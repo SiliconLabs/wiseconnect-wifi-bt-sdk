@@ -2284,7 +2284,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
     rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_sem);
 
   } else if (cmd_type == RSI_WLAN_RSP_SOCKET_CREATE || cmd_type == RSI_WLAN_RSP_CONN_ESTABLISH) {
-    if (sockID >= 0) {
+    if (sockID >= 0 && sockID < NUMBER_OF_SOCKETS) {
       rsi_wlan_socket_set_status(status, sockID);
       if (rsi_socket_pool_non_rom[sockID].socket_wait_bitmap & BIT(0)) {
 #ifndef RSI_SOCK_SEM_BITMAP
@@ -2966,7 +2966,7 @@ void rsi_check_wlan_buffer_full(rsi_pkt_t *pkt)
       rsi_semaphore_post(&rsi_driver_cb_non_rom->send_data_sem);
     } else if (rsi_driver_cb->wlan_cb->expected_response != RSI_WLAN_RSP_TCP_ACK_INDICATION) {
       sockID = rsi_get_application_socket_descriptor(send->socket_id[0]);
-      if (sockID >= 0) {
+      if (sockID >= 0 && sockID < NUMBER_OF_SOCKETS) {
         rsi_wlan_socket_set_status(RSI_SUCCESS, sockID);
 #ifndef RSI_SOCK_SEM_BITMAP
         rsi_socket_pool_non_rom[sockID].socket_wait_bitmap &= ~BIT(2);
