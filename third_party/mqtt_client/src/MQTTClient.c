@@ -81,14 +81,14 @@ int decodePacket(Client* c, int* value, int timeout)
     {
         int rc = MQTTPACKET_READ_ERROR;
 
-        if (++len > MAX_NO_OF_REMAINING_LENGTH_BYTES)
+        if (len + 1 > MAX_NO_OF_REMAINING_LENGTH_BYTES)
         {
-            rc = MQTTPACKET_READ_ERROR; /* bad data */
             goto exit;
         }
         rc = c->ipstack->mqttread(c->ipstack, &i, 1, timeout);
         if (rc != 1)
             goto exit;
+        len++;
         *value += (i & 127) * multiplier;
         multiplier *= 128;
     } while ((i & 128) != 0);
@@ -104,17 +104,24 @@ int readPacket(Client* c, Timer* timer)
     int len = 0;
     int rem_len = 0;
 
+    /* Pull out the amount of time we have left.  If we successfully read data
+     * in step 1, we will continue through steps 2 and 3 with the same amount
+     * of time left to ensure that we finish reading the packet even if we
+     * exceed the total amount of time allotted to this call. */
+    const int left = left_ms_mqtt(timer);
+
     /* 1. read the header byte.  This has the packet type in it */
-    if (c->ipstack->mqttread(c->ipstack, c->readbuf, 1, left_ms_mqtt(timer)) != 1)
+    if (c->ipstack->mqttread(c->ipstack, c->readbuf, 1, left) != 1)
         goto exit;
 
     len = 1;
     /* 2. read the remaining length.  This is variable in itself */
-    decodePacket(c, &rem_len, left_ms_mqtt(timer));
+    if (decodePacket(c, &rem_len, left) == 0)
+        goto exit;
     len += MQTTPacket_encode(c->readbuf + 1, rem_len); /* put the original remaining length back into the buffer */
 
     /* 3. read the rest of the buffer using a callback to supply the rest of the data */
-    if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, left_ms_mqtt(timer)) != rem_len))
+    if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, left) != rem_len))
         goto exit;
 
     header.byte = c->readbuf[0];
@@ -190,11 +197,10 @@ int deliverMessage(Client* c, MQTTString* topicName, MQTTMessage* message)
 
 int keepalive(Client* c)
 {
-    int rc = FAILURE;
+    int rc = SUCCESS;
 
     if (c->keepAliveInterval == 0)
     {
-        rc = SUCCESS;
         goto exit;
     }
 
@@ -220,7 +226,7 @@ exit:
 int cycle(Client* c, Timer* timer)
 {
     // read the socket, see what work is due
-    unsigned short packet_type = readPacket(c, timer);
+    int packet_type = readPacket(c, timer);
     
     int len = 0,
         rc = SUCCESS;
@@ -233,7 +239,7 @@ int cycle(Client* c, Timer* timer)
             break;
         case PUBLISH:
         {
-            MQTTString topicName;
+            MQTTString topicName = MQTTString_initializer;
             MQTTMessage msg;
             if (MQTTDeserialize_publish((unsigned char*)&msg.dup, (int*)&msg.qos, (unsigned char*)&msg.retained, (unsigned short*)&msg.id, &topicName,
                (unsigned char**)&msg.payload, (int*)&msg.payloadlen, c->readbuf, c->readbuf_size) != 1)
@@ -273,8 +279,17 @@ int cycle(Client* c, Timer* timer)
         case PINGRESP:
             c->ping_outstanding = 0;
             break;
+        case FAILURE:
+            /* Because packet types start at 1, if we get here we know that
+             * there was nothing to read from the socket.  This is not
+             * necessarily an error.  It could be that there was no data
+             * available. */
+            packet_type = SUCCESS;
+            break;
     }
-    keepalive(c);
+    if (rc == SUCCESS) {
+        rc = keepalive(c);
+    }
 exit:
     if (rc == SUCCESS)
         rc = packet_type;

@@ -127,12 +127,13 @@ int rsi_mqtt_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
 void mqtt_disconnect(Network* n)
 {
 	rsi_shutdown(n->my_socket,0);
+	n->my_socket = -1;
 }
 
 
 void NewNetwork(Network* n)
 {
-	n->my_socket = 0;
+	n->my_socket = -1;
 	n->mqttread = rsi_mqtt_read;
 	n->mqttwrite = rsi_mqtt_write;
 	n->disconnect = mqtt_disconnect;
