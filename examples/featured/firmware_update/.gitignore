@@ -1,0 +1,9 @@
+Makefile*
+Debug
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.pdb
+*.ilk
+*.exe
+.vs

@@ -18,8 +18,13 @@
 #define RPS_HEADER 0x01
 #define RPS_DATA   0x00
 #include "stdio.h"
-#include "sys/socket.h"
-#include "netinet/in.h"
+#if defined(WIN32)
+# include "winsock2.h"
+#else
+# include "sys/socket.h"
+# include "netinet/in.h"
+# define closesocket close
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -50,11 +55,16 @@ int main(int argc, char **argv)
     exit(0);
   }
 
-  fp = fopen(argv[2], "r");
+  fp = fopen(argv[2], "rb");
   if (fp == NULL) {
     printf("unabled to open rps file\n");
     return;
   }
+
+#if defined(WIN32)
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 
   //! Creating of the TCP Socket
   if ((sock_id = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -95,12 +105,16 @@ int main(int argc, char **argv)
     //strcpy(sendip,(const char *)inet_ntop(AF_INET,(void *)&dst_sock.sin_addr,sendip,sizeof(sendip)));
     //printf("Connect Req from %s accepted\n",sendip);
 
+#if defined(WIN32)
+    processRequest(fd, fp);
+#else
     if (fork() == 0) {
-      close(sock_id);
+      closesocket(sock_id);
       processRequest(fd, fp);
       exit(0);
     }
-    close(fd);
+#endif
+    closesocket(fd);
   }
 }
 
