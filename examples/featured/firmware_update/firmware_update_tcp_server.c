@@ -30,12 +30,25 @@
 #include <signal.h>
 #include <errno.h>
 
+#ifndef Linux
+const char* basename(const char* str)
+{
+  int i;
+  for(i = strlen(str) - 1; i >= 0; i--) {
+    if (str[i] == '/' || str[i] == '\\') {
+      return (str + i + 1);
+    }
+  }
+  return str;
+}
+#endif
+
 int processRequest(int, FILE *);
 signed int sock_id, fd;
 void handler(int signo)
 {
-  close(fd);
-  close(sock_id);
+  closesocket(fd);
+  closesocket(sock_id);
   exit(1);
 }
 
@@ -47,11 +60,11 @@ int main(int argc, char **argv)
   int window_size = 2920;
   FILE *fp        = NULL;
 
-  char sendip[50];
+  //char sendip[50];
 
   //! Checking all proper Command line Arguements
   if (argc < 3) {
-    printf("Usage ./a.out <local port> <RPS file path>\n");
+    printf("Usage %s <local port> <RPS file path>\n", basename(argv[0]));
     exit(0);
   }
 
@@ -167,14 +180,14 @@ again:
           data1[1] = (length & 0x00ff);
           data1[2] = ((length >> 8) & 0x00ff);
           tx_len   = send(fd, data1, length + 3, 0);
-          return;
+          return 1;
         }
       }
     } else if (ret_len == 0) {
       fclose(fp);
       printf("reach end of file\n");
       tx_len = send(fd, data1, length + 3, 0);
-      return;
+      return 1;
     }
 
     printf("size of data1==%d\n", length);
