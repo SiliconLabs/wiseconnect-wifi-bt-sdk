@@ -533,6 +533,18 @@ int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
     // Get actual data offset
     data_offset = rsi_bytes2R_to_uint16(recv->offset);
 
+    if ((sock_info->sock_type & 0xF) == SOCK_DGRAM) {
+      // Save destination port number
+      sock_info->destination_port = rsi_bytes2R_to_uint16(recv->dest_port);
+
+      // Save destination IP address
+      if ((sock_info->sock_type >> 4) == AF_INET) {
+        memcpy(sock_info->destination_ip_addr.ipv4, recv->dest_ip_addr.ipv4_address, RSI_IPV4_ADDRESS_LENGTH);
+      } else {
+        memcpy(sock_info->destination_ip_addr.ipv6, recv->dest_ip_addr.ipv6_address, RSI_IPV6_ADDRESS_LENGTH);
+      }
+    }
+
     if (!(sock_info->sock_bitmap & RSI_SOCKET_FEAT_SYNCHRONOUS)) {
 
       if (sock_info->sock_receive_callback != NULL) {
@@ -584,17 +596,6 @@ int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
       }
     }
 
-    if ((sock_info->sock_type & 0xF) == SOCK_DGRAM) {
-      // Save destination port number
-      sock_info->destination_port = rsi_bytes2R_to_uint16(recv->dest_port);
-
-      // Save destination IP address
-      if ((sock_info->sock_type >> 4) == AF_INET) {
-        memcpy(sock_info->destination_ip_addr.ipv4, recv->dest_ip_addr.ipv4_address, RSI_IPV4_ADDRESS_LENGTH);
-      } else {
-        memcpy(sock_info->destination_ip_addr.ipv6, recv->dest_ip_addr.ipv6_address, RSI_IPV6_ADDRESS_LENGTH);
-      }
-    }
 #ifdef RSI_PROCESS_MAX_RX_DATA
     if (sock_info->sock_type & SOCK_STREAM) {
       if (recv->more_data_pending) {

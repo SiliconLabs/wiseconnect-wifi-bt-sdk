@@ -232,13 +232,66 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
 #define  BT_GLOBAL_BUFF_LEN                              15000
 ```
 
-**4.2** Open `aws_iot_config.h` file and change the AWS_IOT_MQTT_CLIENT_ID to your choice (Make sure this is unique, if more than one user use has same client id it might get conflict at server side). 
+**4.3** Open `aws_iot_config.h` file and change the AWS_IOT_MQTT_CLIENT_ID to your choice (Make sure this is unique, if more than one user use has same client id it might get conflict at server side). 
 
-```c
-#define AWS_IOT_MQTT_CLIENT_ID       "Redp"
-```
+ ```c
+   //AWS Host name 
+   #define AWS_IOT_MQTT_HOST          "a25jwtlmds8eip-ats.iot.us-east-2.amazonaws.com"  
+
+   //default port for MQTT
+   #define AWS_IOT_MQTT_PORT          "8883"
    
-   **Note** Certificates are required for the AWS Cloud connection. Please make sure to replace the certficate files (aws_client_certificate.pem.crt, aws_client_private_key.pem.key, aws_starfield_ca.pem) in the release path: `<Release_Package>/resources/certificates/` . Certificates can be downloaded from AWS website.
+   #define AWS_IOT_MQTT_CLIENT_ID     "Redp"
+   
+   // Thing Name of the Shadow this device is associated with 
+   #define AWS_IOT_MY_THING_NAME      "AWS-IoT-C-SDK"    
+```
+
+**4.4 To Load Certificate**
+
+   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the release package `<Release_Package>/resources/certificates/certificate_script.py`.
+   
+> For example : If the certificate is ca-certificate.pem, enter the command in the following way:
+> python certificate_script.py ca-certificate.pem 
+> The script will generate ca-certificate.pem in which one linear array named ca-certificate contains the certificate.
+Root CA certificate, Device private key and Device client certificate needs to be converted as mentioned above
+
+After the conversion, place the converted files in `<Release_Package>/resources/certificates/` path and include the certificate files in rsi_wlan_app.c
+
+   ```c
+   Replace the default Device certificate and Private key certificate include in the application with the converted pem file name.
+
+   // Certificate includes
+   #include "aws_client_certificate.pem.crt.h"
+   #include "aws_client_private_key.pem.key.h"
+
+   Replace the default Device certificate and Private key certificate given in `rsi_wlan_set_certificate()` API in the application with the converted pem array.
+
+   // Load Security Certificates
+   status = rsi_wlan_set_certificate(RSI_SSL_CLIENT, aws_client_certificate, (sizeof(aws_client_certificate) - 1));
+  
+   status =
+   rsi_wlan_set_certificate(RSI_SSL_CLIENT_PRIVATE_KEY, aws_client_private_key, (sizeof(aws_client_private_key) - 1));
+   ```
+
+> NOTE :
+> For AWS connectivity, StarField Root CA Class 2 certificate has the highest authority being at the top of the signing hierarchy.
+>
+> The StarField Root CA Class 2 certificate is an expected/required certificate which usually comes pre-installed in the operating systems and it plays a key part in certificate chain verification when a device is performing TLS authentication with the IoT endpoint.
+>
+> On RS9116 device, we do not maintain root CA trust repository due to memory constraints, so it is mandatory to load StarField Root CA Class 2 certificate for successful mutual authentication to AWS server.
+>
+> The certificate chain sent by AWS server is as below:
+> id-at-commonName=Amazon,id-at-organizationalUnitName=Server CA 1B,id-at-organizationName=Amazon,id-at-countryName=US
+> id-at-commonName=Amazon Root CA 1,id-at-organizationName=Amazon,id-at-countryName=US
+> id-at-commonName=Starfield Services Root Certificate Authority ,id-at-organizationName=Starfield Technologies, Inc.,id-at-localityName=Scottsdale,id-at-  stateOrProvinceName=Arizona,id-at-countryName=US)
+>
+> On RS9116 to authenticate the AWS server, firstly Root CA is validated (validate the Root CA received with the Root CA loaded on the device). Once the Root CA is validation is successful , other certificates sent from the AWS server are validated.
+> RS9116 don't authenticate to AWS server if intermediate CA certificates are loaded instead of StarField Root CA Class 2 certificate and would result in Handshake error.
+> StarField Root CA Class 2 certificate is at https://certs.secureserver.net/repository/sf-class2-root.crt
+>
+> Reference links :
+> https://aws.amazon.com/blogs/security/how-to-prepare-for-aws-move-to-its-own-certificate-authority/
 
 ## 5. Testing the Application
 

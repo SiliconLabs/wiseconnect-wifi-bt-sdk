@@ -218,10 +218,9 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
  *			                	         -5     - Command not supported \n
  *			                  	       -32    - Network command in progress
  * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes. \n
- * @note        For connecting Emb_MQTT over SSL : \n
- * Enable TCP_IP_FEAT_SSL in Opermode parameters as below \n 
- * #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT) \n
- * Load the related MQTT Certificates in the module using rsi_wlan_set_certificate API.
+ * @note        For connecting Embedded_MQTT(emb_mqtt) over SSL : \n Enable TCP_IP_FEAT_SSL in Opermode parameters as below \n 
+ *                                                  #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT) \n
+ *                                                  Load the related SSL Certificates in the module using rsi_wlan_set_certificate() API.
  *
  */
 

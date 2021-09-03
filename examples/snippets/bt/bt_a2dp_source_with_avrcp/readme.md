@@ -44,7 +44,7 @@ The Application is provided with the project folder containing IAR project files
 
 * IAR Project
   - The IAR project is used to evaluate the application on NXP RT595.
-  - Project path: `<Release_Package>/examples/snippets/bt/bt_a2dp_source_with_avrcp/projects/iar/bt_a2dp_source.eww`
+  - Project path: `<SDK>/examples/snippets/bt/bt_a2dp_source_with_avrcp/projects/iar/bt_a2dp_source.eww`
   
 ### 3.4 RTOS Support
 
@@ -123,12 +123,12 @@ Follow the steps below for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with a PC](http://draft-docs.suds.silabs.net/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/) to load the firmware into RS9116W EVK. The firmware file is located in `<Release_Package>/firmware/`
+Refer [Getting started with a PC](http://draft-docs.suds.silabs.net/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/) to load the firmware into RS9116W EVK. The firmware file is located in `<SDK>/firmware/`
 
 ### 5.1.1 Building the Application on the Host Platform
 
-Refer getting started with IAR IDE, `<Release_Package>/examples/snippets/bt/bt_a2dp_source_with_avrcp/platforms/nxp/rt595RS9116W_with_NXP_RT595_User_Guide` 
-- Open the project `<Release_Package>/examples/snippets/bt/bt_a2dp_source_with_avrcp/projects/iar/bt_a2dp_source.eww`
+Refer getting started with IAR IDE, `<SDK>/examples/snippets/bt/bt_a2dp_source_with_avrcp/platforms/nxp/rt595RS9116W_with_NXP_RT595_User_Guide` 
+- Open the project `<SDK>/examples/snippets/bt/bt_a2dp_source_with_avrcp/projects/iar/bt_a2dp_source.eww`
 - Build the project in IAR IDE
 - Debug the project
 - Check for the RESET pin:

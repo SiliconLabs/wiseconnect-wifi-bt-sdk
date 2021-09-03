@@ -54,13 +54,13 @@ The Application is provided with the project folder containing Keil and Simplici
 
 *	Keil Project
 	- The Keil project is used to evaluate the application on STM32.
-	- Project path: `<Release_Package>/examples/snippets/ble/ble_datalength/projects/ble_datalength-nucleo-f411re.uvprojx`
+	- Project path: `<SDK>/examples/snippets/ble/ble_datalength/projects/ble_datalength-nucleo-f411re.uvprojx`
 
 *	Simplicity Studio
 	- The Simplicity Studio project is used to evaluate the application on EFR32MG21.
 	- Project path: 
-		- If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>/examples/snippets/ble/ble_datalength/projects/ble_datalength-brd4180a-mg21.slsproj`
-		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>/examples/snippets/ble/ble_datalength/projects/ble_datalength-brd4180b-mg21.slsproj` 
+		- If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/ble/ble_datalength/projects/ble_datalength-brd4180a-mg21.slsproj`
+		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/ble/ble_datalength/projects/ble_datalength-brd4180b-mg21.slsproj` 
         - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/imagebdl_radio.png)
@@ -162,7 +162,7 @@ User has to follow the below steps for the successful execution of the applicati
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<Release_Package>/firmware/`
+Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
 
 ### 5.2 Building the Application on the Host Platform
@@ -171,7 +171,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
-- Open the project `<Release_Package>/examples/snippets/ble/ble_datalength/projects/ble_datalength-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/ble/ble_datalength/projects/ble_datalength-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
 	- If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -184,7 +184,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
-- Import the project from `<Release_Package>/examples/snippets/ble/ble_datalength/projects`
+- Import the project from `<SDK>/examples/snippets/ble/ble_datalength/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project

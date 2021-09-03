@@ -1,4 +1,4 @@
-## BLE Central(Master) Mode Tera Term Script
+## BLE Central (Main) Mode Tera Term Script
 This application demonstrates how to connect with a remote BLE device in BLE central mode.
 
 Before continuing, ensure the RS9116 EVK is plugged into your computer and Tera Term is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/). 

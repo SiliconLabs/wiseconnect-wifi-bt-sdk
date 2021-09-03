@@ -39,7 +39,7 @@ Read through the following sections and make any changes needed.
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
 ### Wi-Fi Radio Configuration
-Configure the following parameters in [rsi_wlan_rf_test.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/wlan_rf_test/rsi_wlan_rf_test.c).
+Configure the following parameters in [rsi_wlan_rf_test.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/wlan_rf_test/rsi_wlan_rf_test.c).
 
 ```c
   #define RSI_TX_TEST_POWER    4               // Tx RF power in the range [2:18] dBm

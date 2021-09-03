@@ -141,6 +141,14 @@ int32_t application()
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
 
+  // Send feature frame
+  status = rsi_send_feature_frame();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nSend Feature Frame Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nSend Feature Frame Success\r\n");
+
   // Register WLAN receive stats call back handler
   rsi_wlan_register_callbacks(RSI_WLAN_RECEIVE_STATS_RESPONSE_CB, rsi_wlan_stats_receive_handler);
 

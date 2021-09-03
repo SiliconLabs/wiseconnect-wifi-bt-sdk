@@ -202,7 +202,7 @@ int32_t rsi_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32_t addr
  * @param[in]   addressLength  - Length of the address in bytes
  * @return 		  Zero          - Success \n
  *              Negative Value - Failure
- *
+ *  @note       For asynchronous behaviour, user needs to register RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB callback id.
  *
  */
 
@@ -607,8 +607,7 @@ int32_t rsi_recvfrom(int32_t sockID,
  * @param[in]  flags          - Reserved
  * @return     Positive Value - Success, returns the number of bytes received successfully \n
  *             Negative Value - Failure
- *             zero           - Socket close error
- *             
+ *             zero           - Socket close error         
  *
  *
  */
@@ -1532,6 +1531,14 @@ int32_t rsi_select(int32_t nfds,
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
     return RSI_SOCK_ERROR;
+  }
+  if (nfds > 0) {
+    if ((readfds != NULL) && (readfds->fd_array[0] == 0)) {
+      return RSI_SOCK_ERROR;
+    }
+    if ((writefds != NULL) && (writefds->fd_array[0] == 0)) {
+      return RSI_SOCK_ERROR;
+    }
   }
   RSI_MUTEX_LOCK(&rsi_driver_cb->wlan_cb->wlan_mutex);
   for (i = 0; i < RSI_NUMBER_OF_SELECTS; i++) {

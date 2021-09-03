@@ -146,7 +146,9 @@ rsi_mqtt_client_info_t *rsi_mqtt_client_init(int8_t *buffer,
  *   
  * @return      Zero           - Success \n
  *              Negative value - Failure 
- *              
+ * @note        Procedure for connecting MQTT over SSL : \n Enable TCP_IP_FEAT_SSL in Opermode parameters as below  \n
+ *                                                       #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT)  \n
+ *                                                       Load the related SSL Certificates in the module using rsi_wlan_set_certificate() API.           
  *
  */
 #ifdef ASYNC_MQTT

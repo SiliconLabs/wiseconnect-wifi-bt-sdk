@@ -170,6 +170,57 @@ void rsi_bt_common_register_callbacks(rsi_bt_get_ber_pkt_t rsi_bt_get_ber_pkt_fr
   // Assign the call backs to the respective call back
   bt_common_specific_cb->rsi_bt_get_ber_pkt = rsi_bt_get_ber_pkt_from_app;
 }
+
+/**
+ * @fn          uint8_t rsi_bt_get_ACL_type(uint16_t rsp_type)
+ * @brief       Determine the ACL packet type (BT classic) using the frame type
+ * @param[in]   rsp_type - packet type
+ * @return      1 - HCI Command Packet, 2 - HCI ACL packet ,3 - HCI PER Packet\n
+ *              Non-Zero Value - Failure (Not a BT Classic Packet)
+ *
+ *
+ */
+
+uint8_t rsi_bt_get_ACL_type(uint16_t rsp_type)
+{
+  uint16_t proto_type = 0xFF;
+  uint8_t return_type = 0;
+
+  if (((rsp_type >= RSI_BT_REQ_SET_LOCAL_COD) && (rsp_type <= RSI_BT_REQ_QUERY_LOCAL_COD))
+      || ((rsp_type >= RSI_BT_REQ_SET_PROFILE_MODE) && (rsp_type <= RSI_BT_REQ_UNBOND))
+      || ((rsp_type >= RSI_BT_REQ_USER_CONFIRMATION) && (rsp_type <= RSI_BT_REQ_DEL_LINKKEYS))
+      || (rsp_type == RSI_BT_REQ_LINKKEY_REPLY) || ((rsp_type >= RSI_BT_REQ_PER_TX) && (rsp_type <= RSI_BT_REQ_PER_RX))
+      || (rsp_type == RSI_BT_REQ_CW_MODE)
+      || ((rsp_type >= RSI_BT_REQ_SNIFF_MODE) && (rsp_type <= RSI_BT_REQ_SET_SSP_MODE))
+      || (rsp_type == RSI_BT_REQ_SET_EIR)
+      || ((rsp_type >= RSI_BT_REQ_A2DP_CLOSE) && (rsp_type <= RSI_BT_REQ_BR_EDR_LP_HP_TRANSISTION))
+      || ((rsp_type >= RSI_BT_REQ_A2DP_GET_CONFIG) && (rsp_type <= RSI_BT_REQ_A2DP_SET_CONFIG))
+      || ((rsp_type >= RSI_BT_REQ_AVRCP_SET_ABS_VOL) && (rsp_type <= RSI_BT_REQ_GATT_CONNECT))
+      || (rsp_type == RSI_BT_REQ_CHANGE_CONNECTION_PKT_TYPE)
+      || ((rsp_type >= RSI_BT_REQ_A2DP_PCM_MP3_DATA_PREFILL_1) && (rsp_type <= RSI_BT_REQ_AVRCP_GET_TOT_NUM_ITEMS_RESP))
+      || ((rsp_type >= RSI_BT_REQ_IAP_CONN) && (rsp_type <= RSI_BT_REQ_IAP2_SEND_FILE_TRANSFER_DATA))) {
+    proto_type = RSI_PROTO_BT_CLASSIC;
+  }
+
+  if (proto_type == RSI_PROTO_BT_CLASSIC) {
+    if ((((rsp_type >= RSI_BT_REQ_SET_LOCAL_COD) && (rsp_type <= RSI_BT_REQ_QUERY_LOCAL_COD))
+         || ((rsp_type >= RSI_BT_REQ_SET_DISCV_MODE) && (rsp_type <= RSI_BT_REQ_UNBOND))
+         || ((rsp_type >= RSI_BT_REQ_USER_CONFIRMATION) && (rsp_type <= RSI_BT_REQ_SET_ROLE))
+         || ((rsp_type >= RSI_BT_REQ_ENABLE_AUTH) && (rsp_type <= RSI_BT_REQ_DEL_LINKKEYS))
+         || (rsp_type == RSI_BT_REQ_LINKKEY_REPLY)
+         || ((rsp_type >= RSI_BT_REQ_SNIFF_MODE) && (rsp_type <= RSI_BT_REQ_SET_SSP_MODE))
+         || (rsp_type == RSI_BT_REQ_SET_EIR) || (rsp_type == RSI_BT_REQ_SET_AFH_HOST_CHANNEL_CLASSIFICATION)
+         || ((rsp_type >= RSI_BT_REQ_SET_CURRENT_IAC_LAP) && (rsp_type <= RSI_BT_REQ_BR_EDR_LP_HP_TRANSISTION))
+         || (rsp_type == RSI_BT_REQ_CHANGE_CONNECTION_PKT_TYPE))) {
+      return_type = RSI_BT_HCI_CMD_PKT;
+    } else if ((rsp_type >= RSI_BT_REQ_PER_TX) && (rsp_type <= RSI_BT_REQ_CW_MODE)) {
+      return_type = RSI_BT_HCI_PER_CMD_PKT;
+    } else {
+      return_type = RSI_BT_HCI_ACL_PKT;
+    }
+  }
+  return return_type;
+}
 /**
  * @brief       Determine the BT protocol (BT COMMON / BT classic / BLE ) using the packet type
  * @param[in]   rsp_type - Packet type
@@ -222,7 +273,8 @@ uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb)
     *bt_cb       = rsi_driver_cb->bt_common_cb;
   }
 #ifdef RSI_BT_ENABLE
-  else if (((rsp_type >= RSI_BT_REQ_SET_PROFILE_MODE) && (rsp_type <= RSI_BT_REQ_PBAP_CONTACTS))
+  else if (((rsp_type >= RSI_BT_REQ_SET_LOCAL_COD) && (rsp_type <= RSI_BT_REQ_QUERY_LOCAL_COD))
+           || ((rsp_type >= RSI_BT_REQ_SET_PROFILE_MODE) && (rsp_type <= RSI_BT_REQ_PBAP_CONTACTS))
            || ((rsp_type >= RSI_BT_REQ_HID_CONNECT) && (rsp_type <= RSI_BT_REQ_HID_SDP_ATT_INIT))
            || (rsp_type == RSI_BT_REQ_LINKKEY_REPLY)
            || ((rsp_type >= RSI_BT_REQ_PER_TX) && (rsp_type <= RSI_BT_REQ_CW_MODE))

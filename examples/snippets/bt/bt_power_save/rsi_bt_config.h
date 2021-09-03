@@ -27,6 +27,14 @@
 //! WLAN + BT Classic coex mode
 #define RSI_OPERMODE_WLAN_BT_CLASSIC 5
 
+//! enum for global state
+typedef enum {
+  INQUIRY,
+  CONNECTED,
+  AUTHENTICATED,
+  SPP_CONNECTED,
+  SPP_TRANSMISSION,
+} app_state_t;
 /*=======================================================================*/
 //! Discovery command parameters
 /*=======================================================================*/

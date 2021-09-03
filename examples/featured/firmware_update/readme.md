@@ -47,7 +47,7 @@ Read through the following sections and make any changes needed.
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
 ### Wi-Fi Configuration
-Configure the following parameters in [rsi_firmware_update_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/firmware_update/rsi_firmware_update_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
+Configure the following parameters in [rsi_firmware_update_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/firmware_update/rsi_firmware_update_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
 #define SSID           "SILABS_AP"      // Wi-Fi Network Name
@@ -68,13 +68,13 @@ Configure the following parameters in [rsi_firmware_update_app.c](https://github
 Before a test of the RS9116 firwmare update application can be performed, the TCP server first needs to be setup and started.
 
 ## Build and run the TCP Server
-  1. Copy the TCP server application [firmware_update_tcp_server.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/firmware_update/firmware_update_tcp_server.c) provided with the application source to a Linux PC connected to the Wi-Fi access point. 
+  1. Copy the TCP server application [firmware_update_tcp_server.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/firmware_update/firmware_update_tcp_server.c) provided with the application source to a Linux PC connected to the Wi-Fi access point. 
   2. Compile the application
 > `user@linux:~$ gcc firmware_update_tcp_server.c` -o ota_server.bin
   3. Run the application providing the TCP port number (specified in the RS9116 app) together with the firmware file and path
 > `user@linux:~$ ./ota_server.bin 5001 RS9116.NBZ.WC.GEN.OSI.x.x.x.rps`
 
-... where [RS9116.NBZ.WC.GEN.OSI.x.x.x.rps](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/firmware) is the firmware image to be sent to RS9116.
+... where [RS9116.NBZ.WC.GEN.OSI.x.x.x.rps](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/firmware) is the firmware image to be sent to RS9116.
 
 ## Running the Application
 After making any custom configuration changes requried, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 

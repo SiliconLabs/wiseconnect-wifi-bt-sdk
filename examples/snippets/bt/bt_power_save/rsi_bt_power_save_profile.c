@@ -112,6 +112,7 @@ static uint8_t linkkey[RSI_LINKKEY_REPLY_SIZE];
 uint8_t auth_resp_status = 0;
 uint8_t sniff_mode;
 uint8_t power_save_given = 0;
+app_state_t app_state    = 0;
 
 /*==============================================*/
 /**
@@ -195,6 +196,7 @@ static int32_t rsi_bt_app_get_event(void)
 void rsi_bt_app_on_conn(uint16_t resp_status, rsi_bt_event_bond_t *conn_event)
 {
   if (resp_status == 0) {
+    app_state |= (1 << CONNECTED);
     rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
   } else {
     rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
@@ -286,6 +288,7 @@ void rsi_bt_app_on_auth_complete(uint16_t resp_status, rsi_bt_event_auth_complet
   /* Keeping track of Auth complete response status will be used in unbond event */
   auth_resp_status = resp_status;
   if (resp_status == 0) {
+    app_state |= (1 << AUTHENTICATED);
     rsi_bt_app_set_event(RSI_APP_EVENT_AUTH_COMPLT);
   } else {
     memset(linkkey, 0, RSI_LINKKEY_REPLY_SIZE);
@@ -326,6 +329,7 @@ void rsi_bt_app_on_disconn(uint16_t resp_status, rsi_bt_event_disconnect_t *bt_d
  */
 void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t *spp_connect)
 {
+  app_state |= (1 << SPP_CONNECTED);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_CONN);
   memcpy((int8_t *)remote_dev_addr, spp_connect->dev_addr, RSI_DEV_ADDR_LEN);
   LOG_PRINT("spp_conn: str_conn_bd_addr: %s\r\n",
@@ -344,6 +348,7 @@ void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t 
 void rsi_bt_app_on_spp_disconnect(uint16_t resp_status, rsi_bt_event_spp_disconnect_t *spp_disconn)
 {
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  app_state &= ~(1 << SPP_CONNECTED);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_DISCONN);
   memcpy((int8_t *)remote_dev_addr, spp_disconn->dev_addr, RSI_DEV_ADDR_LEN);
   LOG_PRINT("spp_disconn: str_conn_bd_addr: %s\r\n",
@@ -427,7 +432,13 @@ void rsi_bt_on_confirm_request(uint16_t resp_status,
                                rsi_bt_event_user_confirmation_request_t *user_confirmation_request)
 {
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  uint8_t ix;
   rsi_bt_app_set_event(RSI_APP_EVENT_CONFIRM_REQUEST);
+
+  memcpy(data, user_confirmation_request->confirmation_value, 4);
+  for (ix = 0; ix < 4; ix++) {
+    LOG_PRINT(" 0x%02x,", user_confirmation_request->confirmation_value[ix]);
+  }
   LOG_PRINT("\r\n");
   LOG_PRINT("data: %s", user_confirmation_request->confirmation_value);
 }
@@ -447,6 +458,9 @@ void rsi_bt_on_mode_change(uint16_t resp_status, rsi_bt_event_mode_change_t *mod
 
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   sniff_mode = mode_change->current_mode;
+  /* 0x00 Active Mode.
+		 * 0x01 Hold Mode.
+		 * 0x02 Sniff Mode. */
   LOG_PRINT("sniff_mode:%d", sniff_mode);
   rsi_bt_app_set_event(RSI_APP_EVENT_MODE_CHANGED);
   memcpy((int8_t *)remote_dev_addr, mode_change->dev_addr, RSI_DEV_ADDR_LEN);
@@ -486,6 +500,7 @@ void rsi_bt_app_on_spp_data_rx(uint16_t resp_status, rsi_bt_event_spp_receive_t 
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   uint16_t ix;
 
+  app_state |= (1 << SPP_TRANSMISSION);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_RX);
   data_len = spp_receive->data_len;
   memset(data, 0, sizeof(data));
@@ -729,6 +744,14 @@ int32_t rsi_bt_spp_slave(void)
 
         //! clear the disconnected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
+        app_state = 0;
+        if (sniff_mode == 2) {
+          //exit the sniff mode to support for reconn
+          status = rsi_bt_sniff_exit_mode(remote_dev_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n rsi_bt_sniff_exit_mode Failed: 0x%x\r\n", status);
+          }
+        }
 #if (ENABLE_POWER_SAVE)
         //! initiating Active mode in BLE mode
         status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
@@ -745,11 +768,11 @@ int32_t rsi_bt_spp_slave(void)
 
 #endif
 #if (SPP_MODE == SPP_MASTER)
+        LOG_PRINT("Looking for Device\r\n");
         status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
         if (status != RSI_SUCCESS) {
           return status;
         }
-        LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif
       } break;
       case RSI_APP_EVENT_LINKKEY_REQ: {
@@ -774,7 +797,7 @@ int32_t rsi_bt_spp_slave(void)
         //! clear the spp connected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_CONN);
 
-#if (SPP_MODE == SPP_MASTER)
+#if 0 //(SPP_MODE == SPP_MASTER)
         strcpy((char *)data, "spp_test_sample_1");
         spp_tx_data_len       = strlen((char *)data);
         data[spp_tx_data_len] = (tx_ix++) % 10;
@@ -841,9 +864,8 @@ int32_t rsi_bt_spp_slave(void)
       case RSI_APP_EVENT_MODE_CHANGED: {
         //! clear the ssp receive event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_MODE_CHANGED);
-        LOG_PRINT("MODE_CHANGE IS COMPLETED\n");
         //! initiating bt powersave mode
-        if (sniff_mode == 2) {
+        if (sniff_mode == 2) { //sniff mode
 #if (ENABLE_POWER_SAVE)
           if (!power_save_given) {
             //! enable wlan radio
@@ -866,16 +888,17 @@ int32_t rsi_bt_spp_slave(void)
           }
 #endif
         }
-#if 0
-					if(sniff_mode == 0)
-					{
-						/* here we call the sniff_mode command*/
-						status = rsi_bt_sniff_mode(remote_dev_addr,SNIFF_MAX_INTERVAL,SNIFF_MIN_INTERVAL,SNIFF_ATTEMPT,SNIFF_TIME_OUT);  
-						if(status != RSI_SUCCESS)
-						{
-							return status;
-						}
-					}
+        //need to exit sniff in case of disconn to support for reconn
+#if 1
+        if ((sniff_mode == 0) && (app_state & (1 << SPP_CONNECTED))) //0 - unsniff mode
+        {
+          /* here we are initiating sniff mode req again*/
+          status =
+            rsi_bt_sniff_mode(remote_dev_addr, SNIFF_MAX_INTERVAL, SNIFF_MIN_INTERVAL, SNIFF_ATTEMPT, SNIFF_TIME_OUT);
+          if (status != RSI_SUCCESS) {
+            return status;
+          }
+        }
 #endif
       } break;
 

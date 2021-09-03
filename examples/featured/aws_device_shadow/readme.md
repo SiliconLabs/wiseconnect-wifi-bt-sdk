@@ -70,7 +70,7 @@ Read through the following sections and make any changes needed.
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
 ### Wi-Fi & Cloud Configuration
-Configure the following parameters in [rsi_aws_device_shadow.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/aws_device_shadow/rsi_aws_device_shadow.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
+Configure the following parameters in [rsi_aws_device_shadow.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/aws_device_shadow/rsi_aws_device_shadow.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
 #define SSID           "SILABS_AP"      // Wi-Fi Network Name
@@ -78,13 +78,13 @@ Configure the following parameters in [rsi_aws_device_shadow.c](https://github.c
 #define SECURITY_TYPE  RSI_WPA2         // Wi-Fi Security Type: RSI_OPEN / RSI_WPA / RSI_WPA2
 ```
     
-Configure `AWS_IOT_MQTT_HOST` in the file [aws_iot_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/aws_device_shadow/rsi_aws_iot_config.h) to match the endpoint for your device in AWS.
+Configure `AWS_IOT_MQTT_HOST` in the file [aws_iot_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/aws_device_shadow/rsi_aws_iot_config.h) to match the endpoint for your device in AWS.
 
 ```c
 #define AWS_IOT_MQTT_HOST "xxxxxxxxxxxxx-ats.iot.us-east-2.amazonaws.com"
 ```
 ### Power Save Configuration
-Configure below parameter in [rsi_wlan_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/aws_device_shadow/rsi_wlan_config.h) to enable power save mode
+Configure below parameter in [rsi_wlan_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/aws_device_shadow/rsi_wlan_config.h) to enable power save mode
 
 ```c
 #define ENABLE_POWER_SAVE 1
@@ -93,7 +93,7 @@ Configure below parameter in [rsi_wlan_config.h](https://github.com/SiliconLabs/
 ### Setting up Security Certificates
 To authenticate and securely connect with AWS, your Wi-Fi device requires a unique x.509 security certificate and private key, as well as a CA certificate which is used to verify the AWS server. Security credentials need to be converted into a C-array rather than [PEM format](https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail) provided by AWS; they also need to be added to your project. 
 
-The WiSeConnect SDK provides a conversion script (written in Python 3) to make the conversion straightforward. The script is provided in the SDK 'resources' directory and is called [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/resources/certificates/).
+The WiSeConnect SDK provides a conversion script (written in Python 3) to make the conversion straightforward. The script is provided in the SDK 'resources' directory and is called [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/).
 
 To convert the device certificate and private key to C arrays, open a system command prompt and use the script as indicated in the following examples.
 
@@ -112,11 +112,11 @@ aws_client_certificate.pem.crt.h
 aws_client_private_key.pem.key.h
 ```
 
-Before proceeding, copy both of the new files to the WiSeConnect directory: `<WiSeConnect>/resources/certificates`  
+Before proceeding, copy both of the new files to the WiSeConnect directory: `<SDK>/resources/certificates`  
 Go ahead and overwrite any existing files with the same name in that directory, the originals are not needed.
 
 The Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the WiSeConnect SDK; no additional setup is required.
-For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/resources/certificates/aws_starfield_ca.pem.h).
+For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/aws_starfield_ca.pem.h).
 
 # Testing the Application
 After making any custom configuration changes, and updating the device certificate and private key, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 

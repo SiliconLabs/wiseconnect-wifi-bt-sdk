@@ -199,13 +199,31 @@ void rsi_tx_event_handler(void)
       || prop_protocol_pkt_pending
 #endif
   ) {
+#ifdef RSI_BT_ENABLE
+    // Read packet from BT/BLE Common Queue
+    pkt = (rsi_pkt_t *)(rsi_driver_cb->bt_single_tx_q.head);
+
+    buf_ptr = (uint8_t *)pkt->desc;
+
+    // Get Frame type
+    frame_type = buf_ptr[2];
+#endif
     // Read interrupt status register to check buffer full condition
     ret_status = rsi_device_interrupt_status(&int_status);
 
     // if buffer full then return without clearing Tx event
     if ((ret_status != 0x0)
 #ifdef RSI_BT_ENABLE
-        || (int_status & (BIT(1)))
+        || ((int_status & (BIT(1)))
+            && (rsi_bt_get_ACL_type(frame_type) == RSI_BT_HCI_ACL_PKT)) /* Check for ACL Packet Buffer full Condition */
+#endif
+#if ((defined RSI_BT_ENABLE) || (defined RSI_BLE_ENABLE))
+        || ((int_status & (BIT(4))) /* Check for Command Pool Buffer full Condition */
+#ifdef RSI_BT_ENABLE
+            // ACL Packets should not blocked by Command Buffer Full Condition
+            && (!(frame_type == RSI_BT_REQ_A2DP_SBC_AAC_DATA) || (frame_type == RSI_BT_REQ_SPP_TRANSFER))
+#endif
+              )
 #endif
 #ifdef RSI_BLE_ENABLE
         || (int_status & (BIT(2)))

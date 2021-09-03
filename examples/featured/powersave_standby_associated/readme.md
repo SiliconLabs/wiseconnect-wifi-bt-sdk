@@ -46,7 +46,7 @@ Read through the following sections and make any changes needed.
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
 ### Wi-Fi Configuration
-Configure the following parameters in [rsi_aws_device_shadow.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/powersave_standby_associated/rsi_wlan_connected_sleep_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
+Configure the following parameters in [rsi_aws_device_shadow.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/powersave_standby_associated/rsi_wlan_connected_sleep_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
 #define SSID           "SILABS_AP"      // Wi-Fi Network Name
@@ -122,7 +122,7 @@ The primary powersave settings are configured with `PSP_MODE` and `PSP_TYPE`. Th
 
 
 ### Additional Powersave Options
-Additional powersave options may be configured in [rsi_wlan_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/powersave_standby_associated/rsi_wlan_config.h).
+Additional powersave options may be configured in [rsi_wlan_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/powersave_standby_associated/rsi_wlan_config.h).
  
 ```c
   #define CONCURRENT_MODE                     RSI_DISABLE

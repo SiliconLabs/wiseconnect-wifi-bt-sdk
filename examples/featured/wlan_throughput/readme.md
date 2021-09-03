@@ -44,7 +44,7 @@ Read through the following sections and make any changes needed.
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
 ### Wi-Fi Configuration
-Configure the following parameters in [rsi_throughput_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/examples/featured/wlan_throughput/rsi_throughput_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
+Configure the following parameters in [rsi_throughput_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/wlan_throughput/rsi_throughput_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
 #define SSID           "SILABS_AP"      // Wi-Fi Network Name

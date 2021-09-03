@@ -21,8 +21,23 @@ PLATFORM :=$(MAKECMDGOALS)
 endif
 
 include $(RSI_SDK_PATH)/platforms/$(PLATFORM)/$(PLATFORM).mk
-
-
+ 
+ 
+# Try identify the bus
+ifeq ($(words $(VALID_BUSES)),1)
+BUS=$(VALID_BUSES)
+else
+BUS:=$(filter $(MAKECMDGOALS),$(VALID_BUSES))
+ifeq ($(words $(BUS)),0)
+$(error No valid bus found. Please select from the following: $(VALID_BUSES))
+endif
+ifneq ($(words $(BUS)),1)
+$(error Too many buses. Please select from the following: $(BUS))
+endif
+endif
+ 
+.PHONY: $(BUS)
+ 
 INCLUDES += -I . \
             -I $(RSI_SDK_PATH)/sapi/include  \
             -I $(RSI_SDK_PATH)/sapi/network/protocols
@@ -30,10 +45,10 @@ INCLUDES += -I . \
 CFLAGS += -g -Wall $(INCLUDES) -Os
 
 # Interface options
-#CFLAGS+= -D RSI_UART_INTERFACE
-#CFLAGS+= -D RSI_SPI_INTERFACE
-#CFLAGS+= -D RSI_SDIO_INTERFACE
-
+uart_BUS_CFLAGS += -D RSI_UART_INTERFACE
+spi_BUS_CFLAGS  += -D RSI_SPI_INTERFACE
+sdio_BUS_CFLAGS += -D RSI_SDIO_INTERFACE
+ 
 # Enable debug prints by default
 CFLAGS+= -D RSI_ENABLE_DEBUG_PRINT -D RSI_DEBUG_PRINTS
 
@@ -188,35 +203,43 @@ bt_classic_SOURCES = $(RSI_SDK_PATH)/sapi/bluetooth/rsi_bt_gap_apis.c \
 crypto_SOURCES = $(RSI_SDK_PATH)/sapi/crypto/rsi_crypto.c
 
 # $1 is the list of SDK source files
-define SDK_SOURCE_TO_OBJECTS
-$(addprefix output/,$(subst $(RSI_SDK_PATH)/,sdk/,$(sort $(1:.c=.c.o))))
+# $2 is file extension to append
+define MAP_SDK_SOURCE
+$(addsuffix .$2,$(addprefix output/,$(subst $(RSI_SDK_PATH)/,sdk/,$(sort $(1)))))
 endef
 
 # $1 is the list of application source files
-define APPLICATION_SOURCE_TO_OBJECTS
-$(addprefix output/app/,$(1:.c=.c.o))
+# $2 is file extension to append
+define MAP_APPLICATION_SOURCE
+$(addsuffix .$2,$(addprefix output/app/,$(1)))
 endef
+ 
+# Include all existing .d dependency files
+$(eval -include $(call MAP_APPLICATION_SOURCE, $(APPLICATION_SOURCES),d))
+$(eval -include $(call MAP_SDK_SOURCE, $(COMMON_SOURCES) $($(BUS)_BUS_SOURCES) $(foreach f,$(SDK_FEATURES),$($(f)_SOURCES)),d))
 
 # Recipe to compile SDK source files
 output/sdk/%.o: $(RSI_SDK_PATH)/% | output/sdk/%.directory
 	@echo $< : $@
 	$(CC) $(CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -o $@ -c $<
-
+	$(CC) $(CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -MD -o $@ -c $<
+ 
 # Recipe to compile application source files
 output/app/%.o: % | output/app/%.directory
 	@echo $< : $@
 	$(CC) $(CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -o $@ -c $<
-
-
+	$(CC) $(CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -MD -o $@ -c $<
+ 
+ 
 # Recipe to create directories
 %.directory:
 	@mkdir -p $(dir $@)
 
 all: $(PROGNAME)$(PROG_EXTENSION)
 	@echo Building $(PROGNAME)$(PROG_EXTENSION)
-
-$(PROGNAME)$(PROG_EXTENSION): $(call APPLICATION_SOURCE_TO_OBJECTS, $(APPLICATION_SOURCES)) $(call SDK_SOURCE_TO_OBJECTS, $(COMMON_SOURCES) $(foreach f,$(SDK_FEATURES),$($(f)_SOURCES)))
+ 
+$(PROGNAME)$(PROG_EXTENSION): $(call APPLICATION_SOURCE_TO_OBJECTS, $(APPLICATION_SOURCES)) $(call SDK_SOURCE_TO_OBJECTS, $(COMMON_SOURCES) $($(BUS)_BUS_SOURCES) $(foreach f,$(SDK_FEATURES),$($(f)_SOURCES)))
+$(PROGNAME)$(PROG_EXTENSION): $(call MAP_APPLICATION_SOURCE,$(APPLICATION_SOURCES),o) $(call MAP_SDK_SOURCE,$(COMMON_SOURCES) $($(BUS)_BUS_SOURCES) $(foreach f,$(SDK_FEATURES),$($(f)_SOURCES)),o)
 	@echo Linking $@
-	$(CC) $(CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -o $@ $^ $(LIBS)
-
-
+	$(CC) $(CFLAGS) $($(BUS)_BUS_CFLAGS) $(foreach f,$(SDK_FEATURES),$($(f)_CFLAGS)) $(LINKER_FLAGS) -o $@ $^ $(LIBS)
+ 

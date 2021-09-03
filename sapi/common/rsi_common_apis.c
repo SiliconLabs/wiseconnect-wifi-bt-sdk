@@ -1751,7 +1751,7 @@ int32_t rsi_driver_deinit(void)
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "1610.2.4.0.0.36"
+#define RSI_DRIVER_VERSION "1610.2.4.1.0.16"
 int32_t rsi_driver_version(uint8_t *request)
 {
   memcpy(request, (uint8_t *)RSI_DRIVER_VERSION, sizeof(RSI_DRIVER_VERSION));

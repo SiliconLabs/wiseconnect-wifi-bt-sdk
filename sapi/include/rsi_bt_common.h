@@ -30,6 +30,10 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
+#define RSI_BT_HCI_CMD_PKT     0x1
+#define RSI_BT_HCI_ACL_PKT     0x2
+#define RSI_BT_HCI_PER_CMD_PKT 0x3
+
 #define RSI_BT_DUAL_MODE     0x8
 #define RSI_BT_BLE_MODE_BITS (BIT(2) | BIT(3))
 
@@ -371,6 +375,7 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp);
 uint16_t rsi_bt_global_cb_init(struct rsi_driver_cb_s *driver_cb, uint8_t *buffer);
 uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt);
 uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb);
+uint8_t rsi_bt_get_ACL_type(uint16_t rsp_type);
 
 int32_t rsi_bt_get_local_name(rsi_bt_resp_get_local_name_t *bt_resp_get_local_name);
 int32_t rsi_bt_per_cw_mode(struct rsi_bt_per_cw_mode_s *bt_cw_mode);

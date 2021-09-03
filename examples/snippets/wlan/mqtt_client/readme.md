@@ -74,6 +74,9 @@ This application supports only bare metal environment. By default, the applicati
 
 ## 4. Application Configuration Parameters 
 
+> Note :
+> If the user wants to use MQTT library(in Host), then user can opt for this mqtt application. 
+
 The application can be configured to suit user requirements and development environment. Read through the following sections and make any changes needed. 
 
 ### 4.1 Open rsi_mqtt.c file 
@@ -243,6 +246,20 @@ IP address of the network mask should also be in long format and in little endia
 #define RSI_BAND                                   RSI_BAND_2P4GHZ
 ```
 
+ For running **MQTT** with **SSL**, please enable **TCP_IP_FEAT_SSL** in **rsi_wlan_config.h** file, as shown below. Also load the related **SSL Certificates** in the module using rsi_wlan_set_certificate() API. 
+
+
+```c
+#define CONCURRENT_MODE                            RSI_DISABLE
+#define RSI_FEATURE_BIT_MAP                        FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                          RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                 (TCP_IP_FEAT_DHCPV4_CLIENT |  TCP_IP_FEAT_SSL  |  TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
+#define RSI_CUSTOM_FEATURE_BIT_MAP                 EXT_FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP             EXT_FEAT_256k_MODE
+#define RSI_EXT_TCPIP_FEATURE_BITMAP               CONFIG_FEAT_EXTENTION_VALID
+#define RSI_BAND                                   RSI_BAND_2P4GHZ
+```
+
 > Note:
 > In rsi_mqtt_client.h change 'MQTT_VERSION' macro to either 3 or 4 based on the MQTT broker support version (Supported versions are 3 and 4).
 
@@ -329,6 +346,26 @@ mosquitto.exe –p 1883 –v
 11. Now to publish a message using MQTT Explorer, enter the topic name under "Publish" tab, select "raw" data format, type the data that user wishes to send and then click on "publish". This message will be received by the RS9116W EVK.
 
 ![To publish a message using MQTT Explorer](resources/readme/image_10.png) 
+
+### 5.4 Procedure For exexcuting the Application when enabled with SSL
+
+1. Configure the Access point in OPEN/WPA-PSK/WPA2-PSK mode to connect Silicon Labs device in STA mode.
+
+2. Install MQTT broker in Windows PC2 which is connected to Access Point through LAN.
+
+3. User needs to update the mosquitto.conf file with the proper file paths, in which the certificates are available in the mosquitto.conf file.
+
+4. Also, add "certs" folder to the mosquitto broker folder.
+
+5. Execute the following command in MQTT server installed folder. (Ex:  C:\Program Files\mosquitto>mosquitto.exe -c mosquitto.conf -v) (Port can be 1883/8883)
+   
+   `mosquitto.exe -c mosquitto.conf -v`  
+  
+  ![For opening MQTT server ](resources/readme/image_11.png)  
+
+6. If you see any error - Unsupported tls_version "tlsv1", just comment the "tls_version tlsv1" in mosquitto.conf file
+
+7. From here, repeat the steps from step 4 to step 9 of **5.3** to complete the execution.
 
 > Note:
 > Multiple MQTT client instances can be created.
