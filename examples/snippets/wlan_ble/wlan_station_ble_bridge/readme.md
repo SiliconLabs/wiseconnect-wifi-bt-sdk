@@ -146,7 +146,7 @@ To Load certificate:
 
    By default, application loading "cacert.pem" certificate if **LOAD_CERTIFICATE** enable. In order to load different certificate, user has to follow the following steps:
 
-rsi_wlan_set_certificate API expects the certificate in the form of linear array. So, convert the pem certificate into linear array form using python script provided in the release package "certificate_to_array.py"
+rsi_wlan_set_certificate API expects the certificate in the form of linear array. So, convert the pem certificate into linear array form using python script provided in the SDK "certificate_to_array.py"
 
   Ex: If the certificate is wifi-user.pem. Give the command in the following way
   python certificate_to_array.py ca-cert.pem

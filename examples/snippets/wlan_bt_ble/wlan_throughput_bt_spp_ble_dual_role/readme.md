@@ -67,7 +67,7 @@ To get better throughput, **suggest to run the application under 'O3' optimizati
 
 * Keil Project
   - The Keil project is used to evaluate the application on STM32.
-  - Project path: `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx`
+  - Project path: `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx`
   - Open project in Keil IDE and click on 'Options for Target'
   - Go to 'C/C++' tab and select the Optimization to 'Level 3(-O3)'
   - Click on 'OK' button to save the settings
@@ -78,8 +78,8 @@ To get better throughput, **suggest to run the application under 'O3' optimizati
 * Simplicity Studio
   - The Simplicity Studio project is used to evaluate the application on EFR32MG21.
   - Project path: 
-    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-brd4180a-mg21.slsproj`
-    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-brd4180b-mg21.slsproj` 
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-brd4180a-mg21.slsproj`
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-brd4180b-mg21.slsproj` 
     - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image1_b.png) 
@@ -94,7 +94,7 @@ To get better throughput, **suggest to run the application under 'O3' optimizati
 
 ### 3.4 RTOS Support
 
-The Application supports both FreeRTOS. By default, the application project files (Keil and Simplicity studio) are provided with RTOS enabled in the release package, so the application can be tested/validated under OS environment. 
+The Application supports both FreeRTOS. By default, the application project files (Keil and Simplicity studio) are provided with RTOS enabled in the SDK, so the application can be tested/validated under OS environment. 
 
 ## 4. Application Configuration Parameters
 
@@ -494,7 +494,7 @@ Follow the below steps for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W firmware
 
-Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<Release_Package>/firmware/`
+Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
 ### 5.2 Building the Application on the Host Platform
 
@@ -502,7 +502,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
-- Open the project `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -515,7 +515,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
-- Import the project from `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects`
+- Import the project from `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project

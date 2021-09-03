@@ -41,11 +41,11 @@ Before running the application, the user will need the following things to setup
 - User can install any of the below apps to verify WLAN Station BLE Provisioning.
 
  1. Install Android based Silicon labs Connect APK:
-   - Access the apk provided in the path:  `<Release_Package>/utilities/Silicon_lab_connectApp.apk`
+   - Access the apk provided in the path:  `<SDK>/utilities/Silicon_lab_connectApp.apk`
     
  2. Install windows Silicon labs connect application in laptop.
-   - Refer the application provided in the path: `<Release_Package>/utilities/windows_ble_provisioning_app`
-   - Follow the instructions provided in the path: `<Release_Package>/utilities/windows_ble_provisioning_app/Installation_steps_to_run_silabs_connect_windows_application.docx`
+   - Refer the application provided in the path: `<SDK>/utilities/windows_ble_provisioning_app`
+   - Follow the instructions provided in the path: `<SDK>/utilities/windows_ble_provisioning_app/Installation_steps_to_run_silabs_connect_windows_application.docx`
 
 
 ## 3. Application Build Environment
@@ -66,13 +66,13 @@ The Application can be built and executed on below Host platforms
 The Application is provided with the project folder containing Keil and Simplicity Studio project files. 
 * Keil Project: 
   - The Keil project can be executed on STM32 platform.
-  - Project path: `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning-nucleo-f411re.uvprojx`
+  - Project path: `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning-nucleo-f411re.uvprojx`
 
 * Simplicity Studio:
   - The Simplicity Studio project can be executed on EFR32MG21.
   - Project path: 
-    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning/projects-brd4180a-mg21.slsproj` 
-    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning/projects-brd4180b-mg21.slsproj` 
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning/projects-brd4180a-mg21.slsproj` 
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning/projects-brd4180b-mg21.slsproj` 
     - User can find the Radio Board version as given below
 
 ![EFR Radio Boards](resources/readme/image279d.png) 
@@ -82,7 +82,7 @@ The Application is provided with the project folder containing Keil and Simplici
 
 The Application supports both FreeRTOS and bare metal configurations.
 
-- By default, the application project files (Keil and Simplicity Studio) are provided with RTOS enabled in the release package, so the application can be tested/validated under OS environment. 
+- By default, the application project files (Keil and Simplicity Studio) are provided with RTOS enabled in the SDK, so the application can be tested/validated under OS environment. 
 - Follow the below steps for changing the project configuration in Keil and Simplicity Studio  to test the application in the bare metal environment.
    - **Steps to configure project settings in Keil IDE**
     - Open project in Keil IDE and click on 'Options for Target'
@@ -94,7 +94,7 @@ The Application supports both FreeRTOS and bare metal configurations.
    - **Steps to configure project settings in Simplicity Studio**
     - Open project in Simplicity Studio
     - Right click on the project and choose 'Properties'
-    - GO to 'C/C++ Build' → 'Settings' → 'GNU ARM C Compiler' → 'Symbols' and remove macro 'RSI_WITH_OS=1'
+    - GO to 'C/C++ Build' | 'Settings' | 'GNU ARM C Compiler' | 'Symbols' and remove macro 'RSI_WITH_OS=1'
     - Click on 'Apply' and 'OK' to save the settings
 
 ![project settings in Simplicity Studio](resources/readme/image279b.png) 
@@ -252,7 +252,7 @@ Follow the below steps for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<Release_Package>/firmware/`
+Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
 ### 5.2 Building the Application on the Host Platform
 
@@ -260,7 +260,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
-- Open the project `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects/wlan_station_ble_provisioning-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -272,7 +272,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
-- Import the project from `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects`
+- Import the project from `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project
@@ -323,9 +323,9 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
    **Note:** Turn on BT in the PC.
 
-3. Go to folder  `<Release_Package>/utilities/windows_ble_provisioning_app` and Run **Silabs_Connect.py** in the command prompt. 
+3. Go to folder  `<SDK>/utilities/windows_ble_provisioning_app` and Run **Silabs_Connect.py** in the command prompt. 
   
-4. Executing the application in the command prompt as stated in the above point will open the GUI (with the “BLE SCAN ON” button.
+4. Executing the application in the command prompt as stated in the above point will open the GUI (with the â€œBLE SCAN ONâ€� button.
 
 ![Silicon labs connect GUI](resources/readme/image_ble_1.png)
    
@@ -343,21 +343,21 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 ![BLE get connected](resources/readme/image_ble_5.png)
    
-8. By clicking on one of the scanned AP’s, RS9116 will connect to that particular AP. If Access Point is secured it will ask the password as input but if that Access point as not secured, then directly connect to that Access Point.
+8. By clicking on one of the scanned APâ€™s, RS9116 will connect to that particular AP. If Access Point is secured it will ask the password as input but if that Access point as not secured, then directly connect to that Access Point.
 
 ![Password pop-up for PSK](resources/readme/image_ble_7.png)
    
-9. After successful connection, “IP & Mac address” of connected Access point get displayed.
+9. After successful connection, â€œIP & Mac addressâ€� of connected Access point get displayed.
 
 ![Connected Access point IP and MAC](resources/readme/image_ble_8.png)
   
 10. To disconnect from Access Point, click on connected AP.
 
-11. After successful disconnection of WLAN, pop-up comes like **WLAN GOT DISCONNECTED**. Click on the “ok”.
+11. After successful disconnection of WLAN, pop-up comes like **WLAN GOT DISCONNECTED**. Click on the â€œokâ€�.
 
 ![Connected Access point POCO C3](resources/readme/image_ble_9.png)
    
 ![wlan disconnected](resources/readme/image_ble_10.png)
 
    **Note:**   For more information refer **Silabs_Connect_Windows_Application_User_Guide.pdf** in the path 
-   `<Release_Package>/utilities/windows_ble_provisioning_app/`
+   `<SDK>/utilities/windows_ble_provisioning_app/`

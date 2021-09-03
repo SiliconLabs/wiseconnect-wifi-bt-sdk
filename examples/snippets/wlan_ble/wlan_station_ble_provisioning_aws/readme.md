@@ -39,11 +39,11 @@ Before running the application, the user will need the following things to setup
 - User can install any of the below apps to verify WLAN Station BLE Provisioning.
 
   1. Install Android based Silicon labs Connect APK:
-    - Access the apk provided in the path: `<Release_Package>/utilities/Silicon_lab_connectApp.apk`
+    - Access the apk provided in the path: `<SDK>/utilities/Silicon_lab_connectApp.apk`
   
   2. Install windows Silicon labs connect application in laptop.
-    - Refer the application provided in the path: `<Release_Package>/utilities/windows_ble_provisioning_app`
-    - Follow the instructions provided in the document: `<Release_Package>/utilities/windows_ble_provisioning_app/Installation_steps_to_run_silabs_connect_windows_application.docx`
+    - Refer the application provided in the path: `<SDK>/utilities/windows_ble_provisioning_app`
+    - Follow the instructions provided in the document: `<SDK>/utilities/windows_ble_provisioning_app/Installation_steps_to_run_silabs_connect_windows_application.docx`
 
 
 ## 3. Application Build Environment
@@ -64,13 +64,13 @@ The Application can be built and executed on below Host platforms
 The Application is provided with the project folder containing Keil and Simplicity Studio project files. 
 * Keil Project: 
   - The Keil project can be executed on STM32 platform.
-  - Project path: `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS-nucleo-f411re.uvprojx`
+  - Project path: `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS-nucleo-f411re.uvprojx`
 
 * Simplicity Studio:
   - The Simplicity Studio project can be executed on EFR32MG21.
   - Project path: 
-    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS/projects-brd4180a-mg21.slsproj` 
-    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS/projects-brd4180b-mg21.slsproj`
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS/projects-brd4180a-mg21.slsproj` 
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS/projects-brd4180b-mg21.slsproj`
     - User can find the Radio Board version as given below
 
 ![EFR Radio Boards](resources/readme/image279d.png) 
@@ -78,7 +78,7 @@ The Application is provided with the project folder containing Keil and Simplici
 
 ### 3.4 Bare Metal Support
 
-This application supports only bare metal configuration. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal environment in the release package. 
+This application supports only bare metal configuration. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal environment in the SDK. 
 
 ### 4. Application Configuration Parameters
 
@@ -86,7 +86,7 @@ The application can be configured to suit your requirements and development envi
 
 **4.1** Open `rsi_wlan_app.c` file and update/modify following macros
 
-   Modify the MQTT topics and give different names for both topicsRS9116 is subscribed to MQTT_TOPIC1 and publishing to MQTT_TOPIC2. 
+   Modify the MQTT topics and give different names for both topics RS9116 is subscribed to MQTT_TOPIC1 and publishing to MQTT_TOPIC2. 
    MQTT web application is subscribed to `MQTT_TOPIC2` and publishing on `MQTT_TOPIC1`.
 
 ```c
@@ -249,14 +249,14 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
 
 **4.4 To Load Certificate**
 
-   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the release package `<Release_Package>/resources/certificates/certificate_script.py`.
+   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the SDK `<SDK>/resources/certificates/certificate_script.py`.
    
 > For example : If the certificate is ca-certificate.pem, enter the command in the following way:
 > python certificate_script.py ca-certificate.pem 
 > The script will generate ca-certificate.pem in which one linear array named ca-certificate contains the certificate.
 Root CA certificate, Device private key and Device client certificate needs to be converted as mentioned above
 
-After the conversion, place the converted files in `<Release_Package>/resources/certificates/` path and include the certificate files in rsi_wlan_app.c
+After the conversion, place the converted files in `<SDK>/resources/certificates/` path and include the certificate files in rsi_wlan_app.c
 
    ```c
    Replace the default Device certificate and Private key certificate include in the application with the converted pem file name.
@@ -299,7 +299,7 @@ Follow the below steps for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<Release_Package>/firmware/`
+Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
 ### 5.2 Building the Application on the Host Platform
 
@@ -307,7 +307,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
-- Open the project `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects/wlan_station_ble_provisioning_AWS-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -320,7 +320,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
-- Import the project from `<Release_Package>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects`
+- Import the project from `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_AWS/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project
@@ -341,13 +341,13 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
    **Note** Turn on **BT** in the PC.
   
-3. Go to folder  `<Release_Package>/utilities/windows_ble_provisioning_app` and Run **Silabs_Connect.py** in the command prompt.
+3. Go to folder  `<SDK>/utilities/windows_ble_provisioning_app` and Run **Silabs_Connect.py** in the command prompt.
   
-4. Executing the application in the command prompt as stated in the above point will open the GUI (with the “BLE SCAN ON” button.
+4. Executing the application in the command prompt as stated in the above point will open the GUI (with the â€œBLE SCAN ONâ€� button.
 
 ![Silicon labs connect GUI](resources/readme/image_aws15.png)
    
-5. Check for the configured name in the BLE scanned list and connect to the ‘SILABS_BLE_CONFIGURATOR’, by clicking on it.
+5. Check for the configured name in the BLE scanned list and connect to the â€˜SILABS_BLE_CONFIGURATORâ€™, by clicking on it.
    
 ![Silicon labs BLE Configurator ](resources/readme/image_aws16.png)
    
@@ -359,7 +359,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 ### 5.3.2 BLE Provisioning with Android Application
 
-1. Silicon Labs Connect app is available in the `<Release_Package>/utilities/` folder. Currently, this app will be available for Android devices only.
+1. Silicon Labs Connect app is available in the `<SDK>/utilities/` folder. Currently, this app will be available for Android devices only.
    
 2. Once the application gets executed, launch the Android application which you have already installed on Android mobile. 
 
@@ -367,7 +367,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 ![BLE Provisioning BLE connect app](resources/readme/image_aws18.png)
 
-4. It will scan for the RS9116 module, and it appears in the list. For example, “SILABS_BLE_Configurator” on the UI, select this.
+4. It will scan for the RS9116 module, and it appears in the list. For example, â€œSILABS_BLE_Configuratorâ€� on the UI, select this.
   
 ![Module appears in the list](resources/readme/image_aws19.png)
   
@@ -377,7 +377,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 ![Module SSID](resources/readme/image_aws20.png)
    
-7. Click on the SSID of the AP, enter “password” if the AP is in security mode. Click on “Connect” to associate with the access point.
+7. Click on the SSID of the AP, enter â€œpasswordâ€� if the AP is in security mode. Click on â€œConnectâ€� to associate with the access point.
 
 8. Once Silicon labs RS9116 module is connected to the access point, you can notice on the GUI as below.
 

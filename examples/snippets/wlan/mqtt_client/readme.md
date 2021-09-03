@@ -55,13 +55,13 @@ The application is provided with the project folder containing Keil and Simplici
 
 * Keil Project
   - The Keil project is used to evaluate the application on STM32.
-  - Project path: `<Release_Package>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-nucleo-f411re.uvprojx`
+  - Project path: `<SDK>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-nucleo-f411re.uvprojx`
 
 * Simplicity Studio
   - The Simplicity Studio project is used to evaluate the application on EFR32MG21.
   - Project path: 
-    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-brd4180a-mg21.slsproj`
-    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-brd4180b-mg21.slsproj` 
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-brd4180a-mg21.slsproj`
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-brd4180b-mg21.slsproj` 
     - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image_2a.png) 
@@ -69,7 +69,7 @@ The application is provided with the project folder containing Keil and Simplici
 
 ### 3.4 Bare Metal Support 
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration in the release package. 
+This application supports only bare metal environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration in the SDK. 
 
 
 ## 4. Application Configuration Parameters 
@@ -246,7 +246,7 @@ IP address of the network mask should also be in long format and in little endia
 #define RSI_BAND                                   RSI_BAND_2P4GHZ
 ```
 
- For running **MQTT** with **SSL**, please enable **TCP_IP_FEAT_SSL** in **rsi_wlan_config.h** file, as shown below. Also load the related **SSL Certificates** in the module using rsi_wlan_set_certificate() API. 
+ For running **MQTT** with **SSL**, please enable **TCP_IP_FEAT_SSL** in **rsi_wlan_config.h** file, as shown below. Also load the related **SSL Certificates** in the module using rsi_wlan_set_certificate() API and Need to enable **SSL** flag **RSI_SSL_ENABLE** in rsi_mqtt_connect() API. 
 
 
 ```c
@@ -269,7 +269,7 @@ User has to follow the below steps for the successful execution of the applicati
 
 ### 5.1 Loading the RS9116W Firmware 
 
-Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware file is located in `<Release_Package>/firmware/`
+Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware file is located in `<SDK>/firmware/`
 
 
 ### 5.2 Building the Application on the Host Platform 
@@ -278,7 +278,7 @@ Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconn
 
 Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
 
-- Open the project `<Release_Package>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -291,7 +291,7 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) 
 
-- Open Simplicity Studio and import the project from `<Release_Package>/examples/snippets/wlan/mqtt_client/projects`
+- Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/mqtt_client/projects`
 - Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project

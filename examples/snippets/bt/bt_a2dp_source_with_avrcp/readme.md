@@ -48,7 +48,7 @@ The Application is provided with the project folder containing IAR project files
   
 ### 3.4 RTOS Support
 
-This application supports only RTOS environment. By default, the application project files **IAR IDE** are provided with OS configuration in the release package. 
+This application supports only RTOS environment. By default, the application project files **IAR IDE** are provided with OS configuration in the SDK. 
 
 
 ## 4. Application Configuration Parameters

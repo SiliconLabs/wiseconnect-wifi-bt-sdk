@@ -62,11 +62,11 @@ The Application is provided with the project folder containing Keil project file
 
 * Keil Project
   - The Keil project is used to evaluate the application on STM32.
-  - Project path: `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-nucleo-f411re.uvprojx`
+  - Project path: `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-nucleo-f411re.uvprojx`
 
 ### 3.4 RTOS Support
 
-The Application supports both FreeRTOS. By default, the application project files (Keil) are provided with RTOS enabled in the release package. So the application can be tested/validated under OS environment. 
+The Application supports both FreeRTOS. By default, the application project files (Keil) are provided with RTOS enabled in the SDK. So the application can be tested/validated under OS environment. 
     
 ## 4. Application Configuration Parameters
 
@@ -358,14 +358,14 @@ Follow the below steps for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<Release_Package>/firmware/`
+Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
 ### 5.2 Building the Application on the STM32 Host Platform
 
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
-- Open the project `<Release_Package>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx` in Keil IDE.
+- Open the project `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects/wlan_throughput_bt_spp_ble_dual_role-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -380,19 +380,19 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 2. Before running below commands, make sure the file configured in 'DOWNLOAD_FILENAME' is present under below path
    
-   [File path: `/<Release_Package>/resources/scripts/`]
+   [File path: `/<SDK>/resources/scripts/`]
 
 3. To download the files from local http server, navigate to below folder and run below command.
 
-   [File path: `/<Release_Package>/resources/scripts/`] 
+   [File path: `/<SDK>/resources/scripts/`] 
 
    python simple_http_server.py 80
 
 4. To download the files from local https server, copy ssl certificates 'server-cert.pem' , 'server-key.pem' from below 'source path' and paste in to 'destination path'.
 
-   [source path: `/<Release_Package>/resources/certificates/`] 
+   [source path: `/<SDK>/resources/certificates/`] 
 
-   [destination path: `/<Release_Package>/resources/scripts/`] 
+   [destination path: `/<SDK>/resources/scripts/`] 
 
      Open command prompt, navigate to above destination path and run below command.
    

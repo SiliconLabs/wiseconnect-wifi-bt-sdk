@@ -51,20 +51,20 @@ The Application is provided with the project folder consists of Keil and Simplic
 
   - The Keil can be executed on STM32 platform.
 
-  - Project Path : `<Release_package>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-nucleo-f411re.uvprojx`
+  - Project Path : `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-nucleo-f411re.uvprojx`
 
 * Simplicity Studio :
 
   - The Simplicity Studio project can be executed on EFR32MG21.
 
   - Project Path : 
-    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<Release_Package>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180a-mg21.slsproj`
-    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<Release_Package>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180a-mg21.slsproj`
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
 
 
 ### 3.4 Bare Metal Support
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the release package.
+This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
 
 
 ## 4. Application Configuration Parameters
@@ -183,7 +183,7 @@ IP address of the network mask should also be in long format and in little endia
 
 ### 4.4 To Load Certificate
 
-   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the release package `<Release_Package>/resources/certificates/certificate_script.py`.
+   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the SDK `<SDK>/resources/certificates/certificate_script.py`.
    
    ```sh
    For example : If the certificate is ca-certificate.pem, enter the command in the following way:
@@ -192,7 +192,7 @@ IP address of the network mask should also be in long format and in little endia
    ```
 Root CA certificate, Device private key and Device client certificate needs to be converted as mentioned above
 
-After the conversion, place the converted files in `<Release_Package>/resources/certificates/` path and include the certificate files in rsi_azure_telemetry_c2d.c
+After the conversion, place the converted files in `<SDK>/resources/certificates/` path and include the certificate files in rsi_azure_telemetry_c2d.c
 
    Replace the default Device certificate and Private key certificate in the application with the converted pem file name.
 
@@ -230,7 +230,7 @@ Follow the steps below for the successful execution of the application.
 
 ### 5.1 Loading the RS9116W Firmware
 
-Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware file is located in `<Release_Package>/firmware/`
+Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware file is located in `<SDK>/firmware/`
 
 
 ### 5.2 Building the Application on Host Platform
@@ -239,7 +239,7 @@ Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconn
 
 Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
 
-- Open the project `<Release_package>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-nucleo-f411re.uvprojx`
+- Open the project `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-nucleo-f411re.uvprojx`
 - Build and Debug the project.
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before Free run.
@@ -251,7 +251,7 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
-- Open the project `<Release_Package>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
+- Open the project `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
 - Compile and flash the project in to Host MCU
 - Run/debug the application
 - Check for the RESET pin:

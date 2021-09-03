@@ -71,13 +71,13 @@ The Application is provided with the project folder containing Keil and Simplici
 
 ### 3.4 RTOS Support
 
-This application supports only RTOS configuration. By default, the application project files (Keil and Simplicity studio) are provided with OS environment in the release package.
+This application supports only RTOS configuration. By default, the application project files (Keil and Simplicity studio) are provided with OS environment in the SDK.
 
 ## 4. Application Configuration Parameters
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
-**4.1** open `rsi_ble_config.h` file provided in the release package at `examples/snippets/ble/ble_multiconnection_gatt_test` update/modify following macros.
+**4.1** open `rsi_ble_config.h` file provided in the SDK at `examples/snippets/ble/ble_multiconnection_gatt_test` update/modify following macros.
 
 **4.1.1** User must update the below parameters
 
