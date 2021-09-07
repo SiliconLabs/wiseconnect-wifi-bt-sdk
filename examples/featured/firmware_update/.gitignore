@@ -3,6 +3,7 @@ Debug
 *.sln
 *.vcxproj
 *.vcxproj.filters
+*.vcxproj.user
 *.pdb
 *.ilk
 *.exe
