@@ -124,6 +124,7 @@ int main(int argc, char **argv)
     if (fork() == 0) {
       closesocket(sock_id);
       processRequest(fd, fp);
+      fclose(fp);
       exit(0);
     }
 #endif
@@ -154,6 +155,7 @@ again:
       goto again;
     } else if (ret_len < 0) {
       printf("error while receiving\n");
+      fseek(fp, SEEK_SET, 0);
       return (0);
     }
 
@@ -172,7 +174,7 @@ again:
         data1[1] = (length & 0x00ff);
         data1[2] = ((length >> 8) & 0x00ff);
         if (feof(fp)) {
-          fclose(fp);
+          fseek(fp, SEEK_SET, 0);
           printf("reach end of file\n");
           tx_len   = send(fd, data1, length + 3, 0);
           length   = 0;
@@ -184,7 +186,7 @@ again:
         }
       }
     } else if (ret_len == 0) {
-      fclose(fp);
+      fseek(fp, SEEK_SET, 0);
       printf("reach end of file\n");
       tx_len = send(fd, data1, length + 3, 0);
       return 1;
@@ -196,6 +198,7 @@ again:
 
     if (!tx_len) {
       printf("error while sending\n");
+      fseek(fp, SEEK_SET, 0);
       return (0);
     }
     printf("Pkt sent no:%d\n", ++ctr);
