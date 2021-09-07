@@ -324,13 +324,9 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	for(written_so_far = 0, frags = 0;
 			written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++)
 	{
-		while(!has_timer_expired(timer) &&
-				(ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)      //FIXME:flags parameter kept as 0
+		if ((ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)      //FIXME:flags parameter kept as 0
 		{
 			isErrorFlag = true;
-		}
-		if(isErrorFlag)
-		{
 			break;
 		}
 	}
@@ -416,7 +412,13 @@ IoT_Error_t iot_tls_disconnect(Network *pNetwork)
 	status = rsi_shutdown(pNetwork->socket_id,0);
 	if(status != RSI_SUCCESS)
 	{
-		return (IoT_Error_t)rsi_wlan_socket_get_status(pNetwork->socket_id);
+		status = rsi_wlan_socket_get_status(pNetwork->socket_id);
+		if (RSI_ERROR_EBADF == status)
+		{
+			/* We will get this error if the socket has already been closed. */
+			status = RSI_SUCCESS;
+			rsi_wlan_socket_set_status(RSI_SUCCESS, pNetwork->socket_id);
+		}
 	}
 	return (IoT_Error_t)status;
 }
