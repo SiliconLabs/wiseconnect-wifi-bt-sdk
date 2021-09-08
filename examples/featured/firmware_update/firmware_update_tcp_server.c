@@ -18,19 +18,37 @@
 #define RPS_HEADER 0x01
 #define RPS_DATA   0x00
 #include "stdio.h"
-#include "sys/socket.h"
-#include "netinet/in.h"
+#if defined(WIN32)
+# include "winsock2.h"
+#else
+# include "sys/socket.h"
+# include "netinet/in.h"
+# define closesocket close
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
 
+#ifndef Linux
+const char* basename(const char* str)
+{
+  int i;
+  for(i = strlen(str) - 1; i >= 0; i--) {
+    if (str[i] == '/' || str[i] == '\\') {
+      return (str + i + 1);
+    }
+  }
+  return str;
+}
+#endif
+
 int processRequest(int, FILE *);
 signed int sock_id, fd;
 void handler(int signo)
 {
-  close(fd);
-  close(sock_id);
+  closesocket(fd);
+  closesocket(sock_id);
   exit(1);
 }
 
@@ -42,19 +60,24 @@ int main(int argc, char **argv)
   int window_size = 2920;
   FILE *fp        = NULL;
 
-  char sendip[50];
+  //char sendip[50];
 
   //! Checking all proper Command line Arguements
   if (argc < 3) {
-    printf("Usage ./a.out <local port> <RPS file path>\n");
+    printf("Usage %s <local port> <RPS file path>\n", basename(argv[0]));
     exit(0);
   }
 
-  fp = fopen(argv[2], "r");
+  fp = fopen(argv[2], "rb");
   if (fp == NULL) {
     printf("unabled to open rps file\n");
     return;
   }
+
+#if defined(WIN32)
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 
   //! Creating of the TCP Socket
   if ((sock_id = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -95,12 +118,17 @@ int main(int argc, char **argv)
     //strcpy(sendip,(const char *)inet_ntop(AF_INET,(void *)&dst_sock.sin_addr,sendip,sizeof(sendip)));
     //printf("Connect Req from %s accepted\n",sendip);
 
+#if defined(WIN32)
+    processRequest(fd, fp);
+#else
     if (fork() == 0) {
-      close(sock_id);
+      closesocket(sock_id);
       processRequest(fd, fp);
+      fclose(fp);
       exit(0);
     }
-    close(fd);
+#endif
+    closesocket(fd);
   }
 }
 
@@ -127,6 +155,7 @@ again:
       goto again;
     } else if (ret_len < 0) {
       printf("error while receiving\n");
+      fseek(fp, SEEK_SET, 0);
       return (0);
     }
 
@@ -145,7 +174,7 @@ again:
         data1[1] = (length & 0x00ff);
         data1[2] = ((length >> 8) & 0x00ff);
         if (feof(fp)) {
-          fclose(fp);
+          fseek(fp, SEEK_SET, 0);
           printf("reach end of file\n");
           tx_len   = send(fd, data1, length + 3, 0);
           length   = 0;
@@ -153,14 +182,14 @@ again:
           data1[1] = (length & 0x00ff);
           data1[2] = ((length >> 8) & 0x00ff);
           tx_len   = send(fd, data1, length + 3, 0);
-          return;
+          return 1;
         }
       }
     } else if (ret_len == 0) {
-      fclose(fp);
+      fseek(fp, SEEK_SET, 0);
       printf("reach end of file\n");
       tx_len = send(fd, data1, length + 3, 0);
-      return;
+      return 1;
     }
 
     printf("size of data1==%d\n", length);
@@ -169,6 +198,7 @@ again:
 
     if (!tx_len) {
       printf("error while sending\n");
+      fseek(fp, SEEK_SET, 0);
       return (0);
     }
     printf("Pkt sent no:%d\n", ++ctr);
