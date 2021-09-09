@@ -321,10 +321,15 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	bool isErrorFlag = false;
 	int frags;
 	int ret = 0;
+        /* There is a maximum amount of data that is allowed to be written at
+         * one time.  We must limit ourself to writing a smaller amount to
+         * ensure that all of the data gets written. */
+        const size_t block_size = 1024;
 	for(written_so_far = 0, frags = 0;
 			written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++)
 	{
-		if ((ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)      //FIXME:flags parameter kept as 0
+		const size_t to_write = len - written_so_far;
+		if ((ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), to_write > block_size ? block_size : to_write,0)) <= 0)      //FIXME:flags parameter kept as 0
 		{
 			isErrorFlag = true;
 			break;
