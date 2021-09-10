@@ -321,10 +321,10 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	bool isErrorFlag = false;
 	int frags;
 	int ret = 0;
-        /* There is a maximum amount of data that is allowed to be written at
-         * one time.  We must limit ourself to writing a smaller amount to
-         * ensure that all of the data gets written. */
-        const size_t block_size = 1024;
+	/* There is a maximum amount of data that is allowed to be written at
+	 * one time.  We must limit ourself to writing a smaller amount to
+	 * ensure that all of the data gets written. */
+	const size_t block_size = 1024;
 	for(written_so_far = 0, frags = 0;
 			written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++)
 	{
