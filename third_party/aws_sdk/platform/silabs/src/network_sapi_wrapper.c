@@ -254,20 +254,18 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 	{
 		//! Bind socket
 		status = rsi_bind(n->socket_id, (struct rsi_sockaddr *) &clientAddr_v6, sizeof(clientAddr_v6));
-
 	}
 	else
 	{
 		//! Bind socket
 		status = rsi_bind(n->socket_id, (struct rsi_sockaddr *) &clientAddr, sizeof(clientAddr));
-
-
 	}
 	if(status != 0)
 	{
 		//! Shut Down the port
 		//  mqtt_disconnect(n);
 		status = rsi_wlan_socket_get_status(n->socket_id);
+		rsi_shutdown(n->socket_id, 0);
 		return get_aws_error(status);
 	}
 	if(flags == RSI_IPV6)
@@ -282,6 +280,7 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 	if(rc == -1)
 	{
 		status = rsi_wlan_socket_get_status(n->socket_id);
+		rsi_shutdown(n->socket_id, 0);
 		return get_aws_error(status);
 		//! Shut Down the port
 		//mqtt_disconnect(n);
@@ -293,7 +292,9 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 	int32_t     status       = 0;
 	rsi_rsp_dns_query_t dns_query_rsp;
 	uint32_t    server_address =  0;
-	uint8_t  count = DNS_REQ_COUNT;
+	uint16_t  count = DNS_REQ_COUNT;
+	uint16_t ip_count = 0;
+	int client_port = CLIENT_PORT;
 
   do{
     status = rsi_dns_req(RSI_IP_VERSION_4, (uint8_t *)pNetwork->tlsConnectParams.pDestinationURL, NULL, NULL, &dns_query_rsp, sizeof(dns_query_rsp));
@@ -308,10 +309,12 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 	{
 		return NETWORK_ERR_NET_UNKNOWN_HOST;
 	}
-	server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[0].ipv4_address);
-
-	status = ConnecttoNetwork(pNetwork, 2,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, CLIENT_PORT);       //fixme:flags kept as 0
-
+	status = FAILURE;
+	ip_count = rsi_bytes2R_to_uint16(dns_query_rsp.ip_count);
+	for(count = 0; status != SUCCESS && count < ip_count; count++) {
+		server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[count].ipv4_address);
+		status = ConnecttoNetwork(pNetwork, RSI_SSL_ENABLE,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, client_port + count);       //fixme:flags kept as 0
+	}
 	return (IoT_Error_t)status;
 }
 
