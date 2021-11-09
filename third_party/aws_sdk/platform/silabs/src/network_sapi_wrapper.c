@@ -78,10 +78,10 @@ uint32_t ssl_cert_bit_map = RSI_CERT_INDEX_0;
 
 
 /*
- * This is a function to do further verification if needed on the cert received
+ * Convert an RSI error code into an IoT_Error_t error code.
  */
 
-int32_t get_aws_error(int32_t status)
+IoT_Error_t get_aws_error(int32_t status)
 {
 	switch(status)
 	{
@@ -94,7 +94,7 @@ int32_t get_aws_error(int32_t status)
 	case RSI_ERROR_EFAULT:/* Bad address */
 	case RSI_ERROR_EAFNOSUPPORT:/* Address family not supported by protocol */
 	case RSI_ERROR_EMSGSIZE:/* Message too long */
-		return status;
+		return FAILURE;
 
 	case 0xFF7E:
 	case 0xBBED:
@@ -370,7 +370,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	if(status != SUCCESS)
 	{
 		status = rsi_wlan_socket_get_status(pNetwork->socket_id);
-		return (IoT_Error_t)get_aws_error(status);
+		return get_aws_error(status);
 	}
 	while (len > 0)
 	{
@@ -389,7 +389,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 		else //ret<0
 		{
 			status = rsi_wlan_socket_get_status(pNetwork->socket_id);
-			return (IoT_Error_t)get_aws_error(status);
+			return get_aws_error(status);
 		}
 
 		// Evaluate timeout after the read to make sure read is done at least once
