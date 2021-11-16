@@ -1149,7 +1149,7 @@ typedef void (*rsi_bt_app_iap2_identification_start_t)(uint16_t resp_status, rsi
 typedef void (*rsi_bt_app_iap2_identification_complete_t)(uint16_t resp_status,
                                                           rsi_bt_event_iap2_receive_t *iap_disconn);
 typedef void (*rsi_bt_app_iap2_identification_reject_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap_disconn);
-typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
+//typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
 typedef void (*rsi_bt_app_on_iap2_data_rx_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
 typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
 typedef void (*rsi_bt_app_iap2_File_Transfer_rx_data_t)(uint16_t resp_status,
