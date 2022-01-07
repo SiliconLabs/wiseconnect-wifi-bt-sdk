@@ -20,10 +20,11 @@ Before running the application, the user will need the following things to setup
 
 ### 2.1 Hardware Requirements 
   
-* Windows PC with Host interface (UART/ SPI).
+* Windows PC with Host interface (UART/ SPI/ SDIO).
 * Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 * Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
   - [STM32F411 Nucleo](https://st.com/)
 * Wireless Access point
 
@@ -48,11 +49,12 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
 * [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -66,12 +68,16 @@ The Application is provided with the project folder consists of Keil and Simplic
 
 * Simplicity Studio :
   - The Simplicity Studio project is used to evaluate the application on EFR32MG21.
-   - Project Path : If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\mqtt\projects\aws_iot_mqtt-brd4180a-mg21.slsproj`
+   - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\mqtt\projects\aws_iot_mqtt-brd4180a-mg21.slsproj`
    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\mqtt\projects\aws_iot_mqtt-brd4180b-mg21.slsproj`
 
-### 3.4 Bare Metal Support
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/cloud_apps\aws_iot\mqtt/projects/aws_iot_mqtt-brd2204a-gg11.slsproj`
+	  
+### 3.4 Bare Metal/RTOS Support
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
 
 
 ## 4. Application Configuration Parameters
@@ -266,10 +272,12 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Open Simplicity Studio and import the project `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\mqtt\projects`
--  Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
+- Open Simplicity Studio and import the EFR32/EFM32  project `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\mqtt\projects`
+    - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
+   (or)
+    - Select the *.brd2204a-gg11.slsproj  for EFM32GG11 board.
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:

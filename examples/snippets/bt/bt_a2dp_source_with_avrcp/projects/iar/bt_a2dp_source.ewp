@@ -4310,6 +4310,9 @@
             <name>$PROJ_DIR$\..\..\rsi_bt_config.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\rsi_common_app.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\rsi_lk_save.c</name>
         </file>
         <file>

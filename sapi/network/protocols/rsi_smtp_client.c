@@ -66,7 +66,7 @@ int32_t rsi_smtp_client_create(uint8_t flags,
   uint16_t smtp_length = 0;
   uint16_t send_size   = 0;
   uint8_t *host_desc   = NULL;
-
+  SL_PRINTF(SL_SMTP_CLIENT_CREATE_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -74,18 +74,21 @@ int32_t rsi_smtp_client_create(uint8_t flags,
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_CREATE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_CREATE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
 
   if ((auth_type != RSI_SMTP_CLIENT_AUTH_LOGIN) && (auth_type != RSI_SMTP_CLIENT_AUTH_PLAIN)) {
     // Return invalid command error
+    SL_PRINTF(SL_SMTP_CLIENT_CREATE_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -99,6 +102,7 @@ int32_t rsi_smtp_client_create(uint8_t flags,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SMTP_CLIENT_CREATE_PKT_ALLOCATION_FAILURE_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -135,6 +139,7 @@ int32_t rsi_smtp_client_create(uint8_t flags,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return status
+      SL_PRINTF(SL_SMTP_CLIENT_CREATE_EXIT_1, NETWORK, LOG_INFO, "status: %4x", status);
       return status;
     }
 
@@ -145,6 +150,7 @@ int32_t rsi_smtp_client_create(uint8_t flags,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SMTP_CLIENT_CREATE_PKT_ALLOCATION_FAILURE_2, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -219,10 +225,12 @@ int32_t rsi_smtp_client_create(uint8_t flags,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SMTP_CLIENT_CREATE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SMTP_CLIENT_CREATE_EXIT_2, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -272,7 +280,7 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
   uint16_t smtp_length = 0;
   uint16_t send_size   = 0;
   uint8_t *host_desc   = NULL;
-
+  SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -280,12 +288,14 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -293,6 +303,7 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
   if ((priority != RSI_SMTP_MAIL_PRIORITY_LOW) && (priority != RSI_SMTP_MAIL_PRIORITY_NORMAL)
       && (priority != RSI_SMTP_MAIL_PRIORITY_HIGH)) {
     // Return invalid command error
+    SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_INVALID_PARAM_1, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -306,6 +317,7 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_INVALID_PARAM_2, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -316,6 +328,7 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -358,10 +371,12 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SMTP_CLIENT_MAIL_SEND_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -395,7 +410,7 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -403,12 +418,14 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -423,6 +440,7 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer from WLAN pool
@@ -433,6 +451,7 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -458,10 +477,12 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

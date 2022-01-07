@@ -42,8 +42,14 @@ typedef enum {
 
 #define RSI_SSL_HEADER_SIZE 90
 
-#define RSI_MAX_NUM_CALLBACKS      19
-#define MAX_SIZE_OF_EXTENSION_DATA 250
+#define RSI_MAX_NUM_CALLBACKS 19
+
+#ifdef CHIP_9117
+#define MAX_SIZE_OF_EXTENSION_DATA 256
+#else
+#define MAX_SIZE_OF_EXTENSION_DATA 64
+#endif
+
 typedef struct rsi_socket_info_non_rom_s {
   uint8_t max_tcp_retries;
 
@@ -67,8 +73,14 @@ typedef struct rsi_socket_info_non_rom_s {
   uint32_t more_data;
   // user flags
   int32_t flags;
-  // SSL bit map selection
+
+  // ssl version select bit map
+#ifdef CHIP_9117
+  uint32_t ssl_bitmap;
+#else
   uint8_t ssl_bitmap;
+#endif
+
   // High performance socket
   uint8_t high_performance_socket;
 
@@ -100,7 +112,16 @@ typedef struct rsi_socket_info_non_rom_s {
 #ifdef RSI_PROCESS_MAX_RX_DATA
   uint8_t more_rx_data_pending;
 #endif
+
+#ifdef CHIP_9117
+  uint16_t tos;
+#else
   uint32_t tos;
+#endif
+#ifdef CHIP_9117
+  //! max retransmission timeout value.
+  uint8_t max_retransmission_timeout_value;
+#endif
 } rsi_socket_info_non_rom_t;
 
 typedef struct rsi_tls_tlv_s {
@@ -479,13 +500,13 @@ typedef struct rsi_wlan_cb_non_rom_s {
  */
 
 typedef struct module_rtc_time_s {
-  uint8_t tm_sec[4];  //@ seconds after the minute [0-60]
-  uint8_t tm_min[4];  //@ minutes after the hour [0-59]
+  uint8_t tm_sec[4];  //@ seconds [0-59]
+  uint8_t tm_min[4];  //@ minutes [0-59]
   uint8_t tm_hour[4]; //@ hours since midnight [0-23]
   uint8_t tm_mday[4]; //@ day of the month [1-31]
   uint8_t tm_mon[4];  //@ months since January [0-11]
-  uint8_t tm_year[4]; //@ year since 0
-  uint8_t tm_wday[4]; //@ Weekday form Sunday to Saturday [1-7]
+  uint8_t tm_year[4]; //@ year since 1990
+  uint8_t tm_wday[4]; //@ Weekday from Sunday to Saturday [1-7]
 } module_rtc_time_t;
 
 typedef struct rsi_rsp_waiting_cmds_s {
@@ -525,4 +546,17 @@ typedef struct rsi_socket_select_info_s {
   void (*sock_select_callback)(rsi_fd_set *fd_read, rsi_fd_set *fd_write, rsi_fd_set *fd_except, int32_t status);
 
 } rsi_socket_select_info_t;
+// 11ax params
+typedef struct wlan_11ax_config_params_s {
+  uint8_t guard_interval;
+  uint8_t nominal_pe;
+  uint8_t dcm_enable;
+  uint8_t ldpc_enable;
+  uint8_t ng_cb_enable;
+  uint8_t ng_cb_values;
+  uint8_t uora_enable;
+  uint8_t trigger_rsp_ind;
+  uint8_t ipps_valid_value;
+  uint8_t tx_only_on_ap_trig;
+} wlan_11ax_config_params_t;
 #endif

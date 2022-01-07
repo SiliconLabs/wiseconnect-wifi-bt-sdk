@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file    rsi_ble_subtasks.c
  * @version 0.1
- * @date    01 Feb 2020
+ * @date    01 Feb 2021
  *
  *
  *
@@ -596,6 +596,27 @@ void rsi_ble_task_on_conn(void *parameters)
         //! flag to indicate ble connection status
         ble_connected = true;
       } break;
+
+      case RSI_BLE_MTU_EXCHANGE_INFORMATION: {
+        rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MTU_EXCHANGE_INFORMATION);
+        LOG_PRINT("\r\n MTU EXCHANGE INFORMATION - in subtask -conn%d \r\n", l_conn_id);
+        if ((rsi_ble_conn_info[l_conn_id].mtu_exchange_info.initiated_role == PEER_DEVICE_INITATED_MTU_EXCHANGE)
+            && (RSI_BLE_MTU_EXCHANGE_FROM_HOST)) {
+          status = rsi_ble_mtu_exchange_resp(rsi_connected_dev_addr, LOCAL_MTU_SIZE);
+          //! check for procedure already in progress error
+          if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
+            rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_MTU_EXCHANGE_INFORMATION);
+            LOG_PRINT("\r\n rsi_ble_mtu_exchange_resp procedure is already in progress -conn%d \r\n", l_conn_id);
+            break;
+          }
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%x \n", status);
+          } else {
+            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%x \n", status);
+          }
+        }
+      } break;
+
       case RSI_BLE_MORE_DATA_REQ_EVT: {
 
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MORE_DATA_REQ_EVT);

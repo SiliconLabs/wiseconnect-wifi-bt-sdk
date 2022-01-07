@@ -3,7 +3,7 @@
  * @brief
  *******************************************************************************
  * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -24,9 +24,9 @@
  * @section Description :
  * This application explains how to get the WLAN connection functionality using
  * BLE provisioning.
- * Redpine Module starts advertising and with BLE Provisioning the Access Point
+ * SiLabs Module starts advertising and with BLE Provisioning the Access Point
  * details are fetched.
- * Redpine device is configured as a WiFi station and connects to an Access Point.
+ * SiLabs device is configured as a WiFi station and connects to an Access Point.
  =================================================================================*/
 
 /**
@@ -159,7 +159,8 @@ rsi_rsp_scan_t scan_result;
 uint16_t scanbuf_size;
 uint8_t connected = 0, timeout = 0;
 uint8_t disconnected = 0, disassosiated = 0, wlan_connected;
-uint8_t a = 0;
+uint8_t disconnect_flag = 0;
+uint8_t a               = 0;
 uint8_t rsp_buf[18];
 
 /*
@@ -306,7 +307,7 @@ void rsi_wlan_app_task()
 
 #if (BLE_CONFIGURATOR || BLE_SCANNER)
 
-        //	rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
+        //  rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
         if (magic_word) {
           rsi_wlan_app_cb.state = RSI_WLAN_FLASH_STATE;
         } else {
@@ -366,7 +367,7 @@ void rsi_wlan_app_task()
           status = rsi_wlan_connect((int8_t *)coex_ssid, RSI_WPA_WPA2_MIXED, pwd);
         }
 #else
-      status = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
+      status                  = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
 #endif
 
 #if STATIC_AP_OPEN
@@ -400,7 +401,7 @@ void rsi_wlan_app_task()
           break;
         } else {
           a = 0;
-          LOG_PRINT("\r\nAP joined successfully\r\n");
+          LOG_PRINT("\r\nAP Joined Successfully\r\n");
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
         }
@@ -490,11 +491,15 @@ void rsi_wlan_app_task()
 #if RSI_WISE_MCU_ENABLE
           rsi_flash_erase((uint32_t)FLASH_ADDR_TO_STORE_AP_DETAILS);
 #endif
-          LOG_PRINT("\r\nWLAN Disconnect Failed, Error Code : 0x%lX\r\n", status);
-          disassosiated = 1;
-          connected     = 0;
+          LOG_PRINT("\r\nWLAN Disconnected Successfully\r\n");
+          disassosiated   = 1;
+          connected       = 0;
+          yield           = 0;
+          disconnect_flag = 0; // reset flag to allow disconnecting again
           rsi_wlan_app_send_to_ble(RSI_WLAN_DISCONN_NOTIFY, (uint8_t *)&disassosiated, 1);
           rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
+        } else {
+          LOG_PRINT("\r\nWLAN Disconnect Failed, Error Code : 0x%lX\r\n", status);
         }
       } break;
       default:
@@ -545,8 +550,9 @@ void rsi_wlan_mqtt_task()
   connectParams.usernameLen = strlen((char *)username_mq);
   connectParams.pPassword   = (char *)password_mq;
   connectParams.passwordLen = strlen((char *)password_mq);
-
+#ifdef RSI_WITH_OS
   while (1) {
+#endif
     switch (rsi_wlan_app_cb.state) {
       case RSI_WLAN_MQTT_INIT_STATE: {
 
@@ -608,7 +614,7 @@ void rsi_wlan_mqtt_task()
       case RSI_WLAN_DATA_RECEIVE_STATE: {
 
         if (yield == 0) {
-          LOG_PRINT("\r\nWaiting for data from cloud...\r\n");
+          LOG_PRINT("\r\nWaiting for Data from Cloud...\r\n");
         }
         if (!power_save_given) {
 
@@ -630,9 +636,13 @@ void rsi_wlan_mqtt_task()
         rc    = aws_iot_mqtt_yield(&client, 1000);
         yield = 1;
         if (NETWORK_ATTEMPTING_RECONNECT == rc) {
-          // If the client is attempting to reconnect we will skip the rest of the loop.
+          //If the client is attempting to reconnect we will skip the rest of the function.
+#ifdef RSI_WITH_OS
           continue;
+#endif
         }
+        rsi_wlan_app_cb.state = RSI_WLAN_MQTT_PUBLISH_STATE;
+        return;
       } break;
 
       case RSI_WLAN_MQTT_PUBLISH_STATE: {
@@ -646,9 +656,9 @@ void rsi_wlan_mqtt_task()
         //! Get Temperature value
         temp = TEMPDRV_GetTemp();
 #else
-        temperature_upper_limit = 40;
-        temperature_lower_limit = 25;
-        temp = (rand() % (temperature_upper_limit - temperature_lower_limit + 1)) + temperature_lower_limit;
+      temperature_upper_limit = 40;
+      temperature_lower_limit = 25;
+      temp = (rand() % (temperature_upper_limit - temperature_lower_limit + 1)) + temperature_lower_limit;
 
 #endif
 
@@ -669,7 +679,11 @@ void rsi_wlan_mqtt_task()
         } else {
           LOG_PRINT("\r\nData Published Fail :%d\r\n", rc);
         }
-        rsi_wlan_app_cb.state = RSI_WLAN_DATA_RECEIVE_STATE;
+        if (disconnect_flag == 0) {
+          rsi_wlan_app_cb.state = RSI_WLAN_DATA_RECEIVE_STATE;
+        } else {
+          rsi_wlan_app_cb.state = RSI_WLAN_DISCONN_NOTIFY_STATE;
+        }
 #ifdef RSI_WITH_OS
         rsi_semaphore_post(&rsi_mqtt_sem);
 #endif
@@ -691,5 +705,7 @@ void rsi_wlan_mqtt_task()
       case RSI_WLAN_DEMO_COMPLETE_STATE:
         break;
     }
+#ifdef RSI_WITH_OS
   }
+#endif
 }

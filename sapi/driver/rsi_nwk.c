@@ -93,12 +93,13 @@ int16_t rsi_nwk_register_callbacks(
   uint32_t callback_id,
   void (*callback_handler_ptr)(uint8_t command_type, uint32_t status, const uint8_t *buffer, const uint32_t length))
 {
-
+  SL_PRINTF(SL_NWK_REGISTER_CALLBACKS_ENTRY, NETWORK, LOG_INFO);
   if (callback_id > RSI_MAX_NUM_CALLBACKS) {
     /*
      *Return , if the callback number exceeds the RSI_MAX_NUM_CALLBACKS ,or
      * the callback is already registered
      */
+    SL_PRINTF(SL_NWK_REGISTER_CALLBACKS_EXCEEDS_MAX_CALLBACKS, NETWORK, LOG_INFO);
     return RSI_ERROR_EXCEEDS_MAX_CALLBACKS;
   }
   if (callback_id == RSI_NWK_ERROR_CB) // check for NULL or not
@@ -106,7 +107,7 @@ int16_t rsi_nwk_register_callbacks(
     // Register join fail call back handler
     rsi_wlan_cb_non_rom->nwk_callbacks.nwk_error_call_back_handler = callback_handler_ptr;
   }
-
+  SL_PRINTF(SL_NWK_REGISTER_CALLBACKS_EXIT, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */

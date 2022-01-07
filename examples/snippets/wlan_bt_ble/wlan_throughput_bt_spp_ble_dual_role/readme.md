@@ -18,6 +18,7 @@ Before running the application, the user will need the following things to setup
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
   - [STM32F411 Nucleo](https://st.com/)
 - Wireless Access Point
 - Smart phone/tablet with BT Application (Ex: Bluetooth SPP Manager App)
@@ -51,13 +52,13 @@ Before running the application, the user will need the following things to setup
 
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
-* [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
-
+* [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+* Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -83,6 +84,10 @@ To get better throughput, **suggest to run the application under 'O3' optimizati
     - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image1_b.png) 
+
+ - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/station_ping/projects/station_ping-brd2204a-gg11.slsproj`
 
   - Open project in Simplicity Studio
   - Right click on the project and choose 'Properties'
@@ -513,7 +518,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 ### 5.2.2 Using EFX32
 
-Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Import the project from `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**

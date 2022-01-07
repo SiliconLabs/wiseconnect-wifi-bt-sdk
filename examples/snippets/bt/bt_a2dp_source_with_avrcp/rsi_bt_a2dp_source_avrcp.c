@@ -3,7 +3,7 @@
  * @brief
  *******************************************************************************
  * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -185,7 +185,6 @@ static uint8_t remote_dev_addr1[RSI_DEV_ADDR_LEN] = { 0 };
 static uint8_t local_dev_addr[RSI_DEV_ADDR_LEN]   = { 0 };
 static uint8_t linkkey[RSI_LINKKEY_REPLY_SIZE];
 static uint8_t dev_mode;
-static uint32_t avrcp_version;
 #if ((RSI_AUDIO_DATA_TYPE == PCM_AUDIO) || (RSI_AUDIO_DATA_TYPE == MP3_AUDIO))
 uint8_t first_buff_overflow = 1;
 uint8_t underflow           = 0;
@@ -202,6 +201,8 @@ uint16_t headset_max_mtu_size = 0;
 #endif
 
 static rsi_bt_event_avrcp_notify_t avrcp_notify;
+rsi_bt_rsp_avrcp_get_capabilities_t get_cap_resp;
+rsi_bt_rsp_avrcp_remote_version_t avrcp_version;
 #if ((RSI_AUDIO_DATA_TYPE == PCM_AUDIO) || (RSI_AUDIO_DATA_TYPE == MP3_AUDIO))
 static rsi_bt_a2dp_sbc_codec_cap_t set_sbc_cap;
 static rsi_bt_resp_a2dp_get_config_t sbc_resp_cap;
@@ -874,6 +875,9 @@ void rsi_bt_app_a2dp_pause()
   } else {
     app_state &= ~(1 << A2DP_STREAM_START);
     rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
+#if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO && !TA_BASED_ENCODER)
+    rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_SBC_ENCODE);
+#endif
   }
 }
 
@@ -1254,13 +1258,18 @@ void rsi_bt_on_avrcp_get_play_status_event(uint8_t *bd_addr)
   return;
 }
 
-uint8_t app_event_id[5];
+#define MAX_REG_EVENTS 10
+uint8_t app_event_id[MAX_REG_EVENTS];
 uint8_t app_reg_events;
 void rsi_bt_on_avrcp_reg_notify_event(uint8_t *bd_addr, uint8_t event_id)
 {
-  app_event_id[app_reg_events++] = event_id;
-  rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_REG_EVENT);
-  LOG_PRINT("\r\n RSI_APP_EVENT_AVRCP_REG_EVENT: event_id: %d\r\n", event_id);
+  if (app_reg_events < MAX_REG_EVENTS) {
+    app_event_id[app_reg_events++] = event_id;
+    rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_REG_EVENT);
+    LOG_PRINT("\r\n RSI_APP_EVENT_AVRCP_REG_EVENT: event_id: %d\r\n", event_id);
+  } else {
+    LOG_PRINT("\r\n app_reg_events: %d crossed MAX_REG_EVENTS\r\n", app_reg_events);
+  }
   return;
 }
 
@@ -2317,7 +2326,7 @@ int32_t rsi_bt_app_task()
   uint32_t file_size = 0;
 
 #ifdef RSI_WITH_OS
-  //! Redpine module initialization
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     return status;
@@ -2451,17 +2460,22 @@ int32_t rsi_bt_app_task()
 #if (RSI_APP_AVDTP_ROLE != ACCEPTOR_ROLE)
 
           rsi_delay_ms(500);
-          status = rsi_bt_a2dp_connect(remote_dev_addr);
-          if (status != RSI_SUCCESS) {
-            if (status == RSI_APP_ERR_SOCK_DISCONN) {
-              rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
-              app_state = 0;
-            } else if (status == RSI_APP_ERR_A2DP_CONN_ALRDY_EXISTS) {
-            } else
-              rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
-            LOG_PRINT("\r\n a2dp conn resp status 0x%04x\r\n", status);
-          }
+          if (!(app_state & (1 << A2DP_CONNECTED))) {
+            status = rsi_bt_a2dp_connect(remote_dev_addr);
+            if (status != RSI_SUCCESS) {
+              if (status == RSI_APP_ERR_SOCK_DISCONN) {
+                rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+                app_state = 0;
+              } else if (status == RSI_APP_ERR_A2DP_CONN_ALRDY_EXISTS) {
 
+              } else
+                rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
+
+              LOG_PRINT("\r\n a2dp conn resp status 0x%04x\n", status);
+            }
+          } else {
+            LOG_PRINT("\r\n a2dp connection initiated by headset \n");
+          }
 #endif
         }
       } break;
@@ -2534,18 +2548,26 @@ int32_t rsi_bt_app_task()
         if ((app_state & (1 << CONNECTED)) && (app_state & (1 << AUTHENTICATED))) {
 #if (RSI_APP_AVDTP_ROLE != ACCEPTOR_ROLE)
           rsi_delay_ms(500);
-          status = rsi_bt_a2dp_connect(remote_dev_addr);
-          if (status != RSI_SUCCESS) {
-            if (status == RSI_APP_ERR_SOCK_DISCONN) {
-              rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
-              app_state = 0;
-            } else if (status == RSI_APP_ERR_A2DP_CONN_ALRDY_EXISTS) {
-            } else
-              rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
+          /*RSC-8818: While in Reconnection, When DUT Initiates PHY Level Connection to the Remote Device,
+	   * Some Devices like Samsung Level U Headset are initiating A2DP Profile Level Connection immediatley
+	   * after authetication completes. Therefore, if the A2DP_CONNECTED state sets in app_state, DUT shouldn't 
+	   * initiate A2DP Profile Conection one more time*/
+          if (!(app_state & (1 << A2DP_CONNECTED))) {
+            status = rsi_bt_a2dp_connect(remote_dev_addr);
+            if (status != RSI_SUCCESS) {
+              if (status == RSI_APP_ERR_SOCK_DISCONN) {
+                rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+                app_state = 0;
+              } else if (status == RSI_APP_ERR_A2DP_CONN_ALRDY_EXISTS) {
 
-            LOG_PRINT("\r\n a2dp conn resp status 0x%04x\n", status);
+              } else
+                rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
+
+              LOG_PRINT("\r\n a2dp conn resp status 0x%04x\n", status);
+            }
+          } else {
+            LOG_PRINT("\r\n a2dp connection initiated by headset \n");
           }
-
 #endif
         }
       } break;
@@ -2579,6 +2601,7 @@ int32_t rsi_bt_app_task()
         app_state        = 0;
         play_pause_count = 0;
         rem_mtu_size     = DEFAULT_MTU_SIZE;
+        app_reg_events   = 0;
 
 #if (RSI_APP_AVDTP_ROLE != ACCEPTOR_ROLE)
         LOG_PRINT("\r\n looking for device\n");
@@ -2643,6 +2666,7 @@ int32_t rsi_bt_app_task()
         rsi_delay_ms(500);
         if ((app_state & (1 << CONNECTED)) && (app_state & (1 << AUTHENTICATED))
             && (!(app_state & (1 << A2DP_STREAM_START)))) {
+          LOG_PRINT("trying for a2dp reconn\n");
           status = rsi_bt_a2dp_connect(remote_dev_addr);
           if (status != RSI_SUCCESS) {
             if (status == RSI_APP_ERR_SOCK_DISCONN) {
@@ -2837,6 +2861,17 @@ int32_t rsi_bt_app_task()
         } else if (status == RSI_APP_ERR_HW_BUFFER_OVERFLOW_TIMEOUT) {
           LOG_PRINT("\r\n Buffer Overflow Timeout: 0x%x \n", status);
           rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
+        } else if (status == RSI_APP_ERR_A2DP_INVALID_SOCKET) {
+          LOG_PRINT("\r\n Invalid Socket Error: 0x%x\n", status);
+          /*This invalid socket error comes when there is no l2cap cfg response from remote device for stream socket.
+            i.e, A2DP stream socket conn is not completed although A2DP Conn socket is completed.*/
+          LOG_PRINT("\r\n Initiating profile level reconn: \r\n");
+          status = rsi_bt_a2dp_disconnect(remote_dev_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n A2DP Disconn Failed: %x\r\n", status);
+          }
+          app_state &= ~(1 << A2DP_STREAM_START);
+          break;
         } else {
           first_buff_overflow = 1;
           LOG_PRINT("\r\n send SBC command status: 0x%x \n", status);
@@ -2891,9 +2926,18 @@ int32_t rsi_bt_app_task()
           rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
         } else if (status == RSI_APP_ERR_A2DP_NOT_STREAMING) {
           rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
-          LOG_PRINT("A2DP not streaming: %x", status);
+          LOG_PRINT("A2DP not streaming: 0x%x\r\n", status);
         } else if (status == RSI_APP_ERR_A2DP_INVALID_SOCKET) {
-          LOG_PRINT("Invalid Socket Error: %x", status);
+          LOG_PRINT("\r\n Invalid Socket Error: 0x%x\n", status);
+          /*This invalid socket error comes when there is no l2cap cfg response from remote device for stream socket.
+            i.e, A2DP stream socket conn is not completed although A2DP Conn socket is completed.*/
+          LOG_PRINT("\r\n Initiating profile level reconn: \r\n");
+          status = rsi_bt_a2dp_disconnect(remote_dev_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n A2DP Disconn Failed: 0x%x\r\n", status);
+          }
+          app_state &= ~(1 << A2DP_STREAM_START);
+          break;
         }
 #if A2DP_BURST_MODE
         aud_pkts_sent++;
@@ -2956,8 +3000,7 @@ int32_t rsi_bt_app_task()
 
         //! clear the ssp receive event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_CONN);
-        LOG_PRINT("\r\nRSI_APP_EVENT_AVRCP_CONN\r\n");
-
+        app_reg_events = 0;
 #if (RSI_APP_AVDTP_ROLE != ACCEPTOR_ROLE)
         if (!(app_state & (1 << A2DP_CONNECTED))) {
           rsi_delay_ms(500);
@@ -2977,16 +3020,6 @@ int32_t rsi_bt_app_task()
         } else
           LOG_PRINT("\r\nwaiting for a2dp config\n");
 #endif
-
-        /* Register AVRCP volume event notification, when AVRCP connected */
-        if (app_state & (1 << AVRCP_CONNECTED)) {
-          status = rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_VOLUME_CHANGED, &abs_vol);
-          if (status != RSI_SUCCESS) {
-            LOG_PRINT("AVRCP Register Notification: status: 0x%x\r\n", status);
-          }
-          uint8_t abs_vol_per = (abs_vol * 100) / 0x7f;
-          LOG_PRINT("Absolute Volume: %d% (0x%x)\r\n", abs_vol_per, abs_vol);
-        }
         rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_GET_REM_CAP);
       } break;
 
@@ -3094,21 +3127,22 @@ int32_t rsi_bt_app_task()
 #endif
       } break;
       case RSI_APP_EVENT_AVRCP_GET_REM_CAP: {
-        uint32_t cap[3] = { 0 };
         rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_GET_REM_CAP);
-
-        status =
-          rsi_bt_avrcp_get_capabilities(remote_dev_addr, app_cap_type, (rsi_bt_rsp_avrcp_get_capabilities_t *)cap);
+        get_cap_resp = (rsi_bt_rsp_avrcp_get_capabilities_t){ 0 };
+        status       = rsi_bt_avrcp_get_capabilities(remote_dev_addr, AVRCP_CAP_ID_EVENTS_SUPPORTED, &get_cap_resp);
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\nAVRCP get_capabilities: status 0x%x\r\n", status);
+        } else {
+          LOG_PRINT("\nAVRCP get_cap resp nbr_ids: %d\n", get_cap_resp.nbr_ids);
         }
-        LOG_PRINT("\nAVRCP get capabilities resp status 0x%x: cap[0]:%d cap[1]:%d cap[2]:%d\n",
-                  status,
-                  cap[0],
-                  cap[1],
-                  cap[2]);
-
         if (app_state & (1 << AVRCP_CONNECTED)) {
+          uint8_t playback_status = 0;
+          status =
+            rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_PLAYBACK_STATUS_CHANGED, &playback_status);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("AVRCP Register Notification: status: 0x%x\r\n", status);
+          }
+          rsi_delay_ms(5);
           status = rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_VOLUME_CHANGED, &abs_vol);
           if (status != RSI_SUCCESS) {
             LOG_PRINT("AVRCP Register Notification: status: 0x%x\r\n", status);
@@ -3139,13 +3173,17 @@ int32_t rsi_bt_app_task()
         }
       } break;
       case RSI_APP_EVENT_AVRCP_GET_REM_VER: {
-        status = rsi_bt_avrcp_get_remote_version(remote_dev_addr, (rsi_bt_rsp_avrcp_remote_version_t *)&avrcp_version);
+        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_GET_REM_VER);
+        avrcp_version = (rsi_bt_rsp_avrcp_remote_version_t){ 0 };
+        status        = rsi_bt_avrcp_get_remote_version(remote_dev_addr, &avrcp_version);
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\nAVRCP get_remote_version: status 0x%x\r\n", status);
         }
-        LOG_PRINT("\r\nAVRCP remote version: %d.%d\n", ((avrcp_version >> 8) & 0xFF), ((avrcp_version) && 0xFF));
-        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_GET_REM_VER);
+        LOG_PRINT("\r\nAVRCP remote version: %d.%d\n",
+                  ((avrcp_version.version >> 8) & 0xFF),
+                  ((avrcp_version.version) & 0xFF));
       } break;
+
       case RSI_APP_EVENT_AVRCP_GET_ATTS: {
         uint8_t atts[5] = { 1 };
 

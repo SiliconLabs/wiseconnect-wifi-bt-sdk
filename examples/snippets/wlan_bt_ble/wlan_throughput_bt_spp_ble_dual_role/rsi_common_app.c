@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,17 +17,17 @@
 /**
  * @file    rsi_common_app.c
  * @version 0.1
- * @date    01 Feb 2020
+ * @date    01 Feb 2021
  *
  *
  *  @section Licenseremote_name
  *  This program should be used on your own responsibility.
- *  Redpine Signals assumes no responsibility for any losses
+ *  SiLabs Signals assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contains example application for device initialization
  *
- *  @section Description  This application initiates Redpine device and create tasks.
+ *  @section Description  This application initiates SiLabs device and create tasks.
  *
  */
 
@@ -285,12 +285,22 @@ void rsi_common_app_task(void)
   wlan_app_task_handle     = NULL;
 
   while (1) {
-    //! Redpine module initialization
+    //! SiLabs module initialization
     status = rsi_device_init(LOAD_NWP_FW);
     if (status != RSI_SUCCESS) {
       LOG_PRINT("\r\n device init failed \n");
       return;
     }
+// rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM platform
+#ifdef EFM32GG11B820F2048GL192
+    //! Task created for Driver task
+    rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                    (uint8_t *)"driver_task",
+                    RSI_DRIVER_TASK_STACK_SIZE,
+                    NULL,
+                    RSI_DRIVER_TASK_PRIORITY,
+                    &driver_task_handle);
+#endif
     //! WiSeConnect initialization
     status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_COEX_MODE);
     if (status != RSI_SUCCESS) {
@@ -441,6 +451,9 @@ int main(void)
                   NULL,
                   RSI_COMMON_TASK_PRIORITY,
                   &common_task_handle);
+
+  // rsi_wireless_driver_task is created in rsi_common_app_task for EFM platform
+#ifndef EFM32GG11B820F2048GL192
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -448,7 +461,7 @@ int main(void)
                   NULL,
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
-
+#endif
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();
 #endif

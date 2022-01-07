@@ -336,9 +336,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--C99 --reduce_paths</MiscControls>
-              <Define>RSI_SAMPLE_HAL RSI_DEBUG_PRINTS USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_WLAN_ENABLE RSI_WITH_OS </Define>
+              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_WLAN_API_ENABLE RSI_WITH_OS </Define>
               <Undefine></Undefine>
-              <IncludePath>../../../../examples/featured/aws_device_shadow;../../../../sapi/include; ../../../../sapi/network/protocols; ../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../platforms/stm32/core/inc; ../../../../platforms/stm32/boards/nucleo-f411re; ../../../../sapi/network/socket; ../../../../resources/certificates; ../../../../third_party/aws_sdk/include; ../../../../third_party/aws_sdk/platform/silabs/inc; ../../../../third_party/freertos/include; ../../../../third_party/freertos/portable; ../../../../sapi/rtos/freertos_wrapper; platforms/stm32/boards/nucleo-f411re</IncludePath>
+              <IncludePath>../../../../examples/featured/aws_device_shadow;../../../../sapi/include; ../../../../sapi/network/protocols; ../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../platforms/stm32/core/inc; ../../../../platforms/stm32/boards/nucleo-f411re; ../../../../sapi/network/protocols; ../../../../resources/certificates; ../../../../third_party/aws_sdk/include; ../../../../third_party/aws_sdk/platform/silabs/inc; ../../../../third_party/freertos/include; ../../../../third_party/freertos/portable; ../../../../sapi/rtos/freertos_wrapper; platforms/stm32/boards/nucleo-f411re</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -451,6 +451,11 @@
              <FileName>rsi_hal_mcu_rtc.c</FileName>
              <FileType>1</FileType>
              <FilePath>../../../../platforms/stm32/hal/rsi_hal_mcu_rtc.c</FilePath>
+           </File>
+           <File>
+             <FileName>sl_hal_mcu_logging.c</FileName>
+             <FileType>1</FileType>
+             <FilePath>../../../../platforms/stm32/hal/sl_hal_mcu_logging.c</FilePath>
            </File>
            <File>
              <FileName>stm32f4xx_hal.c</FileName>
@@ -728,11 +733,6 @@
 	                <FilePath>../../../../sapi/driver/rsi_pkt_mgmt.c</FilePath>
 	             </File>
 	             <File>
-	                <FileName>rsi_nwk.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../sapi/driver/rsi_nwk.c</FilePath>
-	             </File>
-	             <File>
 	                <FileName>rsi_utils_rom.c</FileName>
 	                <FileType>1</FileType>
 	                <FilePath>../../../../sapi/driver/rsi_utils_rom.c</FilePath>
@@ -757,42 +757,51 @@
 	                <FileType>1</FileType>
 	                <FilePath>../../../../sapi/driver/rsi_events_rom.c</FilePath>
 	             </File>
+	             <File>
+	                <FileName>rsi_nwk.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/driver/rsi_nwk.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_wlan.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/driver/rsi_wlan.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_socket.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/network/socket/rsi_socket.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_socket_rom.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/network/socket/rsi_socket_rom.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_wlan_apis.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/wlan/rsi_wlan_apis.c</FilePath>
+	             </File>
+	           </Files>
+	        
+	           <Files>
+	           
+	             <File>
+	                <FileName>sl_logging.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/logging/sl_logging.c</FilePath>
+	             </File>
 	           </Files>
 	        
         </Group>
         
         
-        <Group><GroupName>sapi/wlan</GroupName>
-           <Files>
         
-             <File>
-                <FileName>rsi_wlan_apis.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../sapi/wlan/rsi_wlan_apis.c</FilePath>
-             </File>
-             <File>
-                <FileName>rsi_wlan.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../sapi/driver/rsi_wlan.c</FilePath>
-             </File>
-             
-           </Files>
-         </Group>
         
         
         <Group><GroupName>sapi/sockets</GroupName>
            <Files>
         
-             <File>
-                <FileName>rsi_socket.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../sapi/network/socket/rsi_socket.c</FilePath>
-             </File>
-             <File>
-                <FileName>rsi_socket_rom.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../sapi/network/socket/rsi_socket_rom.c</FilePath>
-             </File>
              <File>
                 <FileName>rsi_dns.c</FileName>
                 <FileType>1</FileType>

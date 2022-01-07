@@ -282,7 +282,7 @@ int32_t rsi_http_client_async(uint8_t type,
   uint32_t send_size   = 0;
   uint8_t *host_desc   = NULL;
   uint8_t tmp_str[7]   = { 0 };
-
+  SL_PRINTF(SL_HTTP_CLIENT_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -293,12 +293,14 @@ int32_t rsi_http_client_async(uint8_t type,
     // In concurrent mode and AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // command given in wrong state
+      SL_PRINTF(SL_HTTP_CLIENT_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_HTTP_CLIENT_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -313,6 +315,7 @@ int32_t rsi_http_client_async(uint8_t type,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_HTTP_CLIENT_ASYNC_NVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -323,6 +326,7 @@ int32_t rsi_http_client_async(uint8_t type,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -438,10 +442,12 @@ int32_t rsi_http_client_async(uint8_t type,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -466,7 +472,7 @@ int32_t rsi_http_client_abort(void)
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_HTTP_CLIENT_ABORT_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -479,6 +485,7 @@ int32_t rsi_http_client_abort(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_ABORT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -499,10 +506,12 @@ int32_t rsi_http_client_abort(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_ABORT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_HTTP_CLIENT_ABORT_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -529,7 +538,7 @@ int32_t rsi_http_client_put_create(void)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_CREATE_ENTRY, NETWORK, LOG_INFO);
   rsi_http_client_put_req_t *http_put_req;
 
   // Get WLAN CB structure pointer
@@ -549,6 +558,7 @@ int32_t rsi_http_client_put_create(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_PUT_CREATE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -586,10 +596,12 @@ int32_t rsi_http_client_put_create(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_PUT_CREATE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_CREATE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -616,7 +628,7 @@ int32_t rsi_http_client_put_delete(void)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_DELETE_ENTRY, NETWORK, LOG_INFO);
   rsi_http_client_put_req_t *http_put_req;
 
   // Get WLAN CB structure pointer
@@ -631,6 +643,7 @@ int32_t rsi_http_client_put_delete(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_PUT_DELETE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -656,10 +669,12 @@ int32_t rsi_http_client_put_delete(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_PUT_DELETE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_DELETE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -737,7 +752,7 @@ int32_t rsi_http_client_put_start(
   uint8_t *host_desc   = NULL;
   rsi_http_client_put_req_t *http_put_req;
   rsi_http_client_put_start_t *http_put_start;
-
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_START_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -751,6 +766,7 @@ int32_t rsi_http_client_put_start(
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_HTTP_CLIENT_PUT_START_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -761,6 +777,7 @@ int32_t rsi_http_client_put_start(
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_PUT_START_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -842,10 +859,12 @@ int32_t rsi_http_client_put_start(
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_PUT_START_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_START_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -878,7 +897,7 @@ int32_t rsi_http_client_put_pkt(uint8_t *file_content, uint16_t current_chunk_le
   rsi_http_client_put_data_req_t *http_put_data;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_PKT_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -891,6 +910,7 @@ int32_t rsi_http_client_put_pkt(uint8_t *file_content, uint16_t current_chunk_le
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_PUT_PKT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -936,10 +956,12 @@ int32_t rsi_http_client_put_pkt(uint8_t *file_content, uint16_t current_chunk_le
     }
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_PUT_PKT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_PUT_PKT_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -999,7 +1021,7 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
   rsi_http_client_post_data_req_t *http_post_data;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_HTTP_CLIENT_POST_DATA_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -1014,6 +1036,7 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_HTTP_CLIENT_POST_DATA_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1025,6 +1048,7 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_CLIENT_POST_DATA_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1054,10 +1078,12 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_CLIENT_POST_DATA_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_CLIENT_POST_DATA_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

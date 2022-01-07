@@ -84,10 +84,12 @@ The Application is provided with the project folder consists of Keil and Simplic
     - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\device_shadow_logging_stats\projects\device_shadow_logging_stats-brd4180a-mg21.slsproj`
     - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\aws_iot\device_shadow_logging_stats\projects\device_shadow_logging_stats-brd4180b-mg21.slsproj`
 
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/cloud_apps\aws_iot\mqtt/projects/aws_iot_mqtt-brd2204a-gg11.slsproj`
+### 3.4 Bare Metal/RTOS Support
 
-### 3.4 Bare Metal Support
-
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 
 
 
 ## 4. Application Configuration Parameters
@@ -264,7 +266,7 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 
 - Configure EFX32 pin-9(PD03/PB01 GPIO) should connect to UULP_GPIO_0 and EVFX32 pin-7(PD02/PB00 GPIO) should connect to UULP_GPIO_2.

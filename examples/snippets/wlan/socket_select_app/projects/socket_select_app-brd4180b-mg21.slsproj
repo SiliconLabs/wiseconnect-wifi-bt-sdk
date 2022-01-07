@@ -51,22 +51,19 @@
   <folder name="sapi/crypto" uri="sapi/crypto" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver" uri="sapi/driver" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
-  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
-  
-  <file name="sapi/wlan/rsi_wlan_apis.c" uri="sapi/wlan/rsi_wlan_apis.c" />
-  <file name="sapi/driver/rsi_wlan.c" uri="sapi/driver/rsi_wlan.c" />
   
   
   
   
   
-  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   
-  <file name="sapi/network/socket/rsi_socket.c" uri="sapi/network/socket/rsi_socket.c" />
-  <file name="sapi/network/socket/rsi_socket_rom.c" uri="sapi/network/socket/rsi_socket_rom.c" />
+  
   <file name="sapi/network/protocols/rsi_dns.c" uri="sapi/network/protocols/rsi_dns.c" />
   <file name="sapi/network/protocols/rsi_emb_mqtt_client.c" uri="sapi/network/protocols/rsi_emb_mqtt_client.c" />
   <file name="sapi/network/protocols/rsi_raw_data.c" uri="sapi/network/protocols/rsi_raw_data.c" />
@@ -74,19 +71,43 @@
   <file name="sapi/network/protocols/rsi_dhcp_user_class.c" uri="sapi/network/protocols/rsi_dhcp_user_class.c" />
   
   
-  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/network/socket"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/network/protocols"/>
   
   
+  
+  
+  <file name="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" uri="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" />
+  <file name="sapi/rtos/freertos_wrapper/port.c" uri="sapi/rtos/freertos_wrapper/port.c" />
+  
+  <file name="sapi/rtos/freertos_wrapper/portmacro.h" uri="sapi/rtos/freertos_wrapper/portmacro.h" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/rtos/freertos_wrapper"/>
+  
+  <folder name="third_party/freertos/include" uri="third_party/freertos/include" includeAllFiles="true" includeAllFolders="true"/>
+  <file name="third_party/freertos/croutine.c" uri="third_party/freertos/croutine.c" />
+  <file name="third_party/freertos/event_groups.c" uri="third_party/freertos/event_groups.c" />
+  <file name="third_party/freertos/list.c" uri="third_party/freertos/list.c" />
+  <file name="third_party/freertos/queue.c" uri="third_party/freertos/queue.c" />
+  <file name="third_party/freertos/stream_buffer.c" uri="third_party/freertos/stream_buffer.c" />
+  <file name="third_party/freertos/tasks.c" uri="third_party/freertos/tasks.c" />
+  <file name="third_party/freertos/timers.c" uri="third_party/freertos/timers.c" />
+  <file name="third_party/freertos/portable/MemMang/heap_4.c" uri="third_party/freertos/portable/MemMang/heap_4.c" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/include"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/portable"/>
   
   <includePath uri="$(isCopySources?$(projectLocation)/socket_select_app:./examples/snippets/wlan/socket_select_app)"/>
   
   <includePath uri="$(projectLocation)/platform/core"/>
   <includePath uri="$(projectLocation)/platform/board"/>
+   <macroDefinition name="WISECONNECT" />
    <macroDefinition name="RSI_SAMPLE_HAL" />
    <macroDefinition name="RSI_DEBUG_PRINTS" />
-  
-  
    <macroDefinition name="RSI_WLAN_ENABLE" />
+  
+  
+   <macroDefinition name="RSI_WLAN_API_ENABLE" />
+   <macroDefinition name="RSI_WITH_OS" />
   
   
   

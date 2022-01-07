@@ -3,7 +3,7 @@
  * @brief
  *******************************************************************************
  * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -106,7 +106,7 @@ int main(void)
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();
 #else
-  //! Redpine module initialization
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     return status;

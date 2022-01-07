@@ -17,7 +17,9 @@
 
 #ifndef RSI_COMMON_H
 #define RSI_COMMON_H
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
+#endif
 #ifdef RSI_M4_INTERFACE
 #include "rsi_ipmu.h"
 #endif
@@ -120,7 +122,6 @@
   ((((((uint32_t)(sizeof(rsi_pkt_pool_t))) + 3) & ~3)) \
    + ((RSI_PROP_PROTOCOL_CMD_LEN + sizeof(void *)) * RSI_PROP_PROTOCOL_TX_POOL_PKT_COUNT))
 #endif
-
 #ifdef RSI_M4_INTERFACE
 #define RSI_M4_MEMORY_POOL_SIZE ((((uint32_t)(sizeof(efuse_ipmu_t))) + 3) & ~3)
 #else
@@ -278,6 +279,7 @@
 #define RSI_GET_RTC_TIMER_RESPONSE_WAIT_TIME   ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_WLAN_TCP_WINDOW_RESPONSE_WAIT_TIME ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_TIMEOUT_RESPONSE_WAIT_TIME         ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_SET_CONFIG_RESPONSE_WAIT_TIME      ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 // WIFI WAIT timeout defines
 #define RSI_SCAN_RESPONSE_WAIT_TIME             ((10000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
@@ -319,6 +321,7 @@
 #define RSI_EMB_MQTT_RESPONSE_WAIT_TIME         ((60000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_PSK_RESPONSE_WAIT_TIME              ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_SOCKET_CLOSE_RESPONSE_WAIT_TIME     ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_11AX_WAIT_TIME                 ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 // WIFI BLOCKED timeout defines
 #define RSI_ACCEPT_RESPONSE_WAIT_TIME          (RSI_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF)
@@ -329,6 +332,7 @@
 #define RSI_COMMON_SEND_CMD_RESPONSE_WAIT_TIME ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_WLAN_SEND_CMD_RESPONSE_WAIT_TIME   ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_NWK_SEND_CMD_RESPONSE_WAIT_TIME    ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_GPIO_CONFIG_RESP_WAIT_TIME         ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 #ifdef RSI_MFG_ENABLE
 #define RSI_BOOTUP_PARAMS_RESPONSE_WAIT_TIME   600000
@@ -361,6 +365,12 @@
 #endif
 
 #define RSI_BT_BLE_CMD_MAX_RESP_WAIT_TIME ((2000 * BT_COMMON_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+
+/********TA GPIO defines ******************************/
+//! GPIO address
+#define RSI_GPIO_ADDR 0x40200000
+//! PAD enable
+#define PAD_REN 0x41380000
 
 /******************************************************/
 
@@ -435,7 +445,6 @@ typedef enum rsi_common_cmd_response_e {
   RSI_COMMON_RSP_SET_RTC_TIMER = 0xE9,
   RSI_COMMON_RSP_GET_RTC_TIMER = 0xF2,
 #ifdef CONFIGURE_GPIO_FROM_HOST
-  ,
   RSI_COMMON_RSP_GPIO_CONFIG = 0x28
 #endif
 } rsi_common_cmd_response_t;
@@ -490,8 +499,8 @@ typedef enum rsi_common_cmd_request_e {
   ,
   RSI_COMMON_REQ_SET_RTC_TIMER = 0xE9,
   RSI_COMMON_REQ_GET_RTC_TIMER = 0xF2,
+  RSI_COMMON_REQ_SET_CONFIG    = 0xBA,
 #ifdef CONFIGURE_GPIO_FROM_HOST
-  ,
   RSI_COMMON_REQ_GPIO_CONFIG = 0x28
 #endif
 } rsi_common_cmd_request_t;
@@ -798,6 +807,9 @@ typedef struct rsi_driver_cb_non_rom {
   uint32_t rom_version_info;
   uint32_t tx_mask_event;
   rsi_mutex_handle_t tx_mutex;
+#ifdef LOGGING_ENABLE
+  rsi_mutex_handle_t logging_mutex;
+#endif
   rsi_semaphore_handle_t nwk_sem;
   rsi_semaphore_handle_t wlan_cmd_sem;
   rsi_semaphore_handle_t common_cmd_sem;
@@ -847,8 +859,19 @@ typedef struct rsi_driver_cb_non_rom {
   //error response handler pointer
   void (*rsi_wait_timeout_handler_error_cb)(int32_t status, uint32_t cmd_type);
 #endif
+  // buffer pointer given by application to driver
+  uint8_t *nwk_app_buffer;
 
+  // buffer length given by application to driver
+  uint32_t nwk_app_buffer_length;
 } rsi_driver_cb_non_rom_t;
+typedef struct rsi_set_config_s {
+#define XO_CTUNE_FROM_HOST BIT(0)
+  uint32_t code;
+  union {
+    uint8_t xo_ctune;
+  } values;
+} rsi_set_config_t;
 extern rsi_driver_cb_non_rom_t *rsi_driver_cb_non_rom;
 extern rsi_wlan_cb_non_rom_t *rsi_wlan_cb_non_rom;
 
@@ -891,6 +914,7 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
 void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type);
 #endif
 int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response);
+int32_t rsi_set_config(uint32_t code, uint8_t value);
 #ifdef RSI_CHIP_MFG_EN
 int32_t rsi_common_dev_params();
 int32_t rsi_wait_for_card_ready();

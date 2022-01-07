@@ -18,14 +18,32 @@
 #ifndef RSI_DRIVER_H
 #define RSI_DRIVER_H
 
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
+#endif
 #ifdef RSI_M4_INTERFACE
 #include "rsi_ccp_user_config.h"
 #endif
 #include <rsi_data_types.h>
 #include <rsi_error.h>
 #include <rsi_wlan_defines.h>
+#ifdef WISECONNECT
+#ifdef RSI_WLAN_API_ENABLE
 #include <rsi_wlan_config.h>
+#endif
+#elif defined(RSI_WLAN_ENABLE)
+#include <rsi_wlan_config.h>
+#endif
+#if (defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE))
+#ifdef RSI_BT_ENABLE
+#include <rsi_bt_config.h>
+#endif
+#ifdef RSI_BLE_ENABLE
+#include <rsi_ble_config.h>
+#else
+#include "rsi_ble_common_config.h"
+#endif
+#endif
 #ifndef RSI_ENABLE_DEMOS
 #include <rsi_wlan_common_config.h>
 #endif
@@ -59,8 +77,7 @@
 #if (defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE))
 #include <rsi_bt_common.h>
 #include <rsi_bt_apis.h>
-#include <rsi_bt_config.h>
-#include <rsi_ble_config.h>
+
 #include "rsi_bt.h"
 #include "rsi_ble.h"
 #include "rsi_bt_common_apis.h"
@@ -80,6 +97,10 @@
 #endif
 #include "rsi_apis_rom.h"
 #include "rsi_wlan_non_rom.h"
+#ifdef LOGGING_ENABLE
+#include "debug_auto_gen.h"
+#include "sl_logging.h"
+#endif
 
 //#include <stdlib.h>
 /******************************************************
@@ -126,6 +147,11 @@
 
 #define RSI_TRUE  1
 #define RSI_FALSE 0
+
+//SL_PRINTF logging call
+#ifndef SL_PRINTF
+#define SL_PRINTF(...)
+#endif
 
 /******************************************************
  * *                    Constants
@@ -229,6 +255,8 @@ void rsi_clear_sockets(int32_t sockID);
 void rsi_interrupt_handler(void);
 void rsi_mask_ta_interrupt(void);
 void rsi_unmask_ta_interrupt(void);
+uint32_t rsi_hal_critical_section_entry(void);
+void rsi_hal_critical_section_exit(void);
 
 int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt);
 //int32_t rsi_driver_send_data(int32_t sock_no, uint8_t* buffer, uint32_t length, struct rsi_sockaddr *destAddr);

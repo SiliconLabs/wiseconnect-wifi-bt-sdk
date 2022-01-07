@@ -336,9 +336,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--C99 --reduce_paths</MiscControls>
-              <Define>RSI_SAMPLE_HAL RSI_DEBUG_PRINTS USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE RSI_WLAN_ENABLE </Define>
+              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE RSI_WITH_OS </Define>
               <Undefine></Undefine>
-              <IncludePath>../../../../../examples/snippets/ble/ble_central;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; ../../../../../sapi/network/socket; platforms/stm32/boards/nucleo-f411re</IncludePath>
+              <IncludePath>../../../../../examples/snippets/ble/ble_central;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; ../../../../../third_party/freertos/include; ../../../../../third_party/freertos/portable; ../../../../../sapi/rtos/freertos_wrapper; platforms/stm32/boards/nucleo-f411re</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -391,16 +391,6 @@
          </Files>
          <Files>
            
-           <File>
-             <FileName>rsi_wlan_config.h</FileName>
-             <FileType>5</FileType>
-             <FilePath>../../../../../examples/snippets/ble/ble_central/rsi_wlan_config.h</FilePath>
-           </File>
-           <File>
-             <FileName>rsi_bt_config.h</FileName>
-             <FileType>5</FileType>
-             <FilePath>../../../../../examples/snippets/ble/ble_central/rsi_bt_config.h</FilePath>
-           </File>
            <File>
              <FileName>rsi_ble_config.h</FileName>
              <FileType>5</FileType>
@@ -456,6 +446,11 @@
              <FileName>rsi_hal_mcu_rtc.c</FileName>
              <FileType>1</FileType>
              <FilePath>../../../../../platforms/stm32/hal/rsi_hal_mcu_rtc.c</FilePath>
+           </File>
+           <File>
+             <FileName>sl_hal_mcu_logging.c</FileName>
+             <FileType>1</FileType>
+             <FilePath>../../../../../platforms/stm32/hal/sl_hal_mcu_logging.c</FilePath>
            </File>
            <File>
              <FileName>stm32f4xx_hal.c</FileName>
@@ -733,11 +728,6 @@
 	                <FilePath>../../../../../sapi/driver/rsi_pkt_mgmt.c</FilePath>
 	             </File>
 	             <File>
-	                <FileName>rsi_nwk.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../sapi/driver/rsi_nwk.c</FilePath>
-	             </File>
-	             <File>
 	                <FileName>rsi_utils_rom.c</FileName>
 	                <FileType>1</FileType>
 	                <FilePath>../../../../../sapi/driver/rsi_utils_rom.c</FilePath>
@@ -761,6 +751,40 @@
 	                <FileName>rsi_events_rom.c</FileName>
 	                <FileType>1</FileType>
 	                <FilePath>../../../../../sapi/driver/rsi_events_rom.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_nwk.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/driver/rsi_nwk.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_wlan.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/driver/rsi_wlan.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_socket.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/network/socket/rsi_socket.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_socket_rom.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/network/socket/rsi_socket_rom.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>rsi_wlan_apis.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/wlan/rsi_wlan_apis.c</FilePath>
+	             </File>
+	           </Files>
+	        
+	           <Files>
+	           
+	             <File>
+	                <FileName>sl_logging.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../../sapi/logging/sl_logging.c</FilePath>
 	             </File>
 	           </Files>
 	        
@@ -813,66 +837,73 @@
          </Group>
         
         
-        <Group><GroupName>sapi/wlan</GroupName>
+        <Group><GroupName>sapi/freertos</GroupName>
            <Files>
         
              <File>
-                <FileName>rsi_wlan_apis.c</FileName>
+                <FileName>rsi_os_wrapper.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/wlan/rsi_wlan_apis.c</FilePath>
+                <FilePath>../../../../../sapi/rtos/freertos_wrapper/rsi_os_wrapper.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_wlan.c</FileName>
+                <FileName>port.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/driver/rsi_wlan.c</FilePath>
+                <FilePath>../../../../../sapi/rtos/freertos_wrapper/port.c</FilePath>
              </File>
-             
+             <File>
+                <FileName>portmacro.h</FileName>
+                <FileType>5</FileType>
+                <FilePath>../../../../../sapi/rtos/freertos_wrapper/portmacro.h</FilePath>
+             </File>
            </Files>
          </Group>
         
-        
-        <Group><GroupName>sapi/sockets</GroupName>
+        <Group><GroupName>third_party/freertos</GroupName>
            <Files>
-        
+           
              <File>
-                <FileName>rsi_socket.c</FileName>
+                <FileName>croutine.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/socket/rsi_socket.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/croutine.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_socket_rom.c</FileName>
+                <FileName>event_groups.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/socket/rsi_socket_rom.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/event_groups.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_dns.c</FileName>
+                <FileName>list.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/protocols/rsi_dns.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/list.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_emb_mqtt_client.c</FileName>
+                <FileName>queue.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/protocols/rsi_emb_mqtt_client.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/queue.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_raw_data.c</FileName>
+                <FileName>stream_buffer.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/protocols/rsi_raw_data.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/stream_buffer.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_http_ota_fw_up.c</FileName>
+                <FileName>tasks.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/protocols/rsi_http_ota_fw_up.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/tasks.c</FilePath>
              </File>
              <File>
-                <FileName>rsi_dhcp_user_class.c</FileName>
+                <FileName>timers.c</FileName>
                 <FileType>1</FileType>
-                <FilePath>../../../../../sapi/network/protocols/rsi_dhcp_user_class.c</FilePath>
+                <FilePath>../../../../../third_party/freertos/timers.c</FilePath>
              </File>
-             
+             <File>
+                <FileName>heap_4.c</FileName>
+                <FileType>1</FileType>
+                <FilePath>../../../../../third_party/freertos/portable/MemMang/heap_4.c</FilePath>
+             </File>
+            
            </Files>
          </Group>
-        
       </Groups>
     </Target>
   </Targets>

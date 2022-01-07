@@ -139,10 +139,10 @@ void switch_m4_frequency(void);
 
 #define SOCKET_ASYNC_FEATURE 1
 // Power measurement type
-//#define THROUGHPUT_TYPE  UDP_TX
+#define THROUGHPUT_TYPE UDP_TX
 //#define THROUGHPUT_TYPE  UDP_RX
 //#define THROUGHPUT_TYPE  TCP_RX
-#define THROUGHPUT_TYPE TCP_TX
+//#define THROUGHPUT_TYPE TCP_TX
 //#define THROUGHPUT_TYPE  SSL_TX
 //#define THROUGHPUT_TYPE  SSL_RX
 

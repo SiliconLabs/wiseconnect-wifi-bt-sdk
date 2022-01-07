@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,12 +17,12 @@
 /**
  * @file    rsi_ble_main_task.c
  * @version 0.1
- * @date    01 Feb 2020
+ * @date    01 Feb 2021
  *
  *
  *  @section Licenseremote_name
  *  This program should be used on your own responsibility.
- *  Redpine Signals assumes no responsibility for any losses
+ *  SiLabs Signals assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contains code to create multiple task instances and handling of ble events
@@ -91,7 +91,8 @@ rsi_semaphore_handle_t ble_conn_sem[TOTAL_CONNECTIONS];
 /*=======================================================================*/
 extern rsi_ble_conn_info_t rsi_ble_conn_info[];
 extern rsi_parsed_conf_t rsi_parsed_conf;
-extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, bt_inquiry_sem, ble_scan_sem;
+extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, bt_inquiry_sem, ble_scan_sem,
+  bt_inquiry_sem;
 #if WLAN_SYNC_REQ
 extern rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_bt_sem;
 #endif
@@ -1157,6 +1158,21 @@ static void rsi_ble_on_read_req_event(uint16_t event_id, rsi_ble_read_req_t *rsi
   rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_READ_REQ_EVENT);
 }
 
+static void rsi_ble_on_event_mtu_exchange_info(
+  rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info)
+{
+  //! convert to ascii
+  rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_event_mtu_exchange_info->dev_addr);
+  ble_conn_id = rsi_get_ble_conn_id(remote_dev_addr_conn, NULL, 0);
+  //! copy to conn specific buffer
+  memcpy(&rsi_ble_conn_info[ble_conn_id].mtu_exchange_info,
+         rsi_ble_event_mtu_exchange_info,
+         sizeof(rsi_ble_event_mtu_exchange_information_t));
+
+  //! set conn specific event
+  rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_MTU_EXCHANGE_INFORMATION);
+}
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_mtu_event
@@ -1691,6 +1707,8 @@ static int32_t rsi_ble_dual_role(void)
                                   rsi_ble_on_event_indication_confirmation,
                                   NULL);
 
+  rsi_ble_gatt_extended_register_callbacks(rsi_ble_on_event_mtu_exchange_info);
+
   rsi_ble_gap_extended_register_callbacks(rsi_ble_simple_peripheral_on_remote_features_event,
                                           rsi_ble_more_data_req_event);
 
@@ -1841,6 +1859,11 @@ void rsi_ble_main_app_task()
     LOG_PRINT("BLE DUAL role init failed \r\n");
   }
 
+  //! start bt inquiry after ble scan
+  if (rsi_bt_running) {
+    //!BLE activities started , so start bt inquiry
+    rsi_semaphore_post(&bt_inquiry_sem);
+  }
   //! Measure the WLAN throughput after BLE init i.e., adv/scanning
 #if BLE_INIT_DONE
   LOG_PRINT("\r\n BLE activity completed");

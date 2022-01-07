@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file         rsi_ble_device_info.h
  * @version      0.1
- * @date         01 Feb 2020 *
+ * @date         01 Feb 2021 *
  *
  *
  *  @brief : This file contains macros, structure declarations and prototypes for handling multiple ble connection
@@ -63,12 +63,13 @@ typedef struct rsi_ble_conn_info_s {
   rsi_ble_event_prepare_write_t app_ble_prepared_write_event;
   rsi_ble_execute_write_t app_ble_execute_write_event;
   rsi_ble_set_att_resp_t rsi_ble_write_resp_event;
-  rsi_ble_read_req_t app_ble_read_event;           //! -- rsi_ble_on_read_req_event()
-  rsi_ble_event_mtu_t app_ble_mtu_event;           //! -- rsi_ble_on_mtu_event()
-  rsi_ble_event_disconnect_t rsi_ble_disconn_resp; //! -- rsi_ble_on_disconnect_event()
-  rsi_ble_event_profiles_list_t get_allprofiles;   //!	-- rsi_ble_profiles_list_event()
-  rsi_ble_event_profile_by_uuid_t get_profile;     //!	-- rsi_ble_profile_event()
-  rsi_ble_event_read_by_type1_t get_char_services; //! -- rsi_ble_char_services_event()
+  rsi_ble_read_req_t app_ble_read_event;                      //! -- rsi_ble_on_read_req_event()
+  rsi_ble_event_mtu_t app_ble_mtu_event;                      //! -- rsi_ble_on_mtu_event()
+  rsi_ble_event_mtu_exchange_information_t mtu_exchange_info; //! --rsi_ble_on_mtu_exchange_info_t
+  rsi_ble_event_disconnect_t rsi_ble_disconn_resp;            //! -- rsi_ble_on_disconnect_event()
+  rsi_ble_event_profiles_list_t get_allprofiles;              //!	-- rsi_ble_profiles_list_event()
+  rsi_ble_event_profile_by_uuid_t get_profile;                //!	-- rsi_ble_profile_event()
+  rsi_ble_event_read_by_type1_t get_char_services;            //! -- rsi_ble_char_services_event()
   rsi_ble_event_att_value_t rsi_char_descriptors;
   rsi_ble_event_error_resp_t rsi_ble_gatt_err_resp;
   rsi_bt_event_smp_resp_t rsi_ble_event_smp_resp;

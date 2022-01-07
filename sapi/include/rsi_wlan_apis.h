@@ -26,6 +26,8 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
+// To enable A2DP profile
+#define A2DP_SOURCE_PROFILE_ENABLE BIT(24) // Added to avoid compilation errors
 
 // Enable feature
 #define RSI_ENABLE 1
@@ -104,6 +106,8 @@
 #define BT_BDR_MODE_LP_CHAIN_ENABLE BIT(1)
 //!TA based encoder
 #define TA_BASED_ENCODER_ENABLE BIT(14)
+//! To enable HFP profile
+#define HFP_PROFILE_ENABLE BIT(15)
 //! To enable A2DP profile
 #define A2DP_PROFILE_ENABLE BIT(23)
 //! To enable A2DP Profile role as source/sink
@@ -482,7 +486,8 @@
 #define RSI_XTAL_GOODTIME_3000us BIT(25)
 #define RSI_XTAL_GOODTIME_600us  (BIT(24) | BIT(25))
 
-#define ENABLE_ENHANCED_MAX_PSP BIT(26)
+#define ENABLE_ENHANCED_MAX_PSP    BIT(26)
+#define ENABLE_DEBUG_BBP_TEST_PINS BIT(27)
 /*=========================================================================*/
 
 /*=========================================================================*/
@@ -597,27 +602,35 @@
 #define RSI_JOIN_FEAT_PS_CMD_LISTEN_INTERVAL_VALID BIT(7)
 
 // DATA Rates used //
-#define RSI_DATA_RATE_AUTO 0
-#define RSI_DATA_RATE_1    1
-#define RSI_DATA_RATE_2    2
-#define RSI_DATA_RATE_5P5  3
-#define RSI_DATA_RATE_11   4
-#define RSI_DATA_RATE_6    5
-#define RSI_DATA_RATE_9    6
-#define RSI_DATA_RATE_12   7
-#define RSI_DATA_RATE_18   8
-#define RSI_DATA_RATE_24   9
-#define RSI_DATA_RATE_36   10
-#define RSI_DATA_RATE_48   11
-#define RSI_DATA_RATE_54   12
-#define RSI_DATA_RATE_MCS0 13
-#define RSI_DATA_RATE_MCS1 14
-#define RSI_DATA_RATE_MCS2 15
-#define RSI_DATA_RATE_MCS3 16
-#define RSI_DATA_RATE_MCS4 17
-#define RSI_DATA_RATE_MCS5 18
-#define RSI_DATA_RATE_MCS6 19
-#define RSI_DATA_RATE_MCS7 20
+#define RSI_DATA_RATE_AUTO    0
+#define RSI_DATA_RATE_1       1
+#define RSI_DATA_RATE_2       2
+#define RSI_DATA_RATE_5P5     3
+#define RSI_DATA_RATE_11      4
+#define RSI_DATA_RATE_6       5
+#define RSI_DATA_RATE_9       6
+#define RSI_DATA_RATE_12      7
+#define RSI_DATA_RATE_18      8
+#define RSI_DATA_RATE_24      9
+#define RSI_DATA_RATE_36      10
+#define RSI_DATA_RATE_48      11
+#define RSI_DATA_RATE_54      12
+#define RSI_DATA_RATE_MCS0    13
+#define RSI_DATA_RATE_MCS1    14
+#define RSI_DATA_RATE_MCS2    15
+#define RSI_DATA_RATE_MCS3    16
+#define RSI_DATA_RATE_MCS4    17
+#define RSI_DATA_RATE_MCS5    18
+#define RSI_DATA_RATE_MCS6    19
+#define RSI_DATA_RATE_MCS7    20
+#define RSI_DATA_RATE_HE_MCS0 21
+#define RSI_DATA_RATE_HE_MCS1 22
+#define RSI_DATA_RATE_HE_MCS2 23
+#define RSI_DATA_RATE_HE_MCS3 24
+#define RSI_DATA_RATE_HE_MCS4 25
+#define RSI_DATA_RATE_HE_MCS5 26
+#define RSI_DATA_RATE_HE_MCS6 27
+#define RSI_DATA_RATE_HE_MCS7 28
 /*=========================================================================*/
 
 // Multicast filter cmds
@@ -647,7 +660,18 @@
    | BIT_TLS_RSA_WITH_AES_256_CBC_SHA | BIT_TLS_RSA_WITH_AES_128_CBC_SHA | BIT_TLS_RSA_WITH_AES_128_CCM_8 \
    | BIT_TLS_RSA_WITH_AES_256_CCM_8)
 
+#ifdef CHIP_9117
+#define RSI_SSL_EXT_CIPHERS SSL_TLSV1_3_ALL_CIPHERS
+#endif
+
 #define SSL_ALL_CIPHERS SSL_RELEASE_2_0_ALL_CIPHERS
+
+//TLSv1.3 configurable ciphers
+#ifdef CHIP_9117
+#define SSL_TLSV1_3_ALL_CIPHERS                                                                     \
+  (BIT_TLS13_AES_128_GCM_SHA256 | BIT_TLS13_AES_256_GCM_SHA384 | BIT_TLS13_CHACHA20_POLY1305_SHA256 \
+   | BIT_TLS13_AES_128_CCM_SHA256 | BIT_TLS13_AES_128_CCM_8_SHA256)
+#endif
 
 //DHE_RSA in combination with CBC secure ciphers
 #define BIT_DHE_RSA_CBC (BIT_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256 | BIT_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256)
@@ -685,12 +709,25 @@
 #define BIT_TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA     BIT(26)
 #define BIT_TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA   BIT(27)
 #define SSL_NEW_CIPHERS                             BIT(31)
+
+// TLSv1.3 supported ciphers
+#ifdef CHIP_9117
+#define BIT_TLS13_AES_128_GCM_SHA256       BIT(0)
+#define BIT_TLS13_AES_256_GCM_SHA384       BIT(1)
+#define BIT_TLS13_CHACHA20_POLY1305_SHA256 BIT(2)
+#define BIT_TLS13_AES_128_CCM_SHA256       BIT(3)
+#define BIT_TLS13_AES_128_CCM_8_SHA256     BIT(4)
+#endif
+
 /*=========================================================================*/
 
 // ssl version
 #define RSI_SSL_V_1_0 BIT(2)
 #define RSI_SSL_V_1_2 BIT(3)
 #define RSI_SSL_V_1_1 BIT(4)
+#ifdef CHIP_9117
+#define RSI_SSL_V_1_3 BIT(8)
+#endif
 
 // socket feature
 /*=======================================================================*/
@@ -892,7 +929,7 @@ typedef enum rsi_security_mode_e {
   RSI_WPA_EAP,
   // Enterprise WPA2 security
   RSI_WPA2_EAP,
-  // Enterprise WPA2/WPA security
+  // WPA/WPA2 security with PSK
   RSI_WPA_WPA2_MIXED,
   // WPA security with PMK
   RSI_WPA_PMK,
@@ -904,6 +941,12 @@ typedef enum rsi_security_mode_e {
   RSI_USE_GENERATED_WPSPIN,
   // WPS push button method
   RSI_WPS_PUSH_BUTTON,
+  // WPA/WPA2 security with PMK
+  RSI_WPA_WPA2_MIXED_PMK,
+  // WPA3 security with PSK
+  RSI_WPA3,
+  // WPA3 TRANSITION
+  RSI_WPA3_TRANSITION,
 
 } rsi_security_mode_t;
 
@@ -1462,6 +1505,8 @@ typedef struct rsi_rsp_wlan_stats_s {
 #define SME_WEP             3
 #define SME_WPA_ENTERPRISE  4
 #define SME_WPA2_ENTERPRISE 5
+#define SME_WPA3            7
+#define SME_WPA3_TRANSITION 8
 
 #define BSSID_OFFSET         16
 #define SSID_OFFSET          38
@@ -1614,6 +1659,7 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
 int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz);
 int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int32_t freq_offset);
 int16_t rsi_parse(void *address, uint16_t length, uint8_t *value);
+int32_t rsi_wlan_11ax_config(void);
 
 void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(uint16_t status, uint8_t state));
 STATIC INLINE void set_option(uint32_t *parameter, uint32_t flag)

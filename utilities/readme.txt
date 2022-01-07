@@ -17,4 +17,8 @@
 3. Description of "usb_cdc" folder
 ===========================================================================================================
    rules : rules file for linux PC to recognize RS9116
+   
+4. Description of "advanced_logging" folder
+===========================================================================================================
+   "advanced_logs_generator.py", "log_decoder.py" are the python files required for the Logging enhancement support.
 

@@ -105,7 +105,7 @@ The application can be configured to suit your requirements and development envi
 
    Add the remote BLE device name to connect
 
-	 #define RSI_REMOTE_DEVICE_NAME1                       "REDPINE_DEV"
+	 #define RSI_REMOTE_DEVICE_NAME1                       "SILABS_DEV"
 	 #define RSI_REMOTE_DEVICE_NAME2                       "slave22"
 	 #define RSI_REMOTE_DEVICE_NAME3                       "slave3"
 

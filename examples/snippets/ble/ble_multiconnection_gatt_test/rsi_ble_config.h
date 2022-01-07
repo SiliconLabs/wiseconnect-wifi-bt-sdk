@@ -36,7 +36,6 @@
 #endif
 #include "stdint.h"
 #include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include "rsi_ble_apis.h"
 
@@ -59,7 +58,7 @@
 /***********************************************************************************************************************************************/
 //! Remote Device Name to connect
 /***********************************************************************************************************************************************/
-#define RSI_REMOTE_DEVICE_NAME1 "REDPINE_DEV" //"Hotspot"//"Skv"//"Hotspot"
+#define RSI_REMOTE_DEVICE_NAME1 "SILABS_DEV" //"Hotspot"//"Skv"//"Hotspot"
 #define RSI_REMOTE_DEVICE_NAME2 "slave22"
 #define RSI_REMOTE_DEVICE_NAME3 "slave3"
 #else
@@ -304,6 +303,7 @@
 #define SMP_ENABLE                              1
 #define SIG_VUL                                 0
 #define RESOLVE_ENABLE                          0
+#define LOCAL_MTU_SIZE                          232
 
 #define SLAVE1  0
 #define SLAVE2  1
@@ -319,6 +319,7 @@ typedef enum rsi_ble_state_e {
   RSI_APP_EVENT_ADV_REPORT,
   RSI_BLE_CONN_EVENT,
   RSI_BLE_ENHC_CONN_EVENT,
+  RSI_BLE_MTU_EXCHANGE_INFORMATION,
   RSI_BLE_MTU_EVENT,
   RSI_BLE_MORE_DATA_REQ_EVT,
   RSI_BLE_RECEIVE_REMOTE_FEATURES,
@@ -528,5 +529,91 @@ typedef struct rsi_ble_s {
 
 #define RSI_OPERMODE_WLAN_BLE 13
 
+/*=======================================================================*/
+//!	Powersave configurations
+/*=======================================================================*/
+#define ENABLE_POWER_SAVE 0 //! Set to 1 for powersave mode
+#define PSP_MODE          RSI_SLEEP_MODE_2
+#define PSP_TYPE          RSI_MAX_PSP
+
+/*=======================================================================*/
+//!WMM PS parameters
+/*=======================================================================*/
+
+#define RSI_WMM_PS_ENABLE        RSI_DISABLE //! set WMM enable or disable
+#define RSI_WMM_PS_TYPE          0           //! set WMM enable or disable  //! 0- TX BASED 1 - PERIODIC
+#define RSI_WMM_PS_WAKE_INTERVAL 20          //! set WMM wake up interval
+#define RSI_WMM_PS_UAPSD_BITMAP  15          //! set WMM UAPSD bitmap
+
+/*=======================================================================*/
+//! Feature frame parameters
+/*=======================================================================*/
+#if (ENABLE_POWER_SAVE)
+#define FEATURE_ENABLES \
+  (RSI_FEAT_FRAME_PREAMBLE_DUTY_CYCLE | RSI_FEAT_FRAME_LP_CHAIN | RSI_FEAT_FRAME_IN_PACKET_DUTY_CYCLE)
+#else
+#define FEATURE_ENABLES 0
+#endif
+
+/*=======================================================================*/
+//! BT power control
+/*=======================================================================*/
+#define BT_PWR_CTRL_DISABLE 0
+#define BT_PWR_CTRL         1
+#define BT_PWR_INX          10
+
+/*=======================================================================*/
+//! Power save command parameters
+/*=======================================================================*/
+#define RSI_HAND_SHAKE_TYPE GPIO_BASED //! set handshake type of power mode
+
+/*=======================================================================*/
+//! opermode command paramaters
+/*=======================================================================*/
+//! To set wlan feature select bit map
+#define RSI_FEATURE_BIT_MAP (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1 | FEAT_SECURITY_OPEN)
+
+//! TCP IP BYPASS feature check
+#define RSI_TCP_IP_BYPASS RSI_DISABLE
+
+#define RSI_TCP_IP_FEATURE_BIT_MAP \
+  (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
+
+#define RSI_EXT_TCPIP_FEATURE_BITMAP                                                      \
+  (BIT(16) | EXT_DYNAMIC_COEX_MEMORY | EXT_TCP_IP_WINDOW_DIV | EXT_TCP_IP_TOTAL_SELECTS_4 \
+   | EXT_TCP_IP_BI_DIR_ACK_UPDATE)
+
+//! To set custom feature select bit map
+#define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
+
+//! To set Extended custom feature select bit map
+#if ENABLE_1P8V
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE | EXT_FEAT_1P8V_SUPPORT)
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#endif
+
+//! Rejoin parameters
+/*=======================================================================*/
+
+//! RSI_ENABLE or RSI_DISABLE rejoin params
+#define RSI_REJOIN_PARAMS_SUPPORT RSI_ENABLE
+
+//! Rejoin retry count. If 0 retries infinity times
+#define RSI_REJOIN_MAX_RETRY 10
+
+//! Periodicity of rejoin attempt
+#define RSI_REJOIN_SCAN_INTERVAL 4
+
+//! Beacon missed count
+#define RSI_REJOIN_BEACON_MISSED_COUNT 40
+
+//! RSI_ENABLE or RSI_DISABLE retry for first time join failure
+#define RSI_REJOIN_FIRST_TIME_RETRY RSI_DISABLE
+
+/*=======================================================================*/
+//! including the common defines
+#include "rsi_wlan_common_config.h" /* TESTAPPS_WLAN_HTTPS_BT_SPP_BLE_MULTICONNECTION_RSI_WLAN_CONFIG_H_ */
 #include "rsi_ble_common_config.h"
 #endif /* SAPIS_EXAMPLES_RSI_DEMO_APPS_INC_RSI_BLE_COMMON_BLE_MULTI_SLAVE_MASTER_H */

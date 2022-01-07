@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -436,7 +436,7 @@
 //! Tx power level
 #define RSI_CONFIG_AP_TX_POWER RSI_POWER_LEVEL_HIGH
 //! AP SSID
-#define RSI_CONFIG_AP_SSID "REDPINE_AP"
+#define RSI_CONFIG_AP_SSID "SILABS_AP"
 //! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
 #define RSI_CONFIG_AP_BAND RSI_BAND_2P4GHZ
 //! To configure AP channle number
@@ -488,7 +488,7 @@
 //! To configure listen interval
 #define RSI_CONFIG_CLIENT_LISTEN_INTERVAL 0
 //! To configure SSID
-#define RSI_CONFIG_CLIENT_SSID "REDPINE_AP"
+#define RSI_CONFIG_CLIENT_SSID "SILABS_AP"
 //! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
 #define RSI_CONFIG_CLIENT_BAND RSI_BAND_2P4GHZ
 //! To configure channel number
@@ -547,7 +547,7 @@
 //! scan channle bit map in 5GHz band ,valid if given channel to scan is 0
 #define RSI_CONFIG_EAP_SCAN_CHAN_BITMAP_5_0_GHZ 0
 //! To configure SSID
-#define RSI_CONFIG_EAP_SSID "REDPINE_AP"
+#define RSI_CONFIG_EAP_SSID "SILABS_AP"
 //! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
 #define RSI_CONFIG_EAP_BAND RSI_BAND_2P4GHZ
 //! To set security type
@@ -602,7 +602,7 @@
 //! Set SSID postfix
 #define RSI_CONFIG_P2P_SSID_POSTFIX "WSC_1_0_0"
 //! Set P2P join SSID
-#define RSI_CONFIG_P2P_JOIN_SSID "REDPINE_AP"
+#define RSI_CONFIG_P2P_JOIN_SSID "SILABS_AP"
 //! Set psk key
 #define RSI_CONFIG_P2P_PSK_KEY "12345678"
 //! P2P Network parameters

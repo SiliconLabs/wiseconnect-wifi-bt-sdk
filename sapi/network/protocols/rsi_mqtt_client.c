@@ -62,14 +62,16 @@ rsi_mqtt_client_info_t *rsi_mqtt_client_init(int8_t *buffer,
                                              uint16_t keep_alive_interval)
 {
   rsi_mqtt_client_info_t *rsi_mqtt_client = NULL;
-
+  SL_PRINTF(SL_MQTT_CLIENT_INIT_ENTRY, NETWORK, LOG_INFO);
   // If any invalid parameter is given, return NULL
   if (!(buffer && length && server_port && client_port && server_port)) {
     // Return invalid command error
+    SL_PRINTF(SL_MQTT_CLIENT_INIT_COMMAND_ERROR, NETWORK, LOG_ERROR);
     return NULL;
   }
   // Given buffer length for MQTT client information is not sufficient
   if (length < MQTT_CLIENT_INFO_SIZE) {
+    SL_PRINTF(SL_MQTT_CLIENT_INIT_INSUFFICIENT_BUFFER_LENGTH, NETWORK, LOG_ERROR);
     return NULL;
   }
 
@@ -113,7 +115,7 @@ rsi_mqtt_client_info_t *rsi_mqtt_client_init(int8_t *buffer,
              MQTT_CLIENT_TX_BUFFER_SIZE,
              (uint8_t *)rsi_mqtt_client->mqtt_rx_buffer,
              MQTT_CLIENT_RX_BUFFER_SIZE);
-
+  SL_PRINTF(SL_MQTT_CLIENT_INIT_EXIT, NETWORK, LOG_ERROR);
   return (rsi_mqtt_client);
 }
 /** @} */
@@ -170,13 +172,14 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
 
 #endif
 {
-
+  SL_PRINTF(SL_MQTT_CLIENT_CONNECT_ENTRY, NETWORK, LOG_INFO);
   int32_t status = 0;
 
   MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 
   if ((rsi_mqtt_client == NULL) || (client_id == NULL)) {
     // Return invalid parmater error
+    SL_PRINTF(SL_MQTT_CLIENT_CONNECT_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   // Connect to the new network
@@ -195,6 +198,7 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
                           rsi_mqtt_client->client_port);
 #endif
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_MQTT_CLIENT_CONNECT_EXIT_1, NETWORK, LOG_INFO, "status: %4x", status);
     return status;
   }
 
@@ -221,7 +225,7 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
   // Shut Down the port
   if (status)
     mqtt_disconnect(rsi_mqtt_client->mqtt_client.ipstack);
-
+  SL_PRINTF(SL_MQTT_CLIENT_CONNECT_EXIT_2, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -242,17 +246,19 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
  */
 int32_t rsi_mqtt_disconnect(rsi_mqtt_client_info_t *rsi_mqtt_client)
 {
+  SL_PRINTF(SL_MQTT_CLIENT_DISCONNECT_ENTRY, NETWORK, LOG_INFO);
   int32_t status = 0;
   // If MQTT info structure is NULL ,throw error
   if (rsi_mqtt_client == NULL) {
     // Return invalid command error
+    SL_PRINTF(SL_MQTT_CLIENT_DISCONNECT_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_INVALID_PARAM;
   }
   // Call MQTT disconnect
   status = MQTTDisconnect(&rsi_mqtt_client->mqtt_client);
   // Shut Down the port
   mqtt_disconnect(rsi_mqtt_client->mqtt_client.ipstack);
-
+  SL_PRINTF(SL_MQTT_CLIENT_DISCONNECT_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -272,10 +278,11 @@ int32_t rsi_mqtt_disconnect(rsi_mqtt_client_info_t *rsi_mqtt_client)
 int32_t rsi_mqtt_publish(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic, MQTTMessage *publish_msg)
 {
   int32_t status = 0;
-
+  SL_PRINTF(SL_MQTT_PUBLISH_ENTRY, NETWORK, LOG_INFO);
   // If any invalid parameter is received
   if ((rsi_mqtt_client == NULL) || (topic == NULL) || (publish_msg == NULL)) {
     // Return invalid command parameter error
+    SL_PRINTF(SL_MQTT_PUBLISH_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -283,6 +290,7 @@ int32_t rsi_mqtt_publish(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic,
   status = MQTTPublish(&rsi_mqtt_client->mqtt_client, (const char *)topic, (MQTTMessage *)publish_msg);
 
   // Return status
+  SL_PRINTF(SL_MQTT_PUBLISH_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -304,7 +312,7 @@ int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
                            void (*call_back_handler_ptr)(MessageData *md))
 {
   int32_t status = 0;
-
+  SL_PRINTF(SL_MQTT_SUBSCRIBE_ENTRY, NETWORK, LOG_INFO);
   // If any invalid parameter is received
 #ifdef ASYNC_MQTT
   if ((rsi_mqtt_client == NULL) || (topic == NULL))
@@ -313,15 +321,17 @@ int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
 #endif
   {
     // Return invalid parameter error
+    SL_PRINTF(SL_MQTT_SUBSCRIBE_INVALID_PARAM_1, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
   if (qos > 2) {
     // Return invalid parameter error
+    SL_PRINTF(SL_MQTT_SUBSCRIBE_INVALID_PARAM_2, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   status = MQTTSubscribe(&rsi_mqtt_client->mqtt_client, (const char *)topic, (enum QoS)qos, call_back_handler_ptr);
-
+  SL_PRINTF(SL_MQTT_SUBSCRIBE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -335,18 +345,18 @@ int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
  * @return     Zero            - Success \n
  *             Negative value  - Failure
  */
-
 int32_t rsi_mqtt_unsubscribe(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic)
 {
+  SL_PRINTF(SL_MQTT_UNSUBSCRIBE_ENTRY, NETWORK, LOG_INFO);
   int32_t status;
-
   if ((rsi_mqtt_client == NULL) || (topic == NULL)) {
     // Return invalid command error
+    SL_PRINTF(SL_MQTT_SUBSCRIBE_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   // Unsubscribe to the topic
   status = MQTTUnsubscribe(&rsi_mqtt_client->mqtt_client, (const char *)topic);
-
+  SL_PRINTF(SL_MQTT_UNSUBSCRIBE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -363,9 +373,10 @@ int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, uin
 {
   if (rsi_mqtt_client == NULL) {
     // Return invalid command error
+    SL_PRINTF(SL_MQTT_POLL_FOR_RECV_DATA_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
-
+  SL_PRINTF(SL_MQTT_POLL_FOR_RECV_DATA_EXIT, NETWORK, LOG_INFO);
   return MQTTYield(&rsi_mqtt_client->mqtt_client, time_out);
 }
 /** @} */

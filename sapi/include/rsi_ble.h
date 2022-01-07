@@ -123,7 +123,9 @@ typedef enum rsi_ble_cmd_request_e {
   RSI_BLE_CMD_WRITE_RESP                   = 0x010A,
   RSI_BLE_CMD_PREPARE_WRITE_RESP           = 0x010B,
   RSI_BLE_CMD_SET_LOCAL_IRK                = 0x010C,
+  RSI_BLE_CMD_MTU_EXCHANGE_RESP            = 0x012B,
   RSI_BLE_CMD_SET_BLE_TX_POWER             = 0x012D,
+  RSI_BLE_CMD_INDICATE_SYNC                = 0x016F,
 #ifdef RSI_PROP_PROTOCOL_ENABLE
   RSI_PROP_PROTOCOL_CMD     = 0xE000,
   RSI_PROP_PROTOCOL_CMD_PER = 0xE001,
@@ -213,6 +215,7 @@ typedef enum rsi_ble_cmd_resp_e {
   RSI_BLE_RSP_MTU_EXCHANGE_REQUEST            = 0x0107,
   RSI_BLE_RSP_SET_WWO_RESP_NOTIFY_BUF_INFO    = 0x0108,
   RSI_BLE_RSP_SET_LOCAL_IRK                   = 0x010C,
+  RSI_BLE_RSP_MTU_EXCHANGE_RESP               = 0x012B,
   RSI_BLE_RSP_SET_BLE_TX_POWER                = 0x012D,
 #ifdef RSI_PROP_PROTOCOL_ENABLE
   RSI_PROP_PROTOCOL_CMD_RSP     = 0xE000,
@@ -271,6 +274,7 @@ typedef enum rsi_ble_event_e {
   RSI_BLE_EVENT_CLI_SMP_RESPONSE            = 0x153D,
   RSI_BLE_EVENT_CHIP_MEMORY_STATS           = 0x1530,
   RSI_BLE_EVENT_SC_METHOD                   = 0x1540,
+  RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION    = 0x1541,
 } rsi_ble_event_t;
 
 /********************************************************
@@ -939,6 +943,12 @@ typedef struct rsi_ble_mtu_exchange_s {
   uint8_t req_mtu_size;
 } rsi_ble_mtu_exchange_t;
 
+// mtu exchange resp command structure
+typedef struct rsi_ble_mtu_exchange_resp_s {
+  uint8_t dev_addr[6];
+  uint8_t req_mtu_size;
+} rsi_ble_mtu_exchange_resp_t;
+
 // Driver BLE control block
 struct rsi_ble_cb_s {
   // GAP Callbacks
@@ -984,6 +994,8 @@ struct rsi_ble_cb_s {
   rsi_ble_on_event_write_resp_t ble_on_write_resp_event;
   rsi_ble_on_event_indicate_confirmation_t ble_on_indicate_confirmation_event;
   rsi_ble_on_event_prepare_write_resp_t ble_on_prepare_write_resp_event;
+
+  rsi_ble_on_mtu_exchange_info_t ble_on_mtu_exchange_info_event;
 
   rsi_ble_on_phy_update_complete_t ble_on_phy_update_complete_event;
   rsi_ble_on_data_length_update_t rsi_ble_on_data_length_update_event;

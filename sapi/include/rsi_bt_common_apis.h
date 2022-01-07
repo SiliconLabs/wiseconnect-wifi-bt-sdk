@@ -83,6 +83,17 @@ int32_t rsi_bt_get_local_name(rsi_bt_resp_get_local_name_t *bt_resp_get_local_na
 
 /*==============================================*/
 /**
+ * @fn         rsi_bt_cmd_update_gain_table_offset_or_max_pwr
+ *
+ *
+ */
+int32_t rsi_bt_cmd_update_gain_table_offset_or_max_pwr(uint8_t node_id,
+                                                       uint8_t payload_len,
+                                                       uint8_t *payload,
+                                                       uint8_t req_type);
+
+/*==============================================*/
+/**
  * @fn         rsi_bt_get_rssi 
  *             
  * 

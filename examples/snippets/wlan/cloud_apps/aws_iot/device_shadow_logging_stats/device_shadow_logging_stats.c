@@ -3,7 +3,7 @@
  * @brief
  *******************************************************************************
  * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -305,8 +305,6 @@ int rsi_device_shadow_logging_stats_app(void)
   sp.enableAutoReconnect = NULL;
   sp.disconnectHandler   = NULL;
 
-  //! Board Initialization
-  rsi_hal_board_init();
   //! Call MQTT client application
   rsi_hal_log_stats_intr_config(rsi_give_wakeup_indication);
   //!Module initialization
@@ -547,11 +545,8 @@ int rsi_device_shadow_logging_stats_app(void)
       case RSI_WLAN_SHADOW_YIELD_STATE: {
         temperature = STARTING_ROOMTEMPERATURE;
         // loop and publish a change in temperature
-        while (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc) {
-          rc = aws_iot_shadow_yield(&mqttClient, 2000);
-          if (NETWORK_ATTEMPTING_RECONNECT == rc) {
-            continue;
-          }
+        while (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc
+               || NETWORK_SSL_READ_TIMEOUT_ERROR == rc) {
 
           simulateRoomTemperature(&temperature);
           rc = aws_iot_shadow_init_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
@@ -575,12 +570,15 @@ int rsi_device_shadow_logging_stats_app(void)
               }
             }
           }
-          rsi_delay_ms(PKT_SEND_INTERVAL);
           if (SUCCESS != rc) {
             LOG_PRINT("\r\n error occurred in the loop \r\n");
-            if (!(rsi_wlan_app_cb.state == RSI_WLAN_INITIAL_STATE))
-              rsi_wlan_app_cb.state = RSI_WLAN_SHADOW_YIELD_STATE;
+            break;
           }
+          rc = aws_iot_shadow_yield(&mqttClient, 2000);
+          if (NETWORK_ATTEMPTING_RECONNECT == rc) {
+            continue;
+          }
+          rsi_delay_ms(PKT_SEND_INTERVAL);
         }
 #ifdef RSI_WITH_OS
         rsi_semaphore_post(&rsi_shadow_sem);

@@ -69,7 +69,7 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -77,12 +77,14 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -98,6 +100,7 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -109,6 +112,7 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -154,10 +158,12 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SNTP_CLIENT_CREATE_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -189,7 +195,7 @@ int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SNTP_CLIENT_GETTIME_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -197,12 +203,14 @@ int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -217,14 +225,15 @@ int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
     // Attach the buffer given by user
-    wlan_cb->app_buffer = (uint8_t *)sntp_time_rsp;
+    rsi_driver_cb_non_rom->nwk_app_buffer = (uint8_t *)sntp_time_rsp;
 
     // Length of the buffer provided by user
-    wlan_cb->app_buffer_length = length;
+    rsi_driver_cb_non_rom->nwk_app_buffer_length = length;
 
     // Memset the packet data
     memset(&pkt->data, 0, sizeof(rsi_sntp_client_t));
@@ -260,10 +269,12 @@ int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SNTP_CLIENT_GETTIME_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SNTP_CLIENT_GETTIME_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -294,7 +305,7 @@ int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rs
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -302,12 +313,14 @@ int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rs
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -323,14 +336,15 @@ int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rs
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
     // Attach the buffer given by user
-    wlan_cb->app_buffer = (uint8_t *)sntp_time_date_rsp;
+    rsi_driver_cb_non_rom->nwk_app_buffer = (uint8_t *)sntp_time_date_rsp;
 
     // Length of the buffer provided by user
-    wlan_cb->app_buffer_length = length;
+    rsi_driver_cb_non_rom->nwk_app_buffer_length = length;
 
     // Memset the packet data
     memset(&pkt->data, 0, sizeof(rsi_sntp_client_t));
@@ -366,10 +380,12 @@ int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rs
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SNTP_CLIENT_GETTIME_DATE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -401,7 +417,7 @@ int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_respon
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -410,12 +426,14 @@ int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_respon
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -430,14 +448,15 @@ int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_respon
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
     // Attach the buffer given by user
-    wlan_cb->app_buffer = (uint8_t *)sntp_server_response;
+    rsi_driver_cb_non_rom->nwk_app_buffer = (uint8_t *)sntp_server_response;
 
     // Length of the buffer provided by user
-    wlan_cb->app_buffer_length = length;
+    rsi_driver_cb_non_rom->nwk_app_buffer_length = length;
 
     // Memset the packet data
     memset(&pkt->data, 0, sizeof(rsi_sntp_client_t));
@@ -473,10 +492,12 @@ int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_respon
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SNTP_CLIENT_SERVER_INFO_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -506,7 +527,7 @@ int32_t rsi_sntp_client_delete_async(void)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -514,12 +535,14 @@ int32_t rsi_sntp_client_delete_async(void)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -534,6 +557,7 @@ int32_t rsi_sntp_client_delete_async(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -559,10 +583,12 @@ int32_t rsi_sntp_client_delete_async(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_SNTP_CLIENT_DELETE_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

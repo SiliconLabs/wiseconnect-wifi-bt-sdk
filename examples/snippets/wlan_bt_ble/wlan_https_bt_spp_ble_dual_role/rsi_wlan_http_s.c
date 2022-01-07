@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file    rsi_wlan_http_s.c
  * @version 0.1
- * @date    01 May 2020
+ * @date    01 May 2021
  *
  *
  *  @brief : This file contains example application for TCP+SSL client socket
@@ -69,13 +69,13 @@ volatile uint64_t num_bytes = 0;
 #if HTTPS_DOWNLOAD
 const char httpreq[] = "GET /" DOWNLOAD_FILENAME " HTTPS/1.1\r\n"
                        "Host: " SERVER_IP_ADDRESS "\r\n"
-                       "User-Agent: redpine/1.0.4a\r\n"
+                       "User-Agent: silabs/1.0.4a\r\n"
                        "Accept: */*\r\n";
 
 #else
 const char httpreq[] = "GET " DOWNLOAD_FILENAME " HTTP/1.1\r\n"
                        "Host: " SERVER_IP_ADDRESS "\r\n"
-                       "User-Agent: redpine/1.0.4a\r\n"
+                       "User-Agent: silabs/1.0.4a\r\n"
                        "Accept: */*\r\n";
 const char http_req_str_end[] = "\r\n";
 #endif
@@ -93,6 +93,9 @@ extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem,
   ble_scan_sem;
 #if WLAN_SYNC_REQ
 extern rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_bt_sem;
+#if (WLAN_SCAN_ONLY || WLAN_CONNECTION_ONLY)
+extern rsi_semaphore_handle_t sync_coex_wlan_sem;
+#endif
 #endif
 extern bool rsi_ble_running, rsi_bt_running, rsi_wlan_running, wlan_radio_initialized, powersave_cmd_given;
 extern rsi_mutex_handle_t power_cmd_mutex;
@@ -284,6 +287,21 @@ int32_t rsi_wlan_app_task(void)
       } break;
       case RSI_WLAN_SCAN_STATE: {
         LOG_PRINT("\r\n WLAN scan started \r\n");
+#if (WLAN_SCAN_ONLY && WLAN_SYNC_REQ)
+        static int8_t wlan_scan_only_check = 1;
+        //! unblock other protocol activities
+        if (wlan_scan_only_check) {
+          rsi_semaphore_wait(&sync_coex_wlan_sem, 0);
+          if (rsi_bt_running) {
+            rsi_semaphore_post(&sync_coex_bt_sem);
+          }
+          if (rsi_ble_running) {
+            rsi_semaphore_post(&sync_coex_ble_sem);
+          }
+          wlan_scan_only_check = 0;
+        }
+#endif
+
         status = rsi_wlan_scan((int8_t *)SSID, (uint8_t)CHANNEL_NO, NULL, 0);
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\n scan failed \r\n");
@@ -295,6 +313,9 @@ int32_t rsi_wlan_app_task(void)
 #endif
           LOG_PRINT("\r\n wlan scan done \r\n");
         }
+#if WLAN_SCAN_ONLY
+        rsi_wlan_app_cb.state = RSI_WLAN_SCAN_STATE;
+#endif
 
       } break;
       case RSI_WLAN_JOIN_STATE: {
@@ -341,6 +362,21 @@ int32_t rsi_wlan_app_task(void)
       }
       //no break
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
+#if (WLAN_CONNECTION_ONLY && WLAN_SYNC_REQ)
+        static int8_t wlan_conn_only_check = 1;
+        //! unblock other protocol activities
+        if (wlan_conn_only_check) {
+          if (rsi_bt_running) {
+            rsi_semaphore_post(&sync_coex_bt_sem);
+          }
+          if (rsi_ble_running) {
+            rsi_semaphore_post(&sync_coex_ble_sem);
+          }
+          wlan_conn_only_check = 0;
+        }
+        //! Suspend wlan thread
+        rsi_semaphore_wait(&sync_coex_wlan_sem, 0);
+#endif
         if (stop_download)
           break;
 

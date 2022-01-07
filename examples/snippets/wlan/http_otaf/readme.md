@@ -14,7 +14,7 @@ Before running the application, set up the following.
 
 ### 2.1 Hardware Requirements 
 
-- Windows PC with Host interface (UART / SPI)
+- Windows PC with Host interface (UART / SPI/ SDIO).
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit) 
 - Host MCU Eval Kit. This example has been tested with:
     - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
@@ -49,8 +49,10 @@ The Application can be built and executed on below Host platforms
 
 ### 3.2 Host Interface 
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+
+	 **Note:** This application is under development in EFM32 host platform.
+
 
 ### 3.3 Project Configuration 
 
@@ -69,10 +71,10 @@ The Application is provided with the project folder containing Keil and Simplici
 
 ![EFR Radio Boards](resources/readme/image384g.png)
 
+ 	  
+### 3.4 Bare Metal/RTOS Support 
 
-### 3.4 Bare Metal Support 
-
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 
+This application supports bare metal environment. The application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 
 
 
 ## 4. Application Configuration Parameters 
@@ -341,7 +343,7 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX32
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) 
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/http_otaf/projects`
 - Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**

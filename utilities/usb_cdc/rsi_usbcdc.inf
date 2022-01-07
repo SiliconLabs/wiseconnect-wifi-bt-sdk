@@ -97,8 +97,8 @@ ServiceBinary=%12%\%DRIVERFILENAME%.sys
 [Strings]
 MFGFILENAME="CDC"
 DRIVERFILENAME ="usbser"
-MFGNAME="Redpine Signals Inc"
-INSTDISK="Redpine CDC Driver Installer"
+MFGNAME="Silabs Signals Inc"
+INSTDISK="Silabs CDC Driver Installer"
 DESCRIPTION="RSI WSC Virtual Com Port"
 SERVICE="RSI Virtual COM Driver"
 

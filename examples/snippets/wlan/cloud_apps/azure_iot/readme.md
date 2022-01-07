@@ -10,10 +10,11 @@ This application demonstrates how to configure RS9116 as an Azure device endpoin
 Before running the application, the user will need the following things to setup.
 
 ### 2.1 Hardware Requirements
-* Windows PC with Host interface (UART/ SPI).
+* Windows PC with Host interface (UART/ SPI/ SDIO).
 * Silabs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 * Host MCU Eval Kit. This example has been tested with:
   - Silabs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
   - [STM32F411 Nucleo](https://st.com/)
 * Wi-Fi Access point
 
@@ -37,11 +38,12 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
 * [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -61,10 +63,13 @@ The Application is provided with the project folder consists of Keil and Simplic
     - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180a-mg21.slsproj`
     - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
 
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/cloud_apps/azure_iot/projects/azure_iot-brd2204a-gg11.slsproj`
 
-### 3.4 Bare Metal Support
+### 3.4 Bare Metal/RTOS Support
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
 
 
 ## 4. Application Configuration Parameters
@@ -249,9 +254,12 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Open the project `<SDK>\examples\snippets\wlan\cloud_apps\azure_iot\projects\azure_iot-brd4180b-mg21.slsproj`
+- Open Simplicity Studio and import the EFR32/EFM32 project from `<SDK>/examples/snippets/wlan/cloud_apps/azure_iot/projects`
+    - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
+   (or)
+    - Select the *.brd2204a-gg11.slsproj  for EFM32GG11 board.
 - Compile and flash the project in to Host MCU
 - Run/debug the application
 - Check for the RESET pin:
@@ -423,7 +431,7 @@ We have IoT Hub ready, Next steps will walk through Device creation and attachin
 
  Create a device identity in the identity registry in your IoT hub. A device cannot connect to a hub unless it has an entry in the identity registry.
  
- Follow the steps below or refer Register a [device with Symmetric Key](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-authenticate-downstream-device?view=iotedge-2020-11#register-device-with-iot-hub)
+ Follow the steps below or refer Register a [device with Symmetric Key](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-authenticate-downstream-device?view=iotedge-2021-11#register-device-with-iot-hub)
 
    **Step 1:**  Navigate to your IoT Hub resource,
 
@@ -449,7 +457,7 @@ Device is now successfully registered to IoT Hub with Symmetric key authenticati
 
  For X.509 self-signed authentication, sometimes referred to as thumbprint authentication, you need to create certificates to place on your device. These certificates have a thumbprint in them that you share with IoT Hub for authentication.
  
- Follow the steps below or refer to the [Register a X.509 Device](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-authenticate-downstream-device?view=iotedge-2020-11#x509-self-signed-authentication)
+ Follow the steps below or refer to the [Register a X.509 Device](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-authenticate-downstream-device?view=iotedge-2021-11#x509-self-signed-authentication)
 
   **Step 1:** Generating X509 Self Signed certificates
 

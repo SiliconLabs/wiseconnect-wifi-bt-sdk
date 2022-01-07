@@ -187,3 +187,48 @@ uint8_t rsi_hal_intr_pin_status(void)
 #endif	
 }
 
+
+/*===================================================*/
+/**
+ * @fn           rsi_reg_flags_t rsi_hal_critical_section_entry(void)
+ * @brief        hold interrupt status and disables the SPI interrupt
+ * @param[in]    none  
+ * @param[out]   none
+ * @return       stored interrupt status
+ * @description  This HAL API should contain the code to hold interrupt status and disable interrupts.
+ */
+uint32_t rsi_hal_critical_section_entry(void)
+{
+//! Enable this if any set event or clear event got missed	
+#if 0	
+	rsi_reg_flags_t xflags;
+
+	// hold interrupt status before entering critical section
+	xflags = __NVIC_GetEnableIRQ(EXTI9_5_IRQn);
+
+	// disable interrupts	
+	HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+
+	// return stored interrupt status
+	return (xflags);
+#else
+	return 0;
+#endif
+}
+
+/*===================================================*/
+/**
+ * @fn           void rsi_hal_critical_section_exit(void)
+ * @brief        Enables the SPI interrupt
+ * @param[in]    none  
+ * @param[out]   none
+ * @return       none
+ * @description  This HAL API should contain the code to enable interrupts.
+ */
+void rsi_hal_critical_section_exit(void)
+{
+//! Enable this if any set event or clear event got missed	
+#if 0 
+	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+#endif
+}

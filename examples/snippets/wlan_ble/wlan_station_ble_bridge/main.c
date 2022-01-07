@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -23,8 +23,8 @@
  * @section Description :
  * The coex application demonstrates how information can be exchanged seamlessly
  * using two wireless protocols (WLAN and BLE) running in the same.
- * In this coex application, Redpine BLE device connects with remote BLE device
- * (Smart Phone) and Redpine WiFi interface connects with an Access Point in
+ * In this coex application, SiLabs BLE device connects with remote BLE device
+ * (Smart Phone) and SiLabs WiFi interface connects with an Access Point in
  * station mode and do data transfer in BLE and WiFi interfaces.
  =================================================================================*/
 
@@ -106,7 +106,7 @@ int32_t rsi_wlan_ble_app_init(void)
   rsi_task_handle_t ble_task_handle  = NULL;
 
 #ifdef RSI_WITH_OS
-  //! Redpine module intialisation
+  //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%X\r\n", status);
@@ -215,7 +215,7 @@ int main(void)
   }
 
 #ifndef RSI_WITH_OS
-  //! Redpine module intialization
+  //! SiLabs module intialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);

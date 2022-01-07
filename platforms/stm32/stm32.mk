@@ -15,6 +15,7 @@ STM_BOARD =nucleo-f411re
 endif
 
 PROG_EXTENSION :=.elf
+VALID_BUSES=spi
 
 CFLAGS += -D RSI_SPI_INTERFACE
  

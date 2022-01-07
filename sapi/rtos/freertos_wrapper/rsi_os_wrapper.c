@@ -133,6 +133,21 @@ rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
 
 /*==============================================*/
 /**
+ * @fn           rsi_error_t rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex)
+ * @brief        Take the mutex from ISR context
+ * @param[in]    mutex - Mutex handle pointer  
+ * @return       0              - Success \n
+ *               Negative Value - Failure  
+ *
+ */
+void rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex)
+{
+  BaseType_t xTaskWokenByReceive = pdFALSE;
+  SemaphoreHandle_t *xSemaphore  = (SemaphoreHandle_t *)mutex;
+  (void)xSemaphoreTakeFromISR(*xSemaphore, &xTaskWokenByReceive);
+}
+/*==============================================*/
+/**
  * @fn           rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex)
  * @brief        Give the mutex 
  * @param[in]    mutex - Mutex handle pointer  
@@ -152,7 +167,20 @@ rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex)
   }
   return RSI_ERROR_IN_OS_OPERATION;
 }
-
+/*==============================================*/
+/**
+ * @fn           rsi_error_t rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex)
+ * @brief        Give the mutex from ISR context
+ * @param[in]    mutex - Mutex handle pointer  
+ * @return       none
+ *
+ */
+void rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex)
+{
+  BaseType_t xTaskWokenByReceive = pdFALSE;
+  SemaphoreHandle_t *xSemaphore  = (SemaphoreHandle_t *)mutex;
+  (void)xSemaphoreGiveFromISR(*xSemaphore, &xTaskWokenByReceive);
+}
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_destroy(rsi_mutex_handle_t *mutex)

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -174,145 +174,191 @@ void async_socket_select(rsi_fd_set *fd_read, rsi_fd_set *fd_write, rsi_fd_set *
 int32_t rsi_socket_select()
 {
   int32_t status = RSI_SUCCESS;
-  switch (rsi_wlan_app_cb.state) {
-    case RSI_WLAN_INITIAL_STATE: {
-      //! update wlan application state
-      rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
-    }
-    case RSI_WLAN_UNCONNECTED_STATE: {
-      //! Connect to an Access point
-      status = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
-      if (status != RSI_SUCCESS) {
-        break;
-      } else {
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+#ifdef RSI_WITH_OS
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
+
+  //! WiSeConnect initialization
+  status = rsi_wireless_init(0, 0);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nWireless Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+
+  //! Send feature frame
+  status = rsi_send_feature_frame();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nSend Feature Frame Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  while (RSI_FOREVER) {
+    switch (rsi_wlan_app_cb.state) {
+      case RSI_WLAN_INITIAL_STATE: {
         //! update wlan application state
-        rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
+        rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
       }
-    }
-    case RSI_WLAN_CONNECTED_STATE: {
-      //! Configure IP
+      case RSI_WLAN_UNCONNECTED_STATE: {
+        //! Connect to an Access point
+        status = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nWLAN AP Connect Failed, Error Code : 0x%lX\r\n", status);
+          break;
+        } else {
+          //! update wlan application state
+          rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
+        }
+      }
+      case RSI_WLAN_CONNECTED_STATE: {
+        //! Configure IP
 #if DHCP_MODE
-      status = rsi_config_ipaddress(RSI_IP_VERSION_4, RSI_DHCP, 0, 0, 0, NULL, 0, 0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4, RSI_DHCP, 0, 0, 0, NULL, 0, 0);
 #else
-      status = rsi_config_ipaddress(RSI_IP_VERSION_4,
-                                    RSI_STATIC,
-                                    (uint8_t *)&ip_addr,
-                                    (uint8_t *)&network_mask,
-                                    (uint8_t *)&gateway,
-                                    NULL,
-                                    0,
-                                    0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4,
+                                      RSI_STATIC,
+                                      (uint8_t *)&ip_addr,
+                                      (uint8_t *)&network_mask,
+                                      (uint8_t *)&gateway,
+                                      NULL,
+                                      0,
+                                      0);
 #endif
-      if (status != RSI_SUCCESS) {
-        break;
-      } else {
-        //! update wlan application state
-        rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
-        break;
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
+          break;
+        } else {
+          //! update wlan application state
+          rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
+          break;
+        }
       }
-    }
-    case RSI_WLAN_IPCONFIG_DONE_STATE: {
+      case RSI_WLAN_IPCONFIG_DONE_STATE: {
 #if ENABLE_POWER_SAVE
-      //! Apply power save profile
-      status = rsi_wlan_power_save_profile(PSP_MODE, PSP_TYPE);
-      if (status != RSI_SUCCESS) {
-        return status;
-      }
+        //! Apply power save profile
+        status = rsi_wlan_power_save_profile(PSP_MODE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          return status;
+        }
 #endif
-      for (count = 0; count < MAX_SOCK; count++) {
-        //! Create socket
-        server_socket[count] = rsi_socket(AF_INET, SOCK_STREAM, 0);
-        if (server_socket[count] < 0) {
-          status = rsi_wlan_get_status();
-          break;
+        for (count = 0; count < MAX_SOCK; count++) {
+          //! Create socket
+          server_socket[count] = rsi_socket(AF_INET, SOCK_STREAM, 0);
+          if (server_socket[count] < 0) {
+            status = rsi_wlan_get_status();
+            LOG_PRINT("\r\nSocket Create Failed, Error Code : 0x%lX\r\n", status);
+            break;
+          }
+
+          //! Set server structure
+          memset(&server_addr[count], 0, sizeof(server_addr[count]));
+
+          //! Set family type
+          server_addr[count].sin_family = AF_INET;
+
+          //! Set local port number
+          server_addr[count].sin_port = htons(DEVICE_PORT + count);
+
+          //! Bind socket
+          status =
+            rsi_bind(server_socket[count], (struct rsi_sockaddr *)&server_addr[count], sizeof(server_addr[count]));
+          if (status != RSI_SUCCESS) {
+            status = rsi_wlan_get_status();
+            rsi_shutdown(server_socket[count], 0);
+            LOG_PRINT("\r\nBind Failed, Error Code : 0x%lX\r\n", status);
+            break;
+          }
+
+          //! Socket listen
+          status = rsi_listen(server_socket[count], 1);
+          if (status != RSI_SUCCESS) {
+            status = rsi_wlan_get_status();
+            rsi_shutdown(server_socket[count], 0);
+            LOG_PRINT("\r\nListen Failed, Error Code : 0x%lX\r\n", status);
+            break;
+          }
+
+          addr_size = sizeof(server_socket[count]);
+          //! Socket accept
         }
-
-        //! Set server structure
-        memset(&server_addr[count], 0, sizeof(server_addr[count]));
-
-        //! Set family type
-        server_addr[count].sin_family = AF_INET;
-
-        //! Set local port number
-        server_addr[count].sin_port = htons(DEVICE_PORT + count);
-
-        //! Bind socket
-        status = rsi_bind(server_socket[count], (struct rsi_sockaddr *)&server_addr[count], sizeof(server_addr[count]));
-        if (status != RSI_SUCCESS) {
-          status = rsi_wlan_get_status();
-          rsi_shutdown(server_socket[count], 0);
-          break;
+        for (count = 0; count < MAX_SOCK; count++) {
+          new_socket[count] = rsi_accept(server_socket[count], (struct rsi_sockaddr *)&client_addr[count], &addr_size);
+          if (new_socket[count] < 0) {
+            status = rsi_wlan_get_status();
+            rsi_shutdown(server_socket[count], 0);
+            LOG_PRINT("\r\nSocket Accept Failed, Error Code : 0x%lX\r\n", status);
+            break;
+          }
         }
-
-        //! Socket listen
-        status = rsi_listen(server_socket[count], 1);
-        if (status != RSI_SUCCESS) {
-          status = rsi_wlan_get_status();
-          rsi_shutdown(server_socket[count], 0);
-          break;
-        }
-
-        addr_size = sizeof(server_socket[count]);
-        //! Socket accept
-      }
-      for (count = 0; count < MAX_SOCK; count++) {
-        new_socket[count] = rsi_accept(server_socket[count], (struct rsi_sockaddr *)&client_addr[count], &addr_size);
-        if (new_socket[count] < 0) {
-          status = rsi_wlan_get_status();
-          rsi_shutdown(server_socket[count], 0);
-          break;
-        }
-      }
-      rsi_wlan_app_cb.state = RSI_WAIT_FOR_SELECT_CONFIRM;
-      break;
-    }
-    case RSI_WAIT_FOR_SELECT_CONFIRM: {
-      memset(&read_fds, 0, sizeof(rsi_fd_set));
-      for (count = 0; count < MAX_SOCK; count++) {
-        if (!(rsi_getsockopt(new_socket[count], SOL_SOCKET, SO_CHECK_CONNECTED_STATE, NULL, (rsi_socklen_t)NULL))) {
-          RSI_FD_SET(new_socket[count], &read_fds);
-        }
-      }
-      status = rsi_select(new_socket[MAX_SOCK - 1] + 1, &read_fds, NULL, NULL, NULL, async_socket_select);
-      if (status < 0) {
-        break;
-      } else {
-        //! update wlan application state
-        rsi_wlan_app_cb.state = RSI_WLAN_DATA_RECEIVE_STATE;
+        rsi_wlan_app_cb.state = RSI_WAIT_FOR_SELECT_CONFIRM;
         break;
       }
-    }
-    case RSI_WLAN_DATA_RECEIVE_STATE: {
-      if (socket_select_response) {
-        recv_size = RECV_BUFFER_SIZE;
-        {
-          for (count = 0; count < MAX_SOCK; count++) {
-            if (RSI_FD_ISSET(new_socket[count], &read_fds)) {
-              //! Receive data on socket
-              status = rsi_recvfrom(new_socket[count],
-                                    recv_buffer,
-                                    recv_size,
-                                    0,
-                                    (struct rsi_sockaddr *)&client_addr,
-                                    &addr_size);
-              if (status < 0) {
-                status = rsi_wlan_get_status();
-                if (status == RSI_RX_BUFFER_CHECK) {
-                  break;
+      case RSI_WAIT_FOR_SELECT_CONFIRM: {
+        memset(&read_fds, 0, sizeof(rsi_fd_set));
+        for (count = 0; count < MAX_SOCK; count++) {
+          if (!(rsi_getsockopt(new_socket[count], SOL_SOCKET, SO_CHECK_CONNECTED_STATE, NULL, (rsi_socklen_t)NULL))) {
+            RSI_FD_SET(new_socket[count], &read_fds);
+          }
+        }
+        status = rsi_select(new_socket[MAX_SOCK - 1] + 1, &read_fds, NULL, NULL, NULL, async_socket_select);
+        if (status < 0) {
+          break;
+        } else {
+          //! update wlan application state
+          rsi_wlan_app_cb.state = RSI_WLAN_DATA_RECEIVE_STATE;
+          break;
+        }
+      }
+      case RSI_WLAN_DATA_RECEIVE_STATE: {
+        if (socket_select_response) {
+          recv_size = RECV_BUFFER_SIZE;
+          {
+            for (count = 0; count < MAX_SOCK; count++) {
+              if (RSI_FD_ISSET(new_socket[count], &read_fds)) {
+                //! Receive data on socket
+                status = rsi_recvfrom(new_socket[count],
+                                      recv_buffer,
+                                      recv_size,
+                                      0,
+                                      (struct rsi_sockaddr *)&client_addr,
+                                      &addr_size);
+                if (status < 0) {
+                  status = rsi_wlan_get_status();
+                  if (status == RSI_RX_BUFFER_CHECK) {
+                    break;
+                  }
                 }
               }
+              //! subtract received bytes
             }
-            //! subtract received bytes
+            socket_select_response = 0;
+            rsi_wlan_app_cb.state  = RSI_WAIT_FOR_SELECT_CONFIRM;
           }
-          socket_select_response = 0;
-          rsi_wlan_app_cb.state  = RSI_WAIT_FOR_SELECT_CONFIRM;
         }
       }
+      default:
+        break;
     }
-    default:
-      break;
   }
-  return RSI_SUCCESS;
 }
 
 int main()
@@ -322,32 +368,7 @@ int main()
 
   rsi_task_handle_t wlan_task_handle = NULL;
 
-  rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
-
-  //! WiSeConnect initialization
-  status = rsi_wireless_init(0, 0);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
-
-  //! Send feature frame
-  status = rsi_send_feature_frame();
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
 
 #ifdef RSI_WITH_OS
   //! OS case
@@ -358,14 +379,6 @@ int main()
                   NULL,
                   RSI_WLAN_TASK_PRIORITY,
                   &wlan_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

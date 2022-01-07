@@ -526,6 +526,26 @@ void rsi_ble_task_on_conn(void *parameters)
           }
         }
       } break;
+      case RSI_BLE_MTU_EXCHANGE_INFORMATION: {
+        rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MTU_EXCHANGE_INFORMATION);
+        LOG_PRINT("\r\n MTU EXCHANGE INFORMATION - in subtask -conn%d \r\n", l_conn_id);
+        if ((rsi_ble_conn_info[l_conn_id].mtu_exchange_info.initiated_role == PEER_DEVICE_INITATED_MTU_EXCHANGE)
+            && (RSI_BLE_MTU_EXCHANGE_FROM_HOST)) {
+          status = rsi_ble_mtu_exchange_resp(rsi_connected_dev_addr, LOCAL_MTU_SIZE);
+          //! check for procedure already in progress error
+          if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
+            rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_MTU_EXCHANGE_INFORMATION);
+            LOG_PRINT("\r\n rsi_ble_mtu_exchange_resp procedure is already in progress -conn%d \r\n", l_conn_id);
+            break;
+          }
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%x \n", status);
+          } else {
+            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%x \n", status);
+          }
+        }
+      } break;
+
       case RSI_BLE_MORE_DATA_REQ_EVT: {
 
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MORE_DATA_REQ_EVT);

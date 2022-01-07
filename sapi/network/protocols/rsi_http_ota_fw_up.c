@@ -132,7 +132,7 @@ int32_t rsi_http_otaf_async(uint8_t type,
   uint16_t http_length               = 0;
   uint32_t send_size                 = 0;
   uint8_t *host_desc                 = NULL;
-
+  SL_PRINTF(SL_HTTP_OTAF_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -143,12 +143,14 @@ int32_t rsi_http_otaf_async(uint8_t type,
     // In concurrent mode and AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_HTTP_OTAF_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_HTTP_OTAF_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -162,6 +164,7 @@ int32_t rsi_http_otaf_async(uint8_t type,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_HTTP_OTAF_ASYNC_INVALID_PARAM, NETWORK, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -172,6 +175,7 @@ int32_t rsi_http_otaf_async(uint8_t type,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HTTP_OTAF_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -268,10 +272,12 @@ int32_t rsi_http_otaf_async(uint8_t type,
     status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_HTTP_OTAF, pkt);
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_HTTP_OTAF_ASYNC_NWK_CMD_IN_PROGRESS, NETWORK, LOG_ERROR);
     return RSI_ERROR_NWK_CMD_IN_PROGRESS;
   }
 
   // Return status
+  SL_PRINTF(SL_HTTP_OTAF_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 

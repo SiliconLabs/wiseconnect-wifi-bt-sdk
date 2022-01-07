@@ -41,6 +41,7 @@ int32_t rsi_bt_spp_init(void)
 {
   rsi_bt_req_profile_mode_t bt_req_spp_init = { 0 };
   bt_req_spp_init.profile_mode              = RSI_SPP_PROFILE_BIT;
+  SL_PRINTF(SL_RSI_BT_SPP_INIT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_PROFILE_MODE, &bt_req_spp_init, NULL);
 }
 /*==============================================*/
@@ -68,6 +69,7 @@ int32_t rsi_bt_spp_connect(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_spp_connect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_SPP_CONN_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SPP_CONNECT, &bt_req_spp_connect, NULL);
 }
 
@@ -96,6 +98,7 @@ int32_t rsi_bt_spp_disconnect(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_spp_disconnect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_SPP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SPP_DISCONNECT, &bt_req_spp_disconnect, NULL);
 }
 
@@ -130,6 +133,7 @@ int32_t rsi_bt_spp_transfer(uint8_t *remote_dev_addr, uint8_t *data, uint16_t le
 
   memcpy(bt_req_spp_transfer.data, data, xfer_len);
 
+  SL_PRINTF(SL_RSI_BT_SPP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SPP_TRANSFER, &bt_req_spp_transfer, NULL);
 }
 #endif

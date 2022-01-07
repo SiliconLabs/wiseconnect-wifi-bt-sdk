@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -201,7 +201,7 @@ static uint32_t rsi_ble_add_simple_chat_serv(void)
 {
   uuid_t new_uuid                       = { 0 };
   rsi_ble_resp_add_serv_t new_serv_resp = { 0 };
-  uint8_t data[20]                      = { "redpine_sampletest_1" };
+  uint8_t data[20]                      = { "silabs_sampletest_1" };
 
   //! adding new service
   new_uuid.size      = 2;

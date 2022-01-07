@@ -42,6 +42,7 @@ int32_t rsi_bt_set_local_class_of_device(uint32_t class_of_device)
 {
   rsi_bt_req_set_local_cod_t bt_req_set_local_cod = { 0 };
   bt_req_set_local_cod.class_of_device            = class_of_device;
+  SL_PRINTF(SL_RSI_BT_SET_LOCAL_CLASS_OF_DEVICE_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_LOCAL_COD, &bt_req_set_local_cod, NULL);
 }
@@ -62,6 +63,7 @@ int32_t rsi_bt_set_local_class_of_device(uint32_t class_of_device)
  */
 int32_t rsi_bt_get_local_class_of_device(uint8_t *resp)
 {
+  SL_PRINTF(SL_RSI_BT_GET_LOCAL_CLASS_OF_DEVICE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_QUERY_LOCAL_COD, NULL, resp);
 }
 
@@ -82,6 +84,7 @@ int32_t rsi_bt_start_discoverable(void)
   rsi_bt_req_set_discv_mode_t bt_req_set_discv_mode = { 0 };
   bt_req_set_discv_mode.mode                        = START_DISCOVERY;
   bt_req_set_discv_mode.time_out                    = 0;
+  SL_PRINTF(SL_RSI_BT_DISCOVERY_MODE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_DISCV_MODE, &bt_req_set_discv_mode, NULL);
 }
 
@@ -106,6 +109,7 @@ int32_t rsi_bt_start_limited_discoverable(int32_t time_out_ms)
   rsi_bt_req_set_discv_mode_t bt_req_set_discv_mode = { 0 };
   bt_req_set_discv_mode.mode                        = START_LIMITED_DISCOVERY;
   bt_req_set_discv_mode.time_out                    = time_out_ms;
+  SL_PRINTF(SL_RSI_BT_LIMITED_DISCOVERY_MODE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_DISCV_MODE, &bt_req_set_discv_mode, NULL);
 }
 /*==============================================*/

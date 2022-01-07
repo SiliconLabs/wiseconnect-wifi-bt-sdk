@@ -20,7 +20,13 @@
 #ifndef _RSI_UART_H
 #define _RSI_UART_H
 #include <rsi_data_types.h>
+#ifdef WISECONNECT
+#ifdef RSI_WLAN_API_ENABLE
 #include <rsi_wlan_config.h>
+#endif
+#elif defined(RSI_WLAN_ENABLE)
+#include <rsi_wlan_config.h>
+#endif
 #include <rsi_pkt_mgmt.h>
 #include <rsi_queue.h>
 #include <string.h>
@@ -37,7 +43,9 @@
 #elif defined(WINDOWS)
 #define RSI_UART_DEVICE "\\\\.\\COM97"
 #else
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
+#endif
 #endif
 
 // UART Baud rate to be set

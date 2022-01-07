@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -119,10 +119,10 @@ int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 //! MQTT Related Macros and declarations
-#define RSI_MQTT_TOPIC "REDPINE_TEST"
+#define RSI_MQTT_TOPIC "SILABS_TEST"
 
 //! Message to publish
-uint8_t publish_message[] = "THIS IS MQTT CLIENT DEMO FROM REDPINE";
+uint8_t publish_message[] = "THIS IS MQTT CLIENT DEMO FROM SILABS";
 
 //! MQTT CLient ID
 int8_t clientID[] = "MQTTCLIENT";
@@ -170,6 +170,30 @@ int32_t rsi_mqtt_client_app()
 
   rsi_mqtt_pubmsg_t publish_msg;
 
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
+
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+#ifdef RSI_WITH_OS
+
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
@@ -312,22 +336,8 @@ int main()
 {
   int32_t status;
 #ifdef RSI_WITH_OS
-
   rsi_task_handle_t wlan_task_handle = NULL;
-
-  rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
 
   //! Unmask interrupts
 
@@ -340,14 +350,6 @@ int main()
                   NULL,
                   RSI_WLAN_TASK_PRIORITY,
                   &wlan_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

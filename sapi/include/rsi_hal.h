@@ -30,45 +30,51 @@
 //! User can configure this pin based on platform
 
 //! GPIO to reset WiSeConnect Module
-#define RSI_HAL_RESET_PIN              1
+#define RSI_HAL_RESET_PIN                 1
 
 // GPIO to receive packet pending interrupt
-#define RSI_HAL_MODULE_INTERRUPT_PIN   2
+#define RSI_HAL_MODULE_INTERRUPT_PIN      2
 
 // GPIO to receive module wakeup from power save indication
-#define RSI_HAL_WAKEUP_INDICATION_PIN  3
+#define RSI_HAL_WAKEUP_INDICATION_PIN     3
 
 // ULP GPIO to give sleep confirmation to module to goto sleep in power save
-#define RSI_HAL_SLEEP_CONFIRM_PIN      4
+#define RSI_HAL_SLEEP_CONFIRM_PIN         4
 
 // LP GPIO to give sleep confirmation to module to goto sleep in power save
-#define RSI_HAL_LP_SLEEP_CONFIRM_PIN   6
+#define RSI_HAL_LP_SLEEP_CONFIRM_PIN      6
+
+//!ULP GPIO to receive module wakeup from wake on wireless indication
+#define RSI_HAL_WOWLAN_INTR_FROM_DEV_PIN  7
+
+//! ULP GPIO to give confirmation to module to goto wake on wireless mode
+#define RSI_HAL_WOWLAN_CONFIRM_TO_DEV_PIN 8
 
 //! GPIO Pins related Macros
 //! Macro to configure GPIO in output mode
-#define RSI_HAL_GPIO_OUTPUT_MODE       1
+#define RSI_HAL_GPIO_OUTPUT_MODE          1
 
 // Macro to configure GPIO in input mode
-#define RSI_HAL_GPIO_INPUT_MODE        0
+#define RSI_HAL_GPIO_INPUT_MODE           0
 
 // Macro to drive low value on GPIO
-#define RSI_HAL_GPIO_LOW               0
+#define RSI_HAL_GPIO_LOW                  0
 
 // Macro to drive high value on GPIO
-#define RSI_HAL_GPIO_HIGH              1
+#define RSI_HAL_GPIO_HIGH                 1
 
 //! Timer related macros
 //! Macro to configure timer type in single shot
-#define RSI_HAL_TIMER_TYPE_SINGLE_SHOT 0
+#define RSI_HAL_TIMER_TYPE_SINGLE_SHOT    0
 
 // Macro to configure timer type in periodic
-#define RSI_HAL_TIMER_TYPE_PERIODIC    1
+#define RSI_HAL_TIMER_TYPE_PERIODIC       1
 
 // Macro to configure timer in micro seconds mode
-#define RSI_HAL_TIMER_MODE_MICRO       0
+#define RSI_HAL_TIMER_MODE_MICRO          0
 
 // Macro to configure timer in milli seconds mode
-#define RSI_HAL_TIMER_MODE_MILLI       1
+#define RSI_HAL_TIMER_MODE_MILLI          1
 
 /******************************************************
  * *                    Constants
@@ -119,7 +125,9 @@ uint32_t rsi_timer_read(uint8_t timer_node);
 void rsi_delay_us(uint32_t delay_us);
 void rsi_delay_ms(uint32_t delay_ms);
 uint32_t rsi_hal_gettickcount(void);
+void rsi_hal_enable_uart_irq(void);
 void SysTick_Handler(void);
+void rsi_hal_enable_uart_irq(void);
 
 void rsi_interrupt_handler(void);
 void ABRD(void);

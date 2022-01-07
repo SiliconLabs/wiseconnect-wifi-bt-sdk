@@ -42,13 +42,21 @@ void ROM_WL_rsi_set_event(global_cb_t *global_cb_p, uint32_t event_num)
 {
   rsi_driver_cb_t *rsi_driver_cb = global_cb_p->rsi_driver_cb;
 
+  rsi_reg_flags_t flags;
+
 #ifdef RSI_M4_INTERFACE
   // mask P2P interrupt
   RSI_MASK_TA_INTERRUPT();
 #endif
 
+  // Disable all the interrupts
+  flags = RSI_CRITICAL_SECTION_ENTRY();
+
   // Set the event bit in bitmap
   rsi_driver_cb->scheduler_cb.event_map |= BIT(event_num);
+
+  // Enable all the interrupts
+  RSI_CRITICAL_SECTION_EXIT(flags);
 
 #ifdef RSI_M4_INTERFACE
   // unmask P2P interrupt

@@ -8,12 +8,13 @@ In this application, the RS9116W connects to a Wi-Fi access point, obtains an IP
 To use this application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements	
-- PC or Mac (used to program the Host MCU)
+- Windows PC with Host interface (UART / SPI/ SDIO).
 - A computer running Iperf (may be the same PC or Mac used to program the Host MCU)
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-  - STM32F411 Nucleo
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
+  - [STM32F411 Nucleo](https://st.com/) 
 - Wi-Fi Access Point
 
 ![Figure: Setup Diagram for WLAN Throughput Example](resources/readme/image216g.png)
@@ -37,8 +38,9 @@ The application can be configured to suit your requirements and development envi
 Read through the following sections and make any changes needed. 
 
 ### Host Interface
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### Bare Metal/RTOS Support
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
@@ -144,7 +146,7 @@ The following sections describe how to run the RS9116W throughput application to
 
 
 ## Running the RS9116 Application
-After making any custom configuration changes required, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 
+After making any custom configuration changes required, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/). 
 
 
 ## UDP Tx Throughput

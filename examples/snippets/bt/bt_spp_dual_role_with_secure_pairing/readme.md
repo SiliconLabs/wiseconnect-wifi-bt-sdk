@@ -14,10 +14,11 @@ Before running the application, the user will need the following things to setup
 
 ### 2.1 Hardware Requirements
 
-- Windows PC with Host interface(UART/ SPI).
+- Windows PC with Host interface(UART/ SPI/ SDIO).
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+   - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
    - [STM32F411 Nucleo](https://st.com/)
 
 ![Setup Diagram for BT SPP Master Example ](resources/readme/image15.png)   
@@ -47,11 +48,12 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
 * [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-* By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-* The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -69,10 +71,14 @@ The Application is provided with the project folder containing Keil and Simplici
         - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image15b.png)
-    
-### 3.4 Bare Metal Support
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration. 
+ - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/bt/bt_spp_dual_role_with_secure_pairing/projects/bt_spp_dual_role_with_secure_pairing-brd2204a-gg11.slsproj`
+    
+### 3.4 Bare Metal/RTOS Support
+
+This application supports bare metal/RTOS environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration. 
 
 
 ## 4. Application Configuration Parameters
@@ -132,16 +138,14 @@ The application can be configured to suit your requirements and development envi
 #define BT_GLOBAL_BUFF_LEN                           15000
 ```
 
-**4.1.2** Open `rsi_wlan_config.h` file and update/modify following macros:
+**4.1.2** Open `rsi_bt_config.h` file and update/modify following macros:
 
 ```c
-#define CONCURRENT_MODE                              RSI_DISABLE
 #define RSI_FEATURE_BIT_MAP                          FEAT_SECURITY_OPEN
 #define RSI_TCP_IP_BYPASS                            RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP                   TCP_IP_FEAT_DHCPV4_CLIENT
 #define RSI_CUSTOM_FEATURE_BIT_MAP                   FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP               EXT_FEAT_384K_MODE
-#define RSI_BAND                                     RSI_BAND_2P4GHZ
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP               EXT_FEAT_384K_MODE                                     
 ```
 
    **Role Switch Configuration**
@@ -189,7 +193,7 @@ The application can be configured to suit your requirements and development envi
 #define BT_GLOBAL_BUFF_LEN                           15000
 ```
 
-**4.3** Open `rsi_wlan_config.h` file and update/modify following macros:
+**4.3** Open `rsi_bt_config.h` file and update/modify following macros:
 
 ```c
 #define CONCURRENT_MODE                              RSI_DISABLE
@@ -238,7 +242,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 #### 5.2.2 Using EFX32
 
-Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Import the project from `<SDK>/examples/snippets/bt/bt_spp_dual_role_with_secure_pairing/projects`
 - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**

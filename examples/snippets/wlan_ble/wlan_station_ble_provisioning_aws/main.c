@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -24,9 +24,9 @@
  * @section Description :
  * This application explains how to get the WLAN connection functionality using
  * BLE provisioning.
- * Redpine Module starts advertising and with BLE Provisioning the Access Point
+ * SiLabs Module starts advertising and with BLE Provisioning the Access Point
  * details are fetched.
- * Redpine device is configured as a WiFi station and connects to an Access Point.
+ * SiLabs device is configured as a WiFi station and connects to an Access Point.
  =================================================================================*/
 
 /**
@@ -165,10 +165,10 @@ int32_t rsi_wlan_ble_app(void)
 
   status = rsi_wlan_mqtt_certs_init();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nset certificate issue, Error Code : 0x%lX\r\n", status);
+    LOG_PRINT("\r\nSet Certificate Issue, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("\r\nset certificate Success\r\n");
+    LOG_PRINT("\r\nSet Certificate Success\r\n");
   }
 #ifdef BLE_CONFIGURATOR
   rsi_ble_configurator_init();

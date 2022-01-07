@@ -52,12 +52,7 @@
 
 #define RSI_DEV_NAME_LEN 50
 #define RSI_DEV_ADDR_LEN 6
-#ifdef RSI_SDIO_INTERFACE
-// Adusting length of SDIO interface
-#define RSI_DEV_ATT_LEN 208
-#else
-#define RSI_DEV_ATT_LEN 240
-#endif
+#define RSI_DEV_ATT_LEN  240
 
 #define RSI_BT_CLASSIC_DEVICE 0x00
 #define RSI_BT_LE_DEVICE      0x01
@@ -98,19 +93,20 @@ typedef struct rsi_prop_protocol_cb_s rsi_prop_protocol_cb_t;
  * ******************************************************/
 
 typedef enum rsi_bt_common_cmd_request_e {
-  RSI_BT_SET_LOCAL_NAME             = 0x0001,
-  RSI_BT_GET_LOCAL_NAME             = 0x0002,
-  RSI_BT_GET_RSSI                   = 0x0005,
-  RSI_BT_GET_LOCAL_DEV_ADDR         = 0x0007,
-  RSI_BT_REQ_INIT                   = 0x008D,
-  RSI_BT_REQ_DEINIT                 = 0x008E,
-  RSI_BT_SET_ANTENNA_SELECT         = 0x008F,
-  RSI_BT_REQ_PER_CMD                = 0x009A,
-  RSI_BT_SET_FEATURES_BITMAP        = 0x00A6,
-  RSI_BT_VENDOR_SPECIFIC            = 0x00BE,
-  RSI_BT_SET_ANTENNA_TX_POWER_LEVEL = 0x00A7,
-  RSI_BT_SET_BD_ADDR_REQ            = 0x012E,
-  RSI_BT_GET_BT_STACK_VERSION       = 0x012F,
+  RSI_BT_SET_LOCAL_NAME                            = 0x0001,
+  RSI_BT_GET_LOCAL_NAME                            = 0x0002,
+  RSI_BT_GET_RSSI                                  = 0x0005,
+  RSI_BT_GET_LOCAL_DEV_ADDR                        = 0x0007,
+  RSI_BT_REQ_INIT                                  = 0x008D,
+  RSI_BT_REQ_DEINIT                                = 0x008E,
+  RSI_BT_SET_ANTENNA_SELECT                        = 0x008F,
+  RSI_BT_REQ_PER_CMD                               = 0x009A,
+  RSI_BT_SET_FEATURES_BITMAP                       = 0x00A6,
+  RSI_BT_VENDOR_SPECIFIC                           = 0x00BE,
+  RSI_BT_SET_ANTENNA_TX_POWER_LEVEL                = 0x00A7,
+  RSI_BT_SET_GAIN_TABLE_OFFSET_OR_MAX_POWER_UPDATE = 0x012C,
+  RSI_BT_SET_BD_ADDR_REQ                           = 0x012E,
+  RSI_BT_GET_BT_STACK_VERSION                      = 0x012F,
 
   RSI_BLE_ONLY_OPER_MODE = 0x8010,
   RSI_BLE_REQ_PWRMODE    = 0x8015,
@@ -122,16 +118,17 @@ typedef enum rsi_bt_common_event_e {
 } rsi_bt_common_event_t;
 
 typedef enum rsi_bt_common_cmd_resp_e {
-  RSI_BT_RSP_SET_LOCAL_NAME         = 0x0001,
-  RSI_BT_RSP_QUERY_LOCAL_NAME       = 0x0002,
-  RSI_BT_RSP_QUERY_RSSI             = 0x0005,
-  RSI_BT_RSP_QUERY_LOCAL_BD_ADDRESS = 0x0007,
-  RSI_BT_RSP_INIT                   = 0x008D,
-  RSI_BT_RSP_DEINIT                 = 0x008E,
-  RSI_BT_RSP_ANTENNA_SELECT         = 0x008F,
-  RSI_BT_RSP_SET_FEATURES_BITMAP    = 0x00A6,
-  RSI_BT_RSP_ANTENNA_TX_POWER_LEVEL = 0x00A7,
-  RSI_BT_RSP_SET_BD_ADDR            = 0x012E,
+  RSI_BT_RSP_SET_LOCAL_NAME                            = 0x0001,
+  RSI_BT_RSP_QUERY_LOCAL_NAME                          = 0x0002,
+  RSI_BT_RSP_QUERY_RSSI                                = 0x0005,
+  RSI_BT_RSP_QUERY_LOCAL_BD_ADDRESS                    = 0x0007,
+  RSI_BT_RSP_INIT                                      = 0x008D,
+  RSI_BT_RSP_DEINIT                                    = 0x008E,
+  RSI_BT_RSP_ANTENNA_SELECT                            = 0x008F,
+  RSI_BT_RSP_SET_FEATURES_BITMAP                       = 0x00A6,
+  RSI_BT_RSP_ANTENNA_TX_POWER_LEVEL                    = 0x00A7,
+  RSI_BT_RSP_SET_GAIN_TABLE_OFFSET_OR_MAX_POWER_UPDATE = 0x012C,
+  RSI_BT_RSP_SET_BD_ADDR                               = 0x012E,
 
   RSI_BLE_RSP_ONLY_OPER_MODE = 0x8010,
   RSI_BLE_RSP_PWRMODE        = 0x8015,
@@ -363,6 +360,17 @@ typedef struct rsi_bt_ber_cmd_s {
   /** 1-Enable, 0-Disable */
   uint8_t enable;
 } rsi_bt_ber_cmd_t;
+
+typedef struct rsi_bt_cmd_update_gain_table_offset_or_maxpower_s {
+  /** node id (0 - BLE, 1 - BT) */
+  uint8_t node_id;
+  /** gain table request type (0 - max power update, 1 - offset update) */
+  uint8_t update_gain_table_type;
+  /** gain table payload length */
+  uint8_t payload_len;
+  /** gain table payload data */
+  uint8_t payload[128];
+} rsi_bt_cmd_update_gain_table_offset_or_maxpower_t;
 
 /******************************************************
  * * BT/BLE common function declarations

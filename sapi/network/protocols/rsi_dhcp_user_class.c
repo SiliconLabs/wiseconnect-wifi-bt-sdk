@@ -44,7 +44,8 @@ int32_t rsi_dhcp_user_class(uint8_t mode,
   rsi_dhcp_user_class_t *user_class;
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
-  uint8_t i      = 0;
+  SL_PRINTF(SL_DHCP_USER_CLASS_ENTRY, NETWORK, LOG_INFO);
+  uint8_t i = 0;
 
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -52,6 +53,7 @@ int32_t rsi_dhcp_user_class(uint8_t mode,
   // If state is not in card ready received state
   if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
     // Command given in wrong state
+    SL_PRINTF(SL_DHCP_USER_CLASS_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -64,6 +66,7 @@ int32_t rsi_dhcp_user_class(uint8_t mode,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_DHCP_USER_CLASS_INVALID_PARAM, NETWORK, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -75,6 +78,7 @@ int32_t rsi_dhcp_user_class(uint8_t mode,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_DHCP_USER_CLASS_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -106,10 +110,12 @@ int32_t rsi_dhcp_user_class(uint8_t mode,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_DHCP_USER_CLASS_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_DHCP_USER_CLASS_EXIT, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */

@@ -42,6 +42,8 @@ int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr)
 #else
   memcpy(bd_addr.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
+  SL_PRINTF(SL_RSI_BT_SET_BD_ADDRESS, BLUETOOTH, LOG_INFO);
+
   return rsi_bt_driver_send_cmd(RSI_BT_SET_BD_ADDR_REQ, &bd_addr, NULL);
 }
 
@@ -57,8 +59,12 @@ int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr)
 int32_t rsi_bt_ber_enable_or_disable(struct rsi_bt_ber_cmd_s *ber_cmd)
 {
   if (ber_cmd == NULL) {
+    SL_PRINTF(SL_RSI_ERROR_INVALID_PARAMETER, BLUETOOTH, LOG_ERROR);
+
     return RSI_ERROR_INVALID_PARAM;
   }
+  SL_PRINTF(SL_RSI_BT_BER_ENABLE_OR_DISABLE, BLUETOOTH, LOG_INFO);
+
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, (void *)ber_cmd, NULL);
 }
 
@@ -83,8 +89,41 @@ int32_t rsi_bt_set_local_name(uint8_t *local_name)
   memcpy(bt_req_set_local_name.name, local_name, name_len);
   bt_req_set_local_name.name[name_len] = 0;
   bt_req_set_local_name.name_len       = name_len;
+  SL_PRINTF(SL_RSI_BT_SET_LOCAL_NAME, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_SET_LOCAL_NAME, &bt_req_set_local_name, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_bt_cmd_update_gain_table_offset_or_max_pwr(uint8_t node_id, uint8_t payload_len, uint8_t *payload, uint8_t req_type)
+ * @brief      Update gain table offset/max power. This is blocking API.
+ * @pre        \ref rsi_wireless_init() API need to be called before this API.
+ * @param[in]  node_id     - Node ID (0 - BLE, 1 - BT).
+ * @param[in]  payload_len - Length of the payload.
+ * @param[in]  payload     - Payload containing table data of gain table offset/max power
+ * @param[in]  req_type    - update gain table request type (0 - max power update, 1 - offset update)
+ * @return     0		-	Success \n
+ *             0x4F01		-	Invalid gain table payload length \n
+ *             0x4F02		-	Invalid region. \n
+ *             0x4F03		-	Invalid gain table offset request type \n
+ *             0x4F04           -       Invalid node id. \n	
+ * @note       Refer Error Codes section for above error codes \ref error-codes .
+ *             
+ */
+int32_t rsi_bt_cmd_update_gain_table_offset_or_max_pwr(uint8_t node_id,
+                                                       uint8_t payload_len,
+                                                       uint8_t *payload,
+                                                       uint8_t req_type)
+{
+  rsi_bt_cmd_update_gain_table_offset_or_maxpower_t bt_gain_table_offset = { 0 };
+  bt_gain_table_offset.node_id                                           = node_id;
+  bt_gain_table_offset.update_gain_table_type                            = req_type;
+  bt_gain_table_offset.payload_len                                       = payload_len;
+  memcpy(bt_gain_table_offset.payload, payload, bt_gain_table_offset.payload_len);
+  SL_PRINTF(SL_RSI_BT_SET_GAIN_TABLE_OFFSET_OR_MAX_POWER_UPDATE, BLUETOOTH, LOG_INFO);
+
+  return rsi_bt_driver_send_cmd(RSI_BT_SET_GAIN_TABLE_OFFSET_OR_MAX_POWER_UPDATE, &bt_gain_table_offset, NULL);
 }
 
 /*==============================================*/
@@ -99,6 +138,7 @@ int32_t rsi_bt_set_local_name(uint8_t *local_name)
  */
 int32_t rsi_bt_get_local_name(rsi_bt_resp_get_local_name_t *bt_resp_get_local_name)
 {
+  SL_PRINTF(SL_RSI_BT_GET_LOCAL_NAME, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_GET_LOCAL_NAME, NULL, bt_resp_get_local_name);
 }
 
@@ -121,6 +161,7 @@ int32_t rsi_bt_get_rssi(uint8_t *dev_addr, int8_t *resp)
 #else
   memcpy(bt_rssi.dev_addr, dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_GET_RSSI, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_GET_RSSI, &bt_rssi, resp);
 }
 
@@ -136,6 +177,7 @@ int32_t rsi_bt_get_rssi(uint8_t *dev_addr, int8_t *resp)
  */
 int32_t rsi_bt_get_local_device_address(uint8_t *resp)
 {
+  SL_PRINTF(SL_RSI_BT_GET_LOCAL_DEVICE_ADDRESS, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_GET_LOCAL_DEV_ADDR, NULL, resp);
 }
 
@@ -150,6 +192,7 @@ int32_t rsi_bt_get_local_device_address(uint8_t *resp)
  */
 int32_t rsi_bt_get_bt_stack_version(rsi_bt_resp_get_bt_stack_version_t *bt_resp_get_bt_stack_version)
 {
+  SL_PRINTF(SL_RSI_BT_STACK_VERSION, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_GET_BT_STACK_VERSION, NULL, bt_resp_get_bt_stack_version);
 }
 
@@ -166,6 +209,7 @@ int32_t rsi_bt_get_bt_stack_version(rsi_bt_resp_get_bt_stack_version_t *bt_resp_
  */
 int32_t rsi_bt_init(void)
 {
+  SL_PRINTF(SL_RSI_BT_INIT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_INIT, NULL, NULL);
 }
 
@@ -182,6 +226,7 @@ int32_t rsi_bt_init(void)
  */
 int32_t rsi_bt_deinit(void)
 {
+  SL_PRINTF(SL_RSI_BT_DEINIT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_DEINIT, NULL, NULL);
 }
 
@@ -202,6 +247,7 @@ int32_t rsi_bt_set_antenna(uint8_t antenna_value)
   rsi_ble_set_antenna_t ble_set_antenna = { 0 };
 
   ble_set_antenna.value = antenna_value;
+  SL_PRINTF(SL_RSI_BT_SET_ANTENNA, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_SET_ANTENNA_SELECT, &ble_set_antenna, NULL);
 }
 /** @} */
@@ -225,6 +271,7 @@ int32_t rsi_bt_set_feature_bitmap(uint32_t feature_bit_map)
   rsi_bt_set_feature_bitmap_t bt_features = { 0 };
 
   bt_features.bit_map = feature_bit_map;
+  SL_PRINTF(SL_RSI_SET_FEATURE_MAP, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_SET_FEATURES_BITMAP, &bt_features, NULL);
 }
 
@@ -268,6 +315,7 @@ int32_t rsi_bt_set_antenna_tx_power_level(uint8_t protocol_mode, int8_t tx_power
 #else
   bt_set_antenna_tx_power_level.tx_power = tx_power;
 #endif
+  SL_PRINTF(SL_RSI_BT_SET_ANTENNA_TX_POWER_LEVEL, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_SET_ANTENNA_TX_POWER_LEVEL, &bt_set_antenna_tx_power_level, NULL);
 }
 /*==============================================*/
@@ -279,10 +327,11 @@ int32_t rsi_bt_set_antenna_tx_power_level(uint8_t protocol_mode, int8_t tx_power
  *              0 - RSI_ACTIVE. In this mode module is active and power save is disabled. \n 
  *              1 - RSI_SLEEP_MODE_1. On mode. In this sleep mode, SoC will never turn off, therefore no \n
  *                  handshake is required before sending data to the module. BT/BLE does not support this mode. \n 
- *              2 - RSI_SLEEP_MODE_2. Connected sleep mode. In this sleep mode, SoC will go to sleep based \n
- *                  on GPIO or Message, therefore handshake is required before sending data to the module. \n 
- *              8 - RSI_SLEEP_MODE_8. Disconnected sleep mode. In this sleep mode, module will turn off the \n
- *                  SoC. Since SoC is turn off, therefore handshake is required before sending data to the module.
+ *              2 - RSI_SLEEP_MODE_2. In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n 
+ *              8 - RSI_SLEEP_MODE_8. Deep sleep mode with ULP RAM RETENTION. \n
+ *              10- RSI_SLEEP_MODE_10. Deep sleep mode without ULP RAM RETENTION. \n
+ *                  In this sleep mode, module will turn off the \n
+ *                  SoC. Since SoC is turn off, therefore handshake is required before sending data to the module. \n
  * @param[in]   psp_type Following psp_type is defined. \n 
  *              0 - RSI_MAX_PSP. This psp_type will be used for max power saving \n 
  *              1 - Fast PSP \n 
@@ -310,6 +359,7 @@ int32_t rsi_bt_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
 
   status = rsi_sleep_mode_decision(rsi_common_cb);
 
+  SL_PRINTF(SL_RSI_BT_POWER_SAVE_PROILE, BLUETOOTH, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -332,6 +382,7 @@ int32_t rsi_bt_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
  */
 int32_t rsi_bt_per_stats(uint8_t cmd_type, struct rsi_bt_per_stats_s *per_stats)
 {
+  SL_PRINTF(SL_RSI_BT_REQUEST_LOCAL_DEVICE, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, &cmd_type, per_stats);
 }
 
@@ -349,8 +400,11 @@ int32_t rsi_bt_per_stats(uint8_t cmd_type, struct rsi_bt_per_stats_s *per_stats)
 int32_t rsi_bt_per_cw_mode(struct rsi_bt_per_cw_mode_s *bt_cw_mode)
 {
   if (bt_cw_mode == NULL) {
+
+    SL_PRINTF(SL_RSI_ERROR_INVALID_PARAMETER, BLUETOOTH, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
+  SL_PRINTF(SL_RSI_PER_CW_MODE, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, bt_cw_mode, NULL);
 }
 
@@ -377,6 +431,7 @@ int32_t rsi_bt_vendor_avdtp_stats_enable(uint16_t avdtp_stats_enable, uint32_t a
   rsi_bt_vendor_avdtp_stats.avdtp_stats_enable = avdtp_stats_enable;
   rsi_bt_vendor_avdtp_stats.avdtp_stats_rate   = avdtp_stats_rate;
 
+  SL_PRINTF(SL_RSI_BT_VENDOR_AVDTP_STATS_ENABLE, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_avdtp_stats, NULL);
 }
 
@@ -404,6 +459,8 @@ int32_t rsi_bt_vendor_ar_enable(uint16_t enable)
   rsi_bt_vendor_ar_cmd._3m_state_absolute_fail_threshold   = STATE_3M_ABSOLUTE_FAIL_THRESHOLD;
   rsi_bt_vendor_ar_cmd._3m_state_continuous_fail_threshold = STATE_3M_CONTINUOUS_FAIL_THRESHOLD;
   rsi_bt_vendor_ar_cmd._3m_state_relative_fail_threshold   = STATE_3M_RELATIVE_FAIL_THRESHOLD;
+
+  SL_PRINTF(SL_RSI_BT_VENDOR_AR_ENABLE, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_ar_cmd, NULL);
 }
 /**
@@ -441,6 +498,8 @@ int32_t rsi_bt_vendor_dynamic_pwr(uint16_t enable,
   rsi_bt_vendor_dynamic_pwr_cmd.set_dynamic_pwr_index.dynamic_pwr_index.pwr_index_br         = power_index_br;
   rsi_bt_vendor_dynamic_pwr_cmd.set_dynamic_pwr_index.dynamic_pwr_index.pwr_index_2m         = power_index_2m;
   rsi_bt_vendor_dynamic_pwr_cmd.set_dynamic_pwr_index.dynamic_pwr_index.pwr_index_3m         = power_index_3m;
+
+  SL_PRINTF(SL_RSI_BT_VENDOR_DYNAMIC_POWER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_dynamic_pwr_cmd, NULL);
 }
 
@@ -467,6 +526,8 @@ int32_t rsi_memory_stats_enable(uint8_t protocol, uint8_t memory_stats_enable, u
   rsi_bt_vendor_memory_stats.memory_stats_enable      = memory_stats_enable;
   rsi_bt_vendor_memory_stats.memory_stats_interval_ms = memory_stats_interval_ms;
 
+  SL_PRINTF(SL_RSI_MEMORY_STATS_ENABLE, BLUETOOTH, LOG_INFO);
+
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_memory_stats, NULL);
 }
 /*==============================================*/
@@ -486,6 +547,8 @@ int32_t rsi_bt_l2cap_connect(int8_t *remote_dev_addr, uint16_t psm, uint8_t pref
   memcpy(bt_req_l2cap_connect.dev_addr, remote_dev_addr, 6);
   bt_req_l2cap_connect.psm            = psm;
   bt_req_l2cap_connect.preferred_mode = preferred_mode;
+
+  SL_PRINTF(SL_RSI_BT_L2CAP_CONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_L2CAP_CONNECT, &bt_req_l2cap_connect, NULL);
 }
 /*==============================================*/
@@ -501,6 +564,7 @@ int32_t rsi_bt_l2cap_disconnect(int8_t *remote_dev_addr)
 {
   rsi_bt_req_l2cap_disconnect_t bt_req_l2cap_disconnect = { 0 };
   memcpy(bt_req_l2cap_disconnect.dev_addr, remote_dev_addr, 6);
+  SL_PRINTF(SL_RSI_BT_L2CAP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_L2CAP_DISCONNECT, &bt_req_l2cap_disconnect, NULL);
 }
 /*==============================================*/
@@ -517,6 +581,7 @@ int32_t rsi_bt_l2cap_init(void)
 {
   rsi_bt_req_profile_mode_t bt_req_l2cap_init = { 0 };
   bt_req_l2cap_init.profile_mode              = 1 << 8;
+  SL_PRINTF(SL_RSI_BT_L2CAP_INIT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_PROFILE_MODE, &bt_req_l2cap_init, NULL);
 }
 
@@ -548,6 +613,8 @@ int32_t rsi_bt_l2cap_data(int8_t *remote_dev_addr, uint8_t *data, uint16_t lengt
   bt_req_l2cap_data.frame_type = frame_type;
 
   //  memset(bt_req_l2cap_data.data,0x0f,10);
+
+  SL_PRINTF(SL_RSI_BT_L2CAP_SEND_DATA_REMOTE_DEVICE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_L2CAP_PROTOCOL_DATA, &bt_req_l2cap_data, NULL);
 }
 /*==============================================*/
@@ -563,6 +630,8 @@ int32_t rsi_bt_l2cap_data(int8_t *remote_dev_addr, uint8_t *data, uint16_t lengt
 
 int32_t rsi_bt_l2cap_create_ertm_channel(rsi_bt_l2cap_ertm_channel_t l2cap_ertm)
 {
+
+  SL_PRINTF(SL_RSI_BT_L2CAP_CREATE_ERTM_CHANNEL_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_L2CAP_ERTM_CONFIGURE, &l2cap_ertm, NULL);
 }
 

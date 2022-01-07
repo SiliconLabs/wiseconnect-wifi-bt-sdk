@@ -45,6 +45,8 @@ int32_t rsi_bt_avrcp_init(uint8_t *avrcp_feature)
     bt_req_avrcp_init.data_len = 1;
     bt_req_avrcp_init.data[0]  = *avrcp_feature;
   }
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_INIT, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_PROFILE_MODE, &bt_req_avrcp_init, NULL);
 }
 
@@ -71,6 +73,8 @@ int32_t rsi_bt_avrcp_conn(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_connect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_CONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_CONNECT, &bt_req_avrcp_connect, NULL);
 }
 
@@ -93,6 +97,7 @@ int32_t rsi_bt_avrcp_disconn(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_disconnect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_DISCONNECT, &bt_req_avrcp_disconnect, NULL);
 }
 
@@ -115,6 +120,7 @@ int32_t rsi_bt_avrcp_play(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_play.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_PLAY_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_PLAY, &bt_req_avrcp_play, NULL);
 }
 
@@ -137,6 +143,7 @@ int32_t rsi_bt_avrcp_pause(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_pause.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_PAUSE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_PAUSE, &bt_req_avrcp_pause, NULL);
 }
 
@@ -158,6 +165,7 @@ int32_t rsi_bt_avrcp_stop(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_stop.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_STOP_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_STOP, &bt_req_avrcp_stop, NULL);
 }
 
@@ -180,6 +188,7 @@ int32_t rsi_bt_avrcp_next(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_next.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_NEXT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_NEXT, &bt_req_avrcp_next, NULL);
 }
 
@@ -202,6 +211,7 @@ int32_t rsi_bt_avrcp_previous(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_previous.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_PREV_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_PREVIOUS, &bt_req_avrcp_previous, NULL);
 }
 
@@ -224,6 +234,7 @@ int32_t rsi_bt_avrcp_vol_up(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_vol_up.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_VOL_UP_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_VOL_UP, &bt_req_avrcp_vol_up, NULL);
 }
 
@@ -246,6 +257,7 @@ int32_t rsi_bt_avrcp_vol_down(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_avrcp_vol_down.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_AVRCP_VOL_DOWN_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_VOL_DOWN, &bt_req_avrcp_vol_down, NULL);
 }
 
@@ -279,6 +291,7 @@ int32_t rsi_bt_avrcp_get_capabilities(uint8_t *remote_dev_addr,
 #endif
   bt_req_avrcp_cap.type = capability_type;
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_GET_CAPABILITES_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_CAPABILITES, &bt_req_avrcp_cap, cap_list);
 }
 
@@ -302,6 +315,7 @@ int32_t rsi_bt_avrcp_get_att_list(uint8_t *remote_dev_addr, rsi_bt_rsp_avrcp_get
 #else
   memcpy(bt_req_avrcp_att.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_GET_ATT_LIST_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ATTS_LIST, &bt_req_avrcp_att, att_list);
 }
 
@@ -333,6 +347,7 @@ int32_t rsi_bt_avrcp_get_att_vals_list(uint8_t *remote_dev_addr,
 #endif
   avrcp_att_vals.att_id = att_id;
 
+  SL_PRINTF(SL_RSI_BT_GET_ATT_VALS_LIST_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ATT_VALS_LIST, &avrcp_att_vals, att_vals_list);
 }
 
@@ -371,6 +386,7 @@ int32_t rsi_bt_avrcp_get_cur_att_val(uint8_t *remote_dev_addr,
   for (ix = 0; (ix < nbr_atts) && (ix < RSI_MAX_ATT); ix++) {
     avrcp_atts.att_list[ix] = att_list[ix];
   }
+  SL_PRINTF(SL_RSI_BT_GET_CURR_ATT_VAL_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_CUR_ATT_VAL, &avrcp_atts, att_vals_list);
 }
@@ -407,6 +423,7 @@ int32_t rsi_bt_avrcp_set_cur_att_val(uint8_t *remote_dev_addr, att_val_t *val_li
     att_val_list.att_val_list[ix].att_id = val_list[ix].att_val;
   }
 
+  SL_PRINTF(SL_RSI_BT_SET_CURR_ATT_VAL_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_SET_CUR_ATT_VAL, &att_val_list, NULL);
 }
 
@@ -447,6 +464,7 @@ int32_t rsi_bt_avrcp_get_element_att(uint8_t *remote_dev_addr,
     att_list.att_list[ix] = att_ids[ix];
   }
 
+  SL_PRINTF(SL_RSI_BT_GET_ELEM_ATT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ELEMENT_ATT, &att_list, att_vals);
 }
 
@@ -471,6 +489,7 @@ int32_t rsi_bt_avrcp_get_play_status(uint8_t *remote_dev_addr, rsi_bt_rsp_avrcp_
 #else
   memcpy(play_status_req.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_GET_PLAY_STATUS_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_PLAY_STATUS, &play_status_req, play_status);
 }
 
@@ -501,6 +520,7 @@ int32_t rsi_bt_avrcp_reg_notification(uint8_t *remote_dev_addr, uint8_t event_id
   memcpy(reg_notify_req.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
   reg_notify_req.event_id = event_id;
+  SL_PRINTF(SL_RSI_BT_REG_NOTIFICATION_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_REG_NOTIFICATION, &reg_notify_req, p_resp_val);
 }
@@ -525,6 +545,7 @@ int32_t rsi_bt_avrcp_get_remote_version(uint8_t *remote_dev_addr, rsi_bt_rsp_avr
 #else
   memcpy(profile_version.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_GET_REMOTE_VERSION_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_REMOTE_VERSION, &profile_version, version);
 }
 
@@ -564,6 +585,7 @@ int32_t rsi_bt_avrcp_get_att_text(uint8_t *remote_dev_addr,
   for (ix = 0; (ix < nbr_atts) && (ix < RSI_MAX_ATT); ix++) {
     att_text.att_list[ix] = p_atts[ix];
   }
+  SL_PRINTF(SL_RSI_BT_GET_ATT_TEXT_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_ATT_TEXT, &att_text, p_att_text_resp);
 }
@@ -606,6 +628,7 @@ int32_t rsi_bt_avrcp_get_att_val_text(uint8_t *remote_dev_addr,
   for (ix = 0; (ix < nbr_vals) && (ix < RSI_MAX_ATT); ix++) {
     att_val_text.vals[ix] = p_vals[ix];
   }
+  SL_PRINTF(SL_RSI_BT_AVRCP_GET_ATT_VAL_TEXT_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_ATT_VALS_TEXT, &att_val_text, p_att_text_resp);
 }
@@ -632,6 +655,7 @@ int32_t rsi_bt_avrcp_batt_status(uint8_t *remote_dev_addr, uint8_t batt_level)
 #endif
   batt_status.batt_status = batt_level;
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_BATT_STATUS_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_BATTERY_STATUS, &batt_status, NULL);
 }
 
@@ -664,6 +688,8 @@ int32_t rsi_bt_avrcp_supp_char_sets(uint8_t *remote_dev_addr, uint8_t nbr_sets, 
     char_sets.char_sets.supp_vals[ix] = p_sets[ix];
   }
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_SUPP_CHAR_SETS_TRIGGER, BLUETOOTH, LOG_INFO);
+
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_CHAR_SETS, &char_sets, NULL);
 }
 
@@ -690,6 +716,7 @@ int32_t rsi_bt_avrcp_set_abs_vol(uint8_t *remote_dev_addr, uint8_t abs_vol, uint
 #endif
   abs_vol_req.abs_vol = abs_vol;
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_SEND_ABS_VOLUME_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_SET_ABS_VOL, &abs_vol_req, p_resp_abs_vol);
 }
 
@@ -723,6 +750,7 @@ int32_t rsi_bt_avrcp_cap_resp(uint8_t *remote_dev_addr, uint8_t cap_type, uint8_
     cap_resp.caps[ix] = p_caps[ix];
   }
 
+  SL_PRINTF(SL_RSI_BT_SEND_DEVICE_CAPABILITES_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_CAPABILITES_RESP, &cap_resp, NULL);
 }
 
@@ -755,6 +783,7 @@ int32_t rsi_bt_avrcp_att_list_resp(uint8_t *remote_dev_addr, uint8_t nbr_atts, u
     att_resp.atts[ix] = p_atts[ix];
   }
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_ATT_LIST_RESP_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ATTS_LIST_RESP, &att_resp, NULL);
 }
 
@@ -786,6 +815,8 @@ int32_t rsi_bt_avrcp_att_val_list_resp(uint8_t *remote_dev_addr, uint8_t nbr_val
   for (ix = 0; (ix < nbr_vals) && (ix < MAX_CAPS); ix++) {
     att_vals_resp.vals[ix] = p_vals[ix];
   }
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_ATT_VAL_LIST_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ATT_VALS_LIST_RESP, &att_vals_resp, NULL);
 }
@@ -820,6 +851,7 @@ int32_t rsi_bt_avrcp_cur_att_val_resp(uint8_t *remote_dev_addr, uint8_t nbr_atts
     att_vals_resp.att_list.att_vals[ix].att_id  = p_att_vals[ix].att_id;
     att_vals_resp.att_list.att_vals[ix].att_val = p_att_vals[ix].att_val;
   }
+  SL_PRINTF(SL_RSI_BT_AVRCP_CURR_ATT_VAL_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_CUR_ATT_VAL_RESP, &att_vals_resp, NULL);
 }
@@ -846,6 +878,8 @@ int32_t rsi_bt_avrcp_set_cur_att_val_resp(uint8_t *remote_dev_addr, uint8_t stat
   memcpy(set_att_vals_resp.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
   set_att_vals_resp.status = status;
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_SET_CURR_ATT_VAL_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_SET_CUR_ATT_VAL_RESP, &set_att_vals_resp, NULL);
 }
@@ -884,6 +918,7 @@ int32_t rsi_bt_avrcp_ele_att_resp(uint8_t *remote_dev_addr, uint8_t num_attrs, a
     memcpy(elem_attr.elem_attr_list.attr_list[ix].attr_val, p_attr_list[ix].attr_val, p_attr_list[ix].attr_len);
   }
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_ELE_ATT_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_ELEMENT_ATT_RESP, &elem_attr, NULL);
 }
 
@@ -919,6 +954,8 @@ int32_t rsi_bt_avrcp_play_status_resp(uint8_t *remote_dev_addr,
   player_status.play_status = play_status;
   player_status.song_len    = song_len;
   player_status.song_pos    = song_pos;
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_PLAY_STATUS_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_GET_PLAY_STATUS_RESP, &player_status, NULL);
 }
@@ -968,6 +1005,7 @@ int32_t rsi_bt_avrcp_reg_notify_resp(uint8_t *remote_dev_addr,
   } else {
   }
 
+  SL_PRINTF(SL_RSI_BT_AVRCP_REG_NOTIFY_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_AVRCP_REG_NOTIFICATION_RESP, &reg_event, NULL);
 }
 
@@ -987,6 +1025,8 @@ int32_t rsi_bt_avrcp_reg_notify_resp(uint8_t *remote_dev_addr,
  */
 int32_t rsi_bt_avrcp_att_text_resp(uint8_t *remote_dev_addr, uint8_t nbr_atts, att_text_t *p_att_text)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_ATT_TEXT_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
   rsi_bt_avrcp_att_text_resp_t att_text;
   memset(&att_text, 0, sizeof(att_text));
   uint8_t ix;
@@ -1020,6 +1060,8 @@ int32_t rsi_bt_avrcp_att_text_resp(uint8_t *remote_dev_addr, uint8_t nbr_atts, a
  */
 int32_t rsi_bt_avrcp_att_vals_text_resp(uint8_t *remote_dev_addr, uint8_t nbr_vals, att_text_t *p_vals_text)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_ATT_VALS_TEXT_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO);
   rsi_bt_avrcp_att_text_resp_t vals_text;
   memset(&vals_text, 0, sizeof(vals_text));
   uint8_t ix;
@@ -1051,6 +1093,8 @@ int32_t rsi_bt_avrcp_att_vals_text_resp(uint8_t *remote_dev_addr, uint8_t nbr_va
  */
 int32_t rsi_bt_avrcp_batt_status_resp(uint8_t *remote_dev_addr, uint8_t status)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_BATT_STATUS_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "STATUS: %1x", status);
   rsi_bt_avrcp_reg_notify_resp_t batt_status;
   memset(&batt_status, 0, sizeof(batt_status));
 #ifdef BD_ADDR_IN_ASCII
@@ -1078,6 +1122,8 @@ int32_t rsi_bt_avrcp_batt_status_resp(uint8_t *remote_dev_addr, uint8_t status)
  */
 int32_t rsi_bt_avrcp_char_set_status_resp(uint8_t *remote_dev_addr, uint8_t status)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_CHAR_SET_STATUS_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "STATUS: %1x", status);
   rsi_bt_avrcp_reg_notify_resp_t char_set;
   memset(&char_set, 0, sizeof(char_set));
 #ifdef BD_ADDR_IN_ASCII
@@ -1106,6 +1152,8 @@ int32_t rsi_bt_avrcp_char_set_status_resp(uint8_t *remote_dev_addr, uint8_t stat
  */
 int32_t rsi_bt_avrcp_notify(uint8_t *remote_dev_addr, uint8_t event_id, notify_val_t *p_notify_val)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_NOTIFY_TRIGGER, BLUETOOTH, LOG_INFO);
   rsi_bt_avrcp_notify_t notify;
   memset(&notify, 0, sizeof(notify));
 #ifdef BD_ADDR_IN_ASCII
@@ -1134,6 +1182,8 @@ int32_t rsi_bt_avrcp_notify(uint8_t *remote_dev_addr, uint8_t event_id, notify_v
  */
 int32_t rsi_bt_avrcp_cmd_reject(uint8_t *remote_dev_addr, uint8_t pdu_id, uint8_t status)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_CMD_REJECT_TRIGGER, BLUETOOTH, LOG_INFO, "PDU_ID: %1x, STATUS: %1x", pdu_id, status);
   rsi_bt_avrcp_cmd_reject_t cmd_reject;
   memset(&cmd_reject, 0, sizeof(cmd_reject));
 #ifdef BD_ADDR_IN_ASCII
@@ -1161,6 +1211,8 @@ int32_t rsi_bt_avrcp_cmd_reject(uint8_t *remote_dev_addr, uint8_t pdu_id, uint8_
  */
 int32_t rsi_bt_avrcp_set_abs_vol_resp(uint8_t *remote_dev_addr, uint8_t abs_vol)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_SET_ABS_VOL_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "VOLUME: %1x", abs_vol);
   rsi_bt_avrcp_set_abs_vol_resp_t abs_vol_resp;
   memset(&abs_vol_resp, 0, sizeof(abs_vol_resp));
 #ifdef BD_ADDR_IN_ASCII
@@ -1188,6 +1240,8 @@ int32_t rsi_bt_avrcp_set_abs_vol_resp(uint8_t *remote_dev_addr, uint8_t abs_vol)
  */
 int32_t rsi_bt_avrcp_set_addr_player_resp(uint8_t *remote_dev_addr, uint8_t status)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_SET_ADDR_PLAYER_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "STATUS: %1x", status);
   rsi_bt_avrcp_set_addr_player_resp_t set_addr_player_resp = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_addr_player_resp.dev_addr, (int8_t *)remote_dev_addr);
@@ -1220,6 +1274,8 @@ int32_t rsi_bt_avrcp_get_folder_items_resp(uint8_t *remote_dev_addr,
                                            uint8_t status,
                                            folder_items_resp_t folder_items_resp)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_GET_FOLDER_ITEMS_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "STATUS: %1x", status);
   rsi_bt_avrcp_get_folder_items_resp_t get_folder_items_resp = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(get_folder_items_resp.dev_addr, (int8_t *)remote_dev_addr);
@@ -1254,6 +1310,14 @@ int32_t rsi_bt_avrcp_get_tot_num_items_resp(uint8_t *remote_dev_addr,
                                             uint16_t uidcntr,
                                             uint32_t numofitems)
 {
+
+  SL_PRINTF(SL_RSI_BT_AVRCP_GET_TOTAL_NUM_ITEMS_RESPONSE_TRIGGER,
+            BLUETOOTH,
+            LOG_INFO,
+            "STATUS: %1x, UDICNTR: %2x, NUMBER_OF_ITEMS: %4x",
+            status,
+            uidcntr,
+            numofitems);
   rsi_bt_avrcp_get_tot_num_items_resp_t get_tot_num_items_resp = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(get_tot_num_items_resp.dev_addr, (int8_t *)remote_dev_addr);

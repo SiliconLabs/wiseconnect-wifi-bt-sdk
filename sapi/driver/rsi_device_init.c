@@ -101,19 +101,17 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 
 int16_t rsi_bl_module_power_cycle(void)
 {
-
+  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_ENTRY, DRIVER, LOG_INFO);
   // configure Reset pin in GPIO mode
   rsi_hal_config_gpio(RSI_HAL_RESET_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
 
   // reset/drive low value on the GPIO
   rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
 
-  // delay for 100 milli seconds
   rsi_delay_ms(100);
-
   // Set/drive high value on the GPIO
   rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
-
+  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_EXIT, DRIVER, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */
@@ -123,7 +121,7 @@ int16_t rsi_bl_module_power_cycle(void)
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bl_waitfor_boardready(void)
- * @brief       Check board ready from module.
+ * @brief       This API checks for the readiness of the bootloader to receive the commands from the host.
  * @param[in]   void 
  * @return      0              - Success \n
  *              Negative Value - Failure \n
@@ -135,12 +133,14 @@ int16_t rsi_bl_module_power_cycle(void)
 /// @private
 int16_t rsi_bl_waitfor_boardready(void)
 {
+  SL_PRINTF(SL_BL_WAITFOR_BOARDREADY_ENTRY, DRIVER, LOG_INFO);
   int16_t retval      = 0;
   uint16_t read_value = 0;
 
   retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
 
   if (retval < 0) {
+    SL_PRINTF(SL_BL_WAITFOR_BOARDREADY_EXIT, DRIVER, LOG_ERROR, "retval: %d", retval);
     return retval;
   }
   if ((read_value & 0xFF00) == (RSI_HOST_INTERACT_REG_VALID & 0xFF00)) {
@@ -156,23 +156,30 @@ int16_t rsi_bl_waitfor_boardready(void)
 #if RSI_BOOTLOADER_VERSION_CHECK
     else if ((read_value & 0xFF) == RSI_BOOTLOADER_VERSION) {
     } else {
-
+      SL_PRINTF(SL_BL_WAITFOR_BOARDREADY_BOOTLOADER_VERSION_NOT_MATCHING, DRIVER, LOG_ERROR);
       return RSI_ERROR_BOOTLOADER_VERSION_NOT_MATCHING;
     }
 #endif
-
+    SL_PRINTF(SL_BL_WAITFOR_BOARDREADY_SUCCESS, DRIVER, LOG_ERROR);
     return RSI_SUCCESS;
   }
-
+  SL_PRINTF(SL_BL_WAITFOR_BOARDREADY_WAITING_FOR_BOARD_READY, DRIVER, LOG_ERROR);
   return RSI_ERROR_WAITING_FOR_BOARD_READY;
 }
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bl_select_option(uint8_t cmd)
  * @brief       Send firmware load request to module or update default configurations.
- * @param[in]   cmd - type of configuration to be saved
+ * @param[in]   cmd - type of configuration to be saved \n
+ *                    BURN_NWP_FW                    - 0x42 \n
+ *                    LOAD_NWP_FW                    - 0x31 \n
+ *                    LOAD_DEFAULT_NWP_FW_ACTIVE_LOW - 0x71 \n
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ *              Non-Zero Value - Failure \n
+ *                               -28 - Firmware Load or Upgrade timeout error \n
+ *                               -14 - Valid Firmware not present \n
+ *                               -15 - Invalid Option
+ *  
  */
 /// @private
 int16_t rsi_bl_select_option(uint8_t cmd)
@@ -287,6 +294,7 @@ int16_t rsi_bl_select_option(uint8_t cmd)
 
 int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size, uint8_t flags)
 {
+  SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_ENTRY, COMMON, LOG_INFO);
   static uint16_t boot_cmd;
   uint16_t read_value = 0;
   uint32_t offset     = 0;
@@ -324,6 +332,7 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
 
     retval = rsi_bootloader_instructions(boot_insn, (uint16_t *)((uint8_t *)firmware_image + offset));
     if (retval < 0) {
+      SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT1, COMMON, LOG_ERROR, "retval: %d", retval);
       return retval;
     }
 
@@ -332,12 +341,14 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
     while (1) {
       retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
       if (retval < 0) {
+        SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT2, COMMON, LOG_ERROR, "retval: %d", retval);
         return retval;
       }
       if (read_value == (RSI_HOST_INTERACT_REG_VALID | poll_resp)) {
         break;
       }
       if (rsi_timer_expired(&timer_instance)) {
+        SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT3, COMMON, LOG_ERROR);
         return RSI_ERROR_FW_UPGRADE_TIMEOUT;
       }
     }
@@ -350,6 +361,7 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
 
     retval = rsi_bootloader_instructions(RSI_REG_WRITE, &boot_cmd);
     if (retval < 0) {
+      SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT4, COMMON, LOG_ERROR, "retval: %d", retval);
       return retval;
     }
     rsi_init_timer(&timer_instance, 40000);
@@ -357,14 +369,17 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
     do {
       retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
       if (retval < 0) {
+        SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT5, COMMON, LOG_ERROR, "retval: %d", retval);
         return retval;
       }
       if (rsi_timer_expired(&timer_instance)) {
+        SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT6, COMMON, LOG_ERROR);
         return RSI_ERROR_FW_UPGRADE_TIMEOUT;
       }
 
     } while (read_value != (RSI_HOST_INTERACT_REG_VALID | RSI_FWUP_SUCCESSFUL));
   }
+  SL_PRINTF(SL_BL_UPGRADE_FIRMWARE_EXIT5, COMMON, LOG_INFO, "retval: %d", retval);
   return retval;
 }
 /** @} */
@@ -381,10 +396,12 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
 ///@private
 int32_t rsi_set_fast_fw_up(void)
 {
+  SL_PRINTF(SL_SET_FAST_FW_UP_ENTRY, DRIVER, LOG_INFO);
   uint32_t read_data = 0;
   int32_t retval     = 0;
   retval             = rsi_mem_rd(RSI_SAFE_UPGRADE_ADDR, 4, (uint8_t *)&read_data);
   if (retval < 0) {
+    SL_PRINTF(SL_SDIO_IFACE_INIT_EXIT_1, DRIVER, LOG_ERROR, "retval: %d", retval);
     return retval;
   }
   //disabling safe upgradation bit
@@ -392,9 +409,11 @@ int32_t rsi_set_fast_fw_up(void)
     read_data &= ~(RSI_SAFE_UPGRADE);
     retval = rsi_mem_wr(RSI_SAFE_UPGRADE_ADDR, 4, (uint8_t *)&read_data);
     if (retval < 0) {
+      SL_PRINTF(SL_SDIO_IFACE_INIT_EXIT_2, DRIVER, LOG_ERROR, "retval: %d", retval);
       return retval;
     }
   }
+  SL_PRINTF(SL_SDIO_IFACE_INIT_EXIT_3, DRIVER, LOG_INFO, "retval: %d", retval);
   return retval;
 }
 /** @} */
@@ -412,6 +431,7 @@ int32_t rsi_set_fast_fw_up(void)
 
 int32_t rsi_get_rom_version(void)
 {
+  SL_PRINTF(SL_GET_ROM_VERSION_ENTRY, DRIVER, LOG_INFO);
   return rsi_driver_cb_non_rom->rom_version_info;
 }
 /** @} */
@@ -422,11 +442,21 @@ int32_t rsi_get_rom_version(void)
 /**
  * @fn          int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
  * @brief       Send boot instructions to module.
- * @param[in]   type - type of the insruction to perform
- * @param[in]   data - pointer to data which is to be read/write
+ * @param[in]   type - type of the insruction to perform \n
+ *                     0xD1 - RSI_REG_READ \n
+ *                     0xD2 - RSI_REG_WRITE \n
+ *                     0xD5 - RSI_PING_WRITE \n
+ *                     0xD4 - RSI_PONG_WRITE \n
+ *                     0x42 - BURN_NWP_FW \n
+ *                     0x31 - LOAD_NWP_FW \n
+ *                     0x71 - LOAD_DEFAULT_NWP_FW_ACTIVE_LOW 
+ * @param[in]   data - pointer to data which is to be read/write \n
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
- *              
+ *              Non-Zero Value - Failure \n
+ *                               -28       - Firmware Load or Upgrade timeout error \n
+ *                                -2       - Invalid Parameter \n
+ *                                -1 or -2 - SPI Failure 
+ * @note        This is a proprietry API and it is not recommended to be used by the user directly.
  */
 /// @private
 int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
@@ -548,14 +578,18 @@ int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
 
 int32_t rsi_get_ram_dump(uint32_t addr, uint16_t length, uint8_t *buf)
 {
+  SL_PRINTF(SL_GET_RAM_DUMP_ENTRY, COMMON, LOG_INFO);
   uint32_t retval = 0;
   if (buf == NULL) {
+    SL_PRINTF(SL_SET_RTC_TIMER_NULL_BUFFER, COMMON, LOG_ERROR);
     return -1;
   }
   if (!length || length > 4096) {
+    SL_PRINTF(SL_SET_RTC_TIMER_BUFFER_LENGTH_ERROR, COMMON, LOG_ERROR);
     return -2;
   }
   retval = rsi_mem_rd(addr, length, buf);
+  SL_PRINTF(SL_SET_RTC_TIMER_EXIT, COMMON, LOG_INFO, "retval: %d", retval);
   return retval;
 }
 /** @} */

@@ -66,6 +66,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
                                  int8_t *password)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -76,22 +77,26 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
 
   if ((clientid == NULL) || (server_ip == NULL) || (!client_port) || (!server_port)) {
+    SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   // If any of the parameter is valid and exceeds max allowed length, then return error
   if ((rsi_strlen(clientid) > (RSI_EMB_MQTT_CLIENTID_MAX_LEN - RSI_LENGTH_ADJ))
       || ((username != NULL) && (rsi_strlen(username) > (RSI_EMB_MQTT_USERNAME_MAX_LEN - RSI_LENGTH_ADJ)))
       || ((password != NULL) && (rsi_strlen(password) > (RSI_EMB_MQTT_PASSWORD_MAX_LEN - RSI_LENGTH_ADJ)))) {
+    SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_PARAMTER_LENGTH_EXCEEDS_MAX_VAL, NETWORK, LOG_ERROR);
     return RSI_ERROR_PARAMTER_LENGTH_EXCEEDS_MAX_VAL;
   }
 
@@ -106,6 +111,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -182,10 +188,12 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_EXIT, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -232,6 +240,7 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
   UNUSED_PARAMETER(will_message);
 
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_CONNECT_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -242,11 +251,13 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_CONNECT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_CONNECT_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -262,6 +273,7 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_CONNECT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -296,10 +308,12 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_CONNECT_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_CONNECT_EXIT, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -327,6 +341,7 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
 int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_PUBLISH_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -339,16 +354,19 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_PUBLISH_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_PUBLISH_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
 
   if ((topic == NULL) || (publish_msg == NULL) || (publish_msg->qos > 2)) {
+    SL_PRINTF(SL_EMB_MQTT_PUBLISH_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -363,6 +381,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_PUBLISH_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -376,6 +395,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 
     // Strlen
     if (mqtt_ops->topic_len > (RSI_EMB_MQTT_TOPIC_MAX_LEN - RSI_LENGTH_ADJ)) {
+      SL_PRINTF(SL_EMB_MQTT_PUBLISH_PARAMTER_LENGTH_EXCEEDS_MAX_VAL_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_PARAMTER_LENGTH_EXCEEDS_MAX_VAL;
     }
 
@@ -386,6 +406,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
     }
 
     if (max_payload_size < rsi_cal_mqtt_packet_len((2 + mqtt_ops->topic_len + publish_msg->payloadlen))) {
+      SL_PRINTF(SL_EMB_MQTT_PUBLISH_PARAMTER_LENGTH_EXCEEDS_MAX_VAL_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_PARAMTER_LENGTH_EXCEEDS_MAX_VAL;
     }
 
@@ -423,10 +444,12 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_PUBLISH_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_PUBLISH_COMMAND_SEND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -454,6 +477,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -464,11 +488,13 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -478,6 +504,7 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
   }
   // Strlen
   if (rsi_strlen(topic) > (RSI_EMB_MQTT_TOPIC_MAX_LEN - RSI_LENGTH_ADJ)) {
+    SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_PARAMTER_LENGTH_EXCEEDS_MAX_VAL, NETWORK, LOG_ERROR);
     return RSI_ERROR_PARAMTER_LENGTH_EXCEEDS_MAX_VAL;
   }
 
@@ -492,6 +519,7 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -525,10 +553,12 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_COMMAND_SEND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -556,6 +586,7 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -566,11 +597,13 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -581,6 +614,7 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 
   // Strlen
   if (rsi_strlen(topic) > (RSI_EMB_MQTT_TOPIC_MAX_LEN - RSI_LENGTH_ADJ)) {
+    SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_PARAMTER_LENGTH_EXCEEDS_MAX_VAL, NETWORK, LOG_ERROR);
     return RSI_ERROR_PARAMTER_LENGTH_EXCEEDS_MAX_VAL;
   }
 
@@ -595,6 +629,7 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -626,10 +661,12 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_COMMAND_SEND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -655,6 +692,7 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 int32_t rsi_emb_mqtt_disconnect()
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EMB_MQTT_DISCONNECT_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
 
@@ -665,11 +703,13 @@ int32_t rsi_emb_mqtt_disconnect()
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_DISCONNECT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_DISCONNECT_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -685,6 +725,7 @@ int32_t rsi_emb_mqtt_disconnect()
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_DISCONNECT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -708,10 +749,12 @@ int32_t rsi_emb_mqtt_disconnect()
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_DISCONNECT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_DISCONNECT_COMMAND_SEND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -737,7 +780,7 @@ int32_t rsi_emb_mqtt_disconnect()
 int32_t rsi_emb_mqtt_destroy()
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_EMB_MQTT_DESTROY_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -747,11 +790,13 @@ int32_t rsi_emb_mqtt_destroy()
 
   if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
     // Command not supported
+    SL_PRINTF(SL_EMB_MQTT_DESTROY_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_EMB_MQTT_DESTROY_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -767,6 +812,7 @@ int32_t rsi_emb_mqtt_destroy()
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EMB_MQTT_DESTROY_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -790,10 +836,12 @@ int32_t rsi_emb_mqtt_destroy()
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_EMB_MQTT_DESTROY_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_EMB_MQTT_DESTROY_COMMAND_SEN_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -814,11 +862,14 @@ int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
                                                                       uint8_t *buffer,
                                                                       const uint32_t length))
 {
+
+  SL_PRINTF(SL_EMB_MQTT_REGISTER_CALL_BACK_ENTRY, NETWORK, LOG_INFO);
   if (callback_id > RSI_MAX_NUM_CALLBACKS) {
     /*
      *Return, if the callback number exceeds the RSI_MAX_NUM_CALLBACKS, or
      * the callback is already registered
      */
+    SL_PRINTF(SL_EMB_MQTT_REGISTER_CALL_BACK_EXCEEDS_MAX_CALLBACKS, NETWORK, LOG_ERROR);
     return RSI_ERROR_EXCEEDS_MAX_CALLBACKS;
   }
 
@@ -832,9 +883,10 @@ int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
     // MQTT keep alive timeout callback handler
     rsi_wlan_cb_non_rom->nwk_callbacks.rsi_emb_mqtt_keep_alive_timeout_callback = call_back_handler_ptr;
   } else {
+    SL_PRINTF(SL_EMB_MQTT_REGISTER_CALL_BACK_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
-
+  SL_PRINTF(SL_EMB_MQTT_REGISTER_CALL_BACK_EXIT, NETWORK, LOG_ERROR);
   return RSI_SUCCESS;
 }
 /*==============================================*/
@@ -846,6 +898,7 @@ int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
 /// @private
 int32_t rsi_cal_mqtt_packet_len(int32_t rem_len)
 {
+  SL_PRINTF(SL_CAL_MQTT_PACKET_LEN_ENTRY, NETWORK, LOG_INFO);
   rem_len += 1; /* Header byte */
 
   /* Now remaining_length field */
@@ -857,6 +910,7 @@ int32_t rsi_cal_mqtt_packet_len(int32_t rem_len)
     rem_len += 3;
   else
     rem_len += 4;
+  SL_PRINTF(SL_CAL_MQTT_PACKET_LEN_EXIT, NETWORK, LOG_INFO, "remlen: %4x", rem_len);
   return rem_len;
 }
 /** @} */

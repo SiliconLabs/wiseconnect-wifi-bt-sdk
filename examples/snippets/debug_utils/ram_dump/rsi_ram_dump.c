@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -63,9 +63,12 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 uint8_t ram_content[RAM_CONENT_LEN];
 
+uint32_t buf = 0;
+
 int32_t rsi_ram_dump_app()
 {
   int32_t status = RSI_SUCCESS;
+  int32_t i      = 0;
   int32_t offset = 0, chunk_len;
 #ifdef LINUX_PLATFORM
   FILE *fp = NULL;
@@ -83,6 +86,19 @@ int32_t rsi_ram_dump_app()
       return status;
     }
     offset += chunk_len;
+  }
+
+  for (i = 0; i < 4; i++) {
+    status = rsi_mem_rd((0x22000420 + i * 0x80), 4, (uint8_t *)&buf);
+    LOG_PRINT("\nPC%d 0x%x", i, buf);
+    //Reading the Thread Register values
+    for (uint32_t r = 0; r < 16; r++) {
+      status = rsi_mem_rd((0x22000440 + r * 4 + i * 0x80), 4, (uint8_t *)&buf);
+      LOG_PRINT("\n R%d 0x%x", r, buf);
+    }
+    //Reading the IPL register values for 4 threads
+    status = rsi_mem_rd((0x22000414 + i * 0x80), 4, (uint8_t *)&buf);
+    LOG_PRINT("\n IPL[%d] 0x%x \n", i, buf);
   }
 #ifdef LINUX_PLATFORM
   fp = fopen("dump.txt", "w");
@@ -109,7 +125,7 @@ int main()
     return status;
   }
 
-  //! Redpine module intialisation
+  //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     return status;

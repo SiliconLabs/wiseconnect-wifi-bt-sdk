@@ -346,7 +346,9 @@ extern ROM_WL_API_T *api_wl;
 // Proto types
 rsi_error_t rsi_mutex_create(rsi_mutex_handle_t *mutex);
 rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex);
+void rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex);
 rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex);
+void rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex);
 rsi_error_t rsi_semaphore_create(rsi_semaphore_handle_t *semaphore, uint32_t count);
 rsi_error_t rsi_semaphore_wait(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms);
 rsi_error_t rsi_semaphore_post(rsi_semaphore_handle_t *semaphore);

@@ -71,7 +71,12 @@ static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
 static uint8_t rsi_app_async_event_map                          = 0;
 static rsi_ble_event_conn_status_t rsi_app_connected_device     = { 0 };
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
+uint8_t rsi_ble_states_bitmap;
 
+rsi_semaphore_handle_t ble_slave_conn_sem;
+rsi_semaphore_handle_t ble_main_task_sem;
+static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
@@ -98,22 +103,30 @@ static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
  */
 static void rsi_ble_app_init_events()
 {
-  rsi_app_async_event_map = 0;
+  ble_app_event_map  = 0;
+  ble_app_event_map1 = 0;
   return;
 }
 
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_set_event
- * @brief      sets the specific event.
+ * @brief      set the specific event.
  * @param[in]  event_num, specific event number.
  * @return     none.
  * @section description
  * This function is used to set/raise the specific event.
  */
-static void rsi_ble_app_set_event(uint32_t event_num)
+void rsi_ble_app_set_event(uint32_t event_num)
 {
-  rsi_app_async_event_map |= BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map |= BIT(event_num);
+  } else {
+    ble_app_event_map1 |= BIT((event_num - 32));
+  }
+  rsi_semaphore_post(&ble_main_task_sem);
+
   return;
 }
 
@@ -128,7 +141,13 @@ static void rsi_ble_app_set_event(uint32_t event_num)
  */
 static void rsi_ble_app_clear_event(uint32_t event_num)
 {
-  rsi_app_async_event_map &= ~BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map &= ~BIT(event_num);
+  } else {
+    ble_app_event_map1 &= ~BIT((event_num - 32));
+  }
+
   return;
 }
 
@@ -147,13 +166,19 @@ static int32_t rsi_ble_app_get_event(void)
 {
   uint32_t ix;
 
-  for (ix = 0; ix < 32; ix++) {
-    if (rsi_app_async_event_map & (1 << ix)) {
-      return ix;
+  for (ix = 0; ix < 64; ix++) {
+    if (ix < 32) {
+      if (ble_app_event_map & (1 << ix)) {
+        return ix;
+      }
+    } else {
+      if (ble_app_event_map1 & (1 << (ix - 32))) {
+        return ix;
+      }
     }
   }
 
-  return (RSI_FAILURE);
+  return (-1);
 }
 
 /*==============================================*/
@@ -199,6 +224,8 @@ void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 {
   memcpy(&rsi_app_connected_device, resp_conn, sizeof(rsi_ble_event_conn_status_t));
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
+  //! unblock connection semaphore
+  rsi_semaphore_post(&ble_slave_conn_sem);
 }
 
 /*==============================================*/
@@ -214,6 +241,12 @@ void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
+  //! Comparing Remote slave bd address to check the scan bitmap
+  if (!(memcmp(remote_dev_bd_addr, (uint8_t *)resp_disconnect->dev_addr, 6))) {
+    CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
+  } else {
+    CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
+  }
   rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
 }
 
@@ -232,6 +265,8 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
   memcpy(rsi_app_connected_device.dev_addr, resp_enh_conn->dev_addr, RSI_DEV_ADDR_LEN);
   rsi_app_connected_device.status = resp_enh_conn->status;
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
+  //! unblock connection semaphore
+  rsi_semaphore_post(&ble_slave_conn_sem);
 }
 
 /*==============================================*/
@@ -245,11 +280,32 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
  */
 int32_t rsi_ble_app_task(void)
 {
-  int32_t status         = 0;
-  int32_t temp_event_map = 0;
+  int32_t status          = 0;
+  int32_t temp_event_map  = 0;
+  int32_t temp_event_map1 = 0;
+
 #if ((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
   uint8_t adv[31] = { 2, 1, 6 };
 #endif
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
+#ifndef RSI_WITH_OS
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+#endif
+#ifdef RSI_WITH_OS
   //! Silabs module initialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
@@ -258,6 +314,15 @@ int32_t rsi_ble_app_task(void)
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  "driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
 
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
@@ -279,7 +344,8 @@ int32_t rsi_ble_app_task(void)
                                  NULL,
                                  NULL,
                                  NULL);
-
+  //! create ble main task if ble protocol is selected
+  rsi_semaphore_create(&ble_main_task_sem, 0);
   //! initialize the event map
   rsi_ble_app_init_events();
 
@@ -310,12 +376,15 @@ int32_t rsi_ble_app_task(void)
   //! set advertise data
   rsi_ble_set_advertise_data(adv, strlen(RSI_BLE_LOCAL_NAME) + 5);
 
+  rsi_semaphore_create(&ble_slave_conn_sem, 0);
+
   //! start the advertising
   LOG_PRINT("\n Start advertising \n");
   status = rsi_ble_start_advertising();
   if (status != RSI_SUCCESS) {
     return status;
   }
+  SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
 #endif
 
 #if ((BLE_ROLE == MASTER_MODE) || (BLE_ROLE == DUAL_MODE))
@@ -325,6 +394,7 @@ int32_t rsi_ble_app_task(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
+  SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
 #endif
 
   LOG_PRINT("\n Initiate module in to power save \n");
@@ -361,12 +431,15 @@ int32_t rsi_ble_app_task(void)
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
       //! if events are not received loop will be continued.
+      rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
 
     //! if any event is received, it will be served.
     switch (temp_event_map) {
       case RSI_APP_EVENT_ADV_REPORT: {
+        //! clear the advertise report event.
+        rsi_ble_app_clear_event(RSI_APP_EVENT_ADV_REPORT);
         //! advertise report event.
         //! initiate stop scanning command.
         status = rsi_ble_stop_scanning();
@@ -379,8 +452,20 @@ int32_t rsi_ble_app_task(void)
         if (status != RSI_SUCCESS) {
           return status;
         }
-        //! clear the advertise report event.
-        rsi_ble_app_clear_event(RSI_APP_EVENT_ADV_REPORT);
+
+        rsi_semaphore_wait(&ble_slave_conn_sem, 10000);
+        temp_event_map1 = rsi_ble_app_get_event();
+
+        if ((temp_event_map1 == -1) || (!(temp_event_map1 & RSI_APP_EVENT_CONNECTED))) {
+          LOG_PRINT("\r\n Initiating connect cancel command \n");
+          status = rsi_ble_connect_cancel((int8_t *)remote_dev_bd_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n ble connect cancel cmd status = %x \n", status);
+          } else {
+            rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+          }
+        }
+
       } break;
       case RSI_APP_EVENT_CONNECTED: {
         //! remote device connected event
@@ -410,26 +495,29 @@ int32_t rsi_ble_app_task(void)
           LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
           return status;
         }
-
-#if ((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
-        //! set device in advertising mode.
-        LOG_PRINT("\n Start advertising \n");
+        if (((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
+            && (!(CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)))) {
+          //! set device in advertising mode.
+          LOG_PRINT("\n Start advertising \n");
 adv:
-        status = rsi_ble_start_advertising();
-        if (status != RSI_SUCCESS) {
-          goto adv;
+          status = rsi_ble_start_advertising();
+          if (status != RSI_SUCCESS) {
+            goto adv;
+          }
+          SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
         }
-#endif
-#if ((BLE_ROLE == MASTER_MODE) || (BLE_ROLE == DUAL_MODE))
-        device_found = 0;
-        //! set device in scanning mode.
-        LOG_PRINT("\n Start scanning \n");
+        if (((BLE_ROLE == MASTER_MODE) || (BLE_ROLE == DUAL_MODE))
+            && (!(CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)))) {
+          device_found = 0;
+          //! set device in scanning mode.
+          LOG_PRINT("\n Start scanning \n");
 scan:
-        status = rsi_ble_start_scanning();
-        if (status != RSI_SUCCESS) {
-          goto scan;
+          status = rsi_ble_start_scanning();
+          if (status != RSI_SUCCESS) {
+            goto scan;
+          }
+          SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
         }
-#endif
         LOG_PRINT("\n keep module in to power save \n");
         status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
@@ -476,15 +564,8 @@ int main(void)
 {
   int32_t status;
 #ifdef RSI_WITH_OS
-  rsi_task_handle_t ble_task_handle    = NULL;
-  rsi_task_handle_t driver_task_handle = NULL;
+  rsi_task_handle_t ble_task_handle = NULL;
 #endif
-
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
 
 #ifndef RSI_WITH_OS
 
@@ -501,6 +582,11 @@ int main(void)
 #endif
 
 #ifdef RSI_WITH_OS
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
+    return status;
+  }
 
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
@@ -513,14 +599,6 @@ int main(void)
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &ble_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  "driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

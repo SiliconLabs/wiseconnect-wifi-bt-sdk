@@ -44,6 +44,7 @@ int32_t rsi_bt_a2dp_init(rsi_bt_a2dp_sbc_codec_cap_t *sbc_cap)
     bt_req_a2dp_init.data_len = sizeof(rsi_bt_a2dp_sbc_codec_cap_t);
     memcpy(&bt_req_a2dp_init.data, sbc_cap, sizeof(rsi_bt_a2dp_sbc_codec_cap_t));
   }
+  SL_PRINTF(SL_RSI_BT_A2DP_INIT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SET_PROFILE_MODE, &bt_req_a2dp_init, NULL);
 }
 
@@ -68,6 +69,8 @@ int32_t rsi_bt_a2dp_connect(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_a2dp_connect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_CONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
+
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_CONNECT, &bt_req_a2dp_connect, NULL);
 }
 
@@ -90,6 +93,7 @@ int32_t rsi_bt_a2dp_disconnect(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_a2dp_disconnect.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_DISCONNECT, &bt_req_a2dp_disconnect, NULL);
 }
@@ -122,10 +126,18 @@ int32_t rsi_bt_a2dp_disconnect(uint8_t *remote_dev_addr)
  *
  */
 
+#if (!TA_BASED_ENCODER)
+int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
+                                      uint8_t *pcm_mp3_data,
+                                      uint16_t pcm_mp3_data_len,
+                                      uint8_t audio_type,
+                                      uint16_t *bytes_consumed)
+#else
 int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
                                       uint8_t *pcm_mp3_data,
                                       uint16_t pcm_mp3_data_len,
                                       uint8_t audio_type)
+#endif
 {
 #if (!TA_BASED_ENCODER)
   /*These statement are added only to resolve compilation warning, value is unchanged*/
@@ -162,6 +174,7 @@ int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
          (pcm_mp3_data + sizeof(bt_req_a2dp_pcm_mp3_pkt_part1.pcm_mp3_data)),
          bt_req_a2dp_pcm_mp3_pkt_part2.pcm_mp3_data_len);
 
+  SL_PRINTF(SL_RSI_BT_A2DP_SEND_PCM_MP3_DATA_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_PCM_MP3_DATA, &bt_req_a2dp_pcm_mp3_pkt_part2, NULL);
 #endif
   return RSI_SUCCESS; // This is added to remove the compilation warning
@@ -211,6 +224,7 @@ int32_t rsi_bt_a2dp_send_sbc_aac_data(uint8_t *remote_dev_addr,
   bt_req_a2dp_sbc_aac_pkt.audio_type       = audio_type;
   memcpy(bt_req_a2dp_sbc_aac_pkt.sbc_aac_data, sbc_aac_data, bt_req_a2dp_sbc_aac_pkt.sbc_aac_data_len);
 
+  SL_PRINTF(SL_RSI_BT_A2DP_SEND_SBC_AAC_DATA_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_SBC_AAC_DATA, &bt_req_a2dp_sbc_aac_pkt, NULL);
 }
 
@@ -236,6 +250,7 @@ int32_t rsi_bt_a2dp_start(uint8_t *remote_dev_addr)
   memcpy(bt_req_a2dp_start.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
 
+  SL_PRINTF(SL_RSI_BT_A2DP_START, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_START, &bt_req_a2dp_start, NULL);
 }
 
@@ -260,6 +275,7 @@ int32_t rsi_bt_a2dp_suspend(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_a2dp_suspend.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_SUSPEND, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_SUSPEND, &bt_req_a2dp_suspend, NULL);
 }
@@ -285,6 +301,7 @@ int32_t rsi_bt_a2dp_close(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_a2dp_close.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_CLOSE, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_CLOSE, &bt_req_a2dp_close, NULL);
 }
@@ -310,6 +327,7 @@ int32_t rsi_bt_a2dp_abort(uint8_t *remote_dev_addr)
 #else
   memcpy(bt_req_a2dp_abort.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_ABORT, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_ABORT, &bt_req_a2dp_abort, NULL);
 }
@@ -335,6 +353,7 @@ int32_t rsi_bt_a2dp_get_config(uint8_t *remote_dev_addr, rsi_bt_resp_a2dp_get_co
 #else
   memcpy(bt_req_a2dp_get_config.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
+  SL_PRINTF(SL_RSI_BT_A2DP_GET_CONFIG, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_GET_CONFIG, &bt_req_a2dp_get_config, sbc_resp_cap);
 }
@@ -368,6 +387,7 @@ int32_t rsi_bt_a2dp_set_config(uint8_t *remote_dev_addr, rsi_bt_a2dp_sbc_codec_c
   memcpy(bt_a2dp_set_config.dev_addr, (int8_t *)remote_dev_addr, 6);
 #endif
   memcpy(&bt_a2dp_set_config.sbc_cap, set_sbc_cap, sizeof(rsi_bt_a2dp_sbc_codec_cap_t));
+  SL_PRINTF(SL_RSI_BT_A2DP_SET_CONFIG, BLUETOOTH, LOG_INFO);
 
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_A2DP_SET_CONFIG, &bt_a2dp_set_config, status);
 }

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -28,7 +28,7 @@
 #define AWS_IOT_MQTT_HOST \
   "a25jwtlmds8eip-ats.iot.us-east-2.amazonaws.com" ///< Customer specific MQTT HOST. The same will be used for Thing Shadow
 #define AWS_IOT_MQTT_PORT            8883          ///< default port for MQTT/S
-#define AWS_IOT_MQTT_CLIENT_ID       "Redpine"     ///< MQTT client ID should be unique for every device
+#define AWS_IOT_MQTT_CLIENT_ID       "Silabs"     ///< MQTT client ID should be unique for every device
 #define AWS_IOT_MY_THING_NAME        "Test_IoT" //"AWS-IoT-C-SDK" ///< Thing Name of the Shadow this device is associated with
 #define AWS_IOT_ROOT_CA_FILENAME     "rootCA.crt"  ///< Root CA file name
 #define AWS_IOT_CERTIFICATE_FILENAME "cert.pem"    ///< device signed certificate file name

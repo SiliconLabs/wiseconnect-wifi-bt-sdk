@@ -1,9 +1,9 @@
 /*******************************************************************************
 * @file  rsi_wlan_config.h
-* @brief 
+* @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -14,19 +14,7 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-/**
- * @file     rsi_wlan_config.h
- * @version  0.1  
- * @date     15 Aug 2015
- *
- *
- *
- *  @brief : This file contains user configurable details to configure the device
- *
- *  @section Description  This file contains user configurable details to configure the device
- *
- *
- */
+
 #ifndef RSI_CONFIG_H
 #define RSI_CONFIG_H
 
@@ -64,7 +52,7 @@
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                                                               \
   (EXT_FEAT_384K_MODE | EXT_FEAT_RSA_KEY_WITH_4096_SUPPORT | EXT_FEAT_SSL_CERT_WITH_4096_KEY_SUPPORT \
-   | EXT_FEAT_LOW_POWER_MODE)
+   | EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP \
   (EXT_DYNAMIC_COEX_MEMORY | EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD | CONFIG_FEAT_EXTENTION_VALID)
@@ -91,10 +79,10 @@ typedef enum rsi_wlan_app_state_e {
   RSI_WLAN_MQTT_AUTO_RECONNECT_SET_STATE = 18,
   RSI_WLAN_MQTT_SUBSCRIBE_STATE          = 19,
   RSI_WLAN_MQTT_PUBLISH_STATE            = 20,
-  /*	
+  /*
   RSI_WLAN_MQTT_INIT_DONE_STATE      = 8,
   RSI_WLAN_MQTT_SUBSCRIBE_DONE_STATE = 9,
-	*/
+  */
   RSI_BLE_GATT_WRITE_EVENT      = 10,
   RSI_WLAN_DISCONNECTED_STATE   = 11,
   RSI_WLAN_DISCONN_NOTIFY_STATE = 12,

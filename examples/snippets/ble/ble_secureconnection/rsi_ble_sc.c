@@ -21,7 +21,7 @@
 /*================================================================================
  * @brief : This file contains example application for BLE Secure Connections
  * @section Description :
- * This application demonstrates how to configure the Redpine device in Central
+ * This application demonstrates how to configure the SiLabs device in Central
  * mode and connects with remote slave device and how to enable SMP (Security
  * Manager Protocol) pairing and a Secured passkey pairing.
  =================================================================================*/
@@ -119,7 +119,9 @@ static rsi_ble_event_conn_status_t rsi_app_connected_device;
 #ifdef RSI_BLE_PING
 uint16_t timeout_resp;
 #endif
-
+rsi_semaphore_handle_t ble_main_task_sem;
+static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
 #define MITM_REQ 0x01
 
 /*==============================================*/
@@ -134,9 +136,7 @@ uint16_t timeout_resp;
 static void rsi_ble_app_init_events()
 {
   ble_app_event_map  = 0;
-  ble_app_event_mask = 0xFFFFFFFF;
-  ble_app_event_mask = ble_app_event_mask; //To suppress warning while compiling
-
+  ble_app_event_map1 = 0;
   return;
 }
 
@@ -149,9 +149,16 @@ static void rsi_ble_app_init_events()
  * @section description
  * This function is used to set/raise the specific event.
  */
-static void rsi_ble_app_set_event(uint32_t event_num)
+void rsi_ble_app_set_event(uint32_t event_num)
 {
-  ble_app_event_map |= BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map |= BIT(event_num);
+  } else {
+    ble_app_event_map1 |= BIT((event_num - 32));
+  }
+  rsi_semaphore_post(&ble_main_task_sem);
+
   return;
 }
 
@@ -166,7 +173,13 @@ static void rsi_ble_app_set_event(uint32_t event_num)
  */
 static void rsi_ble_app_clear_event(uint32_t event_num)
 {
-  ble_app_event_map &= ~BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map &= ~BIT(event_num);
+  } else {
+    ble_app_event_map1 &= ~BIT((event_num - 32));
+  }
+
   return;
 }
 
@@ -185,9 +198,15 @@ static int32_t rsi_ble_app_get_event(void)
 {
   uint32_t ix;
 
-  for (ix = 0; ix < 32; ix++) {
-    if (ble_app_event_map & (1 << ix)) {
-      return ix;
+  for (ix = 0; ix < 64; ix++) {
+    if (ix < 32) {
+      if (ble_app_event_map & (1 << ix)) {
+        return ix;
+      }
+    } else {
+      if (ble_app_event_map1 & (1 << (ix - 32))) {
+        return ix;
+      }
     }
   }
 
@@ -206,6 +225,8 @@ static int32_t rsi_ble_app_get_event(void)
 void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn)
 {
   memcpy(remote_dev_address, resp_enh_conn->dev_addr, 6);
+  LOG_PRINT("Enhance connected - str_remote_address : %s\r\n",
+            rsi_6byte_dev_address_to_ascii(str_remote_address, resp_enh_conn->dev_addr));
   rsi_ble_app_set_event(RSI_BLE_CONN_EVENT);
 }
 
@@ -221,7 +242,7 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
 static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 {
   memcpy(remote_dev_address, resp_conn->dev_addr, 6);
-  LOG_PRINT("connect - str_remote_address : %s\r\n",
+  LOG_PRINT("Connected - str_remote_address : %s\r\n",
             rsi_6byte_dev_address_to_ascii(str_remote_address, resp_conn->dev_addr));
 
   rsi_ble_app_set_event(RSI_BLE_CONN_EVENT);
@@ -241,8 +262,9 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
 {
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(remote_dev_address, resp_disconnect->dev_addr, 6);
-  LOG_PRINT("connect - str_remote_address : %s\r\n",
-            rsi_6byte_dev_address_to_ascii(str_remote_address, resp_disconnect->dev_addr));
+  LOG_PRINT("Dis-connected - str_remote_address : %s , reason : %x \r\n",
+            rsi_6byte_dev_address_to_ascii(str_remote_address, resp_disconnect->dev_addr),
+            reason);
 
   rsi_ble_app_set_event(RSI_BLE_DISCONN_EVENT);
 }
@@ -314,7 +336,7 @@ void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address)
 void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display)
 {
   memcpy(remote_dev_address, smp_passkey_display->dev_addr, 6);
-  LOG_PRINT("remote addr: %s, passkey: %s \r\n",
+  LOG_PRINT("Pass_key display event remote addr: %s, passkey: %s \r\n",
             rsi_6byte_dev_address_to_ascii(str_remote_address, smp_passkey_display->dev_addr),
             smp_passkey_display->passkey);
   rsi_ble_app_set_event(RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT);
@@ -323,7 +345,7 @@ void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_pass
 void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey)
 {
   memcpy(remote_dev_address, sc_passkey->dev_addr, 6);
-  LOG_PRINT("remote addr: %s, passkey: %06ld \r\n",
+  LOG_PRINT(" Pass_key event remote addr: %s, passkey: %06ld \r\n",
             rsi_6byte_dev_address_to_ascii(str_remote_address, sc_passkey->dev_addr),
             sc_passkey->passkey);
   numeric_value = sc_passkey->passkey;
@@ -359,7 +381,7 @@ static void rsi_ble_on_le_ltk_req_event(rsi_bt_event_le_ltk_request_t *le_ltk_re
 void rsi_ble_on_le_security_keys(rsi_bt_event_le_security_keys_t *rsi_ble_event_le_security_keys)
 {
   memcpy(&app_ble_sec_keys, rsi_ble_event_le_security_keys, sizeof(rsi_bt_event_le_security_keys_t));
-  LOG_PRINT("remote_ediv: 0x%x\r\n", app_ble_sec_keys.remote_ediv);
+  LOG_PRINT("security keys event remote_ediv: 0x%x\r\n", app_ble_sec_keys.remote_ediv);
 }
 
 /*==============================================*/
@@ -409,8 +431,11 @@ int32_t rsi_ble_smp_test_app(void)
 {
   int32_t status = 0;
   int32_t event_id;
-  uint8_t adv[31] = { 2, 1, 6 };
-
+  uint8_t adv[31]                = { 2, 1, 6 };
+  uint8_t pairing_info_available = 0;
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
 #ifndef RSI_WITH_OS
   //! Driver initialization
   status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
@@ -418,7 +443,7 @@ int32_t rsi_ble_smp_test_app(void)
     return status;
   }
 
-  //! Redpine module intialisation
+  //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -427,7 +452,23 @@ int32_t rsi_ble_smp_test_app(void)
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #endif
-
+#ifdef RSI_WITH_OS
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -461,7 +502,8 @@ int32_t rsi_ble_smp_test_app(void)
                                  rsi_ble_on_le_security_keys,
                                  NULL,
                                  NULL);
-
+  //! create ble main task if ble protocol is selected
+  rsi_semaphore_create(&ble_main_task_sem, 0);
   //!  initializing the application events map
   rsi_ble_app_init_events();
 
@@ -517,6 +559,7 @@ int32_t rsi_ble_smp_test_app(void)
     event_id = rsi_ble_app_get_event();
 
     if (event_id == -1) {
+      rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
 
@@ -526,7 +569,7 @@ int32_t rsi_ble_smp_test_app(void)
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_CONN_EVENT);
-        rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_app_connected_device.dev_addr);
+        rsi_6byte_dev_address_to_ascii(str_remote_address, remote_dev_address);
         LOG_PRINT("\r\n Module connected to address : %s \r\n", str_remote_address);
 
 #ifdef RSI_BLE_PING
@@ -541,7 +584,13 @@ int32_t rsi_ble_smp_test_app(void)
 #endif
 
         //! initiating the SMP pairing process
-        status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+        if (!pairing_info_available) {
+          status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\n smp pair req failed with reason = %x \n", status);
+          }
+        }
+
       } break;
 
       case RSI_BLE_DISCONN_EVENT: {
@@ -570,7 +619,10 @@ int32_t rsi_ble_smp_test_app(void)
 
 #endif
         //! start addvertising
-        rsi_ble_start_advertising();
+        status = rsi_ble_start_advertising();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n start adv cmd failed with reason = %x \n", status);
+        }
 
 #if ENABLE_POWER_SAVE
 
@@ -593,11 +645,16 @@ int32_t rsi_ble_smp_test_app(void)
         LOG_PRINT("\r\nIn SMP request event\r\n");
         //! initiate SMP protocol as a Master
 
+        pairing_info_available = 0;
+
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_REQ_EVENT);
 
         //! initiating the SMP pairing process
         status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n smp pair req failed with reason = %x \n", status);
+        }
       } break;
 
       case RSI_BLE_SMP_RESP_EVENT: {
@@ -607,8 +664,13 @@ int32_t rsi_ble_smp_test_app(void)
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_RESP_EVENT);
 
+        pairing_info_available = 0;
+
         //! initiating the SMP pairing process
         status = rsi_ble_smp_pair_response(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n smp pair resp failed with reason = %x \n", status);
+        }
       } break;
 
       case RSI_BLE_SMP_PASSKEY_EVENT: {
@@ -620,6 +682,9 @@ int32_t rsi_ble_smp_test_app(void)
 
         //! initiating the SMP pairing process
         status = rsi_ble_smp_passkey(remote_dev_address, RSI_BLE_SMP_PASSKEY);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n smp passkey cmd failed with reason = %x \n", status);
+        }
       } break;
       case RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT: {
         LOG_PRINT("\r\nIn SMP passkey display event\r\n");
@@ -630,17 +695,35 @@ int32_t rsi_ble_smp_test_app(void)
       case RSI_BLE_SC_PASSKEY_EVENT: {
         LOG_PRINT("\r\nIn SC passkey event\r\n");
         rsi_ble_app_clear_event(RSI_BLE_SC_PASSKEY_EVENT);
-        rsi_ble_smp_passkey(remote_dev_address, numeric_value);
+        status = rsi_ble_smp_passkey(remote_dev_address, numeric_value);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n smp passkey cmd failed with reason = %x \n", status);
+        }
       } break;
 
       case RSI_BLE_LTK_REQ_EVENT: {
         LOG_PRINT("\r\nIn LTK request event\r\n");
         rsi_ble_app_clear_event(RSI_BLE_LTK_REQ_EVENT);
-        if ((encrypt_keys.localediv == ble_ltk_req.localediv)
-            && !(memcmp(ble_ltk_req.localrand, encrypt_keys.localrand, 8))) {
-          rsi_ble_ltk_req_reply(remote_dev_address, 1, encrypt_keys.localltk);
+        if (pairing_info_available) {
+          status = rsi_ble_ltk_req_reply(remote_dev_address,
+                                         (1 | encrypt_keys.enabled | (encrypt_keys.sc_enable << 7)),
+                                         encrypt_keys.localltk);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\n ltk req reply cmd failed with reason = %x \n", status);
+          }
         } else {
           rsi_ble_ltk_req_reply(remote_dev_address, 0, NULL);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\n ltk negative req reply cmd failed with reason = %x \n", status);
+          }
+
+          /* restarting the SMP */
+          status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\n smp pair req failed with reason = %x \n", status);
+          } else {
+            pairing_info_available = 0;
+          }
         }
       } break;
 
@@ -648,6 +731,7 @@ int32_t rsi_ble_smp_test_app(void)
         LOG_PRINT("\r\nIn SMP failed event\r\n");
         //! initiate SMP protocol as a Master
 
+        pairing_info_available = 0;
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_FAILED_EVENT);
       } break;
@@ -656,6 +740,7 @@ int32_t rsi_ble_smp_test_app(void)
         LOG_PRINT("\r\nIn encrypt started event\r\n");
         //! start the encrypt event
 
+        pairing_info_available = 1;
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_ENCRYPT_STARTED_EVENT);
       } break;
@@ -694,8 +779,7 @@ int main(void)
 {
 #ifdef RSI_WITH_OS
   int32_t status;
-  rsi_task_handle_t bt_task_handle     = NULL;
-  rsi_task_handle_t driver_task_handle = NULL;
+  rsi_task_handle_t bt_task_handle = NULL;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -716,14 +800,6 @@ int main(void)
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
     return status;
   }
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
@@ -736,14 +812,6 @@ int main(void)
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

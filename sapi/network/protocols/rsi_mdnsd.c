@@ -38,11 +38,12 @@ int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_MSNSD_INIT_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if ((rsi_strlen(host_name) + 1) > MDNSD_BUFFER_SIZE) {
+    SL_PRINTF(SL_MSNSD_INIT_INSUFFICIENT_BUFFER, NETWORK, LOG_ERROR);
     return RSI_ERROR_INSUFFICIENT_BUFFER;
   }
 
@@ -57,6 +58,7 @@ int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_MSNSD_INIT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -103,10 +105,12 @@ int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_MSNSD_INIT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_MSNSD_INIT_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -143,11 +147,12 @@ int32_t rsi_mdnsd_register_service(uint16_t port,
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_MSNSD_REGISTER_SERVICE_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if ((rsi_strlen(service_ptr_name) + rsi_strlen(service_name) + rsi_strlen(service_text) + 3) > MDNSD_BUFFER_SIZE) {
+    SL_PRINTF(SL_MSNSD_REGISTER_SERVICE_INSUFFICIENT_BUFFER, NETWORK, LOG_ERROR);
     return RSI_ERROR_INSUFFICIENT_BUFFER;
   }
 
@@ -162,6 +167,7 @@ int32_t rsi_mdnsd_register_service(uint16_t port,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_MSNSD_REGISTER_SERVICE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -220,10 +226,12 @@ int32_t rsi_mdnsd_register_service(uint16_t port,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_MSNSD_REGISTER_SERVICE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_MSNSD_REGISTER_SERVICE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -248,7 +256,7 @@ int32_t rsi_mdnsd_deinit(void)
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
-
+  SL_PRINTF(SL_MSNSD_DEINIT_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -263,6 +271,7 @@ int32_t rsi_mdnsd_deinit(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_MSNSD_DEINIT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -300,10 +309,12 @@ int32_t rsi_mdnsd_deinit(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_MSNSD_INIT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_MSNSD_INIT_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

@@ -12,7 +12,7 @@ This application demonstrates how to update the RS9116W firmware via Wi-Fi by do
 To use this application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements	
-  - PC or Mac (used to program the Host MCU)
+  - Windows PC with Host interface (UART / SPI/ SDIO).
   - Linux PC or Cygwin on Windows (to build and run the TCP server source provided)
   - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
   - Host MCU Eval Kit. This example has been tested with:
@@ -40,9 +40,11 @@ The application can be configured to suit your requirements and development envi
 Read through the following sections and make any changes needed. 
 
 ### Host Interface
-  - By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-  - The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
 
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+
+	 **Note:** This application is under development in EFM32 host platform.
+	 
 ### Bare Metal/RTOS Support
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
@@ -77,7 +79,7 @@ Before a test of the RS9116 firwmare update application can be performed, the TC
 ... where [RS9116.NBZ.WC.GEN.OSI.x.x.x.rps](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/firmware) is the firmware image to be sent to RS9116.
 
 ## Running the Application
-After making any custom configuration changes requried, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 
+After making any custom configuration changes requried, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/). 
 
 When the application runs and connects to the TCP server, the firmware image transfer occurs in chunks. The app requests a firmware chunk, the server sends the chunk, the app requests the next chunk, the server sends the chunk, and so forth until the entire transfer completes. As the transfer proceeds, progress is printed to the serial console. On completion, the console prints 'reach end of file'.
 

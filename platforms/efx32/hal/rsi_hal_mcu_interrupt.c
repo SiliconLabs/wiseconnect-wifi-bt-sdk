@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -155,3 +155,39 @@ uint8_t rsi_hal_intr_pin_status(void)
   return status;
 }
 
+/*===================================================*/
+/**
+ * @fn           rsi_reg_flags_t rsi_hal_critical_section_entry(void)
+ * @brief        hold interrupt status and disables the SPI interrupt
+ * @param[in]    none  
+ * @param[out]   none
+ * @return       stored interrupt status
+ * @description  This HAL API should contain the code to hold interrupt status and disable interrupts.
+ */
+uint32_t rsi_hal_critical_section_entry(void)
+{
+	rsi_reg_flags_t xflags;
+
+	// hold interrupt status before entering critical section
+	xflags = NVIC_GetEnableIRQ(GPIO_ODD_IRQn);
+
+	// disable interrupts	
+	NVIC_DisableIRQ(GPIO_ODD_IRQn);
+
+	// return stored interrupt status
+	return (xflags);
+}
+
+/*===================================================*/
+/**
+ * @fn           void rsi_hal_critical_section_exit(void)
+ * @brief        Enables the SPI interrupt
+ * @param[in]    none  
+ * @param[out]   none
+ * @return       none
+ * @description  This HAL API should contain the code to enable interrupts.
+ */
+void rsi_hal_critical_section_exit(void)
+{
+	NVIC_EnableIRQ(GPIO_ODD_IRQn);
+}

@@ -51,22 +51,19 @@
   <folder name="sapi/crypto" uri="sapi/crypto" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver" uri="sapi/driver" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
-  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
-  
-  <file name="sapi/wlan/rsi_wlan_apis.c" uri="sapi/wlan/rsi_wlan_apis.c" />
-  <file name="sapi/driver/rsi_wlan.c" uri="sapi/driver/rsi_wlan.c" />
   
   
   
   
   
-  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   
-  <file name="sapi/network/socket/rsi_socket.c" uri="sapi/network/socket/rsi_socket.c" />
-  <file name="sapi/network/socket/rsi_socket_rom.c" uri="sapi/network/socket/rsi_socket_rom.c" />
+  
   <file name="sapi/network/protocols/rsi_dns.c" uri="sapi/network/protocols/rsi_dns.c" />
   <file name="sapi/network/protocols/rsi_emb_mqtt_client.c" uri="sapi/network/protocols/rsi_emb_mqtt_client.c" />
   <file name="sapi/network/protocols/rsi_raw_data.c" uri="sapi/network/protocols/rsi_raw_data.c" />
@@ -74,7 +71,7 @@
   <file name="sapi/network/protocols/rsi_dhcp_user_class.c" uri="sapi/network/protocols/rsi_dhcp_user_class.c" />
   
   
-  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/network/socket"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/network/protocols"/>
   
   
   
@@ -82,11 +79,13 @@
   
   <includePath uri="$(projectLocation)/platform/core"/>
   <includePath uri="$(projectLocation)/platform/board"/>
+   <macroDefinition name="WISECONNECT" />
    <macroDefinition name="RSI_SAMPLE_HAL" />
    <macroDefinition name="RSI_DEBUG_PRINTS" />
-  
-  
    <macroDefinition name="RSI_WLAN_ENABLE" />
+  
+  
+   <macroDefinition name="RSI_WLAN_API_ENABLE" />
   
    <macroDefinition name="LOGGING_STATS" />
   

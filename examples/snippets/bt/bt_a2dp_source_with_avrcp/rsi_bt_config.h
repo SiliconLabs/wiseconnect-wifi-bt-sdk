@@ -3,7 +3,7 @@
  * @brief
  *******************************************************************************
  * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -40,7 +40,7 @@
 #define RSI_BT_DUAL_PAIR_TEST 0
 
 #if (RSI_BT_DUAL_PAIR_TEST == 0)
-#define RSI_BT_REMOTE_BD_ADDR "EA:D1:01:01:82:4C"
+#define RSI_BT_REMOTE_BD_ADDR "5C:44:3E:6C:D5:EB" //""EA:D1:01:01:82:4C"
 #endif
 
 #define RSI_APP_AVDTP_ROLE INITIATOR_ROLE //! ACCEPTOR_ROLE

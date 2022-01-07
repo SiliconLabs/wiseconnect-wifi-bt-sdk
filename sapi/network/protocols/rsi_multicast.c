@@ -34,6 +34,7 @@
 static int32_t rsi_multicast(uint8_t flags, int8_t *ip_address, uint8_t command_type)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_MULTICAST_ENTRY, NETWORK, LOG_INFO);
 
   rsi_pkt_t *pkt;
   rsi_req_multicast_t *multicast;
@@ -52,6 +53,7 @@ static int32_t rsi_multicast(uint8_t flags, int8_t *ip_address, uint8_t command_
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
 
       // Return packet allocation failure error
+      SL_PRINTF(SL_MULTICAST_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -92,10 +94,12 @@ static int32_t rsi_multicast(uint8_t flags, int8_t *ip_address, uint8_t command_
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_MULTICAST_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_MULTICAST_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -121,9 +125,10 @@ static int32_t rsi_multicast(uint8_t flags, int8_t *ip_address, uint8_t command_
 int32_t rsi_multicast_join(uint8_t flags, int8_t *ip_address)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_MULTICAST_JOIN_ENTRY, NETWORK, LOG_INFO);
 
   status = rsi_multicast(flags, ip_address, RSI_MULTICAST_JOIN);
-
+  SL_PRINTF(SL_MULTICAST_JOIN_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -153,9 +158,11 @@ int32_t rsi_multicast_join(uint8_t flags, int8_t *ip_address)
 int32_t rsi_multicast_leave(uint8_t flags, int8_t *ip_address)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_MULTICAST_LEAVE_ENTRY, NETWORK, LOG_INFO);
 
   status = rsi_multicast(flags, ip_address, RSI_MULTICAST_LEAVE);
 
+  SL_PRINTF(SL_MULTICAST_LEAVE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

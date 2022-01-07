@@ -12,10 +12,11 @@ Before running the application, the user will need the following things to setup
 
 ### 2.1 Hardware Requirements
 
-- Windows PC with Host interface(UART/ SPI).
+- Windows PC with Host interface(UART/ SPI/ SDIO).
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+   - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
    - [STM32F411 Nucleo](https://st.com/)
 - BLE peripheral device which supports BLE long range and 2Mbps feature.
    
@@ -40,11 +41,13 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 *	[STM32F411 Nucleo](https://st.com/)
 *	[WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+*   [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
+
 
 ### 3.2 Host Interface
 
-* By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-* The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -62,10 +65,14 @@ The Application is provided with the project folder containing Keil and Simplici
         - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image49a.png)
-		
-### 3.4 Bare Metal Support
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration. 
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/ble/ble_longrange_2mbps/projects/ble_longrange_2mbps-brd2204a-gg11.slsproj`
+		
+### 3.4 Bare Metal/RTOS Support
+
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration. 
 
 ## 4. Application Configuration Parameters
 
@@ -96,7 +103,7 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_REMOTE_DEVICE_NAME` refers the name of remote device to which Silicon Labs device has to connect
 
-	 #define RSI_REMOTE_DEVICE_NAME                              "REDPINE_DEV"
+	 #define RSI_REMOTE_DEVICE_NAME                              "SILABS_DEV"
 
 
    **Note:**
@@ -128,24 +135,23 @@ The application can be configured to suit your requirements and development envi
 
 	 #define GLOBAL_BUFF_LEN                                  15000
 
-**4.2** Open `rsi_wlan_config.h` file and update/modify following macros,
+   
 
-	 #define CONCURRENT_MODE                                     RSI_DISABLE
+**4.2** Open `rsi_ble_config.h` file and update/modify following macros,
+
+	 #define RSI_BLE_PWR_INX                                   30
+	 #define RSI_BLE_PWR_SAVE_OPTIONS                          0 
+	 
+   **Opermode command parameters**
+
 	 #define RSI_FEATURE_BIT_MAP                                 FEAT_SECURITY_OPEN
 	 #define RSI_TCP_IP_BYPASS                                   RSI_DISABLE
 	 #define RSI_TCP_IP_FEATURE_BIT_MAP                          TCP_IP_FEAT_DHCPV4_CLIENT
 	 #define RSI_CUSTOM_FEATURE_BIT_MAP                          FEAT_CUSTOM_FEAT_EXTENTION_VALID
 	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                      EXT_FEAT_384K_MODE
-	 #define RSI_BAND                                            RSI_BAND_2P4GHZ
-
-
-**4.3** Open `rsi_ble_config.h` file and update/modify following macros,
-
-	 #define RSI_BLE_PWR_INX                                   30
-	 #define RSI_BLE_PWR_SAVE_OPTIONS                          0 
 	
    **Note:**
-   `rsi_wlan_config.h` and `rsi_ble_config.h` files are already set with desired configuration in 
+   `rsi_ble_config.h` files are already set with desired configuration in 
    respective example folders user need not change for each example. 
 
 ## 5. Testing the Application
@@ -173,10 +179,12 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 #### 5.2.2 Using EFX32
 
-Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Import the project from `<SDK>/examples/snippets/ble/ble_longrange_2mbps/projects`
-- Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
+- Import the EFR32/EFM32 project from `<SDK>/examples/snippets/ble/ble_longrange_2mbps/projects`
+    - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
+   (or)
+    - Select the *.brd2204a-gg11.slsproj  for EFM32GG11 board.
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:

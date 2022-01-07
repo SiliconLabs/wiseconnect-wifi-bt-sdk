@@ -35,7 +35,7 @@
 static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FWUP_ENTRY, FW_UPDATE, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -45,6 +45,7 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
 
   // Check if length exceeds
   if (length > RSI_MAX_FWUP_CHUNK_SIZE) {
+    SL_PRINTF(SL_FWUP_INVALID_PARAM, FW_UPDATE, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -59,6 +60,7 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FWUP_PKT_ALLOCATION_FAILURE, FW_UPDATE, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -92,10 +94,12 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
     }
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FWUP_COMMAND_ERROR, FW_UPDATE, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FWUP_EXIT, FW_UPDATE, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -118,9 +122,10 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
 int32_t rsi_fwup_start(uint8_t *rps_header)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_FWUP_START_ENTRY, FW_UPDATE, LOG_INFO);
 
   status = rsi_fwup(RSI_FWUP_RPS_HEADER, rps_header, RSI_RPS_HEADER_SIZE);
-
+  SL_PRINTF(SL_FWUP_START_EXIT, FW_UPDATE, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -146,9 +151,10 @@ int32_t rsi_fwup_start(uint8_t *rps_header)
 int32_t rsi_fwup_load(uint8_t *content, uint16_t length)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_FWUP_LOAD_ENTRY, FW_UPDATE, LOG_INFO);
 
   status = rsi_fwup(RSI_FWUP_RPS_CONTENT, content, length);
-
+  SL_PRINTF(SL_FWUP_LOAD_EXIT, FW_UPDATE, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

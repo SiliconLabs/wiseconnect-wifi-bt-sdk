@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file     rsi_bt_config.h
  * @version  0.1  
- * @date     01 Feb 2020
+ * @date     01 Feb 2021
  *
  *
  *
@@ -45,6 +45,13 @@
 #define SPP_MODE              SPP_SLAVE //! type of Module mode
 #if (SPP_MODE == SPP_MASTER)
 #define RSI_BT_LOCAL_NAME (void *)"SPP_MASTER"
+#define INQUIRY_ENABLE    0 //! To scan for device and connect
+#if INQUIRY_ENABLE
+#define MAX_NO_OF_RESPONSES 10
+#define INQUIRY_DURATION    10000
+#define INQUIRY_TYPE        2
+#define MAX_NAME_LENGTH     10
+#endif
 #else
 #define RSI_BT_LOCAL_NAME (void *)"SPP_SLAVE" //! Module name
 #endif
@@ -69,5 +76,7 @@
 #define RSI_APP_EVENT_PASSKEY_REQUEST 11
 #define RSI_APP_EVENT_SSP_COMPLETE    12
 #define RSI_APP_EVENT_CONFIRM_REQUEST 13
+#define RSI_APP_EVENT_REMOTE_NAME_REQ 14
+#define RSI_APP_EVENT_INQUIRY_COMPLT  15
 #include <rsi_bt_common_config.h>
 #endif

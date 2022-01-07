@@ -25,7 +25,11 @@
 #include <rsi_data_types.h>
 #include <rsi_utils.h>
 #include <rsi_bt_common.h>
+#ifdef RSI_BT_ENABLE
 #include <rsi_bt_config.h>
+#else
+#include <rsi_bt_common_config.h>
+#endif
 #include <rsi_bt_sdp.h>
 
 /******************************************************
@@ -354,7 +358,7 @@ typedef struct rsi_bt_tx_per_params_s {
   1 ? ACL_LINK \n
   2 ? ESCO_LINK */
   uint8_t link_type;
-  /** Initial seed to be used for whitening. It should be set to ‘0’ in order to disable whitening. \n
+  /** Initial seed to be used for whitening. It should be set to ï¿½0ï¿½ in order to disable whitening. \n
   In order to enable, one should give the scrambler seed value which is used on the receive side */
   uint8_t scrambler_seed;
   /** Defines the frequency hopping type to be used \n
@@ -432,7 +436,7 @@ typedef struct rsi_bt_rx_per_params_s {
   1 ? ACL_LINK \n
   2 ? ESCO_LINK */
   uint8_t link_type;
-  /** Initial seed to be used for whitening. It should be set to ‘0’ in order to disable whitening. \n
+  /** Initial seed to be used for whitening. It should be set to ï¿½0ï¿½ in order to disable whitening. \n
   In order to enable, one should give the scrambler seed value which is used on the transmit side */
   uint8_t scrambler_seed;
   /** Defines the frequency hopping type to be used \n
@@ -1547,6 +1551,9 @@ typedef struct rsi_bt_event_a2dp_start_s {
 
   /** MTU size supported by the remote device*/
   uint16_t rem_mtu_size;
+#if BT_HFP_HF_ROLE
+  uint16_t rx_mtu_size;
+#endif
 } rsi_bt_event_a2dp_start_t;
 
 typedef struct rsi_bt_event_a2dp_open_s {
@@ -2667,6 +2674,19 @@ typedef struct rsi_bt_event_hfp_callheld_s {
 
 } rsi_bt_event_hfp_callheld_t;
 
+typedef struct rsi_bt_event_hfp_audio_codecselect_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint8_t codec_val;
+} rsi_bt_event_hfp_audio_codecselect_t;
+
+typedef struct rsi_bt_event_hfp_voice_data_s {
+  uint16_t sco_handle;
+  uint8_t length;
+#ifdef MXRT_595s
+  uint8_t voice_data[0];
+#endif
+} rsi_bt_event_hfp_voice_data_t;
+
 typedef struct rsi_bt_event_hfp_calwait_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
 } rsi_bt_event_hfp_calwait_t;
@@ -2740,6 +2760,9 @@ typedef void (*rsi_bt_app_on_hfp_phoneservice_t)(uint16_t resp_status, rsi_bt_ev
 typedef void (*rsi_bt_app_on_hfp_roamingstatus_t)(uint16_t resp_status, rsi_bt_event_hfp_roamstatus_t *roamstatus);
 typedef void (*rsi_bt_app_on_hfp_callsetup_t)(uint16_t resp_status, rsi_bt_event_hfp_callsetup_t *callsetup);
 typedef void (*rsi_bt_app_on_hfp_callheld_t)(uint16_t resp_status, rsi_bt_event_hfp_callheld_t *callheld);
+typedef void (*rsi_bt_app_on_hfp_voice_data_t)(uint16_t resp_status, rsi_bt_event_hfp_voice_data_t *voice_data);
+typedef void (*rsi_bt_app_on_hfp_audio_codecselect_t)(uint16_t resp_status,
+                                                      rsi_bt_event_hfp_audio_codecselect_t *codecvalue);
 
 /******************************************************
  * * BT HFP Callbacks register function Declarations
@@ -2778,7 +2801,9 @@ void rsi_bt_hfp_register_callbacks(rsi_bt_on_hfp_connect_t bt_on_hfp_connect_eve
                                    rsi_bt_app_on_hfp_phoneservice_t bt_on_hfp_phoneservice_event,
                                    rsi_bt_app_on_hfp_roamingstatus_t bt_on_hfp_roamingstatus_event,
                                    rsi_bt_app_on_hfp_callsetup_t bt_on_hfp_callsetup_event,
-                                   rsi_bt_app_on_hfp_callheld_t bt_on_hfp_callheld_event);
+                                   rsi_bt_app_on_hfp_callheld_t bt_on_hfp_callheld_event,
+                                   rsi_bt_app_on_hfp_voice_data_t bt_on_hfp_voice_data_event,
+                                   rsi_bt_app_on_hfp_audio_codecselect_t bt_on_hfp_audio_codecselect_event);
 
 /* PBAP Profile */
 typedef struct rsi_bt_event_pbap_connect_s {
@@ -3549,10 +3574,18 @@ int32_t rsi_bt_a2dp_init(rsi_bt_a2dp_sbc_codec_cap_t *sbc_cap);
 int32_t rsi_bt_a2dp_connect(uint8_t *remote_dev_addr);
 int32_t rsi_bt_a2dp_disconnect(uint8_t *remote_dev_addr);
 
+#if (!TA_BASED_ENCODER)
+int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
+                                      uint8_t *pcm_mp3_data,
+                                      uint16_t pcm_mp3_data_len,
+                                      uint8_t audio_type,
+                                      uint16_t *bytes_consumed);
+#else
 int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
                                       uint8_t *pcm_mp3_data,
                                       uint16_t pcm_mp3_data_len,
                                       uint8_t audio_type);
+#endif
 int32_t rsi_bt_a2dp_send_sbc_aac_data(uint8_t *remote_dev_addr,
                                       uint8_t *sbc_aac_data,
                                       uint16_t sbc_aac_data_len,
@@ -3682,7 +3715,8 @@ int32_t rsi_bt_hfp_voicerecognitiondeactive(void);
 int32_t rsi_bt_hfp_spkgain(uint8_t spk_gain);
 int32_t rsi_bt_hfp_micgain(uint8_t mic_gain);
 int32_t rsi_bt_hfp_getcalls(void);
-int32_t rsi_bt_hfp_audio(void);
+int32_t rsi_bt_hfp_audiotransfer(uint8_t b_to_hf_transfer);
+int32_t rsi_bt_hfp_audio(void *hfp_audio_pkt);
 int32_t rsi_bt_pbap_init(void);
 int32_t rsi_bt_pbap_connect(uint8_t *remote_dev_addr);
 int32_t rsi_bt_pbap_disconnect(uint8_t *remote_dev_addr);

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file         rsi_ble_device_info.c
  * @version      0.1
- * @date         01 Feb 2020 *
+ * @date         01 Feb 2021 *
  *
  *
  *  @brief : This file handles the ble connection identifiers

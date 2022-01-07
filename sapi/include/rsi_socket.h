@@ -304,9 +304,14 @@
 #define SO_TCP_ACK_INDICATION       45             /* To enable tcp ack indication feature*/
 #define SO_CERT_INDEX               46             /* To enable set certificate index*/
 #define SO_TLS_SNI                  47             /* To Configure the TLS SNI extension */
+#ifdef CHIP_9117
+#define SO_MAX_RETRANSMISSION_TIMEOUT_VAL 48 /* to configure max retransmission timeout value*/
+#define SO_SSL_V_1_3_ENABLE               49 /* To enable ssl 1.3*/
+#endif
+#define MAX_RETRANSMISSION_TIME_VALUE 32
 
 /*  This second set of socket options take the socket level (category) IPPROTO_IP. */
-
+#ifdef MULTICAST_OPTIONS      //! Added these multicast socket options under this define as they are not supported.
 #define IP_MULTICAST_IF    27 /* Specify outgoing multicast interface */
 #define IP_MULTICAST_TTL   28 /* Specify the TTL value to use for outgoing multicast packet. */
 #define IP_MULTICAST_LOOP  29 /* Whether or not receive the outgoing multicast packet, loopbacloopbackk mode. */
@@ -314,7 +319,8 @@
 #define IP_UNBLOCK_SOURCE  31 /* Unblock multicast from certain source. */
 #define IP_ADD_MEMBERSHIP  32 /* Join IPv4 multicast membership */
 #define IP_DROP_MEMBERSHIP 33 /* Leave IPv4 multicast membership */
-#define IP_HDRINCL         34 /* Raw socket IPv4 header included. */
+#endif
+#define IP_HDRINCL 34 /* Raw socket IPv4 header included. */
 #define IP_RAW_RX_NO_HEADER \
   35                           /* proprietary socket option that does not include 
                                   IPv4/IPv6 header (and extension headers) on received raw sockets.*/

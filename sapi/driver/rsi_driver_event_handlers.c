@@ -20,7 +20,6 @@
  * */
 
 #include "rsi_driver.h"
-#include "rsi_wlan_config.h"
 #ifdef RSI_UART_INTERFACE
 #include "rsi_uart.h"
 #endif
@@ -237,7 +236,7 @@ void rsi_tx_event_handler(void)
       }
       bt_pkt_pending = 0;
 #ifdef RSI_PROP_PROTOCOL_ENABLE
-      if (int_status & BIT(2)) {
+      if (int_status & BIT(4)) {
         prop_protocol_pkt_pending = 0;
       }
 #endif
@@ -441,7 +440,17 @@ void rsi_tx_event_handler(void)
     if (status < 0x0) {
 #ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, TX_EVENT_CMD);
+
 #endif
+      SL_PRINTF(SL_RSI_ERROR_TIMEOUT,
+                BLUETOOTH,
+                LOG_ERROR,
+                "STATUS: %4x, length: %2x, queue_number: %1x",
+                status,
+                length,
+                queueno);
+      SL_PRINTF(SL_RSI_ERROR_TIMEOUT_FRAME_TYPE, BLUETOOTH, LOG_ERROR, "Frame_type: %1x", frame_type);
+
       return;
     }
 #ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
@@ -506,9 +515,6 @@ void rsi_tx_event_handler(void)
 #endif
     }
   } else {
-#ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
-    rsi_driver_cb_non_rom->driver_timer_start = 0;
-#endif
 
 #if (defined RSI_BT_ENABLE || defined RSI_BLE_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE)
     /* REVIEW : reviewed by siva. */
@@ -528,6 +534,9 @@ void rsi_tx_event_handler(void)
       }
     }
 #endif
+#endif
+#ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
+    rsi_driver_cb_non_rom->driver_timer_start = 0;
 #endif
 
     if (rsi_common_cb->power_save.power_save_enable) {
@@ -827,6 +836,8 @@ void rsi_rx_event_handler(void)
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
           rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
+          SL_PRINTF(SL_RSI_ERROR_TIMEOUT_READ, BLUETOOTH, LOG_ERROR, "STATUS: %4x", status);
+
           return;
         }
 
@@ -896,7 +907,7 @@ void rsi_rx_event_handler(void)
                   || (frame_type == RSI_COMMON_REQ_UART_FLOW_CTRL_ENABLE) || (frame_type == RSI_COMMON_RSP_FW_VERSION)
                   || (frame_type == RSI_COMMON_RSP_DEBUG_LOG) || (frame_type == RSI_COMMON_RSP_SWITCH_PROTO)
                   || (frame_type == RSI_COMMON_RSP_GET_RAM_DUMP) || (frame_type == RSI_COMMON_RSP_SET_RTC_TIMER)
-                  || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER)
+                  || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER) || (frame_type == RSI_COMMON_REQ_SET_CONFIG)
 #ifdef RSI_ASSERT_API
                   || (frame_type == RSI_COMMON_RSP_ASSERT)
 #endif

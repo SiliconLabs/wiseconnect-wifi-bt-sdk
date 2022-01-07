@@ -53,7 +53,7 @@ uint8_t adv_payload_for_compare[31] = { 0x6E, 0xC5, 0xFD, 0x05, 0x54, 0x9E, 0x68
 #define RSI_BLE_DEV_ADDR "00:1E:7C:25:E9:4D"
 
 //! Remote Device Name to connect
-#define RSI_REMOTE_DEVICE_NAME "REDPINE_DEV"
+#define RSI_REMOTE_DEVICE_NAME "SILABS_DEV"
 
 //! Memory length for the driver
 #define BT_GLOBAL_BUFF_LEN 15000
@@ -108,7 +108,12 @@ static uint8_t device_found          = 0;
 
 static rsi_ble_event_conn_status_t rsi_app_connected_device;
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device;
+rsi_semaphore_handle_t ble_slave_conn_sem;
 uint8_t str_remote_address[18] = { '\0' };
+
+rsi_semaphore_handle_t ble_main_task_sem;
+static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
 
 /*==============================================*/
 /**
@@ -121,7 +126,8 @@ uint8_t str_remote_address[18] = { '\0' };
  */
 static void rsi_ble_app_init_events()
 {
-  rsi_app_async_event_map = 0;
+  ble_app_event_map  = 0;
+  ble_app_event_map1 = 0;
   return;
 }
 
@@ -134,16 +140,24 @@ static void rsi_ble_app_init_events()
  * @section description
  * This function is used to set/raise the specific event.
  */
-static void rsi_ble_app_set_event(uint32_t event_num)
+void rsi_ble_app_set_event(uint32_t event_num)
 {
-  rsi_app_async_event_map |= BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map |= BIT(event_num);
+  } else {
+    ble_app_event_map1 |= BIT((event_num - 32));
+  }
+
+  rsi_semaphore_post(&ble_main_task_sem);
+
   return;
 }
 
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_clear_event
- * @brief      clear the specific event.
+ * @brief      clears the specific event.
  * @param[in]  event_num, specific event number.
  * @return     none.
  * @section description
@@ -151,7 +165,13 @@ static void rsi_ble_app_set_event(uint32_t event_num)
  */
 static void rsi_ble_app_clear_event(uint32_t event_num)
 {
-  rsi_app_async_event_map &= ~BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map &= ~BIT(event_num);
+  } else {
+    ble_app_event_map1 &= ~BIT((event_num - 32));
+  }
+
   return;
 }
 
@@ -170,9 +190,15 @@ static int32_t rsi_ble_app_get_event(void)
 {
   uint32_t ix;
 
-  for (ix = 0; ix < 32; ix++) {
-    if (rsi_app_async_event_map & (1 << ix)) {
-      return ix;
+  for (ix = 0; ix < 64; ix++) {
+    if (ix < 32) {
+      if (ble_app_event_map & (1 << ix)) {
+        return ix;
+      }
+    } else {
+      if (ble_app_event_map1 & (1 << (ix - 32))) {
+        return ix;
+      }
     }
   }
 
@@ -223,6 +249,8 @@ void rsi_ble_simple_central_on_enhance_conn_status_event(rsi_ble_event_enhance_c
   rsi_app_connected_device.dev_addr_type = resp_enh_conn->dev_addr_type;
   memcpy(rsi_app_connected_device.dev_addr, resp_enh_conn->dev_addr, RSI_DEV_ADDR_LEN);
   rsi_app_connected_device.status = resp_enh_conn->status;
+  //! unblock connection semaphore
+  rsi_semaphore_post(&ble_slave_conn_sem);
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
 }
 
@@ -238,7 +266,8 @@ void rsi_ble_simple_central_on_enhance_conn_status_event(rsi_ble_event_enhance_c
 void rsi_ble_simple_central_on_conn_status_event(rsi_ble_event_conn_status_t *resp_conn)
 {
   memcpy(&rsi_app_connected_device, resp_conn, sizeof(rsi_ble_event_conn_status_t));
-
+  //! unblock connection semaphore
+  rsi_semaphore_post(&ble_slave_conn_sem);
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
 }
 
@@ -254,9 +283,8 @@ void rsi_ble_simple_central_on_conn_status_event(rsi_ble_event_conn_status_t *re
  */
 void rsi_ble_simple_central_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
-  UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
-
+  LOG_PRINT("\r\n Disconnected reason:0x%x \n", reason);
   rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
 }
 
@@ -271,10 +299,14 @@ void rsi_ble_simple_central_on_disconnect_event(rsi_ble_event_disconnect_t *resp
  */
 int32_t rsi_ble_central(void)
 {
-  int32_t status         = 0;
-  int32_t temp_event_map = 0;
+  int32_t status          = 0;
+  int32_t temp_event_map  = 0;
+  int32_t temp_event_map1 = 0;
 #ifdef RSI_BLE_ENABLE_WHITELIST_BASEDON_ADV_PAYLOAD
   uint8_t compare[31];
+#endif
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -284,7 +316,7 @@ int32_t rsi_ble_central(void)
     return status;
   }
 
-  //! Redpine module intialisation
+  //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -293,7 +325,23 @@ int32_t rsi_ble_central(void)
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #endif
-
+#ifdef RSI_WITH_OS
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%X\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -314,6 +362,7 @@ int32_t rsi_ble_central(void)
                                  NULL,
                                  NULL,
                                  NULL);
+  rsi_semaphore_create(&ble_main_task_sem, 0);
 
   //! initialize the event map
   rsi_ble_app_init_events();
@@ -333,7 +382,7 @@ int32_t rsi_ble_central(void)
     return status;
   }
 #endif
-
+  rsi_semaphore_create(&ble_slave_conn_sem, 0);
   //! start scanning
   status = rsi_ble_start_scanning();
   if (status != RSI_SUCCESS) {
@@ -377,6 +426,7 @@ int32_t rsi_ble_central(void)
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
       //! if events are not received, loop will be continued
+      rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
 
@@ -398,7 +448,18 @@ int32_t rsi_ble_central(void)
         if (status != RSI_SUCCESS) {
           LOG_PRINT("connect status: 0x%lX\r\n", status);
         }
+        rsi_semaphore_wait(&ble_slave_conn_sem, 10000);
+        temp_event_map1 = rsi_ble_app_get_event();
 
+        if ((temp_event_map1 == -1) || (!(temp_event_map1 & RSI_APP_EVENT_CONNECTED))) {
+          LOG_PRINT("\r\n Initiating connect cancel command \n");
+          status = rsi_ble_connect_cancel((int8_t *)remote_dev_bd_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n ble connect cancel cmd status = %x \n", status);
+          } else {
+            rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+          }
+        }
       } break;
 
       case RSI_APP_EVENT_CONNECTED: {
@@ -437,6 +498,7 @@ int32_t rsi_ble_central(void)
 #endif
 
         device_found = 0;
+        LOG_PRINT("\r\n Restarted Scanning\r\n");
         //! start scanning
         status = rsi_ble_start_scanning();
         if (status != RSI_SUCCESS) {
@@ -515,14 +577,6 @@ int main(void)
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
     return status;
   }
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%X\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
@@ -535,14 +589,6 @@ int main(void)
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

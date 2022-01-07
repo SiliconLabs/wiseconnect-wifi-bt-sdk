@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file         rsi_wlan_config.h
  * @version      0.1
- * @date         01 Feb 2020
+ * @date         01 Feb 2021
  *
  *
  *
@@ -46,10 +46,13 @@
 #define GATEWAY   0x0100A8C0 //! IP address of Gateway  - E.g: 0x010AA8C0 == 192.168.0.1
 #define NETMASK   0x00FFFFFF //! IP address of netmask - E.g: 0x00FFFFFF == 255.255.255.0
 #endif
-#define SERVER_PORT       80              //443             //! Server port number
-#define SERVER_IP_ADDRESS "192.168.0.103" //! Server IP address
-#define RSI_DNS_CLIENT    0               //! Enable if using DNS client (when using server hostname instead of ip addr)
-#define HTTPS_DOWNLOAD    0               //! Enable this to test HTTPS download and also set RX_DATA to '1'
+#define SERVER_PORT          80              //443             //! Server port number
+#define SERVER_IP_ADDRESS    "192.168.0.103" //! Server IP address
+#define RSI_DNS_CLIENT       0 //! Enable if using DNS client (when using server hostname instead of ip addr)
+#define WLAN_SCAN_ONLY       0 //! Enable this for wlan scanning only case
+#define WLAN_CONNECTION_ONLY 0 //! Enable this for wlan connection only case
+
+#define HTTPS_DOWNLOAD 0 //! Enable this to test HTTPS download and also set RX_DATA to '1'
 #if HTTPS_DOWNLOAD
 #define SSL              1 //! Enable SSL or not
 #define LOAD_CERTIFICATE 1 //! Load certificate to device flash :
@@ -153,8 +156,9 @@ typedef struct rsi_wlan_app_cb_s {
 #define RSI_TCP_IP_FEATURE_BIT_MAP \
   (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
 
-#define RSI_EXT_TCPIP_FEATURE_BITMAP \
-  (EXT_DYNAMIC_COEX_MEMORY | EXT_TCP_IP_WINDOW_DIV | EXT_TCP_IP_TOTAL_SELECTS_4 | EXT_TCP_IP_BI_DIR_ACK_UPDATE)
+#define RSI_EXT_TCPIP_FEATURE_BITMAP                                                                               \
+  (EXT_DYNAMIC_COEX_MEMORY | EXT_TCP_IP_WINDOW_DIV | EXT_TCP_IP_TOTAL_SELECTS_4 | EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE \
+   | EXT_TCP_IP_BI_DIR_ACK_UPDATE)
 
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID

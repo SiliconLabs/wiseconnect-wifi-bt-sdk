@@ -38,7 +38,7 @@ rsi_reg_flags_t rsi_critical_section_entry(void)
   xflags = NVIC_GetIRQEnable((IRQn_Type)M4_ISR_IRQ);
   NVIC_DisableIRQ((IRQn_Type)M4_ISR_IRQ);
 #else
-  xflags = 0;
+  xflags = rsi_hal_critical_section_entry();
 #endif
 
   // return stored interrupt status
@@ -52,17 +52,15 @@ rsi_reg_flags_t rsi_critical_section_entry(void)
 
 void rsi_critical_section_exit(rsi_reg_flags_t xflags)
 {
-#ifndef RSI_M4_INTERFACE
-  UNUSED_PARAMETER(xflags); //This statement is added only to resolve compilation warning, value is unchanged
-#endif
-
   // restore interrupts while exiting critical section
-#ifdef RSI_M4_INTERFACE
   if (xflags != 0) {
+#ifdef RSI_M4_INTERFACE
     // restore interrupts while exiting critical section
     NVIC_EnableIRQ((IRQn_Type)M4_ISR_IRQ);
-  }
+#else
+    rsi_hal_critical_section_exit();
 #endif
+  }
 }
 /*==============================================*/
 /**

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -39,7 +39,7 @@
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/
-#define RSI_DRIVER_TASK_PRIORITY   1         //! Wireless driver task priority
+#define RSI_DRIVER_TASK_PRIORITY   3         //! Wireless driver task priority
 #define RSI_DRIVER_TASK_STACK_SIZE (512 * 2) //! Wireless driver task stack size
 #define RSI_COMMON_TASK_PRIORITY   0         //! application task priority
 #define RSI_COMMON_TASK_STACK_SIZE (512 * 2) //! application task size
@@ -60,6 +60,9 @@ rsi_parsed_conf_t rsi_parsed_conf = { 0 };
 rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, wlan_app_sem, bt_inquiry_sem, ble_scan_sem;
 #if WLAN_SYNC_REQ
 rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_bt_sem;
+#if (WLAN_SCAN_ONLY || WLAN_CONNECTION_ONLY)
+rsi_semaphore_handle_t sync_coex_wlan_sem;
+#endif
 #endif
 rsi_task_handle_t ble_main_app_task_handle, bt_app_task_handle, wlan_app_task_handle;
 bool rsi_ble_running, rsi_bt_running, rsi_wlan_running, wlan_radio_initialized, powersave_cmd_given;
@@ -280,12 +283,22 @@ void rsi_common_app_task(void)
   wlan_app_task_handle     = NULL;
 
   while (1) {
-    //! Redpine module initialization
+    //! SiLabs module initialization
     status = rsi_device_init(LOAD_NWP_FW);
     if (status != RSI_SUCCESS) {
       LOG_PRINT("\r\n device init failed \n");
       return;
     }
+// rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM platform
+#ifdef EFM32GG11B820F2048GL192
+    //! Task created for Driver task
+    rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                    (uint8_t *)"driver_task",
+                    RSI_DRIVER_TASK_STACK_SIZE,
+                    NULL,
+                    RSI_DRIVER_TASK_PRIORITY,
+                    &driver_task_handle);
+#endif
     //! WiSeConnect initialization
     status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_COEX_MODE);
     if (status != RSI_SUCCESS) {
@@ -328,6 +341,9 @@ void rsi_common_app_task(void)
 #if WLAN_SYNC_REQ
     rsi_semaphore_create(&sync_coex_bt_sem, 0); //! This lock will be used from wlan task to be done.
     rsi_semaphore_create(&sync_coex_ble_sem, 0);
+#if (WLAN_SYNC_REQ && (WLAN_SCAN_ONLY || WLAN_CONNECTION_ONLY))
+    rsi_semaphore_create(&sync_coex_wlan_sem, 0);
+#endif
 #endif
     status = rsi_task_create((rsi_task_function_t)rsi_wlan_app_task,
                              (uint8_t *)"wlan_task",
@@ -377,6 +393,9 @@ void rsi_common_app_task(void)
       return;
     }
 #endif
+#if (WLAN_SYNC_REQ && (WLAN_SCAN_ONLY || WLAN_CONNECTION_ONLY))
+    rsi_semaphore_post(&sync_coex_wlan_sem);
+#endif
     //! delete the task as initialization is completed
     rsi_task_destroy(NULL);
   }
@@ -420,6 +439,8 @@ int main(void)
                   NULL,
                   RSI_COMMON_TASK_PRIORITY,
                   &common_task_handle);
+// rsi_wireless_driver_task is created in rsi_common_app_task for EFM platform
+#ifndef EFM32GG11B820F2048GL192
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -427,6 +448,7 @@ int main(void)
                   NULL,
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
+#endif
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

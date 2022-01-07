@@ -10,9 +10,6 @@ WiSeConnect documentation is [available online](http://docs.silabs.com/rs9116-wi
 - [Application Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-application-notes/)
 - [Release Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-release-notes/)
 
-# Refactor of the 2.4 Release
-The WiSeConnect SDK v2.4 release has been significantly reorganized and refactored compared to earlier releases. Several directories have been re-organized; all directories and filenames have been refactored to use snake case exclusively. Example usage has been greatly simplified, and support for EFx32 hosts using Simpicity Studio has been added. STM32 host examples are now only supported using the Keil IDE. Additionally, there have been some changes to SAPI functionality, see the [Changelog for v2.4](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/changelog/) for details.
-
 # SDK Outline
 The WiSeConnect SDK contains the following files and folders.
 
@@ -22,15 +19,19 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--snippets         > Simpler examples to demonstrate specific features
   |  +--at_commands      > Scripts to demonstrate usage of AT Commands  
   |-   
-  +--firmware            > RS9116 firmware image(s)
+  +--firmware                         > RS9116 firmware image(s)
+  |  +--RS916.2.5.0.26.rps            > This firmware image is valid for RS9116 1.5 revision chip/module
+  |  +--RS9116.2.5.0.26.rps           > This firmware image is valid for RS9116 1.4/1.3 revision chip/module
   |-   
   +--platforms            
   |  +--efx32            > Board Support for EFR32 Hosts
   |  +--stm32            > Board Support for STM32 Hosts
+  |  +--efm32            > Board Support for EFM32 Hosts
   |-   
   +--resources   
   |  +--certificates     > Security certificates and keys to secure Wi-Fi, TCP and HTTP connections
   |  +--scripts          > Scripts to assist with testing of example applications
+  |  +--gain_tables      > Gain tables are added
   |
   +--sapi                
   |  +--bluetooth        > APIs to access Bluetooth Classic and Bluetooth Low Energy features
@@ -38,6 +39,7 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--crypto           > APIs to access cryptographic functions
   |  +--driver           > Driver source for various host interfaces incluing SPI, SDIO and UART
   |  +--include          > Full collection of API function prototypes
+  |  +--logging          > Used for logging
   |  +--network          > Collection of network related protocols including MQTT, HTTP, BSD sockets, ...
   |  +--rtos             > Wrapper files for various RTOS implementations
   |  +--wlan             > APIs to access Wi-Fi features including scan, join, powersave, ...
@@ -54,4 +56,5 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--python                 > Python scripts for UART/USB-CDC interface
   |  +--usb_cdc                > Windows inf file for RS9116 usb_cdc port detection
   |  +--ble_provisioning_apps  > Bluetooth provisioning apps for Android and Windows
+  |  +--advanced_logging       > It is used for advanced logging
 ```

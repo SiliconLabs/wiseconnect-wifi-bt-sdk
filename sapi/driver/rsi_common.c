@@ -128,9 +128,6 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
     }
 
   switch (cmd) {
-    case RSI_COMMON_REQ_ENCRYPT_CRYPTO: {
-
-    } break;
     case RSI_COMMON_REQ_FW_VERSION: {
 
     } break;
@@ -272,7 +269,6 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = 1;
     } break;
     case RSI_COMMON_REQ_PWRMODE: {
-
       // Power mode setting
       rsi_power_save_req_t *power_mode = (rsi_power_save_req_t *)pkt->data;
       if (power_mode->power_mode != RSI_POWER_MODE_DISABLE) {
@@ -371,6 +367,9 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = sizeof(rsi_gpio_pin_config_t);
     } break;
 #endif
+    case RSI_COMMON_REQ_SET_CONFIG: {
+      payload_size = sizeof(rsi_set_config_t);
+    } break;
     default: {
     }
   }
@@ -1083,6 +1082,7 @@ void rsi_allow_sleep(void)
 /// @private
 void rsi_powersave_gpio_init(void)
 {
+  SL_PRINTF(SL_POWERSAVE_GPIO_INIT_ENTRY, DRIVER, LOG_INFO);
 #ifndef RSI_M4_INTERFACE
   rsi_hal_config_gpio(RSI_HAL_WAKEUP_INDICATION_PIN, 0, 0);
   rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
@@ -1094,6 +1094,7 @@ void rsi_powersave_gpio_init(void)
   rsi_hal_clear_gpio(RSI_HAL_LP_SLEEP_CONFIRM_PIN);
 #endif
 #endif
+  SL_PRINTF(SL_POWERSAVE_GPIO_INIT_EXIT, DRIVER, LOG_INFO);
 }
 /*==============================================*/
 /**
@@ -1329,12 +1330,8 @@ int32_t rsi_send_ps_mode_to_module(uint8_t selected_ps_mode, uint8_t selected_ps
     rsi_common_cb->power_save.power_save_enable = 1;
   }
 
-  // for powermode 9 unmask will happen after WKP receive
-  if (selected_ps_mode != RSI_MSG_BASED_DEEP_SLEEP) {
-    // unmask Tx event
-    rsi_unmask_event(RSI_TX_EVENT);
-  }
-
+  // unmask Tx event
+  rsi_unmask_event(RSI_TX_EVENT);
   return status;
 }
 /*==============================================*/
@@ -1707,6 +1704,9 @@ void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type)
  */
 int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response)
 {
+#ifdef RSI_WLAN_ENABLE
+  int32_t i = 0;
+#endif
   if (response == NULL) {
     return RSI_FAILURE;
   } else {
@@ -1721,7 +1721,7 @@ int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response)
     if (rsi_driver_cb_non_rom->nwk_wait_bitmap & BIT(0)) {
       response->waiting_cmds |= BIT(2);
     }
-    for (int32_t i = 0; i < NUMBER_OF_SOCKETS; i++) {
+    for (i = 0; i < NUMBER_OF_SOCKETS; i++) {
       if (rsi_socket_pool[i].sock_state > RSI_SOCKET_STATE_INIT) {
         if (rsi_socket_pool_non_rom[i].socket_wait_bitmap) {
           response->waiting_cmds |= BIT(3);
@@ -1729,7 +1729,7 @@ int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response)
         }
       }
     }
-    for (int32_t i = 0; i < RSI_NUMBER_OF_SELECTS; i++) {
+    for (i = 0; i < RSI_NUMBER_OF_SELECTS; i++) {
       if (rsi_socket_select_info[i].select_state == RSI_SOCKET_SELECT_STATE_CREATE) {
         response->waiting_cmds |= BIT(4);
         break;

@@ -261,6 +261,22 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = sizeof(rsi_req_rejoin_params_t);
 
     } break;
+    case RSI_WLAN_REQ_11AX_PARAMS: {
+      wlan_11ax_config_params_t *config = (wlan_11ax_config_params_t *)pkt->data;
+      config->guard_interval            = GUARD_INTERVAL;
+      config->nominal_pe                = NOMINAL_PE;
+      config->dcm_enable                = DCM_ENABLE;
+      config->ldpc_enable               = LDPC_ENABLE;
+      config->ng_cb_enable              = NG_CB_ENABLE;
+      config->ng_cb_values              = NG_CB_VALUES;
+      config->uora_enable               = UORA_ENABLE;
+      config->trigger_rsp_ind           = TRIGGER_RESP_IND;
+      config->ipps_valid_value          = IPPS_VALID_VALUE;
+      config->tx_only_on_ap_trig        = TX_ONLY_ON_AP_TRIG;
+
+      // fill payload size
+      payload_size = sizeof(wlan_11ax_config_params_t);
+    } break;
     case RSI_WLAN_REQ_EAP_CONFIG: {
       rsi_req_eap_config_t *rsi_eap_req = (rsi_req_eap_config_t *)pkt->data;
 
@@ -1306,23 +1322,27 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 
         if (status != RSI_WPS_NOT_SUPPORTED) {
           rsi_wlan_cb->state = RSI_WLAN_STATE_BAND_DONE;
-          if (rsi_wlan_cb->expected_response != cmd_type) {
-            if (rsi_wlan_cb_non_rom->callback_list.join_fail_handler != NULL) {
-              // Call asynchronous response handler to indicate to host
-              rsi_wlan_cb_non_rom->callback_list.join_fail_handler(status, payload, payload_length);
-              rsi_wlan_cb_non_rom->callback_list.join_fail_handler = NULL;
-            }
-
-            if ((wlan_pkt_pending == 0) && rsi_wlan_check_waiting_wlan_cmd()) {
-#ifndef RSI_WLAN_SEM_BITMAP
-              rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(1);
-#endif
-              rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_send_sem);
-            }
-            rsi_post_waiting_semaphore();
-            rsi_wlan_set_status(status);
-            return RSI_SUCCESS;
+          if (rsi_wlan_cb_non_rom->callback_list.join_fail_handler != NULL) {
+            // Call asynchronous response handler to indicate to host
+            rsi_wlan_cb_non_rom->callback_list.join_fail_handler(status, payload, payload_length);
+            rsi_wlan_cb_non_rom->callback_list.join_fail_handler = NULL;
           }
+
+          if ((wlan_pkt_pending == 0) && rsi_wlan_check_waiting_wlan_cmd()) {
+#ifndef RSI_WLAN_SEM_BITMAP
+            rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(1);
+#endif
+            rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_send_sem);
+          }
+          if (rsi_driver_cb_non_rom->wlan_wait_bitmap & BIT(0)) {
+#ifndef RSI_WLAN_SEM_BITMAP
+            rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(0);
+#endif
+            rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_sem);
+          }
+          rsi_post_waiting_semaphore();
+          rsi_wlan_set_status(status);
+          return RSI_SUCCESS;
         }
       }
       if (rsi_wlan_cb_non_rom->callback_list.wlan_join_response_handler != NULL) {
@@ -1524,15 +1544,21 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 
     } break;
     case RSI_WLAN_RSP_UPDATE_TCP_WINDOW: {
-      rsi_rsp_tcp_window_update_t *tcp_window     = (rsi_rsp_tcp_window_update_t *)payload;
-      sockID                                      = rsi_get_application_socket_descriptor(tcp_window->socket_id);
+      rsi_rsp_tcp_window_update_t *tcp_window = (rsi_rsp_tcp_window_update_t *)payload;
+      sockID                                  = rsi_get_application_socket_descriptor(tcp_window->socket_id);
+      if ((sockID < 0) || (sockID >= RSI_NUMBER_OF_SOCKETS)) {
+        break;
+      }
       rsi_socket_pool_non_rom[sockID].window_size = tcp_window->window_size;
       rsi_wlan_socket_set_status(status, sockID);
+      if ((rsi_socket_pool_non_rom[sockID].socket_wait_bitmap & BIT(0))
+          && !(rsi_socket_pool_non_rom[sockID].socket_terminate_indication)) {
 #ifndef RSI_SOCK_SEM_BITMAP
-      rsi_socket_pool_non_rom[sockID].socket_wait_bitmap &= ~BIT(0);
+        rsi_socket_pool_non_rom[sockID].socket_wait_bitmap &= ~BIT(0);
 #endif
-      // Wait on select semaphore
-      rsi_semaphore_post(&rsi_socket_pool_non_rom[sockID].socket_sem);
+        // Wait on select semaphore
+        rsi_semaphore_post(&rsi_socket_pool_non_rom[sockID].socket_sem);
+      }
     } break;
     case RSI_WLAN_RSP_CONN_ESTABLISH: {
       if (status == RSI_SUCCESS) {
@@ -1802,14 +1828,17 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
     }
       // no break
     case RSI_WLAN_RSP_DNS_QUERY: {
+
       if (status == RSI_SUCCESS) {
-        if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
-          copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? (payload_length)
-                                                                          : (rsi_wlan_cb->app_buffer_length);
-          memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
-          rsi_wlan_cb->app_buffer = NULL;
+        if ((rsi_driver_cb_non_rom->nwk_app_buffer != NULL) && (rsi_driver_cb_non_rom->nwk_app_buffer_length != 0)) {
+          copy_length = (payload_length < rsi_driver_cb_non_rom->nwk_app_buffer_length)
+                          ? (payload_length)
+                          : (rsi_driver_cb_non_rom->nwk_app_buffer_length);
+          memcpy(rsi_driver_cb_non_rom->nwk_app_buffer, payload, copy_length);
         }
       }
+      rsi_driver_cb_non_rom->nwk_app_buffer = NULL;
+
     } break;
     case RSI_WLAN_RSP_FTP: {
       rsi_ftp_file_rsp_t *ftp_file_rsp = (rsi_ftp_file_rsp_t *)payload;
@@ -2073,13 +2102,14 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
     case RSI_WLAN_RSP_SNTP_SERVER:
     case RSI_WLAN_RSP_SNTP_CLIENT: {
       if (status == RSI_SUCCESS) {
-        if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
-          copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? (payload_length)
-                                                                          : (rsi_wlan_cb->app_buffer_length);
-          memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
-          rsi_wlan_cb->app_buffer = NULL;
+        if ((rsi_driver_cb_non_rom->nwk_app_buffer != NULL) && (rsi_driver_cb_non_rom->nwk_app_buffer_length != 0)) {
+          copy_length = (payload_length < rsi_driver_cb_non_rom->nwk_app_buffer_length)
+                          ? (payload_length)
+                          : (rsi_driver_cb_non_rom->nwk_app_buffer_length);
+          memcpy(rsi_driver_cb_non_rom->nwk_app_buffer, payload, copy_length);
         }
       }
+      rsi_driver_cb_non_rom->nwk_app_buffer = NULL;
       if (rsi_wlan_cb_non_rom->nwk_callbacks.rsi_sntp_client_create_response_handler != NULL) {
         if (((uint8_t)*payload == RSI_SNTP_CREATE) || ((uint8_t)*payload == RSI_SNTP_DELETE)
             || ((uint8_t)*payload == RSI_SNTP_SERVER_ASYNC_RSP) || ((uint8_t)*payload == RSI_SNTP_GETSERVER_ADDRESS)) {
@@ -2267,7 +2297,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_RSP_IPCONFV6) || (cmd_type == RSI_WLAN_REQ_SET_REGION_AP)
              || (cmd_type == RSI_WLAN_REQ_DYNAMIC_POOL) || (cmd_type == RSI_WLAN_REQ_GAIN_TABLE)
              || (cmd_type == RSI_WLAN_REQ_RX_STATS) || (cmd_type == RSI_WLAN_REQ_RADIO)
-             || (cmd_type == RSI_WLAN_REQ_GET_STATS)
+             || (cmd_type == RSI_WLAN_REQ_GET_STATS) || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
 #endif
@@ -2306,14 +2336,14 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_wlan_radio_init(void)
- * @brief       Initialize wlan radio parameters and WLAN supplicant parameters
+ * @brief       This API initializes wlan radio parameters and WLAN supplicant parameters. This API returns the WLAN MAC address of the module to the host.
  * @pre         \ref rsi_wireless_init() API must be called before this \ref rsi_wlan_radio_init() API. 
  * @param[in]    void  
  * @return       0              - Success  \n
  *               Non-Zero Value - Failure \n
  *                                If return value is greater than 0 \n
  *                                0x0021- Command given in wrong state
- *
+ * @note        rsi_wlan_radio_init() is used if user wants to configure any other parameters which are supposed to be given before rsi_wlan_scan() or rsi_wlan_scan_async() API
  */
 
 int32_t rsi_wlan_radio_init(void)
@@ -2321,7 +2351,7 @@ int32_t rsi_wlan_radio_init(void)
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
   int32_t allow  = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_RADIO_INIT_ENTRY, WLAN, LOG_INFO);
   // Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -2340,6 +2370,7 @@ int32_t rsi_wlan_radio_init(void)
             //Changing the wlan cmd state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // return packet allocation failure error
+            SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           // Memset data
@@ -2365,9 +2396,18 @@ int32_t rsi_wlan_radio_init(void)
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return the status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_1, WLAN, LOG_ERROR, "status: %4x", status);
             return status;
           }
         }
+
+#if HE_PARAMS_SUPPORT
+        status = rsi_wlan_11ax_config();
+        if (status != RSI_SUCCESS) {
+          SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_2, WLAN, LOG_INFO, "status: %4x", status);
+          return status;
+        }
+#endif
         // allocate command buffer  from wlan pool
         pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
 
@@ -2376,6 +2416,7 @@ int32_t rsi_wlan_radio_init(void)
           //Changing the wlan cmd state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // return packet allocation failure error
+          SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -2400,6 +2441,7 @@ int32_t rsi_wlan_radio_init(void)
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return the status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_3, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
       }
@@ -2415,6 +2457,7 @@ int32_t rsi_wlan_radio_init(void)
           //Changing the wlan cmd state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // return packet allocation failure error
+          SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -2439,6 +2482,7 @@ int32_t rsi_wlan_radio_init(void)
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return the status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_4, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -2450,6 +2494,7 @@ int32_t rsi_wlan_radio_init(void)
           //Changing the wlan cmd state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // return packet allocation failure error
+          SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -2470,6 +2515,7 @@ int32_t rsi_wlan_radio_init(void)
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return the status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_5, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #if RSI_SET_REGION_AP_SUPPORT
@@ -2482,6 +2528,7 @@ int32_t rsi_wlan_radio_init(void)
             //Changing the wlan cmd state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // return packet allocation failure error
+            SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           // Memset data
@@ -2504,6 +2551,7 @@ int32_t rsi_wlan_radio_init(void)
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return the status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_6, WLAN, LOG_ERROR, "status: %4x", status);
             return status;
           }
         }
@@ -2518,6 +2566,7 @@ int32_t rsi_wlan_radio_init(void)
             //Changing the wlan cmd state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // return packet allocation failure error
+            SL_PRINTF(SL_WLAN_RADIO_INIT_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           // Memset data
@@ -2540,6 +2589,7 @@ int32_t rsi_wlan_radio_init(void)
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return the status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_7, WLAN, LOG_ERROR, "status: %4x", status);
             return status;
           }
         }
@@ -2563,6 +2613,7 @@ int32_t rsi_wlan_radio_init(void)
           status = rsi_wlan_req_radio(RSI_ENABLE);
         }
         // Return the status if error in sending command occurs
+        SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_8, WLAN, LOG_ERROR, "status: %4x", status);
         return status;
       }
         // no break
@@ -2572,10 +2623,12 @@ int32_t rsi_wlan_radio_init(void)
 
   } else {
     // return wlan command error
+    SL_PRINTF(SL_WLAN_RADIO_INIT_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "Allow:%4x", allow);
     return allow;
   }
 
   // Return the status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_RADIO_INIT_EXIT_9, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2606,7 +2659,7 @@ int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
   rsi_pkt_t *pkt;
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_FILTER_BROADCAST_ENTRY, WLAN, LOG_INFO);
   rsi_req_wlan_filter_bcast_t *rsi_filter_bcast;
 
   // Get wlan cb structure pointer
@@ -2622,6 +2675,7 @@ int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
     if (pkt == NULL) {
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // return packet allocation failure error
+      SL_PRINTF(SL_WLAN_FILTER_BROADCAST_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     // Memset data
@@ -2652,10 +2706,12 @@ int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
 
   } else {
     // return nwk command error
+    SL_PRINTF(SL_WLAN_FILTER_BROADCAST_NWK_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return the status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_FILTER_BROADCAST_COMMAND_SEN_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -2725,11 +2781,11 @@ int32_t rsi_post_waiting_semaphore(void)
     if (rsi_socket_pool[i].sock_state > RSI_SOCKET_STATE_INIT) {
       // Set error
       rsi_wlan_socket_set_status(RSI_ERROR_IN_WLAN_CMD, i);
-      // post on  semaphore
-      rsi_post_waiting_socket_semaphore(i);
 #ifdef SOCKET_CLOSE_WAIT
       rsi_socket_pool_non_rom[i].close_pending = 1;
 #endif
+      // post on  semaphore
+      rsi_post_waiting_socket_semaphore(i);
     }
   }
 #ifndef SOCKET_CLOSE_WAIT
@@ -3252,7 +3308,8 @@ int process_scan_results(uint8_t *buf, uint16_t len, int8_t rssi, uint8_t channe
             break;
 
           case WLAN_EID_VENDOR_SPECIFIC:
-            if ((!memcmp(&bss[IE_POS], WLAN_WIFI_OUI, 3)) && bss[IE_POS + 3] == 0x01) {
+            if (((!memcmp(&bss[IE_POS], WLAN_WIFI_OUI, 3)) && bss[IE_POS + 3] == 0x01)
+                && (result->security_mode == SME_OPEN || result->security_mode == SME_WEP)) {
               result->security_mode = SME_WPA;
               pairwise_cipher_count = *(uint16_t *)&bss[12];
               if (bss[19 + pairwise_cipher_count * 4] == 1) {

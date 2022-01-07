@@ -45,7 +45,8 @@ int32_t rsi_dns_req(uint8_t ip_version,
   rsi_req_dns_server_add_t *dns_srever_add;
   rsi_req_dns_query_t *dns_query;
   rsi_pkt_t *pkt;
-  int32_t status   = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_DNS_REQ_ENTRY, NETWORK, LOG_INFO);
   uint8_t dns_mode = 0;
 
   // Get WLAN CB structure pointer
@@ -55,12 +56,14 @@ int32_t rsi_dns_req(uint8_t ip_version,
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_DNS_REQ_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_DNS_REQ_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -68,12 +71,14 @@ int32_t rsi_dns_req(uint8_t ip_version,
   // Check for invalid parameters
   if (((ip_version != RSI_IP_VERSION_4) && (ip_version != RSI_IP_VERSION_6))) {
     // Throw error in case of invalid parameters
+    SL_PRINTF(SL_DNS_REQ_INVALID_PARAM_1, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
   // Check for invalid parameters
   if ((dns_query_resp == NULL) || (length == 0)) {
     // Throw error in case of invalid parameters
+    SL_PRINTF(SL_DNS_REQ_INVALID_PARAM_2, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -88,6 +93,7 @@ int32_t rsi_dns_req(uint8_t ip_version,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_DNS_REQ_PKT_ALLOCATION_FAILURE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     dns_srever_add = (rsi_req_dns_server_add_t *)pkt->data;
@@ -141,6 +147,7 @@ int32_t rsi_dns_req(uint8_t ip_version,
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
 
       // Return status
+      SL_PRINTF(SL_DNS_REQ_EXIT_1, NETWORK, LOG_INFO, "status: %4x", status);
       return status;
     }
 
@@ -151,6 +158,7 @@ int32_t rsi_dns_req(uint8_t ip_version,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_DNS_REQ_PKT_ALLOCATION_FAILURE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -158,13 +166,11 @@ int32_t rsi_dns_req(uint8_t ip_version,
 
     // Memset the packet data
     memset(&pkt->data, 0, sizeof(rsi_req_dns_query_t));
-
     // Attach the buffer given by user
-    wlan_cb->app_buffer = (uint8_t *)dns_query_resp;
+    rsi_driver_cb_non_rom->nwk_app_buffer = (uint8_t *)dns_query_resp;
 
     // Length of the buffer provided by user
-    wlan_cb->app_buffer_length = length;
-
+    rsi_driver_cb_non_rom->nwk_app_buffer_length = length;
     // Set IP version
     rsi_uint16_to_2bytes(dns_query->ip_version, ip_version);
 
@@ -191,10 +197,12 @@ int32_t rsi_dns_req(uint8_t ip_version,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_DNS_REQ_EXIT_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_DNS_REQ_EXIT_2, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -229,7 +237,8 @@ int32_t rsi_dns_update(uint8_t ip_version,
   rsi_req_dns_server_add_t *dns_srever_add;
   rsi_req_dns_update_t *dns_update;
   rsi_pkt_t *pkt;
-  int32_t status   = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_DNS_UPDATE_ENTRY, NETWORK, LOG_INFO);
   uint8_t dns_mode = 0;
 
   // Get WLAN CB structure pointer
@@ -239,12 +248,14 @@ int32_t rsi_dns_update(uint8_t ip_version,
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_DNS_UPDATE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_DNS_UPDATE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -252,6 +263,7 @@ int32_t rsi_dns_update(uint8_t ip_version,
   // Check for invalid parameters
   if (((ip_version != RSI_IP_VERSION_4) && (ip_version != RSI_IP_VERSION_6))) {
     // Throw error in case of invalid parameters
+    SL_PRINTF(SL_DNS_UPDATE_INVALID_PARAM_1, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -264,6 +276,7 @@ int32_t rsi_dns_update(uint8_t ip_version,
     } else {
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_DNS_UPDATE_INVALID_PARAM_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -274,6 +287,7 @@ int32_t rsi_dns_update(uint8_t ip_version,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_DNS_UPDATE_PKT_ALLOCATION_FAILURE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -322,6 +336,7 @@ int32_t rsi_dns_update(uint8_t ip_version,
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
 
       // Return status
+      SL_PRINTF(SL_DNS_UPDATE_EXIT_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -332,6 +347,7 @@ int32_t rsi_dns_update(uint8_t ip_version,
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_DNS_UPDATE_PKT_ALLOCATION_FAILURE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -374,10 +390,12 @@ int32_t rsi_dns_update(uint8_t ip_version,
     }
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_DNS_UPDATE_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_DNS_UPDATE_EXIT_2, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

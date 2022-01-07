@@ -17,12 +17,30 @@
 
 #include "rsi_driver.h"
 #include "rsi_wlan_non_rom.h"
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
 #ifdef RSI_WLAN_ENABLE
 
 // Socket information pool pointer
 rsi_socket_info_t *rsi_socket_pool;
 rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 extern rsi_socket_select_info_t *rsi_socket_select_info;
+
+/*==============================================*/
+/**
+ * @brief       Checking input parameter is power of two or not. This is a non-blocking API.
+ * @param[in]   x              - value
+ * @return      1              - Success \n
+ *              Zero,-1        - Failure
+ *              
+ */
+int8_t is_power_of_two(int8_t x)
+{
+  if (x < 0)
+    return -1;
+  return x && (!(x & (x - 1)));
+}
 
 /** @addtogroup NETWORK5
 * @{
@@ -40,6 +58,7 @@ extern rsi_socket_select_info_t *rsi_socket_select_info;
 int rsi_fd_isset(uint32_t fd, struct rsi_fd_set_s *fds_p)
 {
   uint32_t mask = 1 << (fd % 32);
+  SL_PRINTF(SL_FD_ISSET_ENTRY, NETWORK, LOG_INFO);
   return fds_p->fd_array[fd / 32] & mask;
 }
 /** @} */
@@ -58,6 +77,7 @@ int rsi_fd_isset(uint32_t fd, struct rsi_fd_set_s *fds_p)
 void rsi_set_fd(uint32_t fd, struct rsi_fd_set_s *fds_p)
 {
   uint32_t mask = 1 << (fd % 32);
+  SL_PRINTF(SL_SET_FD_ENTRY, NETWORK, LOG_INFO);
   fds_p->fd_array[fd / 32] |= mask;
 }
 /** @} */
@@ -76,6 +96,7 @@ void rsi_set_fd(uint32_t fd, struct rsi_fd_set_s *fds_p)
 void rsi_fd_clr(uint32_t fd, struct rsi_fd_set_s *fds_p)
 {
   uint32_t mask = 1 << (fd % 32);
+  SL_PRINTF(SL_FD_CLR_ENTRY, NETWORK, LOG_INFO);
   fds_p->fd_array[fd / 32] &= ~mask;
 }
 /** @} */
@@ -115,6 +136,7 @@ int32_t rsi_socket_async(int32_t protocolFamily,
                          int32_t protocol,
                          void (*callback)(uint32_t sock_no, uint8_t *buffer, uint32_t length))
 {
+  SL_PRINTF(SL_SOCKET_ASYNC_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_async_non_rom(protocolFamily, type, protocol, callback);
 }
 /** @} */
@@ -149,6 +171,7 @@ int32_t rsi_socket_async(int32_t protocolFamily,
 
 int32_t rsi_socket(int32_t protocolFamily, int32_t type, int32_t protocol)
 {
+  SL_PRINTF(SL_SOCKET_ENTRY, NETWORK, LOG_INFO);
 #ifndef BSD_COMPATIBILITY
   if (protocol & BIT(0)) {
     if (protocol & BIT(13)) {
@@ -162,6 +185,7 @@ int32_t rsi_socket(int32_t protocolFamily, int32_t type, int32_t protocol)
     }
   }
 #endif
+  SL_PRINTF(SL_SOCKET_EXIT, NETWORK, LOG_INFO);
   return rsi_socket_async_non_rom(protocolFamily, type, protocol, NULL);
 }
 
@@ -186,6 +210,7 @@ int32_t rsi_socket(int32_t protocolFamily, int32_t type, int32_t protocol)
  */
 int32_t rsi_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32_t addressLength)
 {
+  SL_PRINTF(SL_BIND_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_bind(sockID, localAddress, addressLength);
 }
 /** @} */
@@ -208,6 +233,7 @@ int32_t rsi_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32_t addr
 
 int32_t rsi_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, int32_t addressLength)
 {
+  SL_PRINTF(SL_CONNECT_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_connect(sockID, remoteAddress, addressLength);
 }
 /** @} */
@@ -229,6 +255,7 @@ int32_t rsi_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, int32_t 
 
 int32_t rsi_listen(int32_t sockID, int32_t backlog)
 {
+  SL_PRINTF(SL_LISTEN_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_listen(sockID, backlog);
 }
 /*==============================================*/
@@ -250,6 +277,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
   struct rsi_sockaddr_in peer4_address;
   struct rsi_sockaddr_in6 peer6_address;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ACCEPT_NON_ROM_ENTRY, NETWORK, LOG_INFO);
   rsi_req_socket_accept_t *accept;
   rsi_pkt_t *pkt = NULL;
   rsi_socket_info_t *sock_info;
@@ -265,6 +293,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -275,6 +304,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -285,6 +315,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -295,6 +326,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -305,6 +337,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_EXIT5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (rsi_socket_pool[sockID].ltcp_socket_type != RSI_LTCP_PRIMARY_SOCKET) {
@@ -313,6 +346,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -325,6 +359,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ENOBUFS);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_7, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -348,6 +383,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+      SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_8, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -361,6 +397,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_9, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -390,6 +427,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_10, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Get WLAN/network command response status
@@ -399,6 +437,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_ACCEPT_NON_ROM_SOCK_ERROR_11, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Check status, fill out params with remote peer address details if successful and return status
@@ -455,6 +494,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
   rsi_socket_pool[sockID].backlog_current_count++;
 
   // Return status
+  SL_PRINTF(SL_ACCEPT_NON_ROM_EXIT, NETWORK, LOG_INFO);
   return accept_sock_id;
 }
 
@@ -476,6 +516,7 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
  */
 int32_t rsi_accept(int32_t sockID, struct rsi_sockaddr *ClientAddress, int32_t *addressLength)
 {
+  SL_PRINTF(SL_ACCEPT_ENTRY, NETWORK, LOG_INFO);
   return rsi_accept_non_rom(sockID, ClientAddress, addressLength);
 }
 
@@ -501,6 +542,7 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
                                  struct rsi_sockaddr *fromAddr,
                                  int32_t *fromAddrLen)
 {
+  SL_PRINTF(SL_RECV_LARGE_DATA_SYNC_ENTRY, NETWORK, LOG_INFO);
   int32_t status         = 0;
   int32_t chunk_size     = 0;
   int32_t rem_len        = 0;
@@ -511,6 +553,7 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_RECV_LARGE_DATA_SYNC_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (rsi_socket_pool[sockID].sock_state != RSI_SOCKET_STATE_CONNECTED) {
@@ -518,6 +561,7 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_RECV_LARGE_DATA_SYNC_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (requested_length > RX_DATA_LENGTH) {
@@ -546,6 +590,7 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
       offset += status;
     }
   } while (rem_len && rsi_socket_pool_non_rom[sockID].more_rx_data_pending);
+  SL_PRINTF(SL_RECV_LARGE_DATA_SYNC_EXIT, NETWORK, LOG_INFO, "offset: %4x", offset);
   return offset;
 }
 #endif
@@ -579,13 +624,25 @@ int32_t rsi_recvfrom(int32_t sockID,
                      struct rsi_sockaddr *fromAddr,
                      int32_t *fromAddrLen)
 {
+  SL_PRINTF(SL_RECV_FROM_ENTRY, NETWORK, LOG_INFO);
+
+  if ((buffersize == 0) || (buffer == NULL)) {
+    rsi_wlan_socket_set_status(RSI_ERROR_EINVAL, sockID);
+#ifdef RSI_WITH_OS
+    rsi_set_os_errno(RSI_ERROR_EINVAL);
+#endif
+    return RSI_SOCK_ERROR;
+  }
 #ifdef RSI_PROCESS_MAX_RX_DATA
   if (rsi_socket_pool[sockID].sock_type & SOCK_STREAM) {
+    SL_PRINTF(SL_RECV_FROM_EXIT_1, NETWORK, LOG_INFO);
     return rsi_recv_large_data_sync(sockID, buffer, buffersize, flags, fromAddr, fromAddrLen);
   } else {
+    SL_PRINTF(SL_RECV_FROM_EXIT_2, NETWORK, LOG_INFO);
     return rsi_socket_recvfrom(sockID, buffer, buffersize, flags, fromAddr, fromAddrLen);
   }
 #else
+  SL_PRINTF(SL_RECV_FROM_EXIT_3, NETWORK, LOG_INFO);
   return rsi_socket_recvfrom(sockID, buffer, buffersize, flags, fromAddr, fromAddrLen);
 #endif
 }
@@ -613,14 +670,25 @@ int32_t rsi_recvfrom(int32_t sockID,
  */
 int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t flags)
 {
+  SL_PRINTF(SL_RECV_ENTRY, NETWORK, LOG_INFO);
   int32_t fromAddrLen = 0;
+  if ((bufferLength == 0) || (rcvBuffer == NULL)) {
+    rsi_wlan_socket_set_status(RSI_ERROR_EINVAL, sockID);
+#ifdef RSI_WITH_OS
+    rsi_set_os_errno(RSI_ERROR_EINVAL);
+#endif
+    return RSI_SOCK_ERROR;
+  }
 #ifdef RSI_PROCESS_MAX_RX_DATA
   if (rsi_socket_pool[sockID].sock_type & SOCK_STREAM) {
+    SL_PRINTF(SL_RECV_EXIT_1, NETWORK, LOG_INFO);
     return rsi_recv_large_data_sync(sockID, rcvBuffer, bufferLength, flags, NULL, &fromAddrLen);
   } else {
+    SL_PRINTF(SL_RECV_EXIT_2, NETWORK, LOG_INFO);
     return rsi_socket_recvfrom(sockID, rcvBuffer, bufferLength, flags, NULL, &fromAddrLen);
   }
 #else
+  SL_PRINTF(SL_RECV_EXIT_3, NETWORK, LOG_INFO);
   return rsi_socket_recvfrom(sockID, rcvBuffer, bufferLength, flags, NULL, &fromAddrLen);
 #endif
 }
@@ -643,6 +711,17 @@ int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t 
  * @param[in]   flags          - Reserved
  * @param[in]   destAddr       - Address of the remote peer to send data
  * @param[in]   destAddrLen    - Length of the address in bytes
+ * 
+ * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ *
  * @return	    Positive Value - Success, returns the number of bytes sent successfully \n
  *              Negative Value - Failure \n
  *              zero           - Socket close error
@@ -656,6 +735,7 @@ int32_t rsi_sendto(int32_t sockID,
                    struct rsi_sockaddr *destAddr,
                    int32_t destAddrLen)
 {
+  SL_PRINTF(SL_SENDTO_ENTRY, NETWORK, LOG_INFO);
   return rsi_sendto_async_non_rom(sockID, msg, msgLength, flags, destAddr, destAddrLen, NULL);
 }
 
@@ -676,10 +756,21 @@ int32_t rsi_sendto(int32_t sockID,
  * @param[in]   data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out]  sockID                         - Socket Descriptor ID
  * @param[out]  length                         - Number of bytes transfered
+ *
+ * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ *
  * @return      Positive Value                 - Success, returns the number of bytes sent successfully \n
  *              Negative Value                 - Failure \n
  *              zero                           - Socket close error
- *
+ * @note The data_transfer_complete_handler callback handler is supported only for TCP Data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
  */
 /// @private
 int32_t rsi_sendto_async(int32_t sockID,
@@ -690,6 +781,7 @@ int32_t rsi_sendto_async(int32_t sockID,
                          int32_t destAddrLen,
                          void (*data_transfer_complete_handler)(int32_t sockID, uint16_t length))
 {
+  SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_ENTRY, NETWORK, LOG_INFO);
   return rsi_sendto_async_non_rom(sockID, msg, msgLength, flags, destAddr, destAddrLen, data_transfer_complete_handler);
 }
 /** @} */
@@ -705,6 +797,17 @@ int32_t rsi_sendto_async(int32_t sockID,
  * @param[in]  msg            - Pointer to the buffer containing data to send to the remote peer
  * @param[in]  msgLength      - Length of the buffer
  * @param[in]  flags          - Reserved
+ * 
+ * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ * 
  * @return     Positive Value - Success, returns the number of bytes sent successfully \n
  *             Negative Value - Failure \n
  *             Zero Value     - Socket close error
@@ -714,12 +817,15 @@ int32_t rsi_sendto_async(int32_t sockID,
 
 int32_t rsi_send(int32_t sockID, const int8_t *msg, int32_t msgLength, int32_t flags)
 {
+  SL_PRINTF(SL_SEND_ENTRY, NETWORK, LOG_INFO);
 #ifdef RSI_UART_INTERFACE
   rsi_wlan_cb_non_rom->rsi_uart_data_ack_check = sockID;
 #endif
 #ifdef LARGE_DATA_SYNC
+  SL_PRINTF(SL_SEND_EXIT_1, NETWORK, LOG_INFO);
   return rsi_send_large_data_sync(sockID, msg, msgLength, flags);
 #else
+  SL_PRINTF(SL_SEND_EXIT_2, NETWORK, LOG_INFO);
   return rsi_send_async_non_rom(sockID, msg, msgLength, flags, NULL);
 #endif
 }
@@ -737,6 +843,7 @@ int32_t rsi_send(int32_t sockID, const int8_t *msg, int32_t msgLength, int32_t f
 /// @private
 void rsi_reset_per_socket_info(int32_t sockID)
 {
+  SL_PRINTF(SL_RESET_PER_SOCKET_INFO_ENTRY, NETWORK, LOG_INFO);
   rsi_socket_info_non_rom_t *rsi_sock_info_non_rom_p = &rsi_socket_pool_non_rom[sockID];
   rsi_sock_info_non_rom_p->more_data                 = 0;
   rsi_sock_info_non_rom_p->offset                    = 0;
@@ -754,6 +861,17 @@ void rsi_reset_per_socket_info(int32_t sockID)
  * @param[in]  msg            - Pointer to data that needs to be sent to remote peer
  * @param[in]  msgLength      - Length of data to send
  * @param[in]  flags          - Reserved
+ * 
+ *  @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ * 
  * @return     Zero           - Success \n
  *             Negative Value - Failure
  *
@@ -762,6 +880,7 @@ void rsi_reset_per_socket_info(int32_t sockID)
 /// @private
 int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgLength, int32_t flags)
 {
+  SL_PRINTF(SL_SEND_LARGE_DATA_SYNC_ENTRY, NETWORK, LOG_INFO);
   int32_t status         = 0;
   int32_t chunk_size     = 0;
   int32_t rem_len        = msgLength;
@@ -775,6 +894,7 @@ int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgL
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SEND_LARGE_DATA_SYNC_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Find maximum limit based on the protocol
@@ -810,6 +930,7 @@ int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgL
       offset += status;
     }
   }
+  SL_PRINTF(SL_SEND_LARGE_DATA_SYNC_EXIT, NETWORK, LOG_INFO, "offset: %4x", offset);
   return offset;
 }
 
@@ -825,6 +946,7 @@ int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgL
 /// @private
 void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
 {
+  SL_PRINTF(SL_CHUNK_DATA_TX_DONE_CB_ENTRY, NETWORK, LOG_INFO);
   UNUSED_CONST_PARAMETER(length); // Added to resolve compilation warning, value is unchanged
   int16_t status = 0;
   uint16_t total_data_sent, chunk_size = 0;
@@ -909,7 +1031,18 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
  * @param[out] sockID                   - Application socket ID
  * @param[out] status                   - Status of the data transfer
  * @param[out] total_data_sent          - Total length of data sent
- * @return     Zero                     - Success, number of bytes sent successfully \n
+ * 
+ * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ *
+ *@return     Zero                     - Success, number of bytes sent successfully \n
  *             Negative Value           - Failure
  *
  */
@@ -922,6 +1055,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
                                                                    int16_t status,
                                                                    uint16_t total_data_sent))
 {
+  SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_ENTRY, NETWORK, LOG_INFO);
   int32_t status                                     = 0;
   uint16_t chunk_size                                = 0;
   rsi_socket_info_non_rom_t *rsi_sock_info_non_rom_p = &rsi_socket_pool_non_rom[sockID];
@@ -933,6 +1067,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Check if the socket is already doing data transfer, if so, return busy
@@ -940,6 +1075,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EEXIST);
 #endif
+    SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -975,6 +1111,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
     rsi_set_os_errno(status);
 #endif
     rsi_reset_per_socket_info(sockID);
+    SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_EXIT_1, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   } else // In case of BUFFER FULL condition, no need to update the values
   {
@@ -983,7 +1120,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
     // Set the socket event
     rsi_set_event(RSI_SOCKET_EVENT);
   }
-
+  SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_EXIT_2, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 
@@ -998,12 +1135,14 @@ int32_t rsi_send_large_data_async(int32_t sockID,
 /// @private
 uint32_t rsi_find_socket_data_pending(uint32_t event_map)
 {
+  SL_PRINTF(SL_FIND_SOCKET_DATA_PENDING_ENTRY, NETWORK, LOG_INFO);
   uint8_t i;
   for (i = 0; i < RSI_NUMBER_OF_SOCKETS; i++) {
     if (event_map & BIT(i)) {
       break;
     }
   }
+  SL_PRINTF(SL_FIND_SOCKET_DATA_PENDING_EXIT, NETWORK, LOG_INFO);
   return i;
 }
 
@@ -1019,6 +1158,7 @@ uint32_t rsi_find_socket_data_pending(uint32_t event_map)
 /// @private
 void rsi_socket_event_handler(void)
 {
+  SL_PRINTF(SL_SOCKET_EVENT_HANDLER_ENTRY, NETWORK, LOG_INFO);
   int32_t sockID = 0;
 
   if (rsi_wlan_cb_non_rom->socket_bitmap) {
@@ -1046,10 +1186,21 @@ void rsi_socket_event_handler(void)
  * @param[in]  data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out] sockID                         - Socket Descriptor ID
  * @param[out] length                         - Number of bytes transfered
+ * 
+ *  @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ * 
  * @return     Positive Value                 - Success, returns the number of bytes sent successfully \n
  *             Negative Value                 - Failure \n
  *             Zero Value                     - Socket close error
- *
+ * @note      The data_transfer_complete_handler callback handler is supported only for TCP Data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
  */
 /// @private
 int32_t rsi_send_async(int32_t sockID,
@@ -1058,6 +1209,7 @@ int32_t rsi_send_async(int32_t sockID,
                        int32_t flags,
                        void (*data_transfer_complete_handler)(int32_t sockID, uint16_t length))
 {
+  SL_PRINTF(SL_SEND_ASYNC_ENTRY, NETWORK, LOG_INFO);
   return rsi_send_async_non_rom(sockID, msg, msgLength, flags, data_transfer_complete_handler);
 }
 
@@ -1079,6 +1231,7 @@ int32_t rsi_send_async(int32_t sockID,
  */
 int32_t rsi_shutdown(int32_t sockID, int32_t how)
 {
+  SL_PRINTF(SL_SEND_ASYNC_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_shutdown(sockID, how);
 }
 /** @} */
@@ -1132,6 +1285,7 @@ int32_t rsi_check_state(int32_t type)
 /// @private
 int32_t rsi_get_application_socket_descriptor(int32_t sock_id)
 {
+  SL_PRINTF(SL_GET_APPLICATON_SOCKET_DESCRIPTOR_ENTRY, NETWORK, LOG_INFO);
   return rsi_application_socket_descriptor(sock_id);
 }
 
@@ -1145,6 +1299,7 @@ int32_t rsi_get_application_socket_descriptor(int32_t sock_id)
 /// @private
 void rsi_clear_sockets(int32_t sockID)
 {
+  SL_PRINTF(SL_CLEAR_SOCKETS_ENTRY, NETWORK, LOG_INFO);
   rsi_clear_sockets_non_rom(sockID);
 }
 
@@ -1163,10 +1318,12 @@ void rsi_clear_sockets(int32_t sockID)
 /// @private
 int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *option_value, rsi_socklen_t extension_len)
 {
+  SL_PRINTF(SL_FILL_TLS_EXTENSION_ENTRY, NETWORK, LOG_INFO);
   rsi_tls_tlv_t *tls_extension = NULL;
 
   if ((rsi_socket_pool_non_rom[sockID].extension_offset + extension_len + sizeof(rsi_tls_tlv_t))
       > MAX_SIZE_OF_EXTENSION_DATA) {
+    SL_PRINTF(SL_FILL_TLS_EXTENSION_INSUFFICIENT_BUFFER, NETWORK, LOG_ERROR);
     return RSI_ERROR_INSUFFICIENT_BUFFER;
   }
   if (extension_type == SO_TLS_SNI) {
@@ -1183,6 +1340,7 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
          extension_len);
   rsi_socket_pool_non_rom[sockID].extension_offset += extension_len;
   rsi_socket_pool_non_rom[sockID].no_of_tls_extensions++;
+  SL_PRINTF(SL_FILL_TLS_EXTENSION_EXIT, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */
@@ -1210,12 +1368,13 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  *				-3 - Command given in wrong state \n
  *				-4 - Buffer not available to serve the command
  *
- *
+ * @note         Default window size is 2920 bytes. To modify window size, user need to configure HIGH_PERFORMANCE socket in \ref rsi_setsockopt()
+ * 
  */
 
 int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *option_value, rsi_socklen_t option_len)
 {
-
+  SL_PRINTF(SL_SETSOCKOPT_ENTRY, NETWORK, LOG_INFO);
   struct rsi_timeval *timeout = NULL;
   int32_t status              = RSI_SUCCESS;
   uint16_t timeout_val;
@@ -1228,6 +1387,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -1238,6 +1398,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1248,45 +1409,62 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   // Configure per socket maximum TCP retries count
   if ((option_name == SO_MAXRETRY)) {
     rsi_socket_pool_non_rom[sockID].max_tcp_retries = *(uint8_t *)option_value;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_1, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure TCP keep alive time
   if ((option_name == SO_TCP_KEEP_ALIVE)) {
     rsi_uint16_to_2bytes(rsi_socket_pool_non_rom[sockID].tcp_keepalive_initial_time, *(uint16_t *)option_value);
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_2, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure SSL socket bit map
   if ((option_name == SO_SSL_ENABLE)) {
     rsi_socket_pool_non_rom[sockID].ssl_bitmap = RSI_SOCKET_FEAT_SSL;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_3, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure SSL socket bit map with 1.0 version
   if ((option_name == SO_SSL_V_1_0_ENABLE)) {
     rsi_socket_pool_non_rom[sockID].ssl_bitmap = (RSI_SOCKET_FEAT_SSL | RSI_SSL_V_1_0);
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_4, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure SSL socket bit map with 1.1 version
   if ((option_name == SO_SSL_V_1_1_ENABLE)) {
     rsi_socket_pool_non_rom[sockID].ssl_bitmap = (RSI_SOCKET_FEAT_SSL | RSI_SSL_V_1_1);
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_5, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure SSL socket bit map with 1.2 version
   if ((option_name == SO_SSL_V_1_2_ENABLE)) {
     rsi_socket_pool_non_rom[sockID].ssl_bitmap = (RSI_SOCKET_FEAT_SSL | RSI_SSL_V_1_2);
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_6, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
-  // Configure TCP ACK indication
+
+  // Configure ssl socket bit map with 1.3 version
+#ifdef CHIP_9117
+  if ((option_name == SO_SSL_V_1_3_ENABLE)) {
+    rsi_socket_pool_non_rom[sockID].ssl_bitmap = (RSI_SOCKET_FEAT_SSL | RSI_SSL_V_1_3);
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_7, NETWORK, LOG_INFO);
+    return RSI_SUCCESS;
+  }
+#endif
+
+  // Configure tcp ack indication
   if ((option_name == SO_TCP_ACK_INDICATION)) {
     if (*(uint32_t *)option_value) {
       protocol = *(uint32_t *)option_value;
@@ -1300,6 +1478,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
       rsi_socket_pool[sockID].max_available_buffer_count = rsi_socket_pool[sockID].current_available_buffer_count =
         ((protocol >> 3) & 0xF);
     }
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_8, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
@@ -1314,34 +1493,56 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
     rsi_socket_pool[sockID].sock_bitmap |= RSI_SOCKET_FEAT_CERT_INDEX;
 
     rsi_socket_pool[sockID].socket_cert_inx = protocol;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_9, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure high performance socket
   if ((option_name == SO_HIGH_PERFORMANCE_SOCKET)) {
     rsi_socket_pool_non_rom[sockID].high_performance_socket = 1;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_10, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   if ((option_name == SO_SOCK_VAP_ID)) {
     rsi_socket_pool_non_rom[sockID].vap_id = *(uint8_t *)option_value;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_11, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
   // Configure the TCP MSS size
   if (option_name == SO_TCP_MSS) {
     rsi_socket_pool_non_rom[sockID].tcp_mss = *(uint16_t *)option_value;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_12, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // Configure the TCP MSS size
   if (option_name == SO_TCP_RETRY_TRANSMIT_TIMER) {
     rsi_socket_pool_non_rom[sockID].tcp_retry_transmit_timer = *(uint8_t *)option_value;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_13, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
+#ifdef CHIP_9117
+  //! Configure max_retransmission_timeout_value
+  if (option_name == SO_MAX_RETRANSMISSION_TIMEOUT_VAL) {
+    status = is_power_of_two(*(int8_t *)option_value);
+    if ((status == 1) && !((*(int8_t *)option_value) > MAX_RETRANSMISSION_TIME_VALUE)) {
+      rsi_socket_pool_non_rom[sockID].max_retransmission_timeout_value = *(int8_t *)option_value;
+      SL_PRINTF(SL_SETSOCKOPT_EXIT_14, NETWORK, LOG_INFO);
+      return RSI_SUCCESS;
+    } else {
+      LOG_PRINT(
+        "\n Max retransmission timeout value in between 1 - 32 and should be power of two. ex:1,2,4,8,16,32 \n");
+      SL_PRINTF(SL_SETSOCKOPT_EXIT_15, NETWORK, LOG_ERROR);
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  }
+#endif
 #ifndef RSI_M4_INTERFACE
   if ((option_name == SO_RCVBUF)) {
     rsi_socket_pool[sockID].recv_buffer        = (uint8_t *)option_value;
     rsi_socket_pool[sockID].recv_buffer_length = option_len;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_16, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 #endif
@@ -1354,14 +1555,21 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+      SL_PRINTF(SL_SETSOCKOPT_EXIT_17, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_18, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
   // For TOS
   if (option_name == IP_TOS) {
+#ifdef CHIP_9117
+    rsi_socket_pool_non_rom[sockID].tos = *(uint16_t *)option_value;
+#else
     rsi_socket_pool_non_rom[sockID].tos = *(uint32_t *)option_value;
+#endif
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_19, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 
@@ -1370,6 +1578,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If socket is in not created state
@@ -1380,6 +1589,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1399,9 +1609,11 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_ENOPROTOOPT);
 #endif
+      SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_5, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
+  SL_PRINTF(SL_SETSOCKOPT_EXIT20, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */
@@ -1424,6 +1636,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 
 int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *option_value, rsi_socklen_t option_len)
 {
+  SL_PRINTF(SL_GETSOCKOPT_EXIT1, NETWORK, LOG_INFO);
   UNUSED_PARAMETER(level);        //Added to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(option_value); //Added to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(option_len);   //Added to resolve compilation warning, value is unchanged
@@ -1438,6 +1651,7 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_GETSOCKOPT_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -1448,6 +1662,7 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_GETSOCKOPT_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If sockID is not in available range
@@ -1457,6 +1672,7 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_GETSOCKOPT_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if ((option_name == SO_CHECK_CONNECTED_STATE)) {
@@ -1468,10 +1684,11 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
       status = rsi_get_error(sockID);
       rsi_set_os_errno(status);
 #endif
+      SL_PRINTF(SL_GETSOCKOPT_SOCK_ERROR_4, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
-
+  SL_PRINTF(SL_GETSOCKOPT_EXIT, NETWORK, LOG_ERROR);
   return RSI_SUCCESS;
 }
 
@@ -1512,6 +1729,7 @@ int32_t rsi_select(int32_t nfds,
                    void (*callback)(rsi_fd_set *fd_read, rsi_fd_set *fd_write, rsi_fd_set *fd_except, int32_t status))
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SELECT_ENTRY, NETWORK, LOG_INFO);
   rsi_req_socket_select_t *select;
   rsi_pkt_t *pkt                 = NULL;
   rsi_driver_cb_t *rsi_driver_cb = global_cb_p->rsi_driver_cb;
@@ -1530,13 +1748,16 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_SELECT_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (nfds > 0) {
     if ((readfds != NULL) && (readfds->fd_array[0] == 0)) {
+      SL_PRINTF(SL_SELECT_SOCK_ERROR_2, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
     if ((writefds != NULL) && (writefds->fd_array[0] == 0)) {
+      SL_PRINTF(SL_SELECT_SOCK_ERROR_3, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -1565,6 +1786,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
             rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+            SL_PRINTF(SL_SELECT_SOCK_ERROR_4, NETWORK, LOG_ERROR);
             return RSI_SOCK_ERROR;
           }
         }
@@ -1576,6 +1798,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
             rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+            SL_PRINTF(SL_SELECT_SOCK_ERROR_5, NETWORK, LOG_ERROR);
             return RSI_SOCK_ERROR;
           }
         }
@@ -1589,6 +1812,7 @@ int32_t rsi_select(int32_t nfds,
           writefds->fd_array[0] = wfds.fd_array[0];
         }
         RSI_MUTEX_UNLOCK(&rsi_driver_cb->wlan_cb->wlan_mutex);
+        SL_PRINTF(SL_SELECT_SOCK_ERROR_6, NETWORK, LOG_INFO, "Total count %d", read_count + write_count);
         return read_count + write_count;
       }
 #endif
@@ -1599,6 +1823,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
           rsi_set_os_errno(RSI_ERROR_ENOMEM);
 #endif
+          SL_PRINTF(SL_SELECT_SOCK_ERROR_7, NETWORK, LOG_ERROR);
           return RSI_SOCK_ERROR;
         }
       }
@@ -1610,6 +1835,7 @@ int32_t rsi_select(int32_t nfds,
 #endif
         // Release mutex lock
         RSI_MUTEX_UNLOCK(&rsi_driver_cb->wlan_cb->wlan_mutex);
+        SL_PRINTF(SL_SELECT_SOCK_ERROR_8, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
 
@@ -1675,6 +1901,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_SELECT_SOCK_ERROR_9, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1694,6 +1921,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EBUSY);
 #endif
+      SL_PRINTF(SL_SELECT_SOCK_ERROR_10, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
 
@@ -1717,6 +1945,7 @@ int32_t rsi_select(int32_t nfds,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_SELECT_SOCK_ERROR_11, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 }
@@ -1764,6 +1993,7 @@ int32_t rsi_accept_async(int32_t sockID,
                          void (*callback)(int32_t sock_id, int16_t dest_port, uint8_t *ip_addr, int16_t ip_version))
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ACCEPT_ASYNC_ENTRY, NETWORK, LOG_INFO);
   rsi_req_socket_accept_t *accept;
   rsi_pkt_t *pkt = NULL;
   rsi_socket_info_t *sock_info;
@@ -1779,6 +2009,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -1789,6 +2020,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1799,6 +2031,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1809,6 +2042,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1819,6 +2053,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (rsi_socket_pool[sockID].ltcp_socket_type != RSI_LTCP_PRIMARY_SOCKET) {
@@ -1827,6 +2062,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1839,6 +2075,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ENOBUFS);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_7, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -1862,6 +2099,7 @@ int32_t rsi_accept_async(int32_t sockID,
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+      SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_8, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -1875,6 +2113,7 @@ int32_t rsi_accept_async(int32_t sockID,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_9, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Set socket connection indication callback
@@ -1897,10 +2136,12 @@ int32_t rsi_accept_async(int32_t sockID,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_ACCEPT_ASYNC_SOCK_ERROR_10, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   // Return status
+  SL_PRINTF(SL_ACCEPT_ASYNC_EXIT, NETWORK, LOG_INFO);
   return accept_sock_id;
 }
 
@@ -1915,6 +2156,7 @@ int32_t rsi_accept_async(int32_t sockID,
 /// @private
 int32_t rsi_get_app_socket_descriptor(uint8_t *src_port)
 {
+  SL_PRINTF(SL_GET_APP_SOCKET_DESCRIPTOR_ENTRY, NETWORK, LOG_INFO);
   int i;
   uint16_t source_port;
 
@@ -1930,9 +2172,10 @@ int32_t rsi_get_app_socket_descriptor(uint8_t *src_port)
   }
 
   if (i >= NUMBER_OF_SOCKETS) {
+    SL_PRINTF(SL_GET_APP_SOCKET_DESCRIPTOR_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
-
+  SL_PRINTF(SL_GET_APP_SOCKET_DESCRIPTOR_EXIT, NETWORK, LOG_INFO, "i:%d ", i);
   return i;
 }
 /*==============================================*/
@@ -1946,6 +2189,7 @@ int32_t rsi_get_app_socket_descriptor(uint8_t *src_port)
 /// @private
 int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
 {
+  SL_PRINTF(SL_GET_SOCKET_ID_ENTRY, NETWORK, LOG_INFO);
   int i;
 
   rsi_socket_info_t *rsi_socket_pool = global_cb_p->rsi_socket_pool;
@@ -1959,8 +2203,10 @@ int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
   }
 
   if (i >= NUMBER_OF_SOCKETS) {
+    SL_PRINTF(SL_GET_SOCKET_ID_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
+  SL_PRINTF(SL_GET_SOCKET_ID_EXIT, NETWORK, LOG_INFO, "i:%d ", i);
   return i;
 }
 /*==============================================*/
@@ -1974,6 +2220,7 @@ int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
 /// @private
 int32_t rsi_get_primary_socket_id(uint8_t *port_num)
 {
+  SL_PRINTF(SL_GET_PRIMARY_SOCKET_ID_ENTRY, NETWORK, LOG_INFO);
   int i;
   uint16_t port_number;
 
@@ -1989,8 +2236,10 @@ int32_t rsi_get_primary_socket_id(uint8_t *port_num)
   }
 
   if (i >= NUMBER_OF_SOCKETS) {
+    SL_PRINTF(SL_GET_PRIMARY_SOCKET_ID_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
+  SL_PRINTF(SL_GET_PRIMARY_SOCKET_ID_EXIT, NETWORK, LOG_INFO, "i:%d ", i);
   return i;
 }
 /** @} */
@@ -2013,6 +2262,7 @@ int32_t rsi_get_primary_socket_id(uint8_t *port_num)
 int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_CERTIFICATE_VALID_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt = NULL;
   rsi_req_cert_valid_t *cert_valid;
   int32_t sockID = 0;
@@ -2024,6 +2274,7 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_CERTIFICATE_VALID_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -2033,6 +2284,7 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_CERTIFICATE_VALID_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Allocate packet
@@ -2040,6 +2292,7 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
   if (pkt == NULL) {
     // Set error
     rsi_wlan_socket_set_status(RSI_ERROR_PKT_ALLOCATION_FAILURE, socket_id);
+    SL_PRINTF(SL_CERTIFICATE_VALID_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   rsi_driver_cb_non_rom->socket_state = RSI_SOCKET_CMD_IN_PROGRESS;
@@ -2051,7 +2304,7 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 
   // Send cert valid command
   status = RSI_DRIVER_WLAN_SEND_CMD(RSI_WLAN_REQ_CERT_VALID, pkt);
-
+  SL_PRINTF(SL_CERTIFICATE_VALID_EXIT, NETWORK, LOG_INFO, "status : %4x", status);
   return status;
 }
 #endif
@@ -2072,6 +2325,7 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 
 int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 {
+  SL_PRINTF(SL_SOCKET_CREATE_ASYNC_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt = NULL;
   rsi_req_socket_t *socket_create;
   int32_t status = 0;
@@ -2086,6 +2340,7 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SOCKET_CREATE_ASYNC_SOCK_ERROR_1, NETWORK, LOG_INFO);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -2093,6 +2348,7 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
   if (rsi_socket_pool[sockID].sock_state == RSI_SOCKET_STATE_INIT) {
     // Set error
     rsi_wlan_socket_set_status(RSI_ERROR_EBADF, sockID);
+    SL_PRINTF(SL_SOCKET_CREATE_ASYNC_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2101,6 +2357,7 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
   if (pkt == NULL) {
     // Set error
     rsi_wlan_socket_set_status(RSI_ERROR_PKT_ALLOCATION_FAILURE, sockID);
+    SL_PRINTF(SL_SOCKET_CREATE_ASYNC_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2176,9 +2433,17 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 
   socket_create->vap_id = rsi_socket_pool_non_rom[sockID].vap_id;
   if (rsi_socket_pool_non_rom[sockID].tos) {
+#ifdef CHIP_9117
+    rsi_uint16_to_2bytes(socket_create->tos, rsi_socket_pool_non_rom[sockID].tos);
+#else
     rsi_uint32_to_4bytes(socket_create->tos, rsi_socket_pool_non_rom[sockID].tos);
+#endif
   } else {
+#ifdef CHIP_9117
+    rsi_uint16_to_2bytes(socket_create->tos, RSI_TOS);
+#else
     rsi_uint32_to_4bytes(socket_create->tos, RSI_TOS);
+#endif
   }
   if (rsi_socket_pool_non_rom[sockID].max_tcp_retries) {
     socket_create->max_tcp_retries_count = rsi_socket_pool_non_rom[sockID].max_tcp_retries;
@@ -2193,21 +2458,37 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
   if (rsi_socket_pool_non_rom[sockID].ssl_bitmap) {
     socket_create->ssl_bitmap = rsi_socket_pool_non_rom[sockID].ssl_bitmap;
   }
+#ifndef BSD_COMPATIBILITY
   if (rsi_wlan_cb_non_rom->tls_version & RSI_SOCKET_FEAT_SSL) {
     socket_create->ssl_bitmap |= rsi_wlan_cb_non_rom->tls_version;
     rsi_wlan_cb_non_rom->tls_version = 0;
   }
+#endif
   if (rsi_socket_pool_non_rom[sockID].high_performance_socket) {
     socket_create->ssl_bitmap |= RSI_HIGH_PERFORMANCE_SOCKET;
   }
-  // Configure ssl_ciphers_bitmap
+
+  // Configure SSL extended ciphers bitmap
+#ifdef CHIP_9117
+  socket_create->ssl_ext_ciphers_bitmap = RSI_SSL_EXT_CIPHERS;
+#endif
+
+  // Configure SSL ciphers bitmap
   socket_create->ssl_ciphers_bitmap = RSI_SSL_CIPHERS;
+
   if (rsi_socket_pool_non_rom[sockID].tcp_mss) {
     socket_create->tcp_mss = rsi_socket_pool_non_rom[sockID].tcp_mss;
   }
   if (rsi_socket_pool_non_rom[sockID].tcp_retry_transmit_timer) {
     socket_create->tcp_retry_transmit_timer = rsi_socket_pool_non_rom[sockID].tcp_retry_transmit_timer;
   }
+
+#ifdef CHIP_9117
+  //! Copy max_retransmission_timeout_value
+  if (rsi_socket_pool_non_rom[sockID].max_retransmission_timeout_value) {
+    socket_create->max_retransmission_timeout_value = rsi_socket_pool_non_rom[sockID].max_retransmission_timeout_value;
+  }
+#endif
 
   if (!(rsi_wlan_cb_non_rom->callback_list.socket_connect_response_handler != NULL)) {
 #ifndef RSI_SOCK_SEM_BITMAP
@@ -2239,6 +2520,7 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
     // Get WLAN/network command response status
     status = rsi_wlan_socket_get_status(sockID);
   }
+  SL_PRINTF(SL_SOCKET_CREATE_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -2261,6 +2543,7 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 
 int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
 {
+  SL_PRINTF(SL_TCP_WINDOW_UPDATE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt = NULL;
   rsi_req_tcp_window_update_t *tcp_window_update;
   int32_t status = 0;
@@ -2268,15 +2551,43 @@ int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
   rsi_driver_cb_t *rsi_driver_cb     = global_cb_p->rsi_driver_cb;
   rsi_socket_info_t *rsi_socket_pool = global_cb_p->rsi_socket_pool;
 
+#ifdef SOCKET_CLOSE_WAIT
+  if (rsi_socket_pool[sockID].sock_state > RSI_SOCKET_STATE_INIT && rsi_socket_pool_non_rom[sockID].close_pending) {
+    // Set error
+    rsi_wlan_socket_set_status(RSI_ERROR_ECONNABORTED, sockID);
+#ifdef RSI_WITH_OS
+    rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
+#endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_1, NETWORK, LOG_ERROR);
+    return RSI_SOCK_ERROR;
+  }
+#endif
+  if (rsi_socket_pool_non_rom[sockID].socket_terminate_indication) {
+    rsi_wlan_socket_set_status(RSI_ERROR_ECONNABORTED, sockID);
+#ifdef RSI_WITH_OS
+    rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
+#endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_2, NETWORK, LOG_ERROR);
+    return RSI_SOCK_ERROR;
+  }
   if (rsi_socket_pool[sockID].sock_state != RSI_SOCKET_STATE_CONNECTED) {
     // Set error
     rsi_wlan_socket_set_status(RSI_ERROR_EBADF, sockID);
+#ifdef RSI_WITH_OS
+    rsi_set_os_errno(RSI_ERROR_EBADF);
+#endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   pkt = rsi_pkt_alloc(&rsi_driver_cb->wlan_cb->wlan_tx_pool);
   if (pkt == NULL) {
     rsi_wlan_socket_set_status(RSI_ERROR_PKT_ALLOCATION_FAILURE, sockID);
+#ifdef RSI_WITH_OS
+    status = rsi_get_error(sockID);
+    rsi_set_os_errno(status);
+#endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2300,6 +2611,11 @@ int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
   if (status != RSI_ERROR_NONE) {
     // Get WLAN/network command response status
     rsi_wlan_socket_set_status(status, sockID);
+#ifdef RSI_WITH_OS
+    status = rsi_get_error(sockID);
+    rsi_set_os_errno(status);
+#endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_5, NETWORK, LOG_ERROR, "status: %4x", status);
     return RSI_SOCK_ERROR;
   }
   // Get WLAN/network command response status
@@ -2308,8 +2624,10 @@ int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ERANGE);
 #endif
+    SL_PRINTF(SL_TCP_WINDOW_UPDATE_SOCK_ERROR_6, NETWORK, LOG_ERROR, "status: %4x", status);
     return RSI_SOCK_ERROR;
   }
+  SL_PRINTF(SL_TCP_WINDOW_UPDATE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return rsi_socket_pool_non_rom[sockID].window_size;
 }
 /** @} */
@@ -2337,6 +2655,7 @@ int32_t rsi_get_socket_descriptor(uint8_t *src_port,
                                   uint16_t ip_version,
                                   uint16_t sockid)
 {
+  SL_PRINTF(SL_GET_SOCKET_DESCRIPTOR_ENTRY, NETWORK, LOG_INFO);
   int i;
   uint16_t source_port;
   uint16_t destination_port;
@@ -2403,9 +2722,10 @@ int32_t rsi_get_socket_descriptor(uint8_t *src_port,
     }
   }
   if (i >= NUMBER_OF_SOCKETS) {
+    SL_PRINTF(SL_GET_SOCKET_DESCRIPTOR_SOCK_ERROR, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
-
+  SL_PRINTF(SL_GET_SOCKET_DESCRIPTOR_EXIT, NETWORK, LOG_ERROR);
   return i;
 }
 /** @} */
@@ -2444,6 +2764,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
                                  int32_t protocol,
                                  void (*callback)(uint32_t sock_no, uint8_t *buffer, uint32_t length))
 {
+  SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_ENTRY, NETWORK, LOG_INFO);
   int i;
 
   rsi_driver_cb_t *rsi_driver_cb     = global_cb_p->rsi_driver_cb;
@@ -2461,6 +2782,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EAFNOSUPPORT);
 #endif
+    SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2469,6 +2791,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2486,6 +2809,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_EBUSY);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_3, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
       status = rsi_semaphore_check_and_destroy(&rsi_socket_pool_non_rom[i].sock_send_sem);
@@ -2493,6 +2817,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_EBUSY);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_EXIT4, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
       status = rsi_semaphore_check_and_destroy(&rsi_socket_pool_non_rom[i].sock_recv_sem);
@@ -2500,6 +2825,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_EBUSY);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_5, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
 #endif
@@ -2510,6 +2836,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_ENOMEM);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_6, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
       status = rsi_semaphore_create(&rsi_socket_pool_non_rom[i].sock_send_sem, 0);
@@ -2517,6 +2844,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_ENOMEM);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_7, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
       status = rsi_semaphore_create(&rsi_socket_pool_non_rom[i].sock_recv_sem, 0);
@@ -2524,6 +2852,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
         rsi_set_os_errno(RSI_ERROR_ENOMEM);
 #endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_8, NETWORK, LOG_ERROR);
         return RSI_SOCK_ERROR;
       }
 
@@ -2590,6 +2919,8 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ENFILE);
 #endif
+    rsi_wlan_socket_set_status(RSI_ERROR_ENFILE, i);
+    SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_9, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2597,6 +2928,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
   RSI_MUTEX_UNLOCK(&rsi_driver_cb->wlan_cb->wlan_mutex);
 
   // Return available index
+  SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_EXIT, NETWORK, LOG_INFO);
   return i;
 }
 /*==============================================*/
@@ -2614,6 +2946,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 
 int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, int32_t addressLength)
 {
+  SL_PRINTF(SL_SOCKET_CONNECT_ENTRY, NETWORK, LOG_INFO);
   int32_t status = RSI_SUCCESS;
 
   rsi_driver_cb_t *rsi_driver_cb     = global_cb_p->rsi_driver_cb;
@@ -2626,6 +2959,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -2637,6 +2971,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2647,6 +2982,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2657,6 +2993,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EFAULT);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2668,6 +3005,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EAFNOSUPPORT);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2678,6 +3016,7 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EAFNOSUPPORT);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2716,9 +3055,10 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SOCKET_CONNECT_SOCK_ERROR_7, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
-
+  SL_PRINTF(SL_SOCKET_CONNECT_EXIT, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /*==============================================*/
@@ -2748,6 +3088,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
                             struct rsi_sockaddr *fromAddr,
                             int32_t *fromAddrLen)
 {
+  SL_PRINTF(SL_SOCKET_RECVFROM_ENTRY, NETWORK, LOG_INFO);
   UNUSED_PARAMETER(flags); // Added to resolve compilation warning, value is unchanged
 
   struct rsi_sockaddr_in peer4_address;
@@ -2770,6 +3111,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -2781,6 +3123,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If sockID is not in available range
@@ -2790,6 +3133,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -2800,11 +3144,13 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   if (rsi_socket_pool_non_rom[sockID].socket_terminate_indication) {
     rsi_socket_pool_non_rom[sockID].socket_terminate_indication = 0;
+    SL_PRINTF(SL_SOCKET_RECVFROM_EXIT_1, NETWORK, LOG_INFO, "copy length: %4x", copy_length);
     return copy_length;
   }
   // Acquire mutex lock
@@ -2835,6 +3181,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
       status = rsi_get_error(sockID);
       rsi_set_os_errno(status);
 #endif
+      SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_6, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
 
@@ -2905,6 +3252,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
       status = rsi_get_error(sockID);
       rsi_set_os_errno(status);
 #endif
+      SL_PRINTF(SL_SOCKET_RECVFROM_SOCK_ERROR_7, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
 
@@ -2994,7 +3342,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
       memcpy(fromAddr, &peer6_address, *fromAddrLen);
     }
   }
-
+  SL_PRINTF(SL_SOCKET_RECVFROM_EXIT_2, NETWORK, LOG_INFO, "copy length: %4x", copy_length);
   return copy_length;
 }
 /*==============================================*/
@@ -3010,6 +3358,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
 
 int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 {
+  SL_PRINTF(SL_SOCKET_LISTEN_ENTRY, NETWORK, LOG_INFO);
   int32_t status                     = RSI_SUCCESS;
   rsi_socket_info_t *rsi_socket_pool = global_cb_p->rsi_socket_pool;
 
@@ -3020,6 +3369,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SOCKET_LISTEN_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -3031,6 +3381,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_LISTEN_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If sockID is not in available range
@@ -3040,6 +3391,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_LISTEN_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3050,6 +3402,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_SOCKET_LISTEN_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3060,6 +3413,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_LISTEN_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3084,6 +3438,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
     status = RSI_SOCK_ERROR;
 #endif
   }
+  SL_PRINTF(SL_SOCKET_LISTEN_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3105,6 +3460,7 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SOCKET_SHUTDOWN_ENTRY, NETWORK, LOG_INFO);
 
   rsi_req_socket_close_t *close;
   rsi_pkt_t *pkt = NULL;
@@ -3119,6 +3475,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If sockID is not in available range
@@ -3128,6 +3485,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3139,6 +3497,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
     rsi_socket_pool_non_rom[sockID].close_pending = 0;
     rsi_wlan_socket_set_status(RSI_SUCCESS, sockID);
     // Return success
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_EXIT_1, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
 #endif
@@ -3151,6 +3510,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 
       rsi_wlan_socket_set_status(RSI_SUCCESS, sockID);
       // Return success
+      SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_3, NETWORK, LOG_INFO);
       return RSI_SUCCESS;
     } else {
       if (rsi_socket_pool[sockID].sock_state != RSI_SOCKET_STATE_LISTEN) {
@@ -3159,6 +3519,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 
         rsi_wlan_socket_set_status(RSI_SUCCESS, sockID);
         // Return success
+        SL_PRINTF(SL_SOCKET_SHUTDOWN_EXIT_2, NETWORK, LOG_INFO);
         return RSI_SUCCESS;
       }
       how = 1;
@@ -3174,6 +3535,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3207,6 +3569,7 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Clear socket info
@@ -3218,10 +3581,12 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SOCKET_SHUTDOWN_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   // Return status
+  SL_PRINTF(SL_SOCKET_SHUTDOWN_EXIT_3, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3241,6 +3606,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 {
   int32_t local_port;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SOCKET_BIND_ENTRY, NETWORK, LOG_INFO);
   uint8_t i;
 
   rsi_driver_cb_t *rsi_driver_cb     = global_cb_p->rsi_driver_cb;
@@ -3253,6 +3619,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -3264,6 +3631,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // If sockID is not in available range
@@ -3273,6 +3641,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3283,6 +3652,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3293,6 +3663,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3304,6 +3675,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3315,6 +3687,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_7, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3340,6 +3713,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+      SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_8, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -3354,8 +3728,6 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
   if ((rsi_socket_pool[sockID].sock_type & 0xF) == SOCK_DGRAM) {
     status = rsi_socket_create_async(sockID, RSI_SOCKET_LUDP, 0);
 
-    // Set socket state as connected
-    rsi_socket_pool[sockID].sock_state = RSI_SOCKET_STATE_CONNECTED;
   } else {
     // Set socket state as bind
     rsi_socket_pool[sockID].sock_state = RSI_SOCKET_STATE_BIND;
@@ -3366,10 +3738,12 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SOCKET_BIND_SOCK_ERROR_9, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
   // Return success
+  SL_PRINTF(SL_SOCKET_BIND_EXIT, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /*==============================================*/
@@ -3385,6 +3759,7 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 
 rsi_error_t rsi_wait_on_socket_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms)
 {
+  SL_PRINTF(SL_WAIT_ON_SOCKET_SEMAPHORE_ENTRY, NETWORK, LOG_INFO);
   // Wait on WLAN semaphore
   if (rsi_semaphore_wait(semaphore, timeout_ms) != RSI_ERROR_NONE) {
 #ifndef RSI_WAIT_TIMEOUT_EVENT_HANDLE_TIMER_DISABLE
@@ -3392,8 +3767,10 @@ rsi_error_t rsi_wait_on_socket_semaphore(rsi_semaphore_handle_t *semaphore, uint
       rsi_driver_cb_non_rom->rsi_wait_timeout_handler_error_cb(RSI_ERROR_RESPONSE_TIMEOUT, SOCKET_CMD);
     }
 #endif
+    SL_PRINTF(SL_WAIT_ON_SOCKET_SEMAPHORE_RESPONSE_TIMEOUT, NETWORK, LOG_ERROR);
     return RSI_ERROR_RESPONSE_TIMEOUT;
   }
+  SL_PRINTF(SL_WAIT_ON_SOCKET_SEMAPHORE_ERROR_NONE, NETWORK, LOG_INFO);
   return RSI_ERROR_NONE;
 }
 /** @} */
@@ -3411,6 +3788,7 @@ rsi_error_t rsi_wait_on_socket_semaphore(rsi_semaphore_handle_t *semaphore, uint
 /// @private
 int32_t rsi_application_socket_descriptor(int32_t sock_id)
 {
+  SL_PRINTF(SL_APPLICATION_SOCKET_DESCRIPTOR_ENTRY, NETWORK, LOG_INFO);
   int i;
 
   rsi_socket_info_t *rsi_socket_pool = global_cb_p->rsi_socket_pool;
@@ -3426,9 +3804,10 @@ int32_t rsi_application_socket_descriptor(int32_t sock_id)
   }
 
   if (i >= NUMBER_OF_SOCKETS) {
+    SL_PRINTF(SL_APPLICATION_SOCKET_DESCRIPTOR_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
-
+  SL_PRINTF(SL_APPLICATION_SOCKET_DESCRIPTOR_EXIT, NETWORK, LOG_INFO, "i: %d ", i);
   return i;
 }
 /** @} */
@@ -3444,6 +3823,7 @@ int32_t rsi_application_socket_descriptor(int32_t sock_id)
  */
 int32_t rsi_wlan_socket_get_status(int32_t sockID)
 {
+  SL_PRINTF(SL_WLAN_SOCKET_GET_STATUS_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_pool_non_rom[sockID].socket_status;
 }
 
@@ -3457,6 +3837,7 @@ int32_t rsi_wlan_socket_get_status(int32_t sockID)
  */
 void rsi_wlan_socket_set_status(int32_t status, int32_t sockID)
 {
+  SL_PRINTF(SL_WLAN_SOCKET_SET_STATUS_ENTRY, NETWORK, LOG_INFO);
   rsi_socket_pool_non_rom[sockID].socket_status = status;
 #ifndef RSI_WLAN_STATUS
   rsi_wlan_set_status(status);
@@ -3472,6 +3853,7 @@ void rsi_wlan_socket_set_status(int32_t status, int32_t sockID)
  */
 int32_t rsi_select_get_status(int32_t selectid)
 {
+  SL_PRINTF(SL_SELECT_GET_STATUS_ENTRY, NETWORK, LOG_INFO);
   return rsi_socket_select_info[selectid].select_status;
 }
 
@@ -3492,6 +3874,7 @@ int32_t rsi_select_get_status(int32_t selectid)
 /// @private
 void rsi_select_set_status(int32_t status, int32_t selectid)
 {
+  SL_PRINTF(SL_SELECT_SET_STATUS_ENTRY, NETWORK, LOG_INFO);
   rsi_socket_select_info[selectid].select_status = status;
 #ifndef RSI_WLAN_STATUS
   rsi_wlan_set_status(status);
@@ -3507,6 +3890,17 @@ void rsi_select_set_status(int32_t status, int32_t selectid)
  * @param[in]  data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out] sockID                         - Socket Descriptor ID
  * @param[out] length                         - Number of bytes transfered
+ *
+ * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+
+ | Protocol            | Maximum data chunk (bytes) |
+ |---------------------|----------------------------|
+ | TCP/LTCP socket     | 1460                       |
+ | LUDP socket         | 1472                       |
+ | Web socket          | 1450                       |
+ | TCP-SSL/LTCP-SSL    | 1370                       |
+ | Web socket over SSL | 1362                       |
+ * 
  * @return	Zero                           - Success \n
  *             Negative Value                 - Failure
  *
@@ -3519,6 +3913,7 @@ int32_t rsi_send_async_non_rom(int32_t sockID,
                                int32_t flags,
                                void (*data_transfer_complete_handler)(int32_t sockID, uint16_t length))
 {
+  SL_PRINTF(SL_SEND_ASYNC_NON_ROM_ENTRY, NETWORK, LOG_INFO);
   struct rsi_sockaddr_in fromAddr4;
   struct rsi_sockaddr_in6 fromAddr6;
   int32_t status                     = 0;
@@ -3530,6 +3925,7 @@ int32_t rsi_send_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SEND_ASYNC_NON_ROM_SOCK_ERROR, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if ((rsi_socket_pool[sockID].sock_type >> 4) == AF_INET) {
@@ -3573,6 +3969,7 @@ int32_t rsi_send_async_non_rom(int32_t sockID,
   }
 
   // Return status
+  SL_PRINTF(SL_SEND_ASYNC_NON_ROM_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3604,6 +4001,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
                                  int32_t destAddrLen,
                                  void (*data_transfer_complete_handler)(int32_t sockID, uint16_t length))
 {
+  SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_ENTRY, NETWORK, LOG_INFO);
   UNUSED_PARAMETER(destAddrLen); //Added to resolve compilation warning, value is unchanged
   int32_t status        = RSI_SUCCESS;
   int32_t maximum_limit = 0;
@@ -3620,6 +4018,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_ECONNABORTED);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 #endif
@@ -3628,6 +4027,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
     // Set error
     rsi_wlan_socket_set_status(RSI_ERROR_EBADF, sockID);
 #ifdef RSI_WITH_OS
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_ERROR_EBADF, NETWORK, LOG_ERROR);
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
     return RSI_SOCK_ERROR;
@@ -3639,6 +4039,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EBADF);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3650,6 +4051,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_3, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   if (((rsi_socket_pool[sockID].sock_type & 0xF) == SOCK_STREAM)
@@ -3659,6 +4061,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EPROTOTYPE);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_4, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3669,6 +4072,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EFAULT);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -3700,11 +4104,9 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
       status = rsi_get_error(sockID);
       rsi_set_os_errno(status);
 #endif
+      SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_EXIT_1, NETWORK, LOG_ERROR);
       return status;
     }
-
-    // Change state to connected
-    rsi_socket_pool[sockID].sock_state = RSI_SOCKET_STATE_CONNECTED;
   }
 
   // Find maximum limit based on the protocol
@@ -3743,6 +4145,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_ENOBUFS);
 #endif
+      SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_6, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
 
@@ -3789,12 +4192,14 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
   RSI_MUTEX_UNLOCK(&rsi_driver_cb->wlan_cb->wlan_mutex);
 
   if (status == RSI_SUCCESS) {
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_EXIT_2, NETWORK, LOG_INFO);
     return msgLength;
   } else {
 #ifdef RSI_WITH_OS
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_SENDTO_ASYNC_NON_ROM_SOCK_ERROR_7, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 }
@@ -3809,6 +4214,7 @@ int32_t rsi_sendto_async_non_rom(int32_t sockID,
 /// @private
 void rsi_clear_sockets_non_rom(int32_t sockID)
 {
+  SL_PRINTF(SL_CLEAR_SOCKET_NON_ROM_ENTRY, NETWORK, LOG_INFO);
   int i;
   int32_t sock_id = -1;
   uint16_t port_number;

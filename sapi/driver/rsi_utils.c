@@ -385,6 +385,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
 
   return str;
 }
+
 /*=========================================================================*/
 /**
  * @fn          int32_t rsi_atoi(const int8_t *str)
@@ -392,15 +393,25 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
  * @param[in]   str - This is the string representation of an integral number 
  * @return      Converted Integer  
  */
-
 int32_t rsi_atoi(const int8_t *str)
 {
-  int32_t res = 0;
-  int32_t i   = 0;
-  for (i = 0; str[i] != '\0'; ++i)
+  int32_t res              = 0;
+  int32_t i                = 0;
+  uint32_t negative_number = 0;
+
+  if (str[i] == '-') {
+    negative_number = 1;
+    i++;
+  }
+  for (; (str[i] >= '0') && (str[i] <= '9'); ++i)
     res = res * 10 + str[i] - '0';
+
+  if (negative_number) {
+    res *= -1;
+  }
   return res;
 }
+
 /*=============================================================================*/
 /**
  * @fn         int8_t asciihex_2_num(int8_t ascii_hex_in)
@@ -408,7 +419,6 @@ int32_t rsi_atoi(const int8_t *str)
  * @param[in]  ascii_hex_in - ASCII hex input  
  * @return     hex num  
  */
-
 int8_t asciihex_2_num(int8_t ascii_hex_in)
 {
   if ((ascii_hex_in >= '0') && (ascii_hex_in <= '9'))

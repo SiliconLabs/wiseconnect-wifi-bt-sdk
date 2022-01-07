@@ -705,8 +705,8 @@ typedef struct rsi_ble_read_req_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   /**attribute handle*/
   uint16_t handle;
-  /**0 – Read request \n 
-     1 – Read Blob request*/
+  /**0 ï¿½ Read request \n 
+     1 ï¿½ Read Blob request*/
   uint8_t type;
   uint8_t reserved;
   /**offset of attribute value to be read*/
@@ -721,6 +721,21 @@ typedef struct rsi_ble_event_mtu_s {
   uint16_t mtu_size;
 } rsi_ble_event_mtu_t;
 
+#define PEER_DEVICE_INITATED_MTU_EXCHANGE  0x1
+#define LOCAL_DEVICE_INITATED_MTU_EXCHANGE 0x2
+//MTU Exchange Information event structure
+typedef struct rsi_ble_event_mtu_exchange_information_s {
+  /**uint8_t[6], remote device address*/
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  /**uint8_t[2], Remote MTU Size*/
+  uint16_t remote_mtu_size;
+  /**uint8_t[2], Local MTU Size*/
+  uint16_t local_mtu_size;
+  /**uint8_t Initiated role, who initiated mtu exchange \n
+     PEER_DEVICE_INITATED_MTU_EXCHANGE     0x01 \n
+     LOCAL_DEVICE_INITATED_MTU_EXCHANGE    0x02  */
+  uint8_t initiated_role;
+} rsi_ble_event_mtu_exchange_information_t;
 // GATT Notification event structure
 typedef struct rsi_ble_event_notify_s {
   /**remote device address*/
@@ -881,7 +896,7 @@ typedef struct rsi_ble_per_transmit_s {
   uint8_t rx_chnl_num;
   /** Tx channel number (0 - 39) */
   uint8_t tx_chnl_num;
-  /** Initial seed to be used for whitening. It should be set to ‘0’ in order to disable whitening. \n
+  /** Initial seed to be used for whitening. It should be set to ï¿½0ï¿½ in order to disable whitening. \n
       In order to enable, one should give the scrambler seed value which is used on the receive side */
   uint8_t scrambler_seed;
   /** LE channel type (data or advertise channel) \n
@@ -914,12 +929,12 @@ typedef struct rsi_ble_per_transmit_s {
   /** Length of the packet to be transmitted*/
   uint8_t pkt_len[2];
   /** Type of payload data sequence \n
-       0x00  PRBS9 sequence ‘11111111100000111101... \n
-       0x01  Repeated ‘11110000’ \n
-       0x02  Repeated ‘10101010’ \n
+       0x00  PRBS9 sequence ï¿½11111111100000111101... \n
+       0x01  Repeated ï¿½11110000ï¿½ \n
+       0x02  Repeated ï¿½10101010ï¿½ \n
        0x03  PRBS15 \n
-       0x04  Repeated ‘11111111’ \n
-       0x05  Repeated ‘00000000’ \n
+       0x04  Repeated ï¿½11111111ï¿½ \n
+       0x05  Repeated ï¿½00000000ï¿½ \n
        0x06  Repeated '00001111' \n
        0x07  Repeated '01010101' */
   uint8_t payload_type;
@@ -965,7 +980,7 @@ typedef struct rsi_ble_per_receive_s {
   uint8_t rx_chnl_num;
   /** Tx channel number (0 - 39) */
   uint8_t tx_chnl_num;
-  /** Initial seed to be used for whitening. It should be set to ‘0’ in order to disable whitening. \n
+  /** Initial seed to be used for whitening. It should be set to ï¿½0ï¿½ in order to disable whitening. \n
       In order to enable, one should give the scrambler seed value which is used on the transmit side */
   uint8_t scrambler_seed;
   /** LE channel type (data or advertise channel) \n
@@ -2189,8 +2204,20 @@ typedef void (*rsi_ble_on_read_req_event_t)(uint16_t event_id, rsi_ble_read_req_
  * This callback function will be called when connected to indicate MTU size \n
  * This callback has to be registered using rsi_ble_gatt_register_callbacks API
  */
-
 typedef void (*rsi_ble_on_mtu_event_t)(rsi_ble_event_mtu_t *rsi_ble_event_mtu);
+
+/**
+ * @typedef    void (*rsi_ble_on_mtu_exchange_info_t)(rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info);
+ * @brief      Callback function to indicate MTU size and who initated MTU Exchange Request
+ * @param[out]  rsi_ble_event_mtu_exchange_info contains the MTU exchange information. Please refer rsi_ble_event_mtu_exchange_information_s for more info.
+ * @return      void
+ * @section description
+ * This callback function will be called when connected, this event will contain MTU Exchange Information \n
+ * This callback has to be registered using rsi_ble_gatt_extended_register_callbacks API
+ */
+typedef void (*rsi_ble_on_mtu_exchange_info_t)(
+  rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info);
+
 /** @} */
 /******************************************************
  * * BLE GATT Callbacks register function Declarations
@@ -2223,6 +2250,12 @@ void rsi_ble_gatt_register_callbacks(rsi_ble_on_profiles_list_resp_t ble_on_prof
                                      rsi_ble_on_event_write_resp_t ble_on_write_resp_event,
                                      rsi_ble_on_event_indicate_confirmation_t ble_on_indicate_confirmation_event,
                                      rsi_ble_on_event_prepare_write_resp_t ble_on_prepare_write_resp_event);
+
+/*==============================================*/
+/**
+ * @fn         rsi_ble_gatt_extended_register_callbacks
+ */
+void rsi_ble_gatt_extended_register_callbacks(rsi_ble_on_mtu_exchange_info_t ble_on_mtu_exchange_info_event);
 
 /*********************************************************************************
  * * BLE L2CAP Credit based flow control(CBFC) Callbacks register function Declarations
@@ -2335,6 +2368,7 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, uin
 int32_t rsi_ble_notify_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
 
 int32_t rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
+int32_t rsi_ble_indicate_value_sync(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
 int32_t rsi_ble_indicate_confirm(uint8_t *dev_addr);
 int32_t rsi_ble_remove_gatt_service(uint32_t service_handler);
 int32_t rsi_ble_remove_gatt_attibute(uint32_t service_handler, uint16_t att_hndl);
@@ -2349,6 +2383,7 @@ int32_t rsi_ble_gatt_prepare_write_response(uint8_t *dev_addr,
                                             uint8_t *data);
 
 int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size);
+int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size);
 void rsi_ble_gap_extended_register_callbacks(rsi_ble_on_remote_features_t ble_on_remote_features_event,
                                              rsi_ble_on_le_more_data_req_t ble_on_le_more_data_req_event);
 int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt);

@@ -18,7 +18,9 @@
 #ifndef RSI_INTERFACE_H
 #define RSI_INTERFACE_H
 
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
+#endif
 
 /******************************************************
  * *                      Macros

@@ -44,7 +44,7 @@
 */
 /*=============================================*/
 /**
- * @brief       Initialize the wlan module’s Slave SPI interface.
+ * @brief       Initialize the wlan moduleï¿½s Slave SPI interface.
  * @param[in]   void
  * @return      0 - SUCCESS \n
  *              -1 - SPI busy / Timeout \n
@@ -53,6 +53,7 @@
 
 int16_t rsi_spi_iface_init(void)
 {
+  SL_PRINTF(SL_SPI_IFACE_INIT_ENTRY, DRIVER, LOG_INFO);
 
   uint8_t txCmd[4];
   uint8_t localBuf[4] = { 0 };
@@ -84,7 +85,7 @@ int16_t rsi_spi_iface_init(void)
       retval = RSI_ERROR_SPI_BUSY;
     }
   }
-
+  SL_PRINTF(SL_SPI_IFACE_INIT_EXIT, DRIVER, LOG_INFO, "retval: %d", retval);
   return retval;
 }
 
@@ -99,9 +100,6 @@ void rsi_ulp_wakeup_init(void)
   uint8_t txCmd[4];
   uint8_t rxbuff[2];
 
-#ifdef CHIP_9117
-  return;
-#endif
   txCmd[0] = (RSI_RS9116_INIT_CMD & 0xFF);
   txCmd[1] = ((RSI_RS9116_INIT_CMD >> 8) & 0xFF);
   txCmd[2] = ((RSI_RS9116_INIT_CMD >> 16) & 0xFF);

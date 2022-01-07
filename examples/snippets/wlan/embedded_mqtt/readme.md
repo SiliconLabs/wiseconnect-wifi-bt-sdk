@@ -4,7 +4,7 @@
 
 This application demonstrates how to configure the RS9116W EVK as MQTT client and establish connection with MQTT broker and how to subscribe, publish and receive the MQTT messages from MQTT broker.
 
-In this application, RS9116W EVK configured as WiFi station and connects to the Access Point. After successful WiFi connection, RS9116W EVK connects to MQTT broker and subscribes to the topic "REDPINE_TEST" and publishes a message "THIS IS MQTT CLIENT DEMO FROM REDPINE" on that subscribed topic. After publishing the message on the subscribed topic, the MQTT client un-subscribes and disconnects with the MQTT broker.
+In this application, RS9116W EVK configured as WiFi station and connects to the Access Point. After successful WiFi connection, RS9116W EVK connects to MQTT broker and subscribes to the topic "SILABS_TEST" and publishes a message "THIS IS MQTT CLIENT DEMO FROM SILABS" on that subscribed topic. After publishing the message on the subscribed topic, the MQTT client un-subscribes and disconnects with the MQTT broker.
 
 ## 2. Prerequisites / Setup Requirements
 
@@ -12,10 +12,11 @@ Before running the application, the user will need the following things to setup
 
 ### 2.1 Hardware Requirements
   
-* Windows PC with Host interface (UART/ SPI)
+* Windows PC with Host interface (UART/ SPI/ SDIO).
 * Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 * Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
   - [STM32F411 Nucleo](https://st.com/)
 * Wireless Access point
 * Windows PC1 with MQTT broker installed in it
@@ -42,11 +43,12 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
 * [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -65,10 +67,13 @@ The application is provided with the project folder containing Keil and Simplici
 
 ![EFR Radio Boards](resources/readme/image147a.png) 
 
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/embedded_mqtt/projects/embedded_mqtt-brd2204a-gg11.slsproj`
 
-### 3.4 Bare Metal Support
+### 3.4 Bare Metal/RTOS Support
 
-This application supports only bare metal configuration. By default, the application project files (Keil and Simplicity studio) are provided with bare metal environment in the SDK. 
+This application supports bare metal and RTOS configuration. By default, the application project files (Keil and Simplicity studio) are provided with bare metal environment in the SDK. 
 
 ## 4. Application Configuration Parameters
 
@@ -148,13 +153,13 @@ QOS indicates the level of assurance for delivery of an Application Message.
 RSI_MQTT_TOPIC refers to which topic WiSeConnect MQTT client is supposed to subscribe.
 
 ```c
-#define RSI_MQTT_TOPIC                             "REDPINE"
+#define RSI_MQTT_TOPIC                             "SILABS"
 ```
    
 MQTT Message to publish on the topic subscribed
 
 ```c
-uint8_t publish_message[] ="THIS IS MQTT CLIENT DEMO FROM REDPINE"
+uint8_t publish_message[] ="THIS IS MQTT CLIENT DEMO FROM SILABS"
 ```
 MQTT Client ID with which MQTT client connects to MQTT broker/server
 
@@ -278,7 +283,7 @@ The firmware file is located in `<SDK>/firmware/`
 
 Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
 
-- Open the project `<SDK>/examples/snippets/embedded_mqtt/projects/embedded_mqtt-nucleo-f411re.uvprojx`
+- Open the project `<SDK>/examples/snippets/wlan/embedded_mqtt/projects/embedded_mqtt-nucleo-f411re.uvprojx`
 - Build and Debug the project
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
@@ -289,10 +294,12 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX32
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/embedded_mqtt/projects`
-- Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
+- Open Simplicity Studio and import the EFR32/EFM32 project from `<SDK>/examples/snippets/wlan/embedded_mqtt/projects`
+    - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
+   (or)
+    - Select the *.brd2204a-gg11.slsproj  for EFM32GG11 board.
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
@@ -323,11 +330,11 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 6. After the program gets executed, RS9116W EVK will get connected to the same access point having the configuration same as that of in the application and get IP.
 
-7. Once the RS9116W EVK gets connected to the MQTT broker, it will subscribe to the topic RSI_MQTT_TOPIC (Ex: "REDPINE_TEST"). The user can see the client connected and subscribe information in the MQTT broker.
+7. Once the RS9116W EVK gets connected to the MQTT broker, it will subscribe to the topic RSI_MQTT_TOPIC (Ex: "SILABS_TEST"). The user can see the client connected and subscribe information in the MQTT broker.
    
 ![Client Connected and Subscribe Information in the MQTT broker](resources/readme/image151.png)
 
-8. After successful subscription to the topic RSI_MQTT_TOPIC (Ex: "REDPINE"), the device publishes a message which is given in publish_message array (Ex: "THIS IS MQTT CLIENT DEMO FROM REDPINE") on the subscribed topic.
+8. After successful subscription to the topic RSI_MQTT_TOPIC (Ex: "SILABS"), the device publishes a message which is given in publish_message array (Ex: "THIS IS MQTT CLIENT DEMO FROM SILABS") on the subscribed topic.
 
 9. MQTT client utility which is running on Windows PC3 will receive the message published by the device as it subscribes to the same topic.
    - Refer to the below image for MQTT client utility and message history.

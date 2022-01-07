@@ -52,7 +52,7 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_CONNECT_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -65,12 +65,14 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_CONNECT_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_CONNECT_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -85,6 +87,7 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_CONNECT_PKT_ALLOCATION_FAILURE_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -108,6 +111,7 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_FTP_CONNECT_ERROR_IN_SENDING_COMMAND_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -118,6 +122,7 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_CONNECT_PKT_ALLOCATION_FAILURE_2, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -171,10 +176,12 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_CONNECT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_CONNECT_ERROR_IN_SENDING_COMMAND_2, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -203,7 +210,7 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
 int32_t rsi_ftp_disconnect(void)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_DISCONNECT_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -220,6 +227,7 @@ int32_t rsi_ftp_disconnect(void)
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DISCONNECT_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -235,6 +243,7 @@ int32_t rsi_ftp_disconnect(void)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DISCONNECT_PKT_ALLOCATION_FAILURE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -259,6 +268,7 @@ int32_t rsi_ftp_disconnect(void)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_FTP_DISCONNECT_ERROR_IN_SENDING_COMMAND_1, NETWORK, LOG_ERROR, "status: %4x", status);
       return status;
     }
     // Allocate command buffer from WLAN pool
@@ -269,6 +279,7 @@ int32_t rsi_ftp_disconnect(void)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DISCONNECT_PKT_ALLOCATION_FAILURE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -296,10 +307,12 @@ int32_t rsi_ftp_disconnect(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_DISCONNECT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_DISCONNECT_ERROR_IN_SENDING_COMMAND_2, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -328,7 +341,7 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_FILE_WRITE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -340,12 +353,14 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_WRITE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_WRITE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -360,6 +375,7 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_FILE_WRITE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -387,10 +403,12 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_WRITE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_WRITE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -433,6 +451,7 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
 {
 
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -462,12 +481,14 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -482,6 +503,7 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
         // Change NWK state to allow
         rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
         // Return packet allocation failure error
+        SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
         return RSI_ERROR_PKT_ALLOCATION_FAILURE;
       }
 
@@ -552,16 +574,18 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
       content_length -= chunk_size;
     }
 
-    if (rsi_driver_cb->wlan_cb->expected_response != RSI_WLAN_RSP_ASYNCHRONOUS) {
+    if (rsi_driver_cb->wlan_cb->expected_response == RSI_WLAN_RSP_ASYNCHRONOUS) {
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
     }
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -598,7 +622,7 @@ int32_t rsi_ftp_file_read_aysnc(
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_FILE_READ_ASYNC_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -610,12 +634,14 @@ int32_t rsi_ftp_file_read_aysnc(
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_READ_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_READ_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -629,6 +655,7 @@ int32_t rsi_ftp_file_read_aysnc(
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_FTP_FILE_READ_ASYNC_INVALID_PARAM, NETWORK, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer from WLAN pool
@@ -638,6 +665,7 @@ int32_t rsi_ftp_file_read_aysnc(
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_FILE_READ_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -657,10 +685,12 @@ int32_t rsi_ftp_file_read_aysnc(
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_READ_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_READ_ASYNC_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -688,7 +718,7 @@ int32_t rsi_ftp_file_delete(int8_t *file_name)
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_FILE_DELETE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -700,12 +730,14 @@ int32_t rsi_ftp_file_delete(int8_t *file_name)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_DELETE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_DELETE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -720,6 +752,7 @@ int32_t rsi_ftp_file_delete(int8_t *file_name)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_FILE_DELETE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -747,10 +780,12 @@ int32_t rsi_ftp_file_delete(int8_t *file_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_DELETE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_DELETE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -780,7 +815,7 @@ int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_FILE_RENAME_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -792,12 +827,14 @@ int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_RENAME_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_RENAME_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -812,6 +849,7 @@ int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_FILE_RENAME_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -842,10 +880,12 @@ int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_RENAME_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_RENAME_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -874,7 +914,7 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_DIRECTORY_CREATE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -886,12 +926,14 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_CREATE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_CREATE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -906,6 +948,7 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DIRECTORY_CREATE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -933,10 +976,12 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_DIRECTORY_CREATE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_DIRECTORY_CREATE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -964,7 +1009,7 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
 int32_t rsi_ftp_directory_delete(int8_t *directory_name)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_DIRECTORY_DELETE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -976,12 +1021,14 @@ int32_t rsi_ftp_directory_delete(int8_t *directory_name)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_DELETE_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_DELETE_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -996,6 +1043,7 @@ int32_t rsi_ftp_directory_delete(int8_t *directory_name)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DIRECTORY_DELETE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1023,10 +1071,12 @@ int32_t rsi_ftp_directory_delete(int8_t *directory_name)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_DIRECTORY_DELETE_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_DIRECTORY_DELETE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -1054,7 +1104,7 @@ int32_t rsi_ftp_directory_delete(int8_t *directory_name)
 int32_t rsi_ftp_directory_set(int8_t *directory_path)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_DIRECTORY_SET_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -1066,12 +1116,14 @@ int32_t rsi_ftp_directory_set(int8_t *directory_path)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_SET_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_SET_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -1087,6 +1139,7 @@ int32_t rsi_ftp_directory_set(int8_t *directory_path)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DIRECTORY_SET_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1114,10 +1167,12 @@ int32_t rsi_ftp_directory_set(int8_t *directory_path)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_DIRECTORY_SET_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_DIRECTORY_SET_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -1154,7 +1209,7 @@ int32_t rsi_ftp_directory_list_async(
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -1166,12 +1221,14 @@ int32_t rsi_ftp_directory_list_async(
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -1185,6 +1242,7 @@ int32_t rsi_ftp_directory_list_async(
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return invalid command error
+      SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_INVALID_PARAM, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer from WLAN pool
@@ -1194,6 +1252,7 @@ int32_t rsi_ftp_directory_list_async(
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1213,10 +1272,12 @@ int32_t rsi_ftp_directory_list_async(
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_DIRECTORY_LIST_ASYNC_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -1243,7 +1304,7 @@ int32_t rsi_ftp_directory_list_async(
 int32_t rsi_ftp_mode_set(uint8_t mode)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_FTP_MODE_SET_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get WLAN CB structure pointer
@@ -1255,12 +1316,14 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
     if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_MODE_SET_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   } else {
     // If state is not in ipconfig done state
     if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
       // Command given in wrong state
+      SL_PRINTF(SL_FTP_MODE_SET_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
   }
@@ -1276,6 +1339,7 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
       // Change NWK state to allow
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_MODE_SET_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1306,10 +1370,12 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_FTP_MODE_SET_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_MODE_SET_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */

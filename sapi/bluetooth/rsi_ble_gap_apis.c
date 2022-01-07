@@ -39,6 +39,7 @@ uint8_t pwr_index_to_db_array[] = { 11, 13, 17, 23, 31, 44, 45, 47, 49, 52, 55, 
 uint8_t rsi_convert_db_to_powindex(int8_t tx_power_in_dBm)
 {
 
+  SL_PRINTF(SL_RSI_CONVERT_DB_TO_POWERINDEX_TRIGGER, BLE, LOG_INFO);
   /* Converting At antenna  dBm to On screen dBm  */
   tx_power_in_dBm += BLE_OUTPUT_POWER_FRONT_END_LOSS;
   if ((tx_power_in_dBm < -8) || (tx_power_in_dBm > 15)) {
@@ -66,6 +67,8 @@ uint8_t rsi_convert_db_to_powindex(int8_t tx_power_in_dBm)
 
 int32_t rsi_ble_set_random_address(void)
 {
+
+  SL_PRINTF(SL_RSI_SET_RANDOM_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_rand_t ble_rand = { { 0 } };
 
   // Send set random address command
@@ -87,6 +90,8 @@ int32_t rsi_ble_set_random_address(void)
 
 int32_t rsi_ble_set_random_address_with_value(uint8_t *random_addr)
 {
+
+  SL_PRINTF(SL_RSI_SET_RANDOM_ADDRESS_WITH_VALUE_TRIGGER, BLE, LOG_INFO, "VALUE_ADDRESS: %1x", *random_addr);
   rsi_ble_req_rand_t ble_rand = { { 0 } };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_rand.rand_addr, random_addr);
@@ -116,6 +121,8 @@ int32_t rsi_ble_set_random_address_with_value(uint8_t *random_addr)
 
 int32_t rsi_ble_start_advertising(void)
 {
+
+  SL_PRINTF(SL_RSI_BLE_START_ADV_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_adv_t ble_adv = { 0 };
 
   ble_adv.status = RSI_BLE_START_ADV;
@@ -154,6 +161,7 @@ int32_t rsi_ble_start_advertising(void)
  */
 int32_t rsi_ble_start_advertising_with_values(void *rsi_ble_adv)
 {
+  SL_PRINTF(SL_RSI_BLE_START_ADV_WITH_VALUES_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_adv_t ble_adv = { 0 };
   if (rsi_ble_adv != NULL) {
     memcpy(&ble_adv, rsi_ble_adv, sizeof(rsi_ble_req_adv_t));
@@ -182,6 +190,8 @@ int32_t rsi_ble_start_advertising_with_values(void *rsi_ble_adv)
  */
 int32_t rsi_ble_encrypt(uint8_t *key, uint8_t *data, uint8_t *resp)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ENCRYPT_TRIGGER, BLE, LOG_INFO);
   rsi_ble_encrypt_t ble_en;
   memcpy(ble_en.key, key, 16);
   memcpy(ble_en.data, data, 16);
@@ -206,6 +216,8 @@ int32_t rsi_ble_encrypt(uint8_t *key, uint8_t *data, uint8_t *resp)
  */
 int32_t rsi_ble_stop_advertising(void)
 {
+
+  SL_PRINTF(SL_RSI_BLE_STOP_ADV_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_adv_t ble_adv = { 0 };
 
   ble_adv.status = RSI_BLE_STOP_ADV;
@@ -231,6 +243,8 @@ int32_t rsi_ble_stop_advertising(void)
  */
 int32_t rsi_ble_set_advertise_data(uint8_t *data, uint16_t data_len)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_ADV_DATA_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_adv_data_t ble_adv_data = { 0 };
 
   ble_adv_data.data_len = RSI_MIN(data_len, sizeof(ble_adv_data.adv_data));
@@ -255,6 +269,8 @@ int32_t rsi_ble_set_advertise_data(uint8_t *data, uint16_t data_len)
  */
 int32_t rsi_ble_set_scan_response_data(uint8_t *data, uint16_t data_len)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_SCAN_RESPONSE_DATA_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_scanrsp_data_t ble_scanrsp_data = { 0 };
   ble_scanrsp_data.data_len                   = RSI_MIN(data_len, sizeof(ble_scanrsp_data.scanrsp_data));
   memcpy(ble_scanrsp_data.scanrsp_data, data, ble_scanrsp_data.data_len);
@@ -279,6 +295,8 @@ int32_t rsi_ble_set_scan_response_data(uint8_t *data, uint16_t data_len)
  */
 int32_t rsi_ble_start_scanning(void)
 {
+
+  SL_PRINTF(SL_RSI_BLE_START_SCANNING_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_scan_t ble_scan = { 0 };
 
   ble_scan.status = RSI_BLE_START_SCAN;
@@ -309,6 +327,8 @@ int32_t rsi_ble_start_scanning(void)
  */
 int32_t rsi_ble_start_scanning_with_values(void *rsi_ble_scan_params)
 {
+
+  SL_PRINTF(SL_RSI_BLE_START_SCANNING_WITH_VALUES_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_scan_t ble_scan = { 0 };
 
   if (rsi_ble_scan_params != NULL) {
@@ -336,6 +356,8 @@ int32_t rsi_ble_start_scanning_with_values(void *rsi_ble_scan_params)
  */
 int32_t rsi_ble_stop_scanning(void)
 {
+
+  SL_PRINTF(SL_RSI_BLE_STOP_SCANNING_TRIGGER, BLE, LOG_INFO);
   rsi_ble_req_scan_t ble_scan = { 0 };
 
   ble_scan.status = RSI_BLE_STOP_SCAN;
@@ -417,6 +439,23 @@ int32_t rsi_ble_connect_with_params(uint8_t remote_dev_addr_type,
                                     uint16_t conn_latency,
                                     uint16_t supervision_tout)
 {
+  SL_PRINTF(SL_RSI_BLE_CONNECT_WITH_PARAMS_TRIGGER, BLE, LOG_INFO);
+
+  SL_PRINTF(SL_RSI_BLE_CONNECT_PARAMS_SCAN,
+            BLE,
+            LOG_INFO,
+            "SCAN_INTERVAL: %2x, SCAN_WINDOW: %2x",
+            scan_interval,
+            scan_window);
+
+  SL_PRINTF(SL_RSI_BLE_CONNECT_PARAMS_CONNECT,
+            BLE,
+            LOG_INFO,
+            "CONN_INTERVAL_MAX: %2x, CONN_INTERVAL_MIN: %2x, CONN_LATENCY: %2x",
+            conn_interval_max,
+            conn_interval_min,
+            conn_latency);
+
   //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(conn_interval_min);
   rsi_ble_req_conn_t ble_conn = { 0 };
@@ -460,6 +499,8 @@ int32_t rsi_ble_connect_with_params(uint8_t remote_dev_addr_type,
 
 int32_t rsi_ble_connect(uint8_t remote_dev_addr_type, int8_t *remote_dev_addr)
 {
+
+  SL_PRINTF(SL_RSI_BLE_CONNECT, BLE, LOG_INFO, "ADDRESS_TYPE: %2x", remote_dev_addr_type);
   rsi_ble_req_conn_t ble_conn = { 0 };
 
   ble_conn.dev_addr_type = remote_dev_addr_type;
@@ -495,6 +536,8 @@ int32_t rsi_ble_connect(uint8_t remote_dev_addr_type, int8_t *remote_dev_addr)
  */
 int32_t rsi_ble_connect_cancel(int8_t *remote_dev_address)
 {
+
+  SL_PRINTF(SL_RSI_BLE_CONNECT_CANCEL, BLE, LOG_INFO);
   rsi_ble_req_disconnect_t ble_disconnect = { { 0 } };
 
 #ifdef BD_ADDR_IN_ASCII
@@ -523,6 +566,7 @@ int32_t rsi_ble_connect_cancel(int8_t *remote_dev_address)
  */
 int32_t rsi_ble_disconnect(int8_t *remote_dev_address)
 {
+  SL_PRINTF(SL_RSI_BLE_DISCONNECT, BLE, LOG_INFO, "ADDRESS: %1x", *remote_dev_address);
   rsi_ble_req_disconnect_t ble_disconnect = { { 0 } };
 
 #ifdef BD_ADDR_IN_ASCII
@@ -553,6 +597,7 @@ int32_t rsi_ble_disconnect(int8_t *remote_dev_address)
  */
 int32_t rsi_ble_get_device_state(uint8_t *resp)
 {
+  SL_PRINTF(SL_RSI_BLE_GET_DEVICE_STATE, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_GET_DEV_STATE, NULL, resp);
 }
 
@@ -571,6 +616,8 @@ int32_t rsi_ble_get_device_state(uint8_t *resp)
  */
 int32_t rsi_ble_set_smp_pairing_cap_data(rsi_ble_set_smp_pairing_capabilty_data_t *smp_pair_cap_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_SMP_PAIRING_CAP_DATA, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_SET_SMP_PAIRING_CAPABILITY_DATA, smp_pair_cap_data, NULL);
 }
 /*==============================================*/
@@ -586,6 +633,8 @@ int32_t rsi_ble_set_smp_pairing_cap_data(rsi_ble_set_smp_pairing_capabilty_data_
 
 int32_t rsi_ble_set_local_irk_value(uint8_t *l_irk)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_LOCAL_IRK_VALUE, BLE, LOG_INFO);
   rsi_ble_set_local_irk_t local_device_irk = { 0 };
 
   memcpy(local_device_irk.irk, l_irk, 16);
@@ -614,6 +663,8 @@ int32_t rsi_ble_set_local_irk_value(uint8_t *l_irk)
 
 int32_t rsi_ble_conn_param_resp(uint8_t *remote_dev_address, uint8_t status)
 {
+
+  SL_PRINTF(SL_RSI_BLE_CONN_PARAM_RESPONSE, BLE, LOG_INFO, "STATUS: %1x", status);
   rsi_ble_cmd_conn_param_resp_t conn_param_resp_cmd = { 0 };
 
 #ifdef BD_ADDR_IN_ASCII
@@ -661,6 +712,7 @@ int32_t rsi_ble_conn_param_resp(uint8_t *remote_dev_address, uint8_t status)
 int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capability, uint8_t mitm_req)
 {
 
+  SL_PRINTF(SL_RSI_BLE_SMP_PAIR_REQUEST, BLE, LOG_INFO, "MITM_REQ: %1x", mitm_req);
   rsi_ble_req_smp_pair_t smp_pair_req;
   memset(&smp_pair_req, 0, sizeof(smp_pair_req));
 
@@ -703,6 +755,8 @@ int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capabil
 
 int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, uint8_t *ltk)
 {
+
+  SL_PRINTF(SL_RSI_BLE_LTK_REQ_REPLY, BLE, LOG_INFO, "REPLY_TYPE: %1x", reply_type);
   rsi_ble_set_le_ltkreqreply_t le_ltk_req_reply;
   memset(&le_ltk_req_reply, 0, sizeof(le_ltk_req_reply));
 
@@ -752,6 +806,8 @@ int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, u
 
 int32_t rsi_ble_smp_pair_response(uint8_t *remote_dev_address, uint8_t io_capability, uint8_t mitm_req)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SMP_PAIR_RESPONSE, BLE, LOG_INFO, "MITM_REQ: %1x", mitm_req);
   rsi_ble_smp_response_t smp_pair_resp;
   memset(&smp_pair_resp, 0, sizeof(smp_pair_resp));
 
@@ -789,6 +845,8 @@ int32_t rsi_ble_smp_pair_response(uint8_t *remote_dev_address, uint8_t io_capabi
 
 int32_t rsi_ble_smp_passkey(uint8_t *remote_dev_address, uint32_t passkey)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SMP_PASSKEY, BLE, LOG_INFO, "PASSKEY: %4x", passkey);
   rsi_ble_smp_passkey_t smp_passkey;
   memset(&smp_passkey, 0, sizeof(smp_passkey));
 #ifdef BD_ADDR_IN_ASCII
@@ -822,6 +880,8 @@ int32_t rsi_ble_smp_passkey(uint8_t *remote_dev_address, uint32_t passkey)
 int32_t rsi_ble_get_le_ping_timeout(uint8_t *remote_dev_address, uint16_t *time_out)
 {
   uint16_t status;
+
+  SL_PRINTF(SL_RSI_BLE_GET_LE_PING_TIMEOUT, BLE, LOG_INFO);
   rsi_ble_get_le_ping_timeout_t leping_cmd;
   rsi_ble_rsp_get_le_ping_timeout_t le_ping_rsp;
 #ifdef BD_ADDR_IN_ASCII
@@ -858,6 +918,8 @@ int32_t rsi_ble_get_le_ping_timeout(uint8_t *remote_dev_address, uint16_t *time_
 
 int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_out)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_LE_PING_TIMEOUT, BLE, LOG_INFO, "TIMEOUT: %2x", time_out);
   rsi_ble_set_le_ping_timeout_t leping_cmd;
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(leping_cmd.dev_addr, remote_dev_address);
@@ -884,6 +946,7 @@ int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_o
 
 int32_t rsi_ble_clear_whitelist(void)
 {
+  SL_PRINTF(SL_RSI_BLE_CLEAR_WHITELIST_TRIGGER, BLE, LOG_INFO);
   rsi_ble_white_list_t le_whitelist = { 0 };
   le_whitelist.addordeltowhitlist   = CLEAR_WHITELIST;
 
@@ -906,6 +969,8 @@ int32_t rsi_ble_clear_whitelist(void)
 
 int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ADD_TO_WHITELIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
   rsi_ble_white_list_t le_whitelist = { 0 };
   le_whitelist.addordeltowhitlist   = ADD_DEVICE_TO_WHITELIST;
 #ifdef BD_ADDR_IN_ASCII
@@ -933,6 +998,8 @@ int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
 
 int32_t rsi_ble_deletefrom_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
 {
+
+  SL_PRINTF(SL_RSI_BLE_DELETEFROM_WHITELIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
   rsi_ble_white_list_t le_whitelist = { 0 };
   le_whitelist.addordeltowhitlist   = DELETE_DEVICE_FROM_WHITELIST;
 #ifdef BD_ADDR_IN_ASCII
@@ -977,6 +1044,13 @@ int32_t rsi_ble_resolvlist(uint8_t process_type,
                            uint8_t *peer_irk,
                            uint8_t *local_irk)
 {
+
+  SL_PRINTF(SL_RSI_BLE_RESOLVLIST,
+            BLE,
+            LOG_INFO,
+            "PROCESS_TYPE: %1x, REMOTE_DEVICE_ADDRESS_TYPE: %1x",
+            process_type,
+            remote_dev_addr_type);
   rsi_ble_resolvlist_t resolvlist;
 
   resolvlist.process_type         = process_type;
@@ -1007,6 +1081,7 @@ int32_t rsi_ble_resolvlist(uint8_t process_type,
 int32_t rsi_ble_get_resolving_list_size(uint8_t *resp)
 {
 
+  SL_PRINTF(SL_RSI_BLE_GET_RESOLVING_LIST_SIZE, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_GET_RESOLVING_LIST_SIZE, NULL, resp);
 }
 
@@ -1028,6 +1103,8 @@ int32_t rsi_ble_get_resolving_list_size(uint8_t *resp)
 
 int32_t rsi_ble_set_addr_resolution_enable(uint8_t enable, uint16_t tout)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_ADDR_RESOULTION_ENABLE, BLE, LOG_INFO);
   rsi_ble_set_addr_resolution_enable_t addr_resolution_enable;
 
   addr_resolution_enable.enable = enable;
@@ -1058,6 +1135,7 @@ int32_t rsi_ble_set_addr_resolution_enable(uint8_t enable, uint16_t tout)
 
 int32_t rsi_ble_set_privacy_mode(uint8_t remote_dev_addr_type, uint8_t *remote_dev_address, uint8_t privacy_mode)
 {
+  SL_PRINTF(SL_RSI_BLE_SET_PRIVACY_MODE, BLE, LOG_INFO, "REMOTE_DEVICE_ADDRESS_TYPE: %1x", remote_dev_addr_type);
   rsi_ble_set_privacy_mode_t set_privacy_mode;
   set_privacy_mode.remote_dev_addr_type = remote_dev_addr_type;
 #ifdef BD_ADDR_IN_ASCII
@@ -1082,6 +1160,8 @@ int32_t rsi_ble_set_privacy_mode(uint8_t remote_dev_addr_type, uint8_t *remote_d
  */
 int32_t rsi_ble_readphy(int8_t *remote_dev_address, rsi_ble_resp_read_phy_t *resp)
 {
+
+  SL_PRINTF(SL_RSI_BLE_READPHY, BLE, LOG_INFO);
   rsi_ble_req_read_phy_t ble_read_phy = { { 0 } };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_read_phy.dev_addr, remote_dev_address);
@@ -1126,6 +1206,7 @@ int32_t rsi_ble_readphy(int8_t *remote_dev_address, rsi_ble_resp_read_phy_t *res
 int32_t rsi_ble_setphy(int8_t *remote_dev_address, uint8_t tx_phy, uint8_t rx_phy, uint16_t coded_phy)
 {
 
+  SL_PRINTF(SL_RSI_SETPHY_TRIGGER, BLE, LOG_INFO);
   rsi_ble_set_phy_t set_phy;
   memset(&set_phy, 0, sizeof(set_phy));
 #ifdef BD_ADDR_IN_ASCII
@@ -1180,6 +1261,14 @@ int32_t rsi_ble_conn_params_update(uint8_t *remote_dev_address,
                                    uint16_t latency,
                                    uint16_t timeout)
 {
+
+  SL_PRINTF(SL_RSI_BLE_CONN_PARMS_UPDATE,
+            BLE,
+            LOG_INFO,
+            "MIN_INTERVAL: %2x, MAX_INTERVAL: %2x, LATENCY: %2x",
+            min_int,
+            max_int,
+            latency);
   rsi_ble_cmd_conn_params_update_t conn_params_update_cmd = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(conn_params_update_cmd.dev_addr, remote_dev_address);
@@ -1217,6 +1306,8 @@ int32_t rsi_ble_conn_params_update(uint8_t *remote_dev_address,
 
 int32_t rsi_ble_set_data_len(uint8_t *remote_dev_address, uint16_t tx_octets, uint16_t tx_time)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_DATA_LEN, BLE, LOG_INFO);
   rsi_ble_setdatalength_t lesetdatalen;
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(lesetdatalen.dev_addr, remote_dev_address);
@@ -1242,6 +1333,8 @@ int32_t rsi_ble_set_data_len(uint8_t *remote_dev_address, uint16_t tx_octets, ui
  */
 int32_t rsi_ble_read_max_data_len(rsi_ble_read_max_data_length_t *blereaddatalen)
 {
+
+  SL_PRINTF(SL_RSI_BLE_READ_MAX_DATA_LEN_TRIGGER, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_READ_MAX_DATA_LEN, NULL, blereaddatalen);
 }
 /** @} */
@@ -1270,6 +1363,8 @@ int32_t rsi_ble_read_max_data_len(rsi_ble_read_max_data_length_t *blereaddatalen
 
 int32_t rsi_ble_rx_test_mode(uint8_t rx_channel, uint8_t phy, uint8_t modulation)
 {
+
+  SL_PRINTF(SL_RSI_BLE_RX_TEST_MODE_TRIGGER, BLE, LOG_INFO);
   rsi_ble_rx_test_mode_t rx_test_mode;
 
   rx_test_mode.rx_channel = rx_channel;
@@ -1308,6 +1403,8 @@ int32_t rsi_ble_rx_test_mode(uint8_t rx_channel, uint8_t phy, uint8_t modulation
 
 int32_t rsi_ble_tx_test_mode(uint8_t tx_channel, uint8_t phy, uint8_t tx_len, uint8_t mode)
 {
+
+  SL_PRINTF(SL_RSI_BLE_TX_TEST_MODE_TRIGGER, BLE, LOG_INFO);
   rsi_ble_tx_test_mode_t tx_test_mode;
 
   tx_test_mode.tx_channel   = tx_channel;
@@ -1329,6 +1426,7 @@ int32_t rsi_ble_tx_test_mode(uint8_t tx_channel, uint8_t phy, uint8_t tx_len, ui
 
 int32_t rsi_ble_end_test_mode(uint16_t *num_of_pkts)
 {
+  SL_PRINTF(SL_RSI_BLE_END_TEST_MODE_TRIGGER, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_END_TEST_MODE, NULL, num_of_pkts);
 }
 /** @} */
@@ -1350,6 +1448,7 @@ int32_t rsi_ble_end_test_mode(uint16_t *num_of_pkts)
 
 int32_t rsi_ble_per_transmit(struct rsi_ble_per_transmit_s *rsi_ble_per_tx)
 {
+  SL_PRINTF(SL_RSI_BLE_INIT_PER_TRANSMIT_MODE_TRIGGER, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, rsi_ble_per_tx, NULL);
 }
 
@@ -1366,6 +1465,8 @@ int32_t rsi_ble_per_transmit(struct rsi_ble_per_transmit_s *rsi_ble_per_tx)
 
 int32_t rsi_ble_per_receive(struct rsi_ble_per_receive_s *rsi_ble_per_rx)
 {
+
+  SL_PRINTF(SL_RSI_BLE_PER_RECIEVE_TRIGGER, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, rsi_ble_per_rx, NULL);
 }
 /** @} */
@@ -1387,6 +1488,8 @@ int32_t rsi_ble_per_receive(struct rsi_ble_per_receive_s *rsi_ble_per_rx)
 
 int32_t rsi_ble_vendor_rf_type(uint8_t ble_power_index)
 {
+
+  SL_PRINTF(SL_RSI_BLE_VENDOR_RF_TRIGGER, BLE, LOG_INFO, "BLE_POWER_INDEX: %1x", ble_power_index);
   rsi_ble_vendor_rf_type_t ble_vendor_rf_type;
 
   ble_vendor_rf_type.opcode[0]       = (BLE_VENDOR_RF_TYPE_CMD_OPCODE & 0xFF);
@@ -1421,6 +1524,8 @@ int32_t rsi_ble_white_list_using_adv_data(uint8_t enable,
                                           uint8_t len_for_compare_data,
                                           uint8_t *payload)
 {
+
+  SL_PRINTF(SL_RSI_BLE_WHITELIST_USING_ADV_DATA, BLE, LOG_INFO);
   rsi_ble_req_whitelist_using_payload_t whitelist_using_payload;
   memset(&whitelist_using_payload, 0, sizeof(whitelist_using_payload));
 
@@ -1450,6 +1555,8 @@ int32_t rsi_ble_white_list_using_adv_data(uint8_t enable,
 
 void BT_LE_ADPacketExtract(uint8_t *remote_name, uint8_t *pbuf, uint8_t buf_len)
 {
+
+  SL_PRINTF(SL_RSI_BLE_AD_PACKET_EXTRACT, BLE, LOG_INFO);
   uint8_t adv_len;
   uint8_t adv_type;
   uint8_t ix;
@@ -1494,6 +1601,8 @@ void BT_LE_ADPacketExtract(uint8_t *remote_name, uint8_t *pbuf, uint8_t buf_len)
 
 void rsi_ble_update_directed_address(uint8_t *remote_dev_addr)
 {
+
+  SL_PRINTF(SL_RSI_BLE_UPDATE_DIRECTED_ADDRESS_TRIGGER, BLE, LOG_INFO, "REMOTE_DEVICE_ADDRESS: %1x", *remote_dev_addr);
   rsi_bt_cb_t *le_cb = rsi_driver_cb->ble_cb;
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(le_cb->directed_addr, remote_dev_addr);
@@ -1527,6 +1636,8 @@ void rsi_ble_update_directed_address(uint8_t *remote_dev_addr)
 
 int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, uint8_t *rand, uint8_t *ltk)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ENCRYPTION_TRIGGER, BLE, LOG_INFO);
   rsi_ble_strat_encryption_t encrypt;
   memset(&encrypt, 0, sizeof(encrypt));
 #ifdef BD_ADDR_IN_ASCII
@@ -1579,6 +1690,8 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, uin
 
 int32_t rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8_t tx_power)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_BLE_TX_POWER, BLE, LOG_INFO);
   rsi_ble_set_ble_tx_power_t ble_tx_power = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_tx_power.dev_addr, remote_dev_address);
@@ -1589,6 +1702,8 @@ int32_t rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8
 #if RSI_BLE_PWR_INX_DBM
   ble_tx_power.tx_power = rsi_convert_db_to_powindex(tx_power);
   if (ble_tx_power.tx_power == 0) {
+
+    SL_PRINTF(SL_RSI_ERROR_INVALID_PARAMETER, BLE, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 #else

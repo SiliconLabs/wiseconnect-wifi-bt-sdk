@@ -11,10 +11,11 @@ Before running the application, the user will need the following things to setup
 
 ### 2.1 Hardware Requirements 
 
-- Windows PC with Host interface (UART / SPI)
+- Windows PC with Host interface (UART / SPI/ SDIO).
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit) 
 - Host MCU Eval Kit. This example has been tested with:
     - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+	- Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
     - [STM32F411 Nucleo](https://st.com/) 
 - Wireless Access Point
 - Windows PC1 with with MQTT broker installed in it
@@ -43,11 +44,12 @@ Before running the application, the user will need the following things to setup
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
 * [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface 
 
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration 
 
@@ -66,10 +68,14 @@ The application is provided with the project folder containing Keil and Simplici
 
 ![EFR Radio Boards](resources/readme/image_2a.png) 
 
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/mqtt_client/projects/mqtt_client-brd2204a-gg11.slsproj`
 
-### 3.4 Bare Metal Support 
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration in the SDK. 
+### 3.4 Bare Metal/RTOS Support 
+
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity Studio) are provided with bare metal configuration in the SDK. 
 
 
 ## 4. Application Configuration Parameters 
@@ -289,10 +295,12 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX32 
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) 
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/mqtt_client/projects`
-- Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
+- Open Simplicity Studio and import the EFR32/EFM32 project from `<SDK>/examples/snippets/wlan/mqtt_client/projects`
+    - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
+   (or)
+    - Select the *.brd2204a-gg11.slsproj  for EFM32GG11 board.
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
@@ -369,5 +377,11 @@ mosquitto.exe –p 1883 –v
 
 > Note:
 > Multiple MQTT client instances can be created.
+> If mosquitto isn't allowing external connections to broker, add the below lines in mosquitto.conf file:
+  listener 1883
+  allow_anonymous true
+> For using a different config file for mosquitto broker, use command:
+  "mosquitto -v -p 1883 -c config/mosquitto.conf"
+  where config is the sub folder and mosquitto.conf is the different config file than default.
 > Limitations: 
 > MQTT client application keeps on polling for the data to receive on the subscribed topic irrespective of receive timeout mentioned in the rsi_mqtt_poll_for_recv_data API.

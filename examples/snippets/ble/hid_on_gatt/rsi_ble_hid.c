@@ -177,16 +177,22 @@ static uint32_t numeric_value;
 static rsi_bt_event_encryption_enabled_t glbl_enc_enabled;
 static rsi_bt_event_le_ltk_request_t temp_le_ltk_req;
 static rsi_ble_event_mtu_t app_ble_mtu_event;
+static rsi_bt_event_smp_passkey_display_t smp_passkey_display_event;
 
 static uint16_t rsi_ble_hid_in_report_val_hndl;
 static uint8_t remote_dev_addr[BD_ADDR_ARRAY_LEN];
 static uint8_t remote_dev_bd_addr[6];
-static uint8_t device_found = 0;
-static uint32_t smp_passkey = 0;
-uint16_t att_resp_status    = 0;
+static uint8_t remote_addr_type = 0;
+static uint8_t remote_name[31]  = { 0 };
+static uint8_t device_found     = 0;
+static uint32_t smp_passkey     = 0;
+uint16_t att_resp_status        = 0;
 
 uint8_t app_state              = 0;
 uint8_t str_remote_address[18] = { '\0' };
+uint16_t desc_range[10]        = { 0 };
+uint8_t desc_handle_index      = 0;
+uint8_t desc_handle_index_1    = 0;
 typedef struct rsi_ble_att_list_s {
   uint32_t uuid;
   uint16_t handle;
@@ -282,6 +288,10 @@ static const uint8_t hid_report_map[] = {
   /*==============================================*/
 };
 
+rsi_semaphore_handle_t ble_main_task_sem;
+static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -293,7 +303,8 @@ static const uint8_t hid_report_map[] = {
  */
 static void rsi_ble_app_init_events()
 {
-  ble_app_event_map = 0;
+  ble_app_event_map  = 0;
+  ble_app_event_map1 = 0;
   return;
 }
 
@@ -306,9 +317,17 @@ static void rsi_ble_app_init_events()
  * @section description
  * This function is used to set/raise the specific event.
  */
-static void rsi_ble_app_set_event(uint32_t event_num)
+void rsi_ble_app_set_event(uint32_t event_num)
 {
-  ble_app_event_map |= BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map |= BIT(event_num);
+  } else {
+    ble_app_event_map1 |= BIT((event_num - 32));
+  }
+
+  rsi_semaphore_post(&ble_main_task_sem);
+
   return;
 }
 
@@ -323,7 +342,13 @@ static void rsi_ble_app_set_event(uint32_t event_num)
  */
 static void rsi_ble_app_clear_event(uint32_t event_num)
 {
-  ble_app_event_map &= ~BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map &= ~BIT(event_num);
+  } else {
+    ble_app_event_map1 &= ~BIT((event_num - 32));
+  }
+
   return;
 }
 
@@ -342,9 +367,15 @@ static int32_t rsi_ble_app_get_event(void)
 {
   uint32_t ix;
 
-  for (ix = 0; ix < 32; ix++) {
-    if (ble_app_event_map & (1 << ix)) {
-      return ix;
+  for (ix = 0; ix < 64; ix++) {
+    if (ix < 32) {
+      if (ble_app_event_map & (1 << ix)) {
+        return ix;
+      }
+    } else {
+      if (ble_app_event_map1 & (1 << (ix - 32))) {
+        return ix;
+      }
     }
   }
 
@@ -363,8 +394,6 @@ static int32_t rsi_ble_app_get_event(void)
 void rsi_ble_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report)
 {
   static uint8_t remote_dev_addr[BD_ADDR_ARRAY_LEN] = { 0 };
-  static uint8_t remote_addr_type                   = 0;
-  static uint8_t remote_name[31]                    = { 0 };
 
   if (device_found == 1) {
     return;
@@ -433,7 +462,7 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
-  LOG_PRINT("disconn \n");
+  LOG_PRINT("disconn : %x0x\n", reason);
   memcpy(&disconn_event_to_app, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
   rsi_ble_app_set_event(RSI_BLE_EVENT_DISCONN);
 }
@@ -590,7 +619,8 @@ static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_addres
  */
 static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display)
 {
-  LOG_PRINT("smp passkey disp : %s\n", smp_passkey_display->passkey);
+  memcpy(&smp_passkey_display_event, smp_passkey_display, sizeof(rsi_bt_event_smp_passkey_display_t));
+  LOG_PRINT("smp passkey disp : %s\n", smp_passkey_display_event.passkey);
   rsi_ble_app_set_event(RSI_BLE_EVENT_SMP_PASSKEY_DISPLAY);
 }
 
@@ -1246,6 +1276,9 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
   rsi_ble_resp_char_services_t char_servs = { 0 };
   rsi_ble_resp_att_descs_t att_desc       = { 0 };
 #endif
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
 
 #ifndef RSI_WITH_OS
   //! Driver initialization
@@ -1263,7 +1296,20 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #endif
-
+#ifdef RSI_WITH_OS
+  //! RS9116 initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -1327,7 +1373,8 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
                                  NULL,
                                  NULL,
                                  NULL);
-
+  //! create ble main task if ble protocol is selected
+  rsi_semaphore_create(&ble_main_task_sem, 0);
   //!  initializing the application events map
   rsi_ble_app_init_events();
 
@@ -1383,7 +1430,7 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
 #endif
     //! checking for events list
     event_id = rsi_ble_app_get_event();
-
+#if (GATT_ROLE == SERVER)
     if (event_id == -1) {
       if (app_state & BIT(CONNECTED)) {
         if (app_state & BIT(REPORT_IN_NOTIFY_ENABLE)) {
@@ -1414,9 +1461,10 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
           rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
         }
       }
+      rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
-
+#endif
     switch (event_id) {
 #if (GATT_ROLE == CLIENT)
       case RSI_APP_EVENT_ADV_REPORT: {
@@ -1425,7 +1473,7 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
         //! clear the advertise report event.
         LOG_PRINT("\r\nIn Advertising Event\r\n");
         rsi_ble_app_clear_event(RSI_APP_EVENT_ADV_REPORT);
-        status = rsi_ble_connect((int8_t)RSI_BLE_REMOTE_BD_ADDRESS_TYPE, (int8_t *)RSI_BLE_REMOTE_BD_ADDRESS);
+        status = rsi_ble_connect(remote_addr_type, (int8_t *)remote_dev_bd_addr);
         if (status != RSI_SUCCESS) {
           LOG_PRINT("connect status: 0x%X\r\n", status);
         }
@@ -1440,7 +1488,9 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
         rsi_6byte_dev_address_to_ascii(str_remote_address, conn_event_to_app.dev_addr);
         LOG_PRINT("\r\n Module connected to address : %s \r\n", str_remote_address);
         app_state |= BIT(CONNECTED);
-        //rsi_ble_smp_pair_request (conn_event_to_app.dev_addr, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+#if (GATT_ROLE == CLIENT)
+        rsi_ble_smp_pair_request(conn_event_to_app.dev_addr, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+#endif
       } break;
 
       case RSI_BLE_EVENT_DISCONN: {
@@ -1472,7 +1522,13 @@ scan:
 
       case RSI_BLE_EVENT_GATT_WR: {
         //! event invokes when write/notification events received
-
+#if (GATT_ROLE == CLIENT)
+        int ix;
+        //Displaying the notification received from HID Device.
+        for (ix = 0; ix < app_ble_write_event.length; ix++)
+          LOG_PRINT("0x%02x ", app_ble_write_event.att_value[ix]);
+        LOG_PRINT("\n");
+#endif
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_GATT_WR);
 
@@ -1605,6 +1661,7 @@ scan:
 
         app_state |= BIT(ENCRYPT_EN);
 #if (GATT_ROLE == CLIENT)
+        //Get the HID service handles, if it exixts in remote device.
         service_uuid.size      = 2;
         service_uuid.val.val16 = RSI_BLE_HID_SERVICE_UUID;
         rsi_ble_get_profile(glbl_enc_enabled.dev_addr, service_uuid, &ble_servs);
@@ -1619,11 +1676,10 @@ scan:
         rsi_ble_app_clear_event(RSI_BLE_EVENT_GATT_PROFILE_RESP);
 
         if (att_resp_status == 0) {
-          LOG_PRINT("Service UUID : 0x%04x (Handle range 0x%04x - 0x%04x)",
+          LOG_PRINT("Service UUID : 0x%04x (Handle range 0x%04x - 0x%04x)\n",
                     ble_servs.profile_uuid.val.val16,
                     *(uint16_t *)ble_servs.start_handle,
                     *(uint16_t *)ble_servs.end_handle);
-
           //! query characteristic services, with in the particular range, from the connected remote device.
           rsi_ble_get_char_services(remote_dev_bd_addr,
                                     *(uint16_t *)ble_servs.start_handle,
@@ -1639,31 +1695,50 @@ scan:
         rsi_ble_app_clear_event(RSI_BLE_EVENT_GATT_CHAR_SERVICES_RESP);
 
         if (att_resp_status == 0) {
-          if (char_srv_index < char_servs.num_of_services) {
-            LOG_PRINT("    Charactristic UUID: 0x%04x (Handle: 0x%04x, Property: 0x%02x)",
-                      char_servs.char_services[char_srv_index].char_data.char_uuid.val.val16,
-                      char_servs.char_services[char_srv_index].handle,
-                      char_servs.char_services[char_srv_index].char_data.char_property);
-
-            //! query attribute descriptor, with in the particular range, from the connected remote device.
-            if (char_srv_index < (char_servs.num_of_services - 1)) {
-              rsi_ble_get_att_descriptors(remote_dev_bd_addr,
-                                          char_servs.char_services[char_srv_index].handle,
-                                          char_servs.char_services[char_srv_index + 1].handle - 1,
-                                          &att_desc);
-            } else {
-              rsi_ble_get_att_descriptors(remote_dev_bd_addr,
-                                          char_servs.char_services[char_srv_index].handle,
-                                          *(uint16_t *)ble_servs.end_handle,
-                                          &att_desc);
+          int ix;
+          //Traversing the characteristics list of HID device. Max 3 characteristics per get_char_services call.
+          for (ix = 0; ix < char_servs.num_of_services; ix++) {
+            LOG_PRINT("Character services of hid profile : ");
+            LOG_PRINT(" uuid: 0x%04x handle: 0x%04x\n",
+                      char_servs.char_services[ix].char_data.char_uuid.val.val16,
+                      char_servs.char_services[ix].handle);
+            // if characteristic is HID REPORT TYPE and has notify property we save the respective CCD handle.
+            if (char_servs.char_services[ix].char_data.char_uuid.val.val16 == RSI_BLE_HID_REPORT_UUID
+                && (char_servs.char_services[ix].char_data.char_property & RSI_BLE_ATT_PROP_NOTIFY)) {
+              //Saving the CCD handle, i.e handle + 2, here handle points to characteric declaration.
+              desc_range[desc_handle_index++] = char_servs.char_services[ix].handle + 2;
             }
+          }
+          //If number of characteristic discovered is less than 3, means we have no more chars in the specified service.
+          //else start discovering the next list of characteristics starting from the end of the last discovered characteristic.
+          if (char_servs.num_of_services >= 3) {
+            rsi_ble_get_char_services(remote_dev_bd_addr,
+                                      char_servs.char_services[ix - 1].handle + 2,
+                                      *(uint16_t *)ble_servs.end_handle,
+                                      &char_servs);
           } else {
-            uint8_t temp_val          = char_servs.char_services[char_srv_index - 1].handle + 1;
-            ble_servs.start_handle[0] = temp_val & 0xFF;
-            ble_servs.start_handle[1] = (temp_val >> 8) & 0xFF;
-            char_srv_index            = 0;
-            //! set event for next charteristics
-            rsi_ble_app_set_event(RSI_BLE_EVENT_GATT_PROFILE_RESP);
+            //if all characteristic has been discovered, discover the descriptors one by one from the desc hanlde list.
+            if (desc_handle_index > desc_handle_index_1) {
+              rsi_ble_get_att_descriptors(conn_event_to_app.dev_addr,
+                                          desc_range[desc_handle_index_1],
+                                          desc_range[desc_handle_index_1],
+                                          &att_desc);
+              desc_handle_index_1 += 1;
+            } else {
+              desc_handle_index_1 = desc_handle_index = 0;
+            }
+          }
+          //In case we have over shot the handle range of the service, invalid handle(0x4E60) status marks all charactreistics have been read.
+        } else if (att_resp_status == 0x4E60) {
+          if (desc_handle_index > desc_handle_index_1) {
+            //if all characteristic has been discovered, discover the descriptors one by one from the desc handle list.
+            rsi_ble_get_att_descriptors(conn_event_to_app.dev_addr,
+                                        desc_range[desc_handle_index_1],
+                                        desc_range[desc_handle_index_1],
+                                        &att_desc);
+            desc_handle_index_1 += 1;
+          } else {
+            desc_handle_index_1 = desc_handle_index = 0;
           }
         }
       } break;
@@ -1676,47 +1751,35 @@ scan:
         rsi_ble_app_clear_event(RSI_BLE_EVENT_GATT_CHAR_DESC_RESP);
 
         if (att_resp_status == 0) {
-          for (char_desc_index = 0; char_desc_index < att_desc.num_of_att; char_desc_index++) {
-            if (RSI_BLE_CHAR_SERV_UUID == att_desc.att_desc[char_desc_index].att_type_uuid.val.val16) {
-              temp_prop = char_servs.char_services[char_srv_index].char_data.char_property;
-            } else {
-              LOG_PRINT(
-                "        Att Type UUID: 0x%04x (Handle 0x%04x)",
-                att_desc.att_desc[char_desc_index].att_type_uuid.val.val16,
-                (att_desc.att_desc[char_desc_index].handle[0] | (att_desc.att_desc[char_desc_index].handle[1] << 8)));
-            }
-
-            if (RSI_BLE_CLIENT_CHAR_UUID == att_desc.att_desc[char_desc_index].att_type_uuid.val.val16) {
-              //! check the attribute property with notification
-              if (temp_prop & RSI_BLE_ATT_PROP_NOTIFY) {
-                uint8_t data[] = { 1, 0 };
-                LOG_PRINT("        CCCD, notification enable");
-                //! 0x0001 to enable notification
-                //! Set attribute value of the connected remote device.Ack will not be received from the remote device.
-                rsi_ble_set_att_value(remote_dev_bd_addr,
-                                      *((uint16_t *)att_desc.att_desc[char_desc_index].handle),
-                                      2,
-                                      data);
-              }
-
-              //! check the attribute property with indication
-              if (temp_prop & RSI_BLE_ATT_PROP_INDICATE) {
-                uint8_t data[] = { 2, 0 };
-                LOG_PRINT("        CCCD, indication enable");
-                //! 0x0002 to enable indication
-                //! Set attribute value of the connected remote device.Ack will not be received from the remote device.
-                rsi_ble_set_att_value(remote_dev_bd_addr,
-                                      *((uint16_t *)att_desc.att_desc[char_desc_index].handle),
-                                      2,
-                                      data);
-              }
+          int ix;
+          //Traverse the list to check if the discovered descriptors are CCDS and enable notification.
+          for (ix = 0; ix < att_desc.num_of_att; ix++) {
+            LOG_PRINT("hancle: 0x%04x - 0x%04x\r\n",
+                      *((uint16_t *)att_desc.att_desc[ix].handle),
+                      att_desc.att_desc[ix].att_type_uuid.val.val16);
+            if (att_desc.att_desc[ix].att_type_uuid.val.val16 == 0x2902) {
+              uint8_t data[2];
+              data[0] = 0x01;
+              data[1] = 0x00;
+              rsi_ble_set_att_cmd(conn_event_to_app.dev_addr,
+                                  *((uint16_t *)att_desc.att_desc[ix].handle),
+                                  2,
+                                  (uint8_t *)data);
+              LOG_PRINT("Notification enabled \n");
             }
           }
+          memset(&att_desc, 0, sizeof(rsi_ble_resp_att_descs_t));
+          //Check for the next descriptor in the list.
+          if (desc_handle_index > desc_handle_index_1) {
+            rsi_ble_get_att_descriptors(conn_event_to_app.dev_addr,
+                                        desc_range[desc_handle_index_1],
+                                        desc_range[desc_handle_index_1],
+                                        &att_desc);
+            desc_handle_index_1 += 1;
+          } else {
+            desc_handle_index_1 = desc_handle_index = 0;
+          }
         }
-
-        char_srv_index++;
-        //! set event for next charteristics
-        rsi_ble_app_set_event(RSI_BLE_EVENT_GATT_CHAR_SERVICES_RESP);
         memset(&att_desc, 0, sizeof(rsi_ble_resp_att_descs_t));
       } break;
 #endif
@@ -1768,8 +1831,7 @@ int main(void)
 {
 #ifdef RSI_WITH_OS
   int32_t status;
-  rsi_task_handle_t bt_task_handle     = NULL;
-  rsi_task_handle_t driver_task_handle = NULL;
+  rsi_task_handle_t bt_task_handle = NULL;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -1791,31 +1853,18 @@ int main(void)
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
-  //! RS9116 initialization
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
 
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_hid_gatt_application,
+  rsi_task_create((rsi_task_function_t)rsi_ble_hids_gatt_application,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

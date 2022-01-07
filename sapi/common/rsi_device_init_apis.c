@@ -55,6 +55,7 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 int32_t rsi_device_init(uint8_t select_option)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_DEVICE_INIT_ENTRY, COMMON, LOG_INFO);
 #if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
   rsi_timer_instance_t timer_instance;
 #endif
@@ -105,11 +106,13 @@ int32_t rsi_device_init(uint8_t select_option)
 #endif
       }
       if ((retval < 0) && (retval != RSI_ERROR_WAITING_FOR_BOARD_READY) && (retval != RSI_ERROR_IN_OS_OPERATION)) {
+        SL_PRINTF(SL_DEVICE_INIT_EXIT_1, COMMON, LOG_ERROR, "retval:%d", retval);
         return retval;
       }
     } while ((retval == RSI_ERROR_WAITING_FOR_BOARD_READY) && (retval == RSI_ERROR_IN_OS_OPERATION));
     retval = rsi_select_option(select_option);
     if (retval < 0) {
+      SL_PRINTF(SL_DEVICE_INIT_EXIT_2, COMMON, LOG_ERROR, "retval:%d", retval);
       return retval;
     }
   }
@@ -124,11 +127,13 @@ int32_t rsi_device_init(uint8_t select_option)
     do {
       retval = rsi_waitfor_boardready();
       if ((retval < 0) && (retval != RSI_ERROR_WAITING_FOR_BOARD_READY) && (retval != RSI_ERROR_IN_OS_OPERATION)) {
+        SL_PRINTF(SL_DEVICE_INIT_EXIT_3, COMMON, LOG_ERROR, "retval:%d", retval);
         return retval;
       }
     } while (retval == RSI_ERROR_WAITING_FOR_BOARD_READY);
     retval = rsi_select_option(select_option);
     if (retval < 0) {
+      SL_PRINTF(SL_DEVICE_INIT_EXIT_4, COMMON, LOG_ERROR, "retval:%d", retval);
       return retval;
     }
   }
@@ -138,14 +143,19 @@ int32_t rsi_device_init(uint8_t select_option)
   // Power cycle the module
   status = rsi_bl_module_power_cycle();
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DEVICE_INIT_MODULE_POWER_CYCLE_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
-  // Delay for 100 milliseconds
+
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
+  // delay for 100 milli seconds
   rsi_delay_ms(100);
+#endif
   // SPI interface initialization
   status = rsi_sdio_iface_init();
 
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DEVICE_INIT_SDIO_INIT_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -153,6 +163,7 @@ int32_t rsi_device_init(uint8_t select_option)
   // Power cycle the module
   status = rsi_bl_module_power_cycle();
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DEVICE_INIT_BL_MODULE_POWER_CYCLE_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
   rsi_delay_ms(100);
@@ -160,6 +171,7 @@ int32_t rsi_device_init(uint8_t select_option)
   status = rsi_spi_iface_init();
 
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DEVICE_INIT_SPI_INIT_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -169,10 +181,12 @@ int32_t rsi_device_init(uint8_t select_option)
     status = rsi_bl_waitfor_boardready();
 
     if ((status < 0) && (status != RSI_ERROR_WAITING_FOR_BOARD_READY)) {
+      SL_PRINTF(SL_DEVICE_INIT_BL_WAIT_FOR_BOARD_READY_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
     if (rsi_timer_expired(&timer_instance)) {
+      SL_PRINTF(SL_DEVICE_INIT_BOARD_READY_TIMEOUT, COMMON, LOG_ERROR);
       return RSI_ERROR_BOARD_READY_TIMEOUT;
     }
 
@@ -185,6 +199,7 @@ int32_t rsi_device_init(uint8_t select_option)
 
     status = rsi_set_intr_type(RSI_ACTIVE_LOW_INTR);
     if (status < 0) {
+      SL_PRINTF(SL_DEVICE_INIT_SET_INTR_TYPE_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
       return status;
     }
   }
@@ -193,11 +208,13 @@ int32_t rsi_device_init(uint8_t select_option)
 #if RSI_FAST_FW_UP
   status = rsi_set_fast_fw_up();
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DEVICE_INIT_SET_FAST_FIRMWARE_UP_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
   status = rsi_bl_select_option(select_option);
   if (status < 0) {
+    SL_PRINTF(SL_DEVICE_INIT_BL_SELECT_OPTION_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -213,6 +230,7 @@ int32_t rsi_device_init(uint8_t select_option)
   // Enable high speed SPI
   status = rsi_spi_high_speed_enable();
   if (status < 0) {
+    SL_PRINTF(SL_DEVICE_INIT_HIGH_SPEED_ENABLE_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
   // Switch host clock to high frequency
@@ -230,6 +248,7 @@ int32_t rsi_device_init(uint8_t select_option)
 #endif
   // Updating state
   rsi_driver_cb_non_rom->device_state = RSI_DEVICE_INIT_DONE;
+  SL_PRINTF(SL_DEVICE_INIT_EXIT_5, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -244,11 +263,17 @@ int32_t rsi_device_init(uint8_t select_option)
 
 int32_t rsi_device_deinit(void)
 {
+  SL_PRINTF(SL_DEVICE_DEINIT_ENTRY, COMMON, LOG_INFO);
 #ifdef RSI_WLAN_ENABLE
   uint8_t i;
 #endif
   if ((rsi_driver_cb_non_rom->device_state < RSI_DEVICE_INIT_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_DEVICE_DEINIT_COMMAND_GIVEN_IN_WRONG_STATE,
+              COMMON,
+              LOG_ERROR,
+              "state: %4x",
+              rsi_driver_cb_non_rom->device_state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   if (rsi_driver_cb != NULL) {
@@ -290,6 +315,7 @@ int32_t rsi_device_deinit(void)
 
 #endif
   rsi_driver_cb_non_rom->device_state = RSI_DRIVER_INIT_DONE;
+  SL_PRINTF(SL_DEVICE_INIT_EXIT, COMMON, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */

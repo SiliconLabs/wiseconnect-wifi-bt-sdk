@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -98,6 +98,44 @@ typedef enum {
 
 #define RSI_BT_MAX_PAYLOAD_SIZE \
   1010 /*In Stack MAX_ACL_PKT_LEN is 1010*/ //310 /* Max supported is 200, but 190 gives optimum Tx throughput */
-#define BT_BDR_MODE 0                       // 1 - HP chain
+#define BT_BDR_MODE 0
+
+/***********************************************************************************************************************************************/
+//! RS9116 Firmware Configurations
+/***********************************************************************************************************************************************/
+
+/***********************************************************************************************************************************************/
+//! WLAN SAPI CONFIG DEFINES
+/***********************************************************************************************************************************************/
+//! BT power control
+#define BT_PWR_CTRL_DISABLE 0
+#define BT_PWR_CTRL         1
+#define BT_PWR_INX          10
+
+/*=======================================================================*/
+//! Opermode command parameters
+/*=======================================================================*/
+
+#define RSI_FEATURE_BIT_MAP \
+  (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1) //! To set wlan feature select bit map
+#define RSI_TCP_IP_BYPASS RSI_DISABLE                           //! TCP IP BYPASS feature check
+#define RSI_TCP_IP_FEATURE_BIT_MAP \
+  (TCP_IP_FEAT_DHCPV4_CLIENT) //! TCP/IP feature select bitmap for selecting TCP/IP features
+#define RSI_EXT_TCPIP_FEATURE_BITMAP 0
+
+#define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
+
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+
+#define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE)
+
+/*=======================================================================*/
+//! Power save command parameters
+/*=======================================================================*/
+//! set handshake type of power mode
+#define RSI_HAND_SHAKE_TYPE GPIO_BASED
+
+#include "rsi_wlan_common_config.h"
 #include "rsi_bt_common_config.h"
+
 #endif

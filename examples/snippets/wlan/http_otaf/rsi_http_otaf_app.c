@@ -3,7 +3,7 @@
 * @brief Application file for http/s OTA firmware update
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -306,6 +306,33 @@ int32_t rsi_http_otaf_app()
 #endif
   uint8_t flags = FLAGS;
 
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Task created for Driver task
+  status = rsi_task_create(rsi_wireless_driver_task,
+                           "driver_task",
+                           RSI_DRIVER_TASK_STACK_SIZE,
+                           NULL,
+                           RSI_DRIVER_TASK_PRIORITY,
+                           &driver_task_handle);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDriver Task Creation Failed\r\n");
+    return status;
+  }
+#endif
   //! WC initialization
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_OPERMODE_WLAN);
   if (status != RSI_SUCCESS) {
@@ -494,6 +521,7 @@ int32_t rsi_http_otaf_app()
             rsi_wlan_app_cb.state = RSI_WLAN_INITIAL_STATE;
           } else {
             LOG_PRINT("\r\nFirmware download restart ....\r\n");
+            status                = RSI_SUCCESS;
             rsi_wlan_app_cb.state = RSI_WLAN_HTTP_OTA_UPDATE_STATE;
           }
         } else {
@@ -504,10 +532,22 @@ int32_t rsi_http_otaf_app()
 #endif
       } break;
       case RSI_WLAN_HTTP_OTA_WIRELESS_DEINT_STATE: {
+#ifdef RSI_WITH_OS
+        rsi_task_destroy(driver_task_handle);
+#endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\nWireless deint failed\r\n");
         }
+#ifdef RSI_WITH_OS
+        // Task created for Driver task
+        rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                        (uint8_t *)"driver_task",
+                        RSI_DRIVER_TASK_STACK_SIZE,
+                        NULL,
+                        RSI_DRIVER_TASK_PRIORITY,
+                        &driver_task_handle);
+#endif
 
 #ifdef RSI_M4_INTERFACE
         RSI_CLK_M4ssRefClkConfig(M4CLK, ULP_32MHZ_RC_CLK);
@@ -545,20 +585,6 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 
 #ifdef RSI_WITH_OS
   //! OS case
@@ -573,17 +599,7 @@ int main()
     LOG_PRINT("\r\nWLAN Task Creation Failed\r\n");
     return status;
   }
-  //! Task created for Driver task
-  status = rsi_task_create(rsi_wireless_driver_task,
-                           "driver_task",
-                           RSI_DRIVER_TASK_STACK_SIZE,
-                           NULL,
-                           RSI_DRIVER_TASK_PRIORITY,
-                           &driver_task_handle);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDriver Task Creation Failed\r\n");
-    return status;
-  }
+
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();
 

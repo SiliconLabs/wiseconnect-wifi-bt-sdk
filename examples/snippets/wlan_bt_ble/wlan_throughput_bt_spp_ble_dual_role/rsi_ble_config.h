@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file         rsi_ble_config.h
  * @version      0.1
- * @date         01 Feb 2020 *
+ * @date         01 Feb 2021 *
  *
  *
  *  @brief : This file contains user configurable details to configure the device  
@@ -57,7 +57,7 @@
 /***********************************************************************************************************************************************/
 //! Remote Device Name to connect
 /***********************************************************************************************************************************************/
-#define RSI_REMOTE_DEVICE_NAME1 "REDPINE_DEV" //"Hotspot"//"Skv"//"Hotspot"
+#define RSI_REMOTE_DEVICE_NAME1 "SILABS_DEV" //"Hotspot"//"Skv"//"Hotspot"
 #define RSI_REMOTE_DEVICE_NAME2 "slave22"
 #define RSI_REMOTE_DEVICE_NAME3 "slave3"
 #else
@@ -305,6 +305,7 @@
 #define SMP_ENABLE                              1
 #define SIG_VUL                                 0
 #define RESOLVE_ENABLE                          0
+#define LOCAL_MTU_SIZE                          232
 
 #define SLAVE1  0
 #define SLAVE2  1
@@ -320,6 +321,7 @@ typedef enum rsi_ble_state_e {
   RSI_APP_EVENT_ADV_REPORT,
   RSI_BLE_CONN_EVENT,
   RSI_BLE_ENHC_CONN_EVENT,
+  RSI_BLE_MTU_EXCHANGE_INFORMATION,
   RSI_BLE_MTU_EVENT,
   RSI_BLE_MORE_DATA_REQ_EVT,
   RSI_BLE_RECEIVE_REMOTE_FEATURES,

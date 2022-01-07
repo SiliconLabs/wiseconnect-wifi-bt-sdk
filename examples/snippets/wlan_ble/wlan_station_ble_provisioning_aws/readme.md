@@ -4,7 +4,7 @@
 
 This example demonstrates how to configure/connects RS9116W EVK to get the WLAN connection functionality using BLE provisioning. In this application, the Module starts advertising and with BLE Provisioning the Access Point details are fetched
 
-The RS9116W EVK module is configured  as a station, which associates to an access point and then communicates with an AWS server using MQTT, 
+The RS9116W EVK module is configured  as a station, which associates to an access point and then communicates with an AWS server using MQTT. Data will be continuously published until the device is disconnected from the access point.  
 
 ## 2. Prerequisites / Setup Requirements
 
@@ -253,7 +253,7 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
    
 > For example : If the certificate is ca-certificate.pem, enter the command in the following way:
 > python certificate_script.py ca-certificate.pem 
-> The script will generate ca-certificate.pem in which one linear array named ca-certificate contains the certificate.
+> The script will generate ca-certificate.pem.h in which one linear array named ca-certificate contains the certificate.
 Root CA certificate, Device private key and Device client certificate needs to be converted as mentioned above
 
 After the conversion, place the converted files in `<SDK>/resources/certificates/` path and include the certificate files in rsi_wlan_app.c

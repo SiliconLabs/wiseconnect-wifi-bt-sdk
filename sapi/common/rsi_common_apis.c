@@ -96,7 +96,8 @@ void rsi_common_set_status(int32_t status)
 uint8_t *buffer_addr = NULL;
 int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 {
-#if (defined RSI_WLAN_ENABLE) || (defined RSI_UART_INTERFACE) | (defined LINUX_PLATFORM)
+#if (defined RSI_WLAN_ENABLE) || (defined RSI_UART_INTERFACE) | (defined LINUX_PLATFORM) || (defined RSI_BLE_ENABLE) \
+  || (defined RSI_BT_ENABLE)
   int32_t status = RSI_SUCCESS;
 #endif
 
@@ -150,9 +151,14 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   buffer += sizeof(struct wpa_scan_results_arr);
 #endif
 
+#ifdef LOGGING_ENABLE
+  buffer += sl_log_init(buffer);
+#endif
+
   // Check for max no of sockets
   if (RSI_NUMBER_OF_SOCKETS > (10 + RSI_NUMBER_OF_LTCP_SOCKETS)) {
     status = RSI_ERROR_INVALID_PARAM;
+    SL_PRINTF(SL_DRIVER_INIT_MAX_SOCKETS_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -340,6 +346,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 #endif
 
   if (length < (uint32_t)(buffer - buffer_addr)) {
+    SL_PRINTF(SL_DRIVER_INIT_INSUFFICIENT_BUFFER_2, COMMON, LOG_ERROR, "length: %4x", (uint32_t)(buffer - buffer_addr));
     return buffer - buffer_addr;
   }
 
@@ -372,6 +379,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   // UART initialization
   status = rsi_uart_init();
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_DRIVER_INIT_UART_INIT_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -379,6 +387,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   // Update state
   rsi_driver_cb_non_rom->device_state = RSI_DRIVER_INIT_DONE;
 
+  SL_PRINTF(SL_DRIVER_INIT_EXIT, COMMON, LOG_INFO, "actual_length=%4x", actual_length);
   return actual_length;
 }
 /** @addtogroup COMMON 
@@ -441,6 +450,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
   rsi_pkt_t *pkt;
   rsi_opermode_t *rsi_opermode;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WIRELESS_INIT_ENTRY, COMMON, LOG_INFO);
 #if !((defined(RSI_UART_INTERFACE) && defined(RSI_STM32)))
   rsi_timer_instance_t timer_instance;
 #endif
@@ -454,6 +464,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 
   if ((rsi_driver_cb_non_rom->device_state < RSI_DEVICE_INIT_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   common_cb->ps_coex_mode = coex_mode;
@@ -470,6 +481,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
     rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 
     if (rsi_timer_expired(&timer_instance)) {
+      SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
       return RSI_ERROR_CARD_READY_TIMEOUT;
     }
 #else
@@ -478,6 +490,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 #endif
 #ifdef RSI_WITH_OS
     if (rsi_wait_on_common_semaphore(&common_cb->common_card_ready_sem, RSI_CARD_READY_WAIT_TIME) != RSI_ERROR_NONE) {
+      SL_PRINTF(SL_WIRELESS_INIT_RESPONSE_TIMEOUT, COMMON, LOG_ERROR);
       return RSI_ERROR_RESPONSE_TIMEOUT;
     }
 #endif
@@ -504,6 +517,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
       // Signal the WLAN semaphore
       if (rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_AUTO_JOIN_RESPONSE_WAIT_TIME)
           != RSI_ERROR_NONE) {
+        SL_PRINTF(SL_WIRELESS_INIT_RESPONSE_TIMEOUT, COMMON, LOG_ERROR);
         return RSI_ERROR_RESPONSE_TIMEOUT;
       }
 #endif
@@ -512,11 +526,13 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
     status = rsi_common_get_status();
     if (status) {
       // Return error
+      SL_PRINTF(SL_WIRELESS_INIT_EXIT1, COMMON, LOG_ERROR, "status: %4x", status);
       return status;
     }
     status = rsi_wlan_get_status();
     if (status) {
       // Return error
+      SL_PRINTF(SL_WIRELESS_INIT_EXIT2, COMMON, LOG_ERROR, "status: %4x", status);
       return status;
     }
 #endif
@@ -524,6 +540,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
     return RSI_USER_STORE_CFG_STATUS;
   } else if (common_cb->state != RSI_COMMON_CARDREADY) {
     // Command given in wrong state
+    SL_PRINTF(SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -537,6 +554,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
       //Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure
+      SL_PRINTF(SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -573,6 +591,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_WIRELESS_INIT_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -599,6 +618,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 #endif
 
   // Return status
+  SL_PRINTF(SL_WIRELESS_INIT_EXIT3, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -732,6 +752,7 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
   rsi_pkt_t *pkt;
 
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_CMD_UART_FLOW_CTRL_ENTRY, COMMON, LOG_INFO);
 
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
@@ -746,6 +767,7 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
       //Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_CMD_UART_FLOW_CTRL_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -766,6 +788,7 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_CMD_UART_FLOW_CTRL_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -773,6 +796,7 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_CMD_UART_FLOW_CTRL_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -800,6 +824,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
   rsi_pkt_t *pkt;
 
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_CMD_M4_TA_SECURE_HANDSHAKE_ENTRY, COMMON, LOG_INFO);
 
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
@@ -815,6 +840,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
       //Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -847,6 +873,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -854,6 +881,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 #endif
@@ -882,6 +910,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
 int32_t rsi_wireless_deinit(void)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WIRELESS_DEINIT_ENTRY, COMMON, LOG_INFO);
 #ifndef RSI_M4_INTERFACE
   int32_t length = 0;
 #endif
@@ -901,6 +930,7 @@ int32_t rsi_wireless_deinit(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WIRELESS_DEINIT_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -914,6 +944,7 @@ int32_t rsi_wireless_deinit(void)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_WIRELESS_DEINIT_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #ifdef SOFT_RESET_ENABLE
@@ -929,6 +960,7 @@ int32_t rsi_wireless_deinit(void)
   status = rsi_spi_iface_init();
   if (status != RSI_SUCCESS) {
     // Return status
+    SL_PRINTF(SL_WIRELESS_DEINIT_SPI_INIT_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 #endif
@@ -960,6 +992,7 @@ int32_t rsi_wireless_deinit(void)
     // Driver initialization
     status = rsi_driver_init(buffer_addr, length);
     if ((status < 0) || (status > length)) {
+      SL_PRINTF(SL_WIRELESS_DEINIT_DRIVER_INIT_ERROR_1, COMMON, LOG_ERROR, "status: %4x", status);
       return status;
     }
   } else {
@@ -974,10 +1007,12 @@ int32_t rsi_wireless_deinit(void)
   // Initialize Device
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_WIRELESS_DEINIT_DEVICE_INIT_ERROR_2, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
 #endif
+  SL_PRINTF(SL_WIRELESS_DEINIT_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1006,6 +1041,7 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
   rsi_pkt_t *pkt;
   rsi_antenna_select_t *rsi_antenna;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WIRELESS_ANTENNA_ENTRY, COMMON, LOG_INFO);
 
   // Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -1016,6 +1052,7 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
   // Pre-condition for antenna selection
   if ((wlan_cb->state < RSI_WLAN_STATE_INIT_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_WIRELESS_ANTENNA_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -1030,6 +1067,7 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WIRELESS_ANTENNA_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1061,6 +1099,7 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_WIRELESS_ANTENNA_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1068,6 +1107,7 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_WIRELESS_ANTENNA_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -1098,12 +1138,14 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
   rsi_pkt_t *pkt;
   rsi_feature_frame_t *rsi_feature_frame;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SEND_FEATURE_FRAME_ENTRY, COMMON, LOG_INFO);
 
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_SEND_FEATURE_FRAME_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -1117,6 +1159,7 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SEND_FEATURE_FRAME_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1154,6 +1197,7 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SEND_FEATURE_FRAME_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1161,6 +1205,7 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_SEND_FEATURE_FRAME_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -1184,12 +1229,14 @@ int32_t rsi_send_feature_frame(void)
   rsi_pkt_t *pkt;
   rsi_feature_frame_t *rsi_feature_frame;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SEND_FEATURE_FRAME_ENTRY, COMMON, LOG_INFO);
 
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_SEND_FEATURE_FRAME_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -1203,6 +1250,7 @@ int32_t rsi_send_feature_frame(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SEND_FEATURE_FRAME_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1244,6 +1292,7 @@ int32_t rsi_send_feature_frame(void)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SEND_FEATURE_FRAME_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1251,6 +1300,7 @@ int32_t rsi_send_feature_frame(void)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_SEND_FEATURE_FRAME_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -1272,6 +1322,7 @@ int32_t rsi_send_feature_frame(void)
 int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GET_FW_VERSION_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get common cb structure pointer
@@ -1298,6 +1349,7 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
 
       // Return packet allocation failure error
+      SL_PRINTF(SL_GET_FW_VERSION_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1331,6 +1383,7 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_GET_FW_VERSION_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1338,6 +1391,7 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_GET_FW_VERSION_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1366,15 +1420,18 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
 int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_COMMON_DEBUG_LOG_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_debug_uart_print_t *debug_uart_print;
   // Get common cb structure pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_COMMON_DEBUG_LOG_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   if (((assertion_type > 15) || (assertion_type < 0)) || ((assertion_level < 0) || (assertion_level > 15))) {
+    SL_PRINTF(SL_COMMON_DEBUG_LOG_INVALID_PARAM, COMMON, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -1389,6 +1446,7 @@ int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_COMMON_DEBUG_LOG_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1417,6 +1475,7 @@ int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_COMMON_DEBUG_LOG_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1424,6 +1483,7 @@ int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_COMMON_DEBUG_LOG_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1446,16 +1506,19 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
   rsi_pkt_t *pkt;
   rsi_switch_proto_t *ptr;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SWITCH_PROTO_ENTRY, COMMON, LOG_INFO);
 
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if ((type == 1) && (callback != NULL)) {
     /* In ENABLE case, callback must be NULL */
+    SL_PRINTF(SL_SWITCH_PROTO_INVALID_PARAM, COMMON, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_SWITCH_PROTO_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -1470,6 +1533,7 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SWITCH_PROTO_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     // Take the user provided data and fill it in switch proto structure
@@ -1506,6 +1570,7 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SWITCH_PROTO_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1513,6 +1578,7 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_SWITCH_PROTO_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -1530,12 +1596,14 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
 
 void rsi_wireless_driver_task(void)
 {
+  SL_PRINTF(SL_WIRELESS_DRIVER_TASK_ENTRY, COMMON, LOG_INFO);
 #ifdef RSI_WITH_OS
   while (1)
 #endif
   {
     rsi_scheduler(&rsi_driver_cb->scheduler_cb);
   }
+  SL_PRINTF(SL_WIRELESS_DRIVER_TASK_EXIT, COMMON, LOG_INFO);
 }
 //======================================================
 /**
@@ -1552,7 +1620,8 @@ void rsi_wireless_driver_task(void)
 
 int32_t rsi_driver_deinit(void)
 {
-  int32_t status         = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_DRIVER_DEINIT_ENTRY, COMMON, LOG_INFO);
   uint32_t actual_length = 0;
 
   if ((rsi_driver_cb_non_rom->device_state < RSI_DRIVER_INIT_DONE)) {
@@ -1587,10 +1656,14 @@ int32_t rsi_driver_deinit(void)
 #endif
   status = rsi_semaphore_destroy(&rsi_driver_cb->common_cb->common_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_1, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   rsi_mutex_destroy(&rsi_driver_cb->common_cb->common_mutex);
   rsi_mutex_destroy(&rsi_driver_cb_non_rom->tx_mutex);
+#ifdef LOGGING_ENABLE
+  sl_log_deinit();
+#endif
 #ifdef RSI_ZB_ENABLE
   rsi_mutex_destroy(&rsi_driver_cb->zigb_tx_q.queue_mutex);
 #endif
@@ -1612,15 +1685,18 @@ int32_t rsi_driver_deinit(void)
 #ifdef RSI_WLAN_ENABLE
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->send_data_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_2, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
   status = rsi_semaphore_destroy(&rsi_driver_cb->rx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_3, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->common_cb->common_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_4, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->common_cmd_send_sem);
@@ -1629,32 +1705,39 @@ int32_t rsi_driver_deinit(void)
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->common_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_5, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #ifdef RSI_WLAN_ENABLE
   // Create WLAN semaphore
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->nwk_cmd_send_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_6, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->nwk_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_7, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->wlan_cmd_send_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_8, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb_non_rom->wlan_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_9, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->wlan_cb->wlan_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_10, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->wlan_cb->wlan_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_11, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   rsi_mutex_destroy(&rsi_driver_cb->wlan_cb->wlan_mutex);
@@ -1665,57 +1748,69 @@ int32_t rsi_driver_deinit(void)
   // Create BT semaphore
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_common_cb->bt_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_12, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_common_cb->bt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_13, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_common_cb->bt_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_14, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #ifdef SAPIS_BT_STACK_ON_HOST
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_ble_stack_cb->bt_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_15, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
 #ifdef RSI_BT_ENABLE
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_classic_cb->bt_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_16, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_classic_cb->bt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_17, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->bt_classic_cb->bt_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_18, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
 #ifdef RSI_BLE_ENABLE
   status = rsi_semaphore_destroy(&rsi_driver_cb->ble_cb->bt_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_19, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->ble_cb->bt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_20, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->ble_cb->bt_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_21, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
 #ifdef RSI_PROP_PROTOCOL_ENABLE
   status = rsi_semaphore_destroy(&rsi_driver_cb->prop_protocol_cb->bt_cmd_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_22, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->prop_protocol_cb->bt_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_23, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
@@ -1723,10 +1818,12 @@ int32_t rsi_driver_deinit(void)
 #ifdef RSI_ZB_ENABLE
   status = rsi_semaphore_destroy(&rsi_driver_cb->zigb_cb->zigb_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_24, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->zigb_cb->zigb_sem);
   if (status != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_25, COMMON, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
   rsi_mutex_destroy(&rsi_driver_cb->zigb_cb->zigb_mutex);
@@ -1740,7 +1837,32 @@ int32_t rsi_driver_deinit(void)
   rsi_driver_cb->wlan_cb->state = RSI_WLAN_STATE_NONE;
 #endif
   rsi_driver_cb_non_rom->device_state = RSI_DEVICE_STATE_NONE;
+  SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_26, COMMON, LOG_INFO);
   return RSI_SUCCESS;
+}
+
+/*======================================================*/
+/**
+ *
+ * @brief       In OS case, delete driver task before calling rsi_driver_deinit() API.
+ * @pre         Need to call after the driver initialization
+ * @param[in]   task_handle - Task handle/instance to be deleted
+ * @return      0              - Success \n
+ *              Non-Zero Value - Failure
+ */
+
+int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle)
+{
+  SL_PRINTF(SL_DRIVER_DEINIT_TASK_DESTROY_ENTRY, COMMON, LOG_INFO);
+  int32_t status = RSI_SUCCESS;
+
+#ifdef RSI_WITH_OS
+  rsi_task_destroy(task_handle);
+#endif
+
+  status = rsi_driver_deinit();
+  SL_PRINTF(SL_DRIVER_DEINIT_TASK_DESTROY_EXIT, COMMON, LOG_INFO, "status: %4x", status);
+  return status;
 }
 
 /*=============================================================================*/
@@ -1751,10 +1873,12 @@ int32_t rsi_driver_deinit(void)
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "1610.2.4.1.0.16"
+#define RSI_DRIVER_VERSION "2.5.0.26"
 int32_t rsi_driver_version(uint8_t *request)
 {
+  SL_PRINTF(SL_DRIVER_VERSION_ENTRY, COMMON, LOG_INFO);
   memcpy(request, (uint8_t *)RSI_DRIVER_VERSION, sizeof(RSI_DRIVER_VERSION));
+  SL_PRINTF(SL_DRIVER_VERSION_EXIT, COMMON, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */
@@ -1765,7 +1889,14 @@ int32_t rsi_driver_version(uint8_t *request)
 /**
  * @brief       Set the host rtc timer. This is a blocking API.
  * @pre 		\ref rsi_wireless_init() API needs to be called before this API
- * @param[in]   timer          - Pointer to fill RTC time
+ * @param[in]   timer          - Pointer to fill RTC time.
+ *	  		                        second -->  seconds [0-59] \n
+ *	 		                        minute -->  minutes [0-59] \n
+ *	  		                        hour   -->  hours since midnight [0-23] \n
+ *	  		                        day    -->  day of the month [1-31] \n
+ *	  		                        month  -->  months since January [0-11] \n
+ *	  		                        year   -->  year since 1990. \n
+ *	 		                        Weekday-->  Weekday from Sunday to Saturday [1-7]. \n
  * @return      0              - Success \n
  * 				Non-Zero Value - Failure \n
  * @note        Hour is 24-hour format only (valid values are 0 to 23). Valid values for Month are 0 to 11 (January to December).
@@ -1774,14 +1905,25 @@ int32_t rsi_driver_version(uint8_t *request)
 int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SET_RTC_TIMER_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   module_rtc_time_t *rtc;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_SET_RTC_TIMER_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
+
+  if ((timer->tm_sec[0] > 59) || (timer->tm_min[0] > 59) || (timer->tm_hour[0] > 23)
+      || ((timer->tm_mday[0] < 1) || (timer->tm_mday[0] > 31)) || (timer->tm_mon[0] > 11)
+      || ((timer->tm_wday[0] < 1) || (timer->tm_wday[0] > 7))) {
+
+    // Checking Invalid Parameters
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
 
@@ -1793,6 +1935,7 @@ int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SET_RTC_TIMER_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1823,6 +1966,7 @@ int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SET_RTC_TIMER_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1830,6 +1974,7 @@ int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_SET_RTC_TIMER_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1852,12 +1997,14 @@ int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
 int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GET_RAM_LOG_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_ram_dump_t *ram;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_GET_RAM_LOG_EXIT1, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -1871,6 +2018,7 @@ int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_GET_RAM_LOG_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1896,6 +2044,7 @@ int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_GET_RAM_LOG_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1903,6 +2052,7 @@ int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_GET_RAM_LOG_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1934,7 +2084,9 @@ int32_t rsi_driver_memory_estimate(void)
  */
 void rsi_uregister_events_callbacks(void (*callback_handler_ptr)(uint32_t event_num))
 {
+  SL_PRINTF(SL_UNREGISTER_EVENTS_CALLBACK_ENTRY, COMMON, LOG_INFO);
   global_cb_p->rsi_driver_cb->unregistered_event_callback = callback_handler_ptr;
+  SL_PRINTF(SL_UNREGISTER_EVENTS_CALLBACK_EXIT, COMMON, LOG_INFO);
 }
 #ifndef RSI_WAIT_TIMEOUT_EVENT_HANDLE_TIMER_DISABLE
 /*==============================================*/
@@ -1948,7 +2100,9 @@ void rsi_uregister_events_callbacks(void (*callback_handler_ptr)(uint32_t event_
  */
 void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int32_t status, uint32_t cmd_type))
 {
+  SL_PRINTF(SL_REGISTER_WAIT_TIMEOUT_ERROR_CALLBACKS_ENTRY, COMMON, LOG_INFO);
   rsi_driver_cb_non_rom->rsi_wait_timeout_handler_error_cb = callback_handler_ptr;
+  SL_PRINTF(SL_REGISTER_WAIT_TIMEOUT_ERROR_CALLBACKS_EXIT, COMMON, LOG_INFO);
 }
 #endif
 /** @} */
@@ -1959,6 +2113,7 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
 /**
  * @brief       Fetch current time from hardware Real Time Clock. This is a blocking API.
  * @pre         \ref rsi_set_rtc_timer() API needs to be called before this API.
+ *              Also this API needs to be called only after \ref rsi_wlan_scan() API or \ref rsi_wlan_radio_init() API.
  * @param[out]  response       - Response of the requested command. \n
  * @note	Response parameters: \n
  *	  		second -->  Current real time clock seconds. \n
@@ -1977,10 +2132,12 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
 int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GET_RTC_TIMER_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_GET_RTC_TIMER_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -1993,6 +2150,7 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
       // Unlock mutex
       rsi_mutex_unlock(&common_cb->common_mutex);
       // Return packet allocation failure error
+      SL_PRINTF(SL_GET_RTC_TIMER_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2025,6 +2183,7 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_GET_RTC_TIMER_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -2032,6 +2191,79 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_GET_RTC_TIMER_EXIT, COMMON, LOG_INFO, "status: %4x", status);
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn                int32_t rsi_set_config( uint32_t code, uint8_t value)
+ * @brief             Configure XO Ctune value from host
+ * @param[in]         Code - XO_CTUNE_FROM_HOST
+ * @param[in]         value - Value to be configured
+ * @return            0 		- Success \n
+ *                    Non-Zero Value  - Failure
+ */
+
+int32_t rsi_set_config(uint32_t code, uint8_t value)
+{
+  rsi_pkt_t *pkt;
+  rsi_set_config_t *set_config = NULL;
+  int32_t status               = RSI_SUCCESS;
+
+  // Get common cb structure pointer
+  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
+
+  if (common_cb->state < RSI_COMMON_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (code != XO_CTUNE_FROM_HOST) {
+    // if flag set is other than xo_ctune from host
+    return RSI_ERROR_INVALID_SET_CONFIG_FLAG;
+  }
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+    // allocate command buffer  from common pool
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Changing the common cmd state to allow
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      // return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    set_config = (rsi_set_config_t *)pkt->data;
+
+    //code
+    set_config->code = code;
+
+    //xo ctune value from host
+    set_config->values.xo_ctune = value;
+
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    // send  set config request command
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_SET_CONFIG, pkt);
+
+    // wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_SET_CONFIG_RESPONSE_WAIT_TIME);
+
+    // Changing the common cmd state to allow
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+  } else {
+    // return common command error
+    return status;
+  }
+  // get common command response status
+  status = rsi_common_get_status();
+
+  // Return the status
   return status;
 }
 #ifdef RSI_ASSERT_API
@@ -2046,10 +2278,12 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
 int32_t rsi_assert(void)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ASSERT_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_ASSERT_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -2062,6 +2296,7 @@ int32_t rsi_assert(void)
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ASSERT_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 #ifndef RSI_COMMON_SEM_BITMAP
@@ -2081,6 +2316,7 @@ int32_t rsi_assert(void)
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ASSERT_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -2088,6 +2324,7 @@ int32_t rsi_assert(void)
   status = rsi_common_get_status();
 
   // Return status
+  SL_PRINTF(SL_ASSERT_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 #endif
@@ -2096,156 +2333,288 @@ int32_t rsi_assert(void)
 //*==============================================*/
 /**
  * @brief      Configure TA GPIOs using Command from host.This is a non-blocking API.
- * @param[in]  pin_num       - GPIO Number : Valid values  0 - 15
- * @param[in]  configuration - BIT[4]-  1 - Input mode   0 - Output mode \n
- *                             BIT[0 - 1] - Drive strength : 0 - 2mA , 1 - 4mA , 2 - 8mA, 3 - 12mA  \n
- *                             BIT[6 - 7] : 0 - Hi-Z, 1- Pull-up, 2- Pull-down
+ * @param[in]  gpio_type     - GPIO types :  \n 
+ *                             0 - TA_GPIO   \n
+ *                             1 - ULP_GPIO  \n
+ *                             2 - UULP_GPIO \n
+ * @param[in]  pin_num       - GPIO Number : \n
+ *                             Valid values  0 - 63, if gpio_type is TA_GPIO. \n
+ *                             Valid values  0 - 15, if gpio_type is ULP_GPIO. \n
+ *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
+ * @param[in]  configuration - BIT[4]     -  1 - Input mode  \n
+ *                                           0 - Output mode \n
+ *                             BIT[0 - 1] : Drive strength \n
+ *                                          0 - 2mA  \n
+ *                                          1 - 4mA  \n
+ *                                          2 - 8mA  \n
+ *                                          3 - 12mA \n
+ *                             BIT[6 - 7] : \n
+ *                             0 - Hi-Z     \n
+ *                             1 - Pull-up  \n 
+ *                             2 - Pull-down \n
  * @return 	   0              - Success \n
  *             Non-Zero Value - Failure
+ * @note       It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
  */
 
-int32_t rsi_gpio_pininit(uint8_t pin_num, uint8_t configuration)
+int32_t rsi_gpio_pininit(uint8_t gpio_type, uint8_t pin_num, uint8_t configuration)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GPIO_PININIT_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   rsi_gpio_pin_config_t *config_gpio;
   // Take lock on common control block
-  rsi_mutex_lock(&common_cb->common_mutex);
-
-  // Allocate command buffer  from common pool
-  pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
-
-  // If allocation of packet fails
-  if (pkt == NULL) {
-    // Unlock mutex
-    rsi_mutex_unlock(&common_cb->common_mutex);
-    // Return packet allocation failure error
-    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
+    // Command given in wrong state
+    SL_PRINTF(SL_GPIO_PININIT_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
 
-  config_gpio = (rsi_gpio_pin_config_t *)pkt->data;
+    // Allocate command buffer from common pool
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
 
-  config_gpio->config_mode   = RSI_CONFIG_GPIO;
-  config_gpio->pin_num       = pin_num;
-  config_gpio->output_value  = 0;
-  config_gpio->config_values = configuration;
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_GPIO_PININIT_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
 
-  // Send GPIO configuration request
-  status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
+    config_gpio                = (rsi_gpio_pin_config_t *)pkt->data;
+    config_gpio->gpio_type     = gpio_type;
+    config_gpio->config_mode   = RSI_CONFIG_GPIO;
+    config_gpio->pin_num       = pin_num;
+    config_gpio->output_value  = 0;
+    config_gpio->config_values = configuration;
 
-  // Free the packet
-  rsi_pkt_free(&common_cb->common_tx_pool, pkt);
-
-  // Unlock mutex
-  rsi_mutex_unlock(&common_cb->common_mutex);
-
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    // Send GPIO configuration request
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_GPIO_CONFIG_RESP_WAIT_TIME);
+    // Change common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    // Return common command error
+    SL_PRINTF(SL_GPIO_PININIT_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+  // Get common command response status
+  status = rsi_common_get_status();
   // Return status
+  SL_PRINTF(SL_GPIO_PININIT_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
 //*==============================================*/
 /**
  * @brief       Drive the Module GPIOs high or low using command from host. This is a non-blocking API.
- *@param[in]   	pin_num        -  GPIO Number : Valid values  0 - 15
- *@param[in]    value          -  Value to be driven on GPIO \n
+ * @param[in]  gpio_type     - GPIO types :  \n 
+ *                             0 - TA_GPIO   \n
+ *                             1 - ULP_GPIO  \n
+ *                             2 - UULP_GPIO \n
+ * @param[in]  pin_num       - GPIO Number : \n
+ *                             Valid values  0 - 63, if gpio_type is TA_GPIO. \n
+ *                             Valid values  0 - 15, if gpio_type is ULP_GPIO. \n
+ *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
+ *@param[in]    value        - Value to be driven on GPIO \n
  *                                1 - Drive high \n
  *                                0 - Drive Low  \n
  *@return 	    0              -  Success \n
  *              Non-Zero Value -  Failure	
+ * @note        It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
  */
 
-int32_t rsi_gpio_writepin(uint8_t pin_num, uint8_t value)
+int32_t rsi_gpio_writepin(uint8_t gpio_type, uint8_t pin_num, uint8_t value)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GPIO_WRITEPIN_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   rsi_gpio_pin_config_t *config_gpio;
 
-  // Take lock on common control block
-  rsi_mutex_lock(&common_cb->common_mutex);
-
-  // Allocate command buffer  from common pool
-  pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
-
-  // If allocation of packet fails
-  if (pkt == NULL) {
-    // Unlock mutex
-    rsi_mutex_unlock(&common_cb->common_mutex);
-    // Return packet allocation failure error
-    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
+    // Command given in wrong state
+    SL_PRINTF(SL_GPIO_WRITEPIN_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
-  config_gpio = (rsi_gpio_pin_config_t *)pkt->data;
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
 
-  config_gpio->config_mode   = RSI_SET_GPIO;
-  config_gpio->pin_num       = pin_num;
-  config_gpio->output_value  = value;
-  config_gpio->config_values = 0;
+    // Allocate command buffer from common pool
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
 
-  // Send GPIO configuration request
-  status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_GPIO_WRITEPIN_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+    config_gpio                = (rsi_gpio_pin_config_t *)pkt->data;
+    config_gpio->gpio_type     = gpio_type;
+    config_gpio->config_mode   = RSI_SET_GPIO;
+    config_gpio->pin_num       = pin_num;
+    config_gpio->output_value  = value;
+    config_gpio->config_values = 0;
 
-  // Free the packet
-  rsi_pkt_free(&common_cb->common_tx_pool, pkt);
-
-  // Unlock mutex
-  rsi_mutex_unlock(&common_cb->common_mutex);
-
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    // Send GPIO configuration request
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_GPIO_CONFIG_RESP_WAIT_TIME);
+    // Change common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    // Return common command error
+    SL_PRINTF(SL_GPIO_WRITEPIN_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+  // Get common command response status
+  status = rsi_common_get_status();
   // Return status
+  SL_PRINTF(SL_GPIO_WRITEPIN_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
 
 //*==============================================*/
 /**
  * @brief       Read status of TA GPIOs using Command from host. This is a non-blocking API.
- * @param[in]   pin_num    -  GPIO Number : Valid values  0 - 15
- * @param[in]   gpio_value - Address of variable to store the value
- * @return 		0              - Success \n 
- *				Non-Zero Value - Failure        
+ * @param[in]  gpio_type     - GPIO types :  \n 
+ *                             0 - TA_GPIO   \n
+ *                             1 - ULP_GPIO  \n
+ *                             2 - UULP_GPIO \n
+ * @param[in]  pin_num       - GPIO Number : \n
+ *                             Valid values  0 - 63, if gpio_type is TA_GPIO. \n
+ *                             Valid values  0 - 15, if gpio_type is ULP_GPIO. \n
+ *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
+ * @param[in]   gpio_value   - Address of variable to store the value
+ * @return 		  0              - Success \n 
+ *				      Non-Zero Value - Failure        
+ * @note        It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
  */
 
-int32_t rsi_gpio_readpin(uint8_t pin_num, uint8_t *gpio_value)
+int32_t rsi_gpio_readpin(uint8_t gpio_type, uint8_t pin_num, uint8_t *gpio_value)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_GPIO_READPIN_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   rsi_gpio_pin_config_t *config_gpio;
 
-  // Take lock on common control block
-  rsi_mutex_lock(&common_cb->common_mutex);
-
-  // Allocate command buffer from common pool
-  pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
-
-  // If allocation of packet fails
-  if (pkt == NULL) {
-    // Unlock mutex
-    rsi_mutex_unlock(&common_cb->common_mutex);
-    // Return packet allocation failure error
-    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
+    // Command given in wrong state
+    SL_PRINTF(SL_GPIO_READPIN_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR, "status: %4x", common_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
-  config_gpio = (rsi_gpio_pin_config_t *)pkt->data;
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
 
-  config_gpio->config_mode   = RSI_GET_GPIO;
-  config_gpio->pin_num       = pin_num;
-  config_gpio->output_value  = 0;
-  config_gpio->config_values = 0;
+    // Allocate command buffer from common pool
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_GPIO_READPIN_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+    config_gpio                = (rsi_gpio_pin_config_t *)pkt->data;
+    config_gpio->gpio_type     = gpio_type;
+    config_gpio->config_mode   = RSI_GET_GPIO;
+    config_gpio->pin_num       = pin_num;
+    config_gpio->output_value  = 0;
+    config_gpio->config_values = 0;
 
-  // Attach the buffer given by user
-  common_cb->app_buffer = (uint8_t *)gpio_value;
-  // Length of the buffer provided by user
-  common_cb->app_buffer_length = 1;
+    // Attach the buffer given by user
+    common_cb->app_buffer = (uint8_t *)gpio_value;
+    // Length of the buffer provided by user
+    common_cb->app_buffer_length = 1;
 
-  // Send GPIO configuration request
-  status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
-
-  // Free the packet
-  rsi_pkt_free(&common_cb->common_tx_pool, pkt);
-
-  // Unlock mutex
-  rsi_mutex_unlock(&common_cb->common_mutex);
-
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    // Send GPIO configuration request
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_GPIO_CONFIG, pkt);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_GPIO_CONFIG_RESP_WAIT_TIME);
+    // Change common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    // Return common command error
+    SL_PRINTF(SL_GPIO_READPIN_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+  // Get common command response status
+  status = rsi_common_get_status();
   // Return status
+  SL_PRINTF(SL_GPIO_READPIN_EXIT, COMMON, LOG_INFO, "status: %4x", status);
+  return status;
+}
+
+//*==============================================*/
+/**
+ * @brief       Read status of TA GPIOs using Command from host. This is a non-blocking API.
+ * @param[in]   gpio_num   -  GPIO Number : Valid values  0 - 15
+ * @return 		0  - status of TA GPIO is LOW \n 
+ *                      1  - status of TA GPIO is HIGH \n
+ *		        < 0  Non-Zero Value - Failure        
+ */
+
+int32_t rsi_gpio_read(uint8_t gpio_num)
+{
+  int32_t status = 0;
+  int32_t buf    = 0;
+  status         = rsi_mem_rd((PAD_REN + (4 * gpio_num)), 4, (uint8_t *)&buf);
+  if (status < 0) {
+    return status;
+  }
+  buf |= 0x10;
+  status = rsi_mem_wr((PAD_REN + (4 * gpio_num)), 4, (uint8_t *)&buf);
+  if (status < 0) {
+    return status;
+  }
+  buf    = 0x20;
+  status = rsi_mem_wr((RSI_GPIO_ADDR + (gpio_num * 2)), 2, (uint8_t *)&buf);
+  if (status < 0) {
+    return status;
+  }
+  status = rsi_mem_rd((RSI_GPIO_ADDR + (gpio_num * 2)), 2, (uint8_t *)&buf);
+  if (status < 0) {
+    return status;
+  }
+  return (buf >> 13);
+}
+
+//*==============================================*/
+/**
+ *@brief        Drive the TA GPIOs high or low using command from host. This is a non-blocking API.
+ *@param[in]   	gpio_num       -  GPIO Number : Valid values  0 - 15
+ *@param[in]    write          -  Value to be driven on GPIO \n
+ *                                0x10 - Drive high \n
+ *                                0 - Drive Low  \n
+ *@return 	     0              -  Success \n
+ *                   Non-Zero Value -  Failure	
+ */
+int32_t rsi_gpio_write(uint8_t gpio_num, uint8_t write)
+{
+  int32_t status = 0;
+
+  status = rsi_mem_wr((RSI_GPIO_ADDR + (gpio_num * 2)), 2, (uint8_t *)&write);
+  if (status < 0) {
+    return status;
+  }
   return status;
 }
 

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file         rsi_wlan_config.h
  * @version      1.0
- * @date         11 Feb 2020
+ * @date         11 Feb 2021
  *
  *
  *
@@ -63,7 +63,7 @@
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_384K_MODE)
 
-#define RSI_EXT_TCPIP_FEATURE_BITMAP EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS
+#define RSI_EXT_TCPIP_FEATURE_BITMAP (EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS | EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD)
 
 #else
 //! To set wlan feature select bit map
@@ -82,10 +82,11 @@
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_384K_MODE | EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 
-#define RSI_EXT_TCPIP_FEATURE_BITMAP (EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS | CONFIG_FEAT_EXTENTION_VALID)
+#define RSI_EXT_TCPIP_FEATURE_BITMAP \
+  (EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS | EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD | CONFIG_FEAT_EXTENTION_VALID)
 
 //! config feature bit map
-#define RSI_CONFIG_FEATURE_BITMAP    RSI_FEAT_SLEEP_GPIO_SEL_BITMAP
+#define RSI_CONFIG_FEATURE_BITMAP RSI_FEAT_SLEEP_GPIO_SEL_BITMAP
 #endif
 /*=======================================================================*/
 

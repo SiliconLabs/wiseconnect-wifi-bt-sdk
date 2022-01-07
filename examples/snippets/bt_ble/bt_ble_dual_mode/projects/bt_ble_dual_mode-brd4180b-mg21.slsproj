@@ -55,6 +55,9 @@
   <folder name="sapi/crypto" uri="sapi/crypto" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver" uri="sapi/driver" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
@@ -104,8 +107,10 @@
   
   <includePath uri="$(projectLocation)/platform/core"/>
   <includePath uri="$(projectLocation)/platform/board"/>
+   <macroDefinition name="WISECONNECT" />
    <macroDefinition name="RSI_SAMPLE_HAL" />
    <macroDefinition name="RSI_DEBUG_PRINTS" />
+   <macroDefinition name="RSI_WLAN_ENABLE" />
   
   
    <macroDefinition name="RSI_BT_ENABLE" />

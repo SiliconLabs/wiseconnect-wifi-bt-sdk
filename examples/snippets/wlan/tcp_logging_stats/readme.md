@@ -14,6 +14,7 @@ Before running the application, the user will need the following things to setup
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit) 
 - Host MCU Eval Kit. This example has been tested with:
     - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+	- Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
     - [STM32F411 Nucleo](https://st.com/) 
 - Windows PC (Remote PC) with iperf application.
 
@@ -37,7 +38,8 @@ Before running the application, the user will need the following things to setup
 
 The Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
-* [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+* [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+* [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface 
 
@@ -61,10 +63,14 @@ The Application is provided with the project folder containing Keil and Simplici
 
 ![EFR Radio Boards](resources/readme/image205a.png)
 
+   - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan/tcp_logging_stats/projects/tcp_logging_stats-brd2204a-gg11.slsproj`
 
-### 3.4 Bare Metal Support 
 
-This application supports only bare metal environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
+### 3.4 Bare Metal/RTOS Support 
+
+This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK.
 
 ## 4. Application Configuration Parameters 
 
@@ -236,7 +242,7 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 #### 5.2.2 Using EFX32 
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) 
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Configure EFX32 pin-9(PD03/PB01 GPIO) should connect to UULP_GPIO_0 and EVFX32 pin-7(PD02/PB00 GPIO) should connect to UULP_GPIO_2.
 - Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/tcp_logging_stats/projects`

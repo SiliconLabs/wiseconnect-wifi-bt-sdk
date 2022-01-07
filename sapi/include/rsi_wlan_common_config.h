@@ -168,7 +168,7 @@
 #define RSI_SET_REGION_FROM_USER_OR_BEACON 1
 #endif
 
-// 0-Default Region domain ,1-US, 2-EUROPE, 3-JAPAN
+// 0-Default Region domain ,1-US, 2-EUROPE, 3-JAPAN, 4-WORLD, 5-KOREA
 #ifndef RSI_REGION_CODE
 #define RSI_REGION_CODE 1
 #endif
@@ -458,6 +458,12 @@
 
 #define RSI_SSL_RELEASE_2_0 RSI_ENABLE
 
+#ifdef CHIP_9117
+#ifndef RSI_SSL_EXT_CIPHERS
+#define RSI_SSL_EXT_CIPHERS SSL_TLSV1_3_ALL_CIPHERS
+#endif
+#endif
+
 // ssl ciphers
 #ifndef RSI_SSL_CIPHERS
 #if RSI_SSL_RELEASE_2_0
@@ -693,7 +699,7 @@
 
 // AP SSID
 #ifndef RSI_CONFIG_AP_SSID
-#define RSI_CONFIG_AP_SSID "REDPINE_AP"
+#define RSI_CONFIG_AP_SSID "SILABS_AP"
 #endif
 
 // RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
@@ -809,7 +815,7 @@
 
 // To configure SSID
 #ifndef RSI_CONFIG_CLIENT_SSID
-#define RSI_CONFIG_CLIENT_SSID "REDPINE_AP"
+#define RSI_CONFIG_CLIENT_SSID "SILABS_AP"
 #endif
 
 // RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
@@ -942,7 +948,7 @@
 
 // To configure SSID
 #ifndef RSI_CONFIG_EAP_SSID
-#define RSI_CONFIG_EAP_SSID "REDPINE_AP"
+#define RSI_CONFIG_EAP_SSID "SILABS_AP"
 #endif
 
 // RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
@@ -1064,7 +1070,7 @@
 
 // Set P2P join SSID
 #ifndef RSI_CONFIG_P2P_JOIN_SSID
-#define RSI_CONFIG_P2P_JOIN_SSID "REDPINE_AP"
+#define RSI_CONFIG_P2P_JOIN_SSID "SILABS_AP"
 #endif
 
 // Set psk key
@@ -1135,5 +1141,19 @@
 #ifndef RSI_ASSERT_ENABLE
 #define RSI_ASSERT_ENABLE 1
 #endif
+/*========================================================================*/
+// 11ax params
+/*========================================================================*/
+#define HE_PARAMS_SUPPORT  RSI_DISABLE
+#define GUARD_INTERVAL     3
+#define NOMINAL_PE         2
+#define DCM_ENABLE         0
+#define LDPC_ENABLE        0
+#define NG_CB_ENABLE       0
+#define NG_CB_VALUES       0
+#define UORA_ENABLE        0
+#define TRIGGER_RESP_IND   0xF
+#define IPPS_VALID_VALUE   0
+#define TX_ONLY_ON_AP_TRIG 0
 /*========================================================================*/
 #endif

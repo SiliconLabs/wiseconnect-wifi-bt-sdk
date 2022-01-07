@@ -23,6 +23,9 @@
 #if defined(RSI_DEBUG_PRINTS) || (defined(RSI_ENABLE_DEBUG_PRINT) && defined(LINUX_PLATFORM))
 #include <stdio.h>
 #endif
+#ifdef RSI_WITH_OS
+#include "rsi_os.h"
+#endif
 
 /******************************************************
  * *                      Macros
@@ -79,7 +82,7 @@ typedef struct rsi_gpio_pin_config_val_s {
 } rsi_gpio_pin_config_val_t;
 
 typedef struct rsi_gpio_pin_config_s {
-
+  uint8_t gpio_type;
   uint8_t config_mode;
   uint8_t pin_num;
   uint8_t config_values;
@@ -110,7 +113,7 @@ typedef enum rsi_power_save_profile_type_e {
   RSI_UAPSD    = 2
 } rsi_power_save_profile_type_t;
 
-// enumerations for differnt power mode exists for Redpine module
+// enumerations for differnt power mode exists for SiLabs module
 typedef enum rsi_power_save_mode_e {
   RSI_POWER_MODE_DISABLE      = 0,
   RSI_CONNECTED_SLEEP_PS      = 1,
@@ -167,5 +170,8 @@ extern int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
 extern int32_t rsi_driver_version(uint8_t *request);
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
+#endif
+#ifdef RSI_WITH_OS
+extern int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle);
 #endif
 #endif

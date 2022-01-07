@@ -163,12 +163,6 @@
 // SPI return codes
 #define RSI_SUCCESS 0
 
-// SPI busy error code
-#define RSI_ERROR_SPI_BUSY -1
-
-// SPI fail error code
-#define RSI_ERROR_SPI_FAIL -2
-
 // module buffer full  error code
 #define RSI_ERROR_BUFFER_FULL -3
 

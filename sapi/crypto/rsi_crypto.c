@@ -47,7 +47,8 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
                     uint8_t *digest)
 {
 
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SHA_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t digest_len = 0;
@@ -62,11 +63,13 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_SHA_PEN_COMMAND_GIVEN_IN_WRONG_STATE, CRYPTO, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   // Input pointer check
   if (msg == NULL) {
+    SL_PRINTF(SL_SHA_PEN_INVALID_PARAM_1, CRYPTO, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -84,6 +87,7 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_SHA_PEN_INVALID_PARAM_2, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -95,6 +99,7 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
       //Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_SHA_PEN_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -158,6 +163,7 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_SHA_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -165,6 +171,7 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_SHA_PEN_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -185,7 +192,8 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
 
 int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
 {
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SHA_ENTRY, CRYPTO, LOG_INFO);
   uint16_t total_len = 0;
   uint16_t chunk_len = 0;
   uint16_t offset    = 0;
@@ -220,6 +228,7 @@ int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *di
     status = rsi_sha_pen(sha_mode, msg, msg_length, chunk_len, sha_flags, digest);
 
     if (status != RSI_SUCCESS) {
+      SL_PRINTF(SL_SHA_CHUNK_LENGTH_MSG_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -230,7 +239,7 @@ int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *di
     // Decrement the total message lenth
     total_len -= chunk_len;
   }
-
+  SL_PRINTF(SL_SHA_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -259,7 +268,8 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
                          uint8_t *digest)
 {
 
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_HMAC_SHA_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t digest_len = 0;
@@ -274,11 +284,13 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_HMAC_SHA_PEN_COMMAND_GIVEN_IN_WRONG_STATE, CRYPTO, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   // Input pointer check
   if (data == NULL) {
+    SL_PRINTF(SL_HMAC_SHA_PEN_INVALID_PARAM_1, CRYPTO, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -297,6 +309,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_HMAC_SHA_PEN_INVALID_PARAM_2, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer  from wlan pool
@@ -307,6 +320,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_HMAC_SHA_PEN_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -374,6 +388,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_HMAC_SHA_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -381,6 +396,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_HMAC_SHA_PEN_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -419,7 +435,8 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
                      uint8_t *digest,
                      uint8_t *hmac_buffer)
 {
-  int32_t status         = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_HMAC_SHA_ENTRY, CRYPTO, LOG_INFO);
   uint32_t total_len     = 0;
   uint16_t chunk_len     = 0;
   uint16_t offset        = 0;
@@ -463,6 +480,7 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
       rsi_hmac_sha_pen(hmac_sha_mode, data, (msg_length + key_length), chunk_len, key_length, hmac_sha_flags, digest);
 
     if (status != RSI_SUCCESS) {
+      SL_PRINTF(SL_HMAC_SHA_CHUNK_LENGTH_MSG_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -473,7 +491,7 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
     // Decrement the total message lenth
     total_len -= chunk_len;
   }
-
+  SL_PRINTF(SL_HMAC_SHA_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -515,7 +533,7 @@ int32_t rsi_aes(uint16_t aes_mode,
                 uint8_t *iv,
                 uint8_t *output)
 {
-
+  SL_PRINTF(SL_AES_ENTRY, CRYPTO, LOG_INFO);
   uint16_t total_len = 0;
   uint16_t chunk_len = 0;
   uint16_t offset    = 0;
@@ -549,6 +567,7 @@ int32_t rsi_aes(uint16_t aes_mode,
     status = rsi_aes_pen(aes_mode, enc_dec, msg, msg_length, chunk_len, key, key_length, iv, aes_flags, output);
 
     if (status != RSI_SUCCESS) {
+      SL_PRINTF(SL_AES_CHUNK_LENGTH_MSG_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -559,7 +578,7 @@ int32_t rsi_aes(uint16_t aes_mode,
     // Decrement the total message lenth
     total_len -= chunk_len;
   }
-
+  SL_PRINTF(SL_AES_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -597,7 +616,8 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
                     uint8_t *output)
 {
 
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_AES_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   rsi_pkt_t *pkt;
@@ -611,10 +631,12 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 
   // Input pointer check
   if (msg == NULL) {
+    SL_PRINTF(SL_AES_PEN_INVALID_PARAM_1, CRYPTO, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
   if (((aes_mode == CBC_MODE) || (aes_mode == CTR_MODE)) && (iv == NULL)) {
+    SL_PRINTF(SL_AES_PEN_INVALID_PARAM_2, CRYPTO, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -629,6 +651,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
       //Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_AES_PEN_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -715,6 +738,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_AES_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -722,6 +746,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_AES_PEN_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -760,7 +785,8 @@ int32_t rsi_exponentiation(uint8_t *prime,
                            uint32_t exponent_length,
                            uint8_t *exp_result)
 {
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_EXPONENTIATION_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   rsi_pkt_t *pkt;
@@ -774,11 +800,13 @@ int32_t rsi_exponentiation(uint8_t *prime,
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_EXPONENTIATION_COMMAND_GIVEN_IN_WRONG_STATE, CRYPTO, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   // Input pointer check
   if ((base == NULL) || (prime == NULL) || (exponent == NULL)) {
+    SL_PRINTF(SL_EXPONENTIATION_INVALID_PARAM, CRYPTO, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -793,6 +821,7 @@ int32_t rsi_exponentiation(uint8_t *prime,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_EXPONENTIATION_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -868,6 +897,7 @@ int32_t rsi_exponentiation(uint8_t *prime,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_EXPONENTIATION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -875,6 +905,7 @@ int32_t rsi_exponentiation(uint8_t *prime,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_EXPONENTIATION_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -912,6 +943,7 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
                                       uint8_t *ry,
                                       uint8_t *rz)
 {
+  SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_ENTRY, CRYPTO, LOG_INFO);
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
@@ -939,6 +971,7 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_INVALID_PARAM, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer  from wlan pool
@@ -949,6 +982,7 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1035,6 +1069,7 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1042,6 +1077,7 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1082,7 +1118,8 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
                                 uint8_t *rz)
 {
 
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ECDH_POINT_ADDITION_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t result[96] = { 0 };
@@ -1108,6 +1145,7 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_ECDH_POINT_ADDITION_INVALID_PARAM, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1119,6 +1157,7 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ECDH_POINT_ADDITION_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1217,6 +1256,7 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ECDH_POINT_ADDITION_COMMON_CMD_IN_PROGRESS, CRYPTO, LOG_ERROR);
     return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
   }
 
@@ -1224,6 +1264,7 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_ECDH_POINT_ADDITION_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1262,7 +1303,8 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
                                    uint8_t *ry,
                                    uint8_t *rz)
 {
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t result[96] = { 0 };
@@ -1290,6 +1332,7 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_INVALID_PARAM, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1301,6 +1344,7 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1399,6 +1443,7 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1406,6 +1451,7 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1442,7 +1488,8 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
                               uint8_t *ry,
                               uint8_t *rz)
 {
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ECDH_POINT_DOUBLE_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t result[96] = { 0 };
@@ -1470,6 +1517,7 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_ECDH_POINT_DOUBLE_INVALID_PARAM, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
     // Allocate command buffer  from wlan pool
@@ -1480,6 +1528,7 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ECDH_POINT_DOUBLE_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1560,6 +1609,7 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ECDH_POINT_DOUBLE_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1567,6 +1617,7 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_ECDH_POINT_DOUBLE_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1602,7 +1653,8 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
                               uint8_t *ry,
                               uint8_t *rz)
 {
-  int32_t status     = RSI_SUCCESS;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_ECDH_POINT_AFFINE_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   uint8_t result[96] = { 0 };
@@ -1630,6 +1682,7 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
     } else {
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      SL_PRINTF(SL_ECDH_POINT_AFFINE_INVALID_PARAM, CRYPTO, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1641,6 +1694,7 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
       // Change common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_ECDH_POINT_AFFINE_PKT_ALLOCATION_FAILURE, CRYPTO, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1721,6 +1775,7 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
 
   else {
     // Return common command error
+    SL_PRINTF(SL_ECDH_POINT_AFFINE_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1728,6 +1783,7 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
   status = rsi_common_get_status();
 
   // Return the status
+  SL_PRINTF(SL_SET_RTC_TIMER_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -1741,5 +1797,880 @@ void reverse_8(unsigned char *xx, int no_digits)
     xx[no_digits - count - 1] = temp;
   }
 }
+
+#ifdef CHIP_9117
+/*==============================================*/
+/**
+ * @fn         rsi_sha3_shake_pen(uint8_t pad_char,uint8_t mode, uint8_t *msg, uint16_t msg_length,
+ *              uint16_t chunk_len, uint8_t pending_flag, uint8_t *digest)
+ * @brief      Computes the sha3/shake digest
+ * @param[in]  pad_char 0x1F SHAKE, 0x06 SHA3 
+ * @param[in]  mode
+ * 				21  - SHAKE_128
+ *				17  - SHAKE_256, SHA3_256
+ *				18  - SHA3_224
+ *				13  - SHA3_384
+ *				9   - SHA3_512
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[in]  chunk_length: current chunk length
+ * @param[in]  pending_flag: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk 
+ * @param[out]  digest:  Output parameter to hold computed digest from SHA3/SHAKE
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function computes the sha3/shake digest for the given input message
+ *
+ */
+int32_t rsi_sha3_shake_pen(uint8_t pad_char,
+                           uint8_t mode,
+                           uint8_t *msg,
+                           uint16_t msg_length,
+                           uint16_t chunk_len,
+                           uint8_t pending_flag,
+                           uint8_t *digest)
+{
+
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  uint8_t digest_len = 0;
+  rsi_pkt_t *pkt;
+
+  //!using same structure for sha3 and shake
+  rsi_sha_req_t *sha3;
+
+  //! Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    //! Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  //! Input pointer check
+  if (msg == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+
+    //! Fill digest length based on sha mode
+    if (mode == SHA3_224) {
+      digest_len = SHA_224_DIGEST_LEN;
+    } else if (mode == SHA3_256 || mode == SHAKE_256) {
+      digest_len = SHA_256_DIGEST_LEN;
+    } else if (mode == SHA3_384) {
+      digest_len = SHA_384_DIGEST_LEN;
+    } else if (mode == SHA3_512) {
+      digest_len = SHA_512_DIGEST_LEN;
+    } else if (mode == SHAKE_128) {
+      digest_len = SHAKE_128_DIGEST_LEN;
+    }
+
+    else {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      return RSI_ERROR_INVALID_PARAM;
+    }
+
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (digest != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = digest;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = digest_len;
+    }
+
+    //! Get Data Pointer
+    sha3 = (rsi_sha_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(sha3, 0, sizeof(rsi_sha_req_t));
+
+    //! Fill Algorithm type SHA3 or SHAKE
+    if (pad_char == PAD_CHAR_SHA3) {
+      sha3->algorithm_type = SHA3;
+    } else {
+      sha3->algorithm_type = SHAKE;
+    }
+
+    sha3->algorithm_sub_type = mode;
+
+    //! Fill sha_flags BIT(0) - 1st chunk BIT(2) - Last chunk
+    sha3->sha_flags = pending_flag;
+
+    //! Fill total msg length
+    sha3->total_msg_length = msg_length;
+
+    //! Fill current chunk length
+    sha3->current_chunk_length = chunk_len;
+
+    //!Data
+    //! Memset before filling
+    memset(&sha3->msg[0], 0, MAX_DATA_SIZE_BYTES);
+
+    //! Copy Data
+    memcpy(&sha3->msg[0], msg, chunk_len);
+
+    //! Using host descriptor to set payload length
+    send_size = sizeof(rsi_sha_req_t) - MAX_DATA_SIZE_BYTES + chunk_len;
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    //! send sha digest computation request to module
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+  }
+
+  else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest) * @brief      Decides whether the sha message can be sent once or requires multiple calls to send
+ * @param[in]  r 
+ * 				21  - SHAKE_128
+ *				17  - SHAKE_256
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[out]  digest:  Output parameter to hold computed digest from SHAKE
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the shakeamessage can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
+{
+  int32_t status     = RSI_SUCCESS;
+  uint16_t total_len = 0;
+  uint16_t chunk_len = 0;
+  uint16_t offset    = 0;
+  uint8_t sha_flags  = 0;
+  uint8_t pad_char   = PAD_CHAR_SHAKE;
+
+  total_len = msg_length;
+
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES) {
+      chunk_len = MAX_DATA_SIZE_BYTES;
+      if (offset == 0) {
+        //! Make sha_flag as first chunk
+        sha_flags |= FIRST_CHUNK;
+      } else {
+        //! Make sha_flag as Middle chunk
+        sha_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len = total_len;
+
+      //! Make sha_flag as Last chunk
+      sha_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero 
+					 then make sha_flag as both first chunk as well as last chunk*/
+        sha_flags |= FIRST_CHUNK;
+      }
+    }
+
+    //! send the current chunk length message
+    status = rsi_sha3_shake_pen(pad_char, mode, msg, msg_length, chunk_len, sha_flags, digest);
+
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+
+    //! Increment the offset value
+    offset += chunk_len;
+    msg += chunk_len;
+
+    //! Decrement the total message lenth
+    total_len -= chunk_len;
+  }
+
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
+ * @brief      Decides whether the sha message can be sent once or requires multiple calls to send
+ * @param[in]  mode 
+ *				17  - SHA3_256
+ *				18  - SHA3_224
+ *				13  - SHA3_384
+ *				9   - SHA3_512
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[out]  digest:  Output parameter to hold computed digest from SHA3
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the sha message can be sent once or requires multiple calls to send the message
+ *
+ */
+
+int32_t rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
+{
+  int32_t status     = RSI_SUCCESS;
+  uint16_t total_len = 0;
+  uint16_t chunk_len = 0;
+  uint16_t offset    = 0;
+  uint8_t sha_flags  = 0;
+  uint8_t pad_char   = PAD_CHAR_SHA3;
+
+  total_len = msg_length;
+
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES) {
+      chunk_len = MAX_DATA_SIZE_BYTES;
+      if (offset == 0) {
+        //! Make sha_flag as first chunk
+        sha_flags |= FIRST_CHUNK;
+      } else {
+        //! Make sha_flag as Middle chunk
+        sha_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len = total_len;
+
+      //! Make sha_flag as Last chunk
+      sha_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero 
+					 then make sha_flag as both first chunk as well as last chunk*/
+        sha_flags |= FIRST_CHUNK;
+      }
+    }
+
+    //! send the current chunk length message
+    status = rsi_sha3_shake_pen(pad_char, mode, msg, msg_length, chunk_len, sha_flags, digest);
+
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+
+    //! Increment the offset value
+    offset += chunk_len;
+    msg += chunk_len;
+
+    //! Decrement the total message lenth
+    total_len -= chunk_len;
+  }
+
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_chachapoly(uint16_t chachapoly_mode, uint16_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint8_t *key_chacha, uint8_t *keyr_in,uint8_t *keys_in, 
+				uint8_t *nonce, uint8_t *header_input, uint16_t header_length, uint8_t *output)
+ * @brief      Decides whether the CHACHAPOLY message can be sent once or requires multiple calls to send
+ * @param[in]  chacha_mode : 0 – For CHACHA20POLY1305 mode 1 – For CHACHA20 mode 3 – For POLY1305 mode 
+ * @param[in]  enc_dec: 0 – For CHACHAPOLY Encryption 1 – For CHACHAPOLY Decryption 
+ * @param[in]  dma_use: 1 - DMA enable  0- disable DMA 
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[in]  key_chacha: Pointer to chacha key
+ * @param[in]  keyr_in: pointer to keyr_in
+ * @param[in]  keys_in: pointer to keys_in
+ * @param[in]  nonce: pointer to nonce (1st index is IV)
+ * @param[in]  header_input: Pointer to header
+ * @param[in]  header_length: header length in bytes
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from chachapoly
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the chachapoly message can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_chachapoly(uint16_t chachapoly_mode,
+                       uint16_t enc_dec,
+                       uint16_t dma_use,
+                       uint8_t *msg,
+                       uint16_t msg_length,
+                       uint8_t *key_chacha,
+                       uint8_t *keyr_in,
+                       uint8_t *keys_in,
+                       uint8_t *nonce,
+                       uint8_t *header_input,
+                       uint16_t header_length,
+                       uint8_t *output)
+{
+
+  uint16_t total_len       = 0;
+  uint16_t chunk_len       = 0;
+  uint16_t offset          = 0;
+  uint8_t chachapoly_flags = 0;
+  int32_t status           = RSI_SUCCESS;
+
+  total_len = msg_length;
+
+  //! Input pointer check
+  if (msg == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES) {
+      chunk_len = MAX_DATA_SIZE_BYTES;
+      if (offset == 0) {
+        //! Make chachapoly_flags as first chunk
+        chachapoly_flags |= FIRST_CHUNK;
+      } else {
+        //! Make chachapoly_flags as Last chunk
+        chachapoly_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len        = total_len;
+      chachapoly_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero 
+					 then make chachapoly_flags as both first chunk as well as last chunk*/
+        chachapoly_flags |= FIRST_CHUNK;
+      }
+    }
+
+    //! send the current chunk length message
+    status = rsi_chachapoly_pen(chachapoly_mode,
+                                enc_dec,
+                                dma_use,
+                                msg,
+                                msg_length,
+                                chunk_len,
+                                key_chacha,
+                                keyr_in,
+                                keys_in,
+                                nonce,
+                                header_input,
+                                header_length,
+                                chachapoly_flags,
+                                output);
+
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+
+    //! Increment the offset value
+    offset += chunk_len;
+    msg += chunk_len;
+
+    //! Decrement the total message lenth
+    total_len -= chunk_len;
+  }
+
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_chachapoly_pen(uint16_t chachapoly_mode, uint16_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length,uint16_t chunk_len, uint8_t *key_chacha, uint8_t *keyr_in,uint8_t *keys_in, 
+				uint8_t *nonce, uint8_t *header_input, uint16_t header_length,uint8_t chachapoly_flags,uint8_t *output)
+ * @brief      Encrypt/Decrypt the data using CHACHA_POLY
+ * @param[in]  chacha_mode : 0 – For CHACHA20POLY1305 mode 1 – For CHACHA20 mode 3 – For POLY1305 mode 
+ * @param[in]  enc_dec: 0 – For CHACHAPOLY Encryption 1 – For CHACHAPOLY Decryption 
+ * @param[in]  dma_use: 0 - DMA disable  1- DMA enable
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[in]  chunk_len: current chunk length
+ * @param[in]  key_chacha: Pointer to chacha key
+ * @param[in]  keyr_in: pointer to keyr_in
+ * @param[in]  keys_in: pointer to keys_in
+ * @param[in]  nonce: pointer to nonce (1st index is IV)
+ * @param[in]  header_input: Pointer to header
+ * @param[in]  header_length: header length in bytes
+ * @param[in]  chachapoly_flags: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk 
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from chachapoly
+ *   @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function encrypt/decrypt the data using CHACHAPOLY
+ *
+ */
+int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
+                           uint16_t enc_dec,
+                           uint16_t dma_use,
+                           uint8_t *msg,
+                           uint16_t msg_length,
+                           uint16_t chunk_len,
+                           uint8_t *key_chacha,
+                           uint8_t *keyr_in,
+                           uint8_t *keys_in,
+                           uint8_t *nonce,
+                           uint8_t *header_input,
+                           uint16_t header_length,
+                           uint8_t chachapoly_flags,
+                           uint8_t *output)
+{
+
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  rsi_pkt_t *pkt;
+  rsi_chachapoly_req_t *chachapoly;
+
+  //! Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  //!check for valid mode
+  if (chachapoly_mode > 3) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  //! check for proper key
+  if (chachapoly_mode == CHACHAPOLY_MODE_POLY1305_KEYR_KEYS) {
+    if ((keyr_in == NULL) || (keys_in == NULL))
+      return RSI_ERROR_INVALID_PARAM;
+  } else if (chachapoly_mode == CHACHA20POLY1305 || chachapoly_mode == CHACHA20) {
+    if (key_chacha == NULL || nonce == NULL)
+      return RSI_ERROR_INVALID_PARAM;
+  } else {
+    if ((keyr_in == NULL) || (keys_in == NULL))
+      return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (output != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = output;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = msg_length + TAG_SIZE;
+    }
+
+    //! Get Data Pointer
+    chachapoly = (rsi_chachapoly_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(chachapoly, 0, sizeof(rsi_chachapoly_req_t));
+
+    //! Fill Algorithm type CHACHAPOLY - 17
+    chachapoly->algorithm_type = CHACHAPOLY;
+
+    //! Fill Algorithm subtype
+    chachapoly->algorithm_sub_type = chachapoly_mode;
+
+    //! Fill enc_dec: 0 – For chachapoly Encryption 1 – For chachapoly Decryption
+    chachapoly->encrypt_decryption = enc_dec;
+
+    //! Fill the DMA
+    chachapoly->dma_use = dma_use;
+
+    //! Fill chachapoly_flags BIT(0) - 1st chunk BIT(1)-Middle chunk BIT(2) - Last chunk
+    chachapoly->chachapoly_flags = chachapoly_flags;
+
+    //! Fill msg length
+    chachapoly->total_msg_length = msg_length;
+
+    //! Fill chunk length
+    chachapoly->current_chunk_length = chunk_len;
+
+    //!Fill header length
+    chachapoly->header_length = header_length;
+
+    //!memset header before filling
+    memset(&chachapoly->header_input[0], 0, header_length);
+
+    //!copy the header input
+    memcpy(&chachapoly->header_input[0], header_input, header_length);
+
+    if (chachapoly_mode == CHACHA20POLY1305 || chachapoly_mode == CHACHA20
+        || chachapoly_mode == CHACHAPOLY_MODE_POLY1305_KEYR_KEYS) {
+      //!Keychacha
+      //! Memset before filling
+      memset(&chachapoly->key_chacha[0], 0, KEY_CHACHA_SIZE);
+
+      //! Copy KEY chacha
+      memcpy(&chachapoly->key_chacha[0], key_chacha, KEY_CHACHA_SIZE);
+
+      //!Nonce
+      //!Memset before filling
+      memset(&chachapoly->nonce[0], 0, NONCE_SIZE);
+
+      //! Copy the Nonce
+      memcpy(&chachapoly->nonce[0], nonce, NONCE_SIZE);
+    }
+
+    if (chachapoly_mode == CHACHAPOLY_MODE_POLY1305_KEYR_KEYS || chachapoly_mode == POLY1305_MODE) {
+      //!KEYR and KEYS
+      //! Memset before filling
+      memset(&chachapoly->keyr_in[0], 0, KEYR_SIZE);
+      memset(&chachapoly->keys_in[0], 0, KEYS_SIZE);
+
+      //! Copy keyr and keys
+      memcpy(&chachapoly->keyr_in[0], keyr_in, KEYR_SIZE);
+      memcpy(&chachapoly->keys_in[0], keys_in, KEYS_SIZE);
+    }
+
+    //!Data
+    //! Memset before filling
+    memset(&chachapoly->msg[0], 0, MAX_DATA_SIZE_BYTES);
+
+    //! Copy Data
+    memcpy(&chachapoly->msg[0], msg, chunk_len);
+
+    //! Using host descriptor to set payload length
+    send_size = sizeof(rsi_chachapoly_req_t) - MAX_DATA_SIZE_BYTES + chunk_len;
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    //! send chachapoly encrypt/decrypt request to module
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  }
+
+  else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+/*==============================================*/
+/**
+ * @fn         rsi_gcm(uint8_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint8_t *key, 
+ * 				uint16_t key_length, uint8_t *iv,uint8_t iv_sz,uint8_t *header,uint16_t header_length, uint8_t *output,uint8_t tag_out)
+ * @brief      Decides whether the GCM message can be sent once or requires multiple calls to send
+ * @param[in]  enc_dec: 0 – For GCM Encryption 1 – For GCM Decryption 
+ * @param[in]  dma_use: 0 - DMA disable   1: DMA Enable
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[in]  key: Pointer to GCM key
+ * @param[in]  key_length: GCM key length in bits
+ * @param[in]  iv: Pointer to GCM iv
+ * @params[in] iv_sz:size of IV
+ * @param[in]  header:pointer to header
+ * @param[in]	header_length: Total length of header
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from GCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the GCM message can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_gcm(uint8_t enc_dec,
+                uint16_t dma_use,
+                uint8_t *msg,
+                uint16_t msg_length,
+                uint8_t *key,
+                uint16_t key_length,
+                uint8_t *iv,
+                uint16_t iv_sz,
+                uint8_t *header,
+                uint16_t header_length,
+                uint8_t *output)
+{
+
+  uint16_t total_len = 0;
+  uint16_t chunk_len = 0;
+  uint16_t offset    = 0;
+  uint8_t gcm_flags  = 0;
+  int32_t status     = RSI_SUCCESS;
+
+  total_len = msg_length;
+
+  //! Input pointer check
+  if (msg == NULL || header == NULL || iv == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES) {
+      chunk_len = MAX_DATA_SIZE_BYTES;
+      if (offset == 0) {
+        //! Make gcm_flags as first chunk
+        gcm_flags |= FIRST_CHUNK;
+      } else {
+        //! Make gcm_flags as Last chunk
+        gcm_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len = total_len;
+      gcm_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero 
+					 then make gcm_flags as both first chunk as well as last chunk*/
+        gcm_flags |= FIRST_CHUNK;
+      }
+    }
+
+    //! send the current chunk length message
+    status = rsi_gcm_pen(enc_dec,
+                         dma_use,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key,
+                         key_length,
+                         iv,
+                         iv_sz,
+                         header,
+                         header_length,
+                         gcm_flags,
+                         output);
+
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+
+    //! Increment the offset value
+    offset += chunk_len;
+    msg += chunk_len;
+
+    //! Decrement the total message lenth
+    total_len -= chunk_len;
+  }
+
+  return status;
+}
+/*==============================================*/
+/**
+ * @fn         rsi_gcm_pen(uint8_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint16_t chunk_length, uint8_t *key, uint16_t key_length,
+ * 											uint8_t *iv,uint16_t iv_sz, uint8_t *header,uint16_t header_length, uint8_t gcm_flags, uint8_t *output, uint8_t *tag_out)
+ * @brief      Encrypt/Decrypt the data using GCM
+ * @param[in]  enc_dec: 0 – For GCM Encryption 1 – For GCM Decryption 
+ * @param[in]  dma_use: 0 - DMA disable   1 - DMA Enable
+ * @param[in]  msg: Pointer to message 
+ * @param[in]  msg_length: Total message length
+ * @param[in]  chunk_length: current chunk length
+ * @param[in]  key: Pointer to GCM key
+ * @param[in]  key_length: GCM key length in bits
+ * @param[in]  iv: Pointer to GCM iv
+ * @params[in] iv_sz: size of IV
+ * @param[in]  header:pointer to header
+ * @param[in]  header_length: Total length of header
+ * @param[in]  gcm_flags: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk 
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from GCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function encrypt/decrypt the data using GCM
+ *
+ */
+int32_t rsi_gcm_pen(uint8_t enc_dec,
+                    uint16_t dma_use,
+                    uint8_t *msg,
+                    uint16_t msg_length,
+                    uint16_t chunk_length,
+                    uint8_t *key,
+                    uint16_t key_length,
+                    uint8_t *iv,
+                    uint16_t iv_sz,
+                    uint8_t *header,
+                    uint16_t header_length,
+                    uint8_t gcm_flags,
+                    uint8_t *output)
+{
+
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  rsi_pkt_t *pkt;
+  rsi_gcm_req_t *gcm;
+
+  //! Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  //! Check IV size for gcm
+  //!Return error if IV size if not 12 bytes/96 bits
+
+  if (iv_sz != GCM_IV_SIZE_IN_BYTES) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (output != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = output;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = msg_length + TAG_SIZE;
+    }
+
+    //! Get Data Pointer
+    gcm = (rsi_gcm_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(gcm, 0, sizeof(rsi_gcm_req_t));
+
+    //! Fill Algorithm type GCM - 18
+    gcm->algorithm_type = GCM;
+
+    //! Fill enc_dec: 0 – For GCM Encryption 1 – For GCM Decryption
+    gcm->encrypt_decryption = enc_dec;
+
+    //! Fill the DMA
+    gcm->dma_use = dma_use;
+
+    //! Fill aes_flags BIT(0) - 1st chunk BIT(1)- Middle chunk BIT(2) - Last chunk
+    gcm->gcm_flags = gcm_flags;
+
+    //! Fill msg length
+    gcm->total_msg_length = msg_length;
+
+    //! Fill chunk length
+    gcm->current_chunk_length = chunk_length;
+
+    //! Fill key length
+    gcm->key_length = key_length;
+
+    //!KEY
+    //! Memset before filling
+    memset(&gcm->key[0], 0, key_length);
+
+    //! Copy KEY
+    memcpy(&gcm->key[0], key, key_length);
+
+    //!IV
+    //! Memset before filling
+    memset(&gcm->IV[0], 0, GCM_IV_SIZE_IN_BYTES);
+
+    //! Copy IV
+    memcpy(&gcm->IV[0], iv, GCM_IV_SIZE_IN_BYTES);
+
+    //!Fill the header length
+    gcm->header_length = header_length;
+
+    //!Header
+    //!Memset before filling
+    memset(&gcm->header[0], 0, header_length);
+
+    //!Copy header
+    memcpy(&gcm->header[0], header, header_length);
+
+    //!Data
+    //! Memset before filling
+    memset(&gcm->msg[0], 0, MAX_DATA_SIZE_BYTES);
+
+    //! Copy Data
+    memcpy(&gcm->msg[0], msg, chunk_length);
+
+    //! Using host descriptor to set payload length
+    send_size = sizeof(rsi_gcm_req_t) - MAX_DATA_SIZE_BYTES + chunk_length;
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    //! send aes encrypt/decrypt request to module
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+  }
+
+  else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+
+#endif
 
 #endif

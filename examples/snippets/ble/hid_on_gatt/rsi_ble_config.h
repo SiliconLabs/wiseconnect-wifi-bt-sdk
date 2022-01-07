@@ -208,4 +208,31 @@
 #define INITIATOR_KEYS_TO_DIST (ENC_KEY_DIST | SIGN_KEY_DIST)
 #endif
 
+/***********************************************************************************************************************************************/
+//! RS9116 Firmware Configurations
+/***********************************************************************************************************************************************/
+
+/*=======================================================================*/
+//! Opermode command parameters
+/*=======================================================================*/
+
+#define RSI_FEATURE_BIT_MAP \
+  (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1) //! To set wlan feature select bit map
+#define RSI_TCP_IP_BYPASS RSI_DISABLE                           //! TCP IP BYPASS feature check
+#define RSI_TCP_IP_FEATURE_BIT_MAP \
+  (TCP_IP_FEAT_DHCPV4_CLIENT) //! TCP/IP feature select bitmap for selecting TCP/IP features
+#define RSI_EXT_TCPIP_FEATURE_BITMAP 0
+
+#define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
+
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+
+#define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE | ENABLE_BLE_PROTOCOL)
+
+/*=======================================================================*/
+//! Power save command parameters
+/*=======================================================================*/
+//! set handshake type of power mode
+#define RSI_HAND_SHAKE_TYPE GPIO_BASED
+
 #endif

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -21,8 +21,8 @@
 /*================================================================================
  * @brief : This file contains example application for WLAN Station BLE Bridge
  * @section Description :
- * This Application explains user how to Create Redpine device as Station,Connect
- * Redpine station to remote Access point, Receive TCP data sent by connected
+ * This Application explains user how to Create SiLabs device as Station,Connect
+ * SiLabs station to remote Access point, Receive TCP data sent by connected
  * station and forward to BLE task, Send data received by BLE task to connected
  * station using TCP over SSL client protocol
  =================================================================================*/

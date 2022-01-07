@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,7 +17,7 @@
 /**
  * @file    rsi_spp_master_slave.c
  * @version 0.1
- * @date    01 Feb 2020
+ * @date    01 Feb 2021
  *
  *
  *
@@ -62,6 +62,12 @@ static uint16_t data_len;
 static uint8_t linkkey[RSI_LINKKEY_REPLY_SIZE];
 volatile bool bt_connected = 0;
 
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+static uint8_t inq_responses_count;
+uint8_t rsi_inq_resp_list[MAX_NO_OF_RESPONSES][RSI_DEV_ADDR_LEN] = { 0 };
+uint8_t rsi_inq_resp_list_name_length[MAX_NAME_LENGTH]           = { 0 };
+static uint8_t inq_resp_name_length_index;
+#endif
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
@@ -403,6 +409,86 @@ void rsi_bt_on_confirm_request(uint16_t resp_status,
   LOG_PRINT("data: %s", user_confirmation_request->confirmation_value);
 }
 
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+/*==============================================*/
+/**
+ * @fn         rsi_bt_inq_response
+ * @brief      invoked when bt inquiry response is received
+ * @param[out] status - status of inquiry
+ *        resp_event - bt inquiry response
+ * @param[out] none
+ * @return     none.
+ * @section description
+ * This callback function invoked when remote bt inquiry response is received
+ */
+void rsi_bt_inq_response(uint16_t status, rsi_bt_event_inquiry_response_t *resp_event)
+{
+  uint8_t tmp_str_addr[BD_ADDR_ARRAY_LEN] = { 0 };
+  if (status != 0) {
+    return;
+  }
+  rsi_6byte_dev_address_to_ascii(tmp_str_addr, resp_event->dev_addr);
+
+  memcpy(&rsi_inq_resp_list[inq_responses_count][0],
+         rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, (int8_t *)tmp_str_addr),
+         RSI_DEV_ADDR_LEN);
+  rsi_inq_resp_list_name_length[inq_responses_count++] = resp_event->name_length;
+  LOG_PRINT("\r\n inq_type : %d, Bdaddr : %s, class : %d%d%d, rssi : %d, name : %s ",
+            resp_event->inquiry_type,
+            tmp_str_addr,
+            resp_event->cod[0],
+            resp_event->cod[1],
+            resp_event->cod[2],
+            resp_event->rssi,
+            (resp_event->name_length) ? resp_event->remote_device_name : NULL);
+}
+/*==============================================*/
+/**
+ * @fn         rsi_remote_name_response
+ * @brief      invoked when remote name request is called
+ * @param[out] status - status of remote name request
+ *        remote_name_response_event - remote name response.
+ * @param[out] none
+ * @return     none.
+ * @section description
+ * This callback function invoked when remote name request initiated in application
+ */
+void rsi_remote_name_response(uint16_t status, rsi_bt_event_remote_device_name_t *remote_name_response_event)
+{
+  uint8_t tmp_str_addr[BD_ADDR_ARRAY_LEN] = { 0 };
+  if (status != 0) {
+    LOG_PRINT("\r\n Remote name response error with status : %x", status);
+  } else {
+    LOG_PRINT("\r\n remote name response received \n");
+    rsi_6byte_dev_address_to_ascii(tmp_str_addr, remote_name_response_event->dev_addr);
+    LOG_PRINT("\r\n Bdaddr : %s, name_length : %d, name : %s\n ",
+              tmp_str_addr,
+              remote_name_response_event->name_length,
+              remote_name_response_event->remote_device_name);
+  }
+  inq_resp_name_length_index++;
+  rsi_bt_app_set_event(RSI_APP_EVENT_REMOTE_NAME_REQ);
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_bt_inquiry_complete
+ * @brief      invoked when bt inquiry is completed
+ * @param[out] status - status of inquiry
+ * @param[out] none
+ * @return     none.
+ * @section description
+ * This callback function invoked when remote bd addresses inquiry is completed
+ */
+void rsi_bt_inquiry_complete(uint16_t status)
+{
+  if (status != 0) {
+    LOG_PRINT("\r\n Inq complete error with status : %x", status);
+  }
+  LOG_PRINT("\r\n Inq completed \n");
+  rsi_bt_app_set_event(RSI_APP_EVENT_REMOTE_NAME_REQ);
+}
+#endif
 /*==============================================*/
 /**
  * @fn         rsi_bt_app_on_spp_data_rx
@@ -481,14 +567,23 @@ int32_t rsi_bt_spp_task(void)
                                 rsi_bt_app_on_conn,
                                 NULL, //
                                 rsi_bt_app_on_disconn,
-                                NULL,                      //scan_resp
-                                NULL,                      //remote_name_req
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+                                rsi_bt_inq_response,      //NULL, //scan_resp
+                                rsi_remote_name_response, //NULL, //remote_name_req
+#else
+                                NULL,
+                                NULL,
+#endif
                                 rsi_bt_on_passkey_display, //passkey_display
                                 NULL,                      //remote_name_req+cancel
                                 rsi_bt_on_confirm_request, //confirm req
                                 rsi_bt_app_on_pincode_req,
                                 rsi_bt_on_passkey_request, //passkey request
-                                NULL,                      //inquiry complete
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+                                rsi_bt_inquiry_complete, //NULL, //inquiry complete
+#else
+                                NULL,
+#endif
                                 rsi_bt_app_on_auth_complete,
                                 rsi_ble_app_on_linkkey_req, //linkkey request
                                 rsi_bt_on_ssp_complete,     //ssp coplete
@@ -582,7 +677,22 @@ int32_t rsi_bt_spp_task(void)
 
   //! register the SPP profile callback's
   rsi_bt_spp_register_callbacks(rsi_bt_app_on_spp_connect, rsi_bt_app_on_spp_disconnect, rsi_bt_app_on_spp_data_rx);
-#if (SPP_MODE == SPP_MASTER)
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+  if (rsi_ble_running) {
+    rsi_semaphore_wait(&bt_inquiry_sem, 0);
+    //! wait for 5sec before starting bt inquiry
+    rsi_delay_ms(5000);
+  }
+  inq_responses_count = 0;
+  //! Start inquiry
+  status = rsi_bt_inquiry(INQUIRY_TYPE, INQUIRY_DURATION, MAX_NO_OF_RESPONSES);
+  if (status != 0) {
+    LOG_PRINT("\r\n Inquiry started failed with status : %x \n", status);
+  }
+  LOG_PRINT("\r\n Inquiry started with duration : %d \n", INQUIRY_DURATION);
+#endif
+
+#if ((SPP_MODE == SPP_MASTER) && (!INQUIRY_ENABLE))
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
     return status;
@@ -715,7 +825,9 @@ int32_t rsi_bt_spp_task(void)
           rsi_semaphore_post(&bt_wlan_throughput_sync_sem);
           bt_wlan_sync_done = 1;
 #endif
+#if BT_SPP_CONNECT_ONLY
           rsi_task_suspend(NULL);
+#endif
 #endif
 #if WLAN_THROUGHPUT_TEST
         }
@@ -728,7 +840,7 @@ int32_t rsi_bt_spp_task(void)
         rsi_bt_spp_transfer(remote_dev_addr, data, data_len);
 #else
         strcpy((char *)data, "spp_test_sample_1");
-        spp_tx_data_len       = strlen((char *)data);
+        spp_tx_data_len = strlen((char *)data);
         data[spp_tx_data_len] = (tx_ix++) % 10;
         LOG_PRINT("tx_ix: %d\r\n", tx_ix);
         status = rsi_bt_spp_transfer(remote_dev_addr, data, strlen(data));
@@ -758,6 +870,58 @@ int32_t rsi_bt_spp_task(void)
         rsi_bt_accept_ssp_confirm(remote_dev_addr);
 
       } break;
+
+#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+      case RSI_APP_EVENT_REMOTE_NAME_REQ: {
+        rsi_bt_app_clear_event(RSI_APP_EVENT_REMOTE_NAME_REQ);
+        uint8_t inq_triggered = 0;
+        for (; inq_resp_name_length_index < inq_responses_count; inq_resp_name_length_index++) {
+          if (!rsi_inq_resp_list_name_length[inq_resp_name_length_index]) {
+            inq_triggered = 1;
+            status        = rsi_bt_remote_name_request_async(&rsi_inq_resp_list[inq_resp_name_length_index][0], NULL);
+            if (status != RSI_SUCCESS) {
+              LOG_PRINT("\r\n status= %x Remote name request failed \n", status);
+            } else {
+              LOG_PRINT("\r\n Remote Name Requested Succesfully, Response will come asynchronously\n");
+            }
+            break;
+          }
+        }
+        if (!inq_triggered)
+          rsi_bt_app_set_event(RSI_APP_EVENT_INQUIRY_COMPLT);
+      } break;
+
+      case RSI_APP_EVENT_INQUIRY_COMPLT: {
+        rsi_bt_app_clear_event(RSI_APP_EVENT_INQUIRY_COMPLT);
+        uint8_t bt_device_found = 0;
+        //! Check in all devices, whether the intended slave is present or not.
+        for (int i = 0; i < inq_responses_count; i++) {
+          if (memcmp(&rsi_inq_resp_list[i][0],
+                     rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR),
+                     RSI_DEV_ADDR_LEN)
+              == 0) {
+            bt_device_found = 1;
+            break;
+          }
+        }
+        if (bt_device_found) {
+          status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR));
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n rsi_bt_connect failed : %x \n", status);
+          }
+          LOG_PRINT("bt_conn resp is 0x%x \n", status);
+        } else {
+          inq_responses_count        = 0;
+          inq_resp_name_length_index = 0;
+          //! Start inquiry again
+          status = rsi_bt_inquiry(INQUIRY_TYPE, INQUIRY_DURATION, MAX_NO_OF_RESPONSES);
+          if (status != 0) {
+            LOG_PRINT("\r\n Inquiry started failed with status : %x \n", status);
+          }
+          LOG_PRINT("\r\n Inquiry started with duration : %d \n", INQUIRY_DURATION);
+        }
+      } break;
+#endif
       default: {
       }
     }

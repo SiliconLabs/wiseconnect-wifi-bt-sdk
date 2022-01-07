@@ -22,7 +22,7 @@
  *
  *  @section Licenseremote_name
  *  This program should be used on your own responsibility.
- *  Redpine Signals assumes no responsibility for any losses
+ *  SiLabs Signals assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contains code to create multiple task instances and handling of ble events
@@ -1142,6 +1142,21 @@ static void rsi_ble_on_read_req_event(uint16_t event_id, rsi_ble_read_req_t *rsi
   rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_READ_REQ_EVENT);
 }
 
+static void rsi_ble_on_event_mtu_exchange_info(
+  rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info)
+{
+  //! convert to ascii
+  rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_event_mtu_exchange_info->dev_addr);
+  ble_conn_id = rsi_get_ble_conn_id(remote_dev_addr_conn, NULL, 0);
+  //! copy to conn specific buffer
+  memcpy(&rsi_ble_conn_info[ble_conn_id].mtu_exchange_info,
+         rsi_ble_event_mtu_exchange_info,
+         sizeof(rsi_ble_event_mtu_exchange_information_t));
+
+  //! set conn specific event
+  rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_MTU_EXCHANGE_INFORMATION);
+}
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_mtu_event
@@ -1667,6 +1682,7 @@ static int32_t rsi_ble_dual_role(void)
                                   rsi_ble_on_event_indication_confirmation,
                                   NULL);
 
+  rsi_ble_gatt_extended_register_callbacks(rsi_ble_on_event_mtu_exchange_info);
   rsi_ble_gap_extended_register_callbacks(rsi_ble_simple_peripheral_on_remote_features_event,
                                           rsi_ble_more_data_req_event);
 

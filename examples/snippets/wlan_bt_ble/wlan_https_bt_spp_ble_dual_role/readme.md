@@ -20,6 +20,8 @@ Before running the application, the user will need the following things to setup
 - Windows PC with Host interface(UART/ SPI) in case of WiSeConnect.
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
+   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+   - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
    - [STM32F411 Nucleo](https://st.com/)    
 - Wireless Access Point
 - Smart phone/tablet with BT Application (Ex: Bluetooth SPP Manager App)
@@ -50,11 +52,13 @@ Before running the application, the user will need the following things to setup
 
 TThe Application can be built and executed on below Host platforms
 * [STM32F411 Nucleo](https://st.com/)
+* Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+* Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
 
-* By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-* The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
 
@@ -64,6 +68,19 @@ The Application is provided with the project folder containing Keil project file
   - The Keil project is used to evaluate the application on STM32.
   - Project path: `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-nucleo-f411re.uvprojx`
 
+* Simplicity Studio
+  - The Simplicity Studio project is used to evaluate the application on EFR32MG21.
+  - Project path: 
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-brd4180a-mg21.slsproj`
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-brd4180b-mg21.slsproj`
+        - User can find the Radio Board version as given below 
+
+![EFR Radio Boards](resources/readme/image7a.png)
+
+ - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+      - Project path:`<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-brd2204a-gg11.slsproj`
+	  
 ### 3.4 RTOS Support
 
 The Application supports both FreeRTOS. By default, the application project files (Keil) are provided with RTOS enabled in the SDK. So the application can be tested/validated under OS environment. 
@@ -360,7 +377,7 @@ Follow the below steps for the successful execution of the application.
 
 Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK. The firmware binary is located in `<SDK>/firmware/`
 
-### 5.2 Building the Application on the STM32 Host Platform
+### 5.2.1 Building the Application on the STM32 Host Platform
 
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
@@ -370,6 +387,20 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Check for the RESET pin:
   - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
   - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run.
+- Free run the project
+- Then continue the common steps from **Section 5.3**
+
+#### 5.2.2 Using EFX32
+
+Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+
+- Import the project from `<SDK>/examples/snippets/wlan_bt_ble/wlan_throughput_bt_spp_ble_dual_role/projects`
+- Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3**
+- Compile and flash the project in to Host MCU
+- Debug the project
+- Check for the RESET pin:
+  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

@@ -166,7 +166,7 @@ typedef enum rsi_bt_cmd_request_e {
   RSI_BT_REQ_HFP_SPKGAIN                  = 0x0037,
   RSI_BT_REQ_HFP_MICGAIN                  = 0x0038,
   RSI_BT_REQ_HFP_GETCALLS                 = 0x0039,
-  RSI_BT_REQ_HFP_AUDIO                    = 0x003A,
+  RSI_BT_REQ_HFP_AUDIOTRANSFER            = 0x003A,
 
   RSI_BT_REQ_PBAP_CONNECT    = 0x003B,
   RSI_BT_REQ_PBAP_DISCONNECT = 0x003C,
@@ -185,6 +185,8 @@ typedef enum rsi_bt_cmd_request_e {
   RSI_BT_REQ_ENABLE_AUTH  = 0x0046,
   RSI_BT_REQ_ENABLE_ENC   = 0x0047,
   RSI_BT_REQ_DEL_LINKKEYS = 0x0048,
+
+  RSI_BT_REQ_HFP_AUDIODATA = 0x0049,
 
   RSI_BT_REQ_LINKKEY_REPLY        = 0x0091,
   RSI_BT_REQ_PER_TX               = 0x0098,
@@ -508,6 +510,8 @@ typedef enum rsi_bt_event_e {
   RSI_BT_EVT_HFP_ROAMINGSTATUS         = 0x1412,
   RSI_BT_EVT_HFP_CALLSETUP             = 0x1413,
   RSI_BT_EVT_HFP_CALLHELDSTATUS        = 0x1414,
+  RSI_BT_EVT_HFP_VOICE_DATA            = 0x1415,
+  RSI_BT_EVT_HFP_AUDIO_CODECSELECT     = 0x1416,
 
   /*PBAP profile Event ID's*/
   RSI_BT_EVT_PBAP_CONN    = 0x1450,
@@ -911,9 +915,16 @@ typedef struct rsi_bt_req_hfp_getcalls_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
 } rsi_bt_req_hfp_getcalls_t;
 
+typedef struct rsi_bt_req_hfp_audiotransfer_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint8_t audio_trans_state;
+} rsi_bt_req_hfp_audiotransfer_t;
+
 // HFP profile command
 typedef struct rsi_bt_req_hfp_audio_s {
-  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint16_t conn_handle;
+  uint8_t len;
+  uint8_t encoded_data[60];
 } rsi_bt_req_hfp_audio_t;
 
 // PBAP Connect command
@@ -1091,6 +1102,8 @@ struct rsi_bt_classic_cb_s {
   rsi_bt_app_on_hfp_roamingstatus_t bt_on_hfp_roamingstatus_event;
   rsi_bt_app_on_hfp_callsetup_t bt_on_hfp_callsetup_event;
   rsi_bt_app_on_hfp_callheld_t bt_on_hfp_callheld_event;
+  rsi_bt_app_on_hfp_voice_data_t bt_on_hfp_voice_data_event;
+  rsi_bt_app_on_hfp_audio_codecselect_t bt_on_hfp_audio_codecselect_event;
 
   //PBAP call backs
   rsi_bt_on_pbap_connect_t bt_on_pbap_connect_event;

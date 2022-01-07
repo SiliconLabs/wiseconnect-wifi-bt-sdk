@@ -61,6 +61,7 @@ int32_t rsi_web_socket_create(int8_t flags,
 {
 
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WEB_SOCKET_CREATE_ENTRY, NETWORK, LOG_INFO);
   int32_t sockID, protocolFamily = 0, protocol = 0;
   rsi_pkt_t *pkt = NULL;
   rsi_req_socket_t *socket_create;
@@ -72,6 +73,7 @@ int32_t rsi_web_socket_create(int8_t flags,
 #ifdef RSI_WITH_OS
     rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_1, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -90,6 +92,7 @@ int32_t rsi_web_socket_create(int8_t flags,
   // Create socket
   sockID = rsi_socket_async(protocolFamily, SOCK_STREAM, protocol, web_socket_data_receive_notify_callback);
   if (sockID < 0) {
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_2, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -128,6 +131,7 @@ int32_t rsi_web_socket_create(int8_t flags,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_EXIT_1, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -162,6 +166,7 @@ int32_t rsi_web_socket_create(int8_t flags,
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+      SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_3, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -171,6 +176,7 @@ int32_t rsi_web_socket_create(int8_t flags,
 #ifdef RSI_WITH_OS
       rsi_set_os_errno(RSI_ERROR_EINVAL);
 #endif
+      SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_4, NETWORK, LOG_ERROR);
       return RSI_SOCK_ERROR;
     }
   }
@@ -183,6 +189,7 @@ int32_t rsi_web_socket_create(int8_t flags,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_5, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
 
@@ -255,9 +262,19 @@ int32_t rsi_web_socket_create(int8_t flags,
   // Set waiting socket ID
   rsi_driver_cb->wlan_cb->waiting_socket_id = sockID;
   socket_create->vap_id                     = rsi_socket_pool_non_rom[sockID].vap_id;
+
+#ifdef CHIP_9117
+  rsi_uint16_to_2bytes(socket_create->tos, RSI_TOS);
+
+  // Configure SSL extended ciphers bitmap
+  socket_create->ssl_ext_ciphers_bitmap = RSI_SSL_EXT_CIPHERS;
+#else
   rsi_uint32_to_4bytes(socket_create->tos, RSI_TOS);
-  // Configure ssl_ciphers_bitmap
+#endif
+
+  // Configure SSL ciphers bitmap
   socket_create->ssl_ciphers_bitmap = RSI_SSL_CIPHERS;
+
   if (rsi_socket_pool_non_rom[sockID].max_tcp_retries) {
     socket_create->max_tcp_retries_count = rsi_socket_pool_non_rom[sockID].max_tcp_retries;
   } else {
@@ -270,9 +287,12 @@ int32_t rsi_web_socket_create(int8_t flags,
   }
   if (rsi_socket_pool_non_rom[sockID].ssl_bitmap) {
     socket_create->ssl_bitmap = rsi_socket_pool_non_rom[sockID].ssl_bitmap;
-  } else if (socket_create->socket_bitmap & RSI_SOCKET_FEAT_SSL) {
+  }
+#ifndef BSD_COMPATIBILITY
+  else if (socket_create->socket_bitmap & RSI_SOCKET_FEAT_SSL) {
     socket_create->ssl_bitmap = rsi_wlan_cb_non_rom->tls_version;
   }
+#endif
   if (rsi_socket_pool_non_rom[sockID].high_performance_socket) {
     socket_create->ssl_bitmap |= RSI_HIGH_PERFORMANCE_SOCKET;
   }
@@ -293,6 +313,7 @@ int32_t rsi_web_socket_create(int8_t flags,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_SOCK_ERROR_6, NETWORK, LOG_ERROR);
     return RSI_SOCK_ERROR;
   }
   // Get WLAN/network command response status
@@ -300,7 +321,7 @@ int32_t rsi_web_socket_create(int8_t flags,
   if (status == RSI_SUCCESS) {
     // Change state to connected
     rsi_socket_pool[sockID].sock_state = RSI_SOCKET_STATE_CONNECTED;
-
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_EXIT_2, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   } else {
     rsi_shutdown(sockID, 0);
@@ -308,6 +329,7 @@ int32_t rsi_web_socket_create(int8_t flags,
     status = rsi_get_error(sockID);
     rsi_set_os_errno(status);
 #endif
+    SL_PRINTF(SL_WEB_SOCKET_CREATE_EXIT9, NETWORK, LOG_INFO, "status: %4x", status);
     return status;
   }
 }
@@ -328,13 +350,13 @@ int32_t rsi_web_socket_create(int8_t flags,
 int32_t rsi_web_socket_send_async(int32_t sockID, uint8_t opcode, int8_t *msg, int32_t msg_length)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WEB_SOCKET_SEND_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Set as final packet
   rsi_socket_pool[sockID].opcode = opcode;
 
   // Call send API to send web socket data
   status = rsi_send(sockID, msg, msg_length, 0);
-
+  SL_PRINTF(SL_WEB_SOCKET_SEND_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -350,10 +372,10 @@ int32_t rsi_web_socket_send_async(int32_t sockID, uint8_t opcode, int8_t *msg, i
 int32_t rsi_web_socket_close(int32_t sockID)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WEB_SOCKET_CLOSE_ENTRY, NETWORK, LOG_INFO);
   // Web socket client socket close only sock id-based
   status = rsi_shutdown(sockID, 0);
-
+  SL_PRINTF(SL_WEB_SOCKET_CLOSE_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

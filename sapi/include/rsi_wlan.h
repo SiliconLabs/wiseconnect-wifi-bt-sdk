@@ -347,7 +347,8 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_RADIO                = 0x81,
   RSI_WLAN_REQ_GET_STATS            = 0xF1,
   RSI_WLAN_REQ_HTTP_OTAF            = 0xF4,
-  RSI_WLAN_REQ_UPDATE_TCP_WINDOW    = 0xF5
+  RSI_WLAN_REQ_UPDATE_TCP_WINDOW    = 0xF5,
+  RSI_WLAN_REQ_11AX_PARAMS          = 0xFF
 
 } rsi_wlan_cmd_request_t;
 
@@ -1104,13 +1105,21 @@ typedef struct rsi_req_socket_s {
   uint8_t max_count[2];
 
   // type of service
+#ifdef CHIP_9117
+  uint8_t tos[2];
+#else
   uint8_t tos[4];
+#endif
 
   // ssl version select bit map
+#ifdef CHIP_9117
+  uint32_t ssl_bitmap;
+#else
   uint8_t ssl_bitmap;
 
   // ssl ciphers bitmap
   uint8_t ssl_ciphers;
+#endif
 
   // web socket resource name
   uint8_t webs_resource_name[RSI_WEBS_MAX_URL_LENGTH];
@@ -1139,6 +1148,13 @@ typedef struct rsi_req_socket_s {
   //ssl ciphers bitmap
   uint32_t ssl_ciphers_bitmap;
 
+  //ssl extended ciphers bitmap
+#ifdef CHIP_9117
+  uint32_t ssl_ext_ciphers_bitmap;
+
+  //! max retransmission timeout value
+  uint8_t max_retransmission_timeout_value;
+#endif
   // tcp retry transmission timer
   uint8_t tcp_retry_transmit_timer;
 

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -24,9 +24,9 @@
  * @section Description :
  * This application explains how to get the WLAN connection functionality using
  * BLE provisioning.
- * Redpine Module starts advertising and with BLE Provisioning the Access Point
+ * SiLabs Module starts advertising and with BLE Provisioning the Access Point
  * details are fetched.
- * Redpine device is configured as a WiFi station and connects to an Access Point.
+ * SiLabs device is configured as a WiFi station and connects to an Access Point.
  =================================================================================*/
 
 /**
@@ -52,6 +52,7 @@
 //! application defines
 
 extern uint8_t ble_connected;
+extern uint8_t disconnect_flag; //set when disconnect request is raised from the Silabs Connect App
 //! Memory to initialize driver
 uint8_t bt_global_buf[BT_GLOBAL_BUFF_LEN];
 
@@ -547,7 +548,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // Scan command request
       case '3': //else if(rsi_ble_write->att_value[0] == '3')
       {
-        //LOG_PRINT("scan command 3 is passed\n");
+        //LOG_PRINT("scan command is passed\n");
         retry = 0;
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
         rsi_wlan_app_cb.state = RSI_WLAN_SCAN_STATE;
@@ -556,7 +557,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // Sending SSID
       case '2': //else if(rsi_ble_write->att_value[0] == '2')                                           //The length of the ssid and pasword is not more than 17 character
       {
-        //LOG_PRINT("join command 2 is passed\n");
+        //LOG_PRINT("join command is passed\n");
         memset(coex_ssid, 0, sizeof(coex_ssid));
         strcpy((char *)coex_ssid, (char *)&rsi_ble_write->att_value[3]);
         rsi_ble_app_set_event(RSI_SSID);
@@ -565,7 +566,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // Sending Security type
       case '5': //else if(rsi_ble_write->att_value[0] == '5')
       {
-        //LOG_PRINT("security command 5 is passed\n");
+        //LOG_PRINT("security command is passed\n");
         sec_type = rsi_ble_write->att_value[3];
         rsi_ble_app_set_event(RSI_SECTYPE);
       } break;
@@ -573,7 +574,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // Sending Psk
       case '6': //else if(rsi_ble_write->att_value[0] == '6')
       {
-        // LOG_PRINT("psk command 6 is passed\n");
+        //LOG_PRINT("psk command is passed\n");
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
         strcpy((char *)pwd, (char *)&rsi_ble_write->att_value[3]);
         rsi_wlan_app_cb.state = RSI_WLAN_JOIN_STATE;
@@ -582,7 +583,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // WLAN Status Request
       case '7': //else if(rsi_ble_write->att_value[0] == '7')
       {
-        // LOG_PRINT("wlan status command 7 is passed\n");
+        //LOG_PRINT("wlan status command 7 is passed\n");
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
         if (connected) {
           //printf("\nconnected\n");
@@ -595,14 +596,15 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       // WLAN disconnect request
       case '4': //else if(rsi_ble_write->att_value[0] == '4')
       {
-        // LOG_PRINT("disconnect command 4 is passed\n");
+        //LOG_PRINT("disconnect command is passed\n");
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
         rsi_wlan_app_cb.state = RSI_WLAN_DISCONN_NOTIFY_STATE;
+        disconnect_flag       = 1;
       } break;
 
       // FW version request
       case '8': {
-        //LOG_PRINT("fw version command 8 is passed\n");
+        //LOG_PRINT("fw version command is passed\n");
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
         rsi_ble_app_set_event(RSI_APP_FW_VERSION);
       } break;
@@ -790,7 +792,7 @@ adv:
 
         memset(data, 0, RSI_BLE_MAX_DATA_LEN);
 
-        data[1] = strlen((char *)&data[2]);
+        data[1] = connected;
         data[0] = 0x07;
         rsi_ble_set_local_att_value(rsi_ble_att2_val_hndl, 20, data);
       } break;

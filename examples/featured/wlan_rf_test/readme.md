@@ -7,11 +7,12 @@ This application demonstrates how to configure the RS9116W to transmit Wi-Fi pac
 To use this application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements  
-- PC or Mac
+- Windows PC with Host interface (UART / SPI/ SDIO).
 - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
 - Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-  - STM32F411 Nucleo
+  - Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
+  - [STM32F411 Nucleo](https://st.com/) 
 - Spectrum Analyzer and/or Power Analyzer
  
 ![Figure: Setup Diagram for Transmit Test Example](resources/readme/image217.png)
@@ -32,8 +33,9 @@ The application can be configured to suit your requirements and development envi
 Read through the following sections and make any changes needed. 
 
 ### Host Interface
-- By default, the application is configured to use the SPI bus for interfacing between Host platforms and the RS9116W EVK.
-- The SAPI driver provides APIs to enable other host interfaces if SPI is not suitable for your needs.
+
+* By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
 ### Bare Metal/RTOS Support
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).

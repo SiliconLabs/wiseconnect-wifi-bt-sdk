@@ -17,7 +17,6 @@
 
 #include "rsi_driver.h"
 #include "rsi_wlan_non_rom.h"
-#include "rsi_wlan_config.h"
 #define GAIN_TABLE_MAX_PAYLOAD_LEN 128
 #ifdef RSI_CHIP_MFG_EN
 #include "rsi_qspi_defines.h"
@@ -40,6 +39,7 @@ extern struct wpa_scan_results_arr *scan_results_array;
  */
 void rsi_sort_scan_results_array_based_on_rssi(struct wpa_scan_results_arr *scan_results_array)
 {
+  SL_PRINTF(SL_SORT_SCAN_RESULTS_ENTRY, WLAN, LOG_INFO);
   uint16_t i = 0, j = 0;
   struct wpa_scan_res temp;
   memset(&temp, 0, sizeof(struct wpa_scan_res));
@@ -54,6 +54,7 @@ void rsi_sort_scan_results_array_based_on_rssi(struct wpa_scan_results_arr *scan
       }
     }
   }
+  SL_PRINTF(SL_SORT_SCAN_RESULTS_EXIT, WLAN, LOG_INFO);
 }
 #endif
 
@@ -86,12 +87,13 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
                                           uint32_t scan_bitmap)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_SCAN_BITMAP_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
-  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE || wlan_cb->state >= RSI_WLAN_STATE_CONNECTED) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SCAN_BITMAP_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -107,6 +109,7 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
 
     if (status != RSI_SUCCESS) {
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_WLAN_SCAN_BITMAP_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR);
       return status;
     }
 
@@ -120,10 +123,12 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
     status = rsi_wlan_get_status();
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SCAN_BITMAP_WLAN_COMMAND_ERROR, WLAN, LOG_INFO, "status: %4x", status);
+
     return status;
   }
-
   // Return status
+  SL_PRINTF(SL_WLAN_SCAN_BITMAP_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -165,6 +170,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
   rsi_req_scan_t *scan;
   int32_t status = RSI_SUCCESS;
   int32_t allow  = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ENTRY, WLAN, LOG_INFO);
 
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -175,8 +181,9 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
   }
 #endif
 
-  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE || wlan_cb->state >= RSI_WLAN_STATE_CONNECTED) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   if (scan_response_handler != NULL) {
@@ -193,6 +200,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
             // Change WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 
@@ -219,9 +227,16 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR);
             return status;
           }
         }
+#if HE_PARAMS_SUPPORT
+        status = rsi_wlan_11ax_config();
+        if (status != RSI_SUCCESS) {
+          return status;
+        }
+#endif
 
         // Allocate command buffer from WLAN pool
         pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
@@ -231,6 +246,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -254,6 +270,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR);
           return status;
         }
       }
@@ -270,6 +287,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -294,6 +312,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_3, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -304,6 +323,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -324,6 +344,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR);
           return status;
         }
 #if RSI_SET_REGION_SUPPORT
@@ -335,6 +356,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -359,6 +381,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_5, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -377,6 +400,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -398,6 +422,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_6, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -409,6 +434,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_7, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -463,8 +489,11 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
     }
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR);
     return allow;
   }
+  SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+
   return status;
 }
 
@@ -528,8 +557,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *        		timeout_bitmap        	|       Description	
  * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		        timeout_bitmap[0]     	|	      Set timeout for association and authentication request.timeout_value : timeout value in ms(default 300ms).
- * 		        timeout_bitmap[1]     	|       Reserved
- * 		        timeout_bitmap[2] 	    |       Used for WLAN keep alive timeout
+ * 		        timeout_bitmap[1]     	|       Sets each channel active scan time in ms (default 100ms)
+ * 		        timeout_bitmap[2] 	    |       Used for WLAN keep alive timeout(default value is 30s)
  * 		        timeout_bitmap[31-3]    |       Reserved
  * 	          ####	Scan structure ####
  * 		        Structure Fields        |	Description	
@@ -540,7 +569,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *	           ^        	            |    	2 . WPA2
  *	           ^        	            |    	3 . WEP
  *	           ^        	            |    	4 . WPA Enterprise
- *	           ^        	            |    	5 . WPA2 Enterprise	
+ *	           ^        	            |    	5 . WPA2 Enterprise
+ *	           ^                        |       7 . WPA3
  * 	 	         rssi_val	              |       RSSI value of the Access Point
  * 	 	         network_type	          |       rsi_wlan_setThis is the type of the network
  * 	 	         ^            	        |       1 . Infrastructure mode	
@@ -567,11 +597,12 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
 int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32_t length)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_SCAN_ENTRY, WLAN, LOG_INFO);
 
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
-  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE || wlan_cb->state > RSI_WLAN_STATE_IP_CONFIG_DONE) {
     // Command given in wrong state
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
@@ -589,6 +620,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
     if (status != RSI_SUCCESS) {
 
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_WLAN_SCAN_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -604,10 +636,12 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
     status = rsi_wlan_get_status();
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SCAN_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_WLAN_SCAN_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -674,8 +708,8 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *        	   timeout_bitmap          |       Description	
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		         timeout_bitmap[0]     	 |	     Set timeout for association and authentication request.timeout_value : timeout value in ms(default 300ms).
- * 		         timeout_bitmap[1]     	 |       Reserved
- * 		         timeout_bitmap[2] 	     |       Used for WLAN keep alive timeout
+ * 		         timeout_bitmap[1]     	 |       Sets each channel active scan time in ms (default 100ms)
+ * 		         timeout_bitmap[2] 	     |       Used for WLAN keep alive timeout(default value is 30s)
  * 		         timeout_bitmap[31-3]    |       Reserved
  * 	           #### Scan Response structure format ####
  * 		         Structure Fields        |	Description	
@@ -693,7 +727,8 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *	           ^        	             |    	2 . WPA2
  *	           ^        	             |    	3 . WEP
  *	           ^        	             |    	4 . WPA Enterprise
- *	           ^        	             |    	5 . WPA2 Enterprise	
+ *	           ^        	             |    	5 . WPA2 Enterprise
+ *	           ^        	             |    	7 . WPA3
  * 	 	         rssi_val	               |       RSSI value of the Access Point
  * 	 	         network_type	           |       Type of network
  * 	 	         ^            	         |       1 . Infrastructure mode	
@@ -722,12 +757,14 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
   rsi_req_scan_t *scan;
   int32_t status = RSI_SUCCESS;
   int32_t allow  = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_SCAN_ASYNC_ENTRY, WLAN, LOG_INFO);
 
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
-  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE || wlan_cb->state > RSI_WLAN_STATE_IP_CONFIG_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SCAN_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   if (scan_response_handler != NULL) {
@@ -746,6 +783,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 
@@ -772,9 +810,16 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
             return status;
           }
         }
+#if HE_PARAMS_SUPPORT
+        status = rsi_wlan_11ax_config();
+        if (status != RSI_SUCCESS) {
+          return status;
+        }
+#endif
         // Allocate command buffer from WLAN pool
         pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
 
@@ -783,6 +828,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -806,6 +852,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
       }
@@ -845,6 +892,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_3, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -855,6 +903,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -885,6 +934,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -909,6 +959,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -917,7 +968,8 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
       // Fall through
       case RSI_WLAN_STATE_SCAN_DONE:
       case RSI_WLAN_STATE_INIT_DONE:
-      case RSI_WLAN_STATE_CONNECTED: {
+      case RSI_WLAN_STATE_CONNECTED:
+      case RSI_WLAN_STATE_IP_CONFIG_DONE: {
 #if RSI_WLAN_CONFIG_ENABLE
         // Allocate command buffer from WLAN pool
         pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
@@ -927,6 +979,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -946,6 +999,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_5, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -957,6 +1011,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SCAN_ASYNC_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -986,7 +1041,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
         status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SCAN, pkt);
       } break;
       case RSI_WLAN_STATE_NONE:
-      case RSI_WLAN_STATE_IP_CONFIG_DONE:
       case RSI_WLAN_STATE_IPV6_CONFIG_DONE:
       case RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON:
       case RSI_WLAN_STATE_AUTO_CONFIG_DONE:
@@ -1007,8 +1061,10 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
     }
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SCAN_ASYNC_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return allow;
   }
+  SL_PRINTF(SL_WLAN_SCAN_ASYNC_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1030,7 +1086,9 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 				8: RSI_WPA2_PMK, \n
  * 				9: RSI_WPS_PIN, \n
  * 				10: RSI_USE_GENERATED_WPSPIN, \n
- * 				11: RSI_WPS_PUSH_BUTTON
+ * 				11: RSI_WPS_PUSH_BUTTON, \n
+ * 				12: RSI_WPA_WPA2_MIXED_PMK, \n
+ * 				13: RSI_WPA3
  * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
  * 		Security type(sec_type)	|	Secret key structure format (secret_key)
  * 		:-----------------------|:--------------------------------------------------------------------------------------------------
@@ -1067,14 +1125,15 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_WPS_PIN		|	8-byte WPS PIN
  * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
+ * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			   #define RSI_TIMEOUT_BIT_MAP 4 \n
  *			   #define RSI_TIMEOUT_VALUE 300 \n
  *
- *			   timeout_bitmap[0] -	Set timeout for association and authentication request. \n timeout_value : timeout value in ms(default 300ms).
- *			   timeout_bitmap[1] -	Reserved \n
- *			   timeout_bitmap[2] -	Used for WLAN keep alive timeout \n
+ *			   timeout_bitmap[0] -	Set timeout for association and authentication request. timeout_value : timeout value in ms(default 300ms). \n
+ *			   timeout_bitmap[1] -	Sets each channel active scan time in ms (default 100ms) \n
+ *			   timeout_bitmap[2] -	Used for WLAN keep alive timeout(default value is 30s) \n
  *			   timeout_bitmap[31-3] -	reserved \n 
  * @note	To set Rejoin params, user should configure the following macros in rsi_wlan_config.h \n 
  *		            RSI_REJOIN_PARAMS_SUPPORT      : Enable to send rejoin parameters command during Wi-Fi client connection \n
@@ -1132,7 +1191,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
 {
 
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_CONNECT_ENTRY, WLAN, LOG_INFO);
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
     // Call async connect to call actual connect
@@ -1140,6 +1199,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
 
     if (status != RSI_SUCCESS) {
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_WLAN_CONNECT_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -1154,6 +1214,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
 
     if (status != RSI_SUCCESS) {
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_WLAN_CONNECT_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -1165,6 +1226,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
   status = rsi_wlan_execute_post_connect_cmds();
 
   status = rsi_wlan_get_status();
+  SL_PRINTF(SL_WLAN_CONNECT_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -1184,7 +1246,9 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *                                8: RSI_WPA2_PMK, \n
  *                                9: RSI_WPS_PIN, \n
  *                               10: RSI_USE_GENERATED_WPSPIN, \n
- *                               11: RSI_WPS_PUSH_BUTTON 
+ *                               11: RSI_WPS_PUSH_BUTTON, \n
+ *                               12: RSI_WPA_WPA2_MIXED_PMK, \n
+ *                               13: RSI_WPA3
  * @param[in]   secret_key			  - Pointer to a buffer that contains security information based on sec_type.
  *              Security type(sec_type) |       Secret key structure format (secret_key)
  *              :-----------------------|:-----------------------------------------------------------------------------------------------------------------
@@ -1221,6 +1285,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *              RSI_WPS_PIN             |       8-byte WPS PIN
  *              RSI_USE_GENERATED_WPSPIN|       NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  *              RSI_WPS_PUSH_BUTTON     |       NULL string indicate to generate push button event
+ *              RSI_WPA3                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @param[in]   join_response_handler - Called when the response for join has been received from the module \n
  *                                        Parameters involved are status, buffer, & length \n
  * @param[out]  Status                - Response status. If status is zero, then the join response is stated as Success  \n
@@ -1282,7 +1347,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
   rsi_req_eap_config_t *eap_config;
   int32_t status = RSI_SUCCESS;
   int32_t allow  = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
   if (join_response_handler != NULL) {
@@ -1296,6 +1361,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Throw error in case of invalid parameters
+      SL_PRINTF(SL_WLAN_CONNECT_ASYNC_INVALID_PARAM_1, WLAN, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1304,6 +1370,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Command given in wrong state
+      SL_PRINTF(SL_WLAN_CONNECT_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE_1, WLAN, LOG_ERROR);
       return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
     }
 
@@ -1311,6 +1378,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
         && !((sec_type == RSI_WPA_EAP) || (sec_type == RSI_WPA2_EAP))) {
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Throw error in case of invalid parameters
+      SL_PRINTF(SL_WLAN_CONNECT_ASYNC_INVALID_PARAM_2, WLAN, LOG_ERROR);
       return RSI_ERROR_INVALID_PARAM;
     }
 
@@ -1324,6 +1392,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           // Memset data
@@ -1343,9 +1412,17 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR);
             return status;
           }
         }
+#if HE_PARAMS_SUPPORT
+        status = rsi_wlan_11ax_config();
+        if (status != RSI_SUCCESS) {
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_HE_PARAMS_SUPPORT, WLAN, LOG_INFO);
+          return status;
+        }
+#endif
         // Allocate command buffer from WLAN pool
         pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
         // If allocation of packet fails
@@ -1353,6 +1430,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -1368,6 +1446,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR);
           return status;
         }
       }
@@ -1383,6 +1462,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1403,6 +1483,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_3, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -1412,6 +1493,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -1426,6 +1508,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
         if (status != RSI_SUCCESS) {
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_WLAN_CMD_STATE_CHANGED_TO_ALLOW, WLAN, LOG_INFO);
           return status;
         }
 #if RSI_SET_REGION_SUPPORT
@@ -1436,6 +1519,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
         // Memset data
@@ -1456,6 +1540,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -1472,6 +1557,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1495,6 +1581,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_5, WLAN, LOG_ERROR);
           return status;
         }
 
@@ -1507,6 +1594,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_7, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1544,6 +1632,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_6, WLAN, LOG_ERROR);
           return status;
         }
       }
@@ -1561,6 +1650,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_8, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 
@@ -1594,6 +1684,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_7, WLAN, LOG_ERROR);
             return status;
           }
         }
@@ -1607,6 +1698,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_9, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1630,6 +1722,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_8, WLAN, LOG_ERROR);
           return status;
         }
 
@@ -1643,6 +1736,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_10, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 
@@ -1676,6 +1770,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_9, WLAN, LOG_ERROR);
             return status;
           }
         } else if (sec_type == RSI_WEP) {
@@ -1687,6 +1782,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_11, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 
@@ -1715,13 +1811,15 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_10, WLAN, LOG_ERROR);
             return status;
           }
 
         }
         // Send PSK command for PSK security
-        else if (((sec_type == RSI_WPA) || (sec_type == RSI_WPA2) || (sec_type == RSI_WPA_WPA2_MIXED)
-                  || (sec_type == RSI_WPA_PMK) || (sec_type == RSI_WPA2_PMK))
+        else if (((sec_type == RSI_WPA) || (sec_type == RSI_WPA2) || (sec_type == RSI_WPA3)
+                  || (sec_type == RSI_WPA3_TRANSITION) || (sec_type == RSI_WPA_WPA2_MIXED)
+                  || (sec_type == RSI_WPA_WPA2_MIXED_PMK) || (sec_type == RSI_WPA_PMK) || (sec_type == RSI_WPA2_PMK))
                  && (wlan_cb->opermode != RSI_WLAN_ENTERPRISE_CLIENT_MODE)) {
           // Allocate command buffer from WLAN pool
           pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
@@ -1731,6 +1829,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_12, WLAN, LOG_ERROR);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           psk = (rsi_req_psk_t *)pkt->data;
@@ -1738,7 +1837,10 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Memset buffer
           memset(&pkt->data, 0, sizeof(rsi_req_psk_t));
 
-          if ((sec_type == RSI_WPA2_PMK) || (sec_type == RSI_WPA_PMK)) {
+          if ((sec_type == RSI_WPA2_PMK) || (sec_type == RSI_WPA_PMK) || (sec_type == RSI_WPA_WPA2_MIXED_PMK)) {
+            if (sec_type == RSI_WPA_WPA2_MIXED_PMK) {
+              sec_type = RSI_WPA_WPA2_MIXED;
+            }
             // Set type as PMK
             psk->type = 2;
 
@@ -1769,6 +1871,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_11, WLAN, LOG_ERROR);
             return status;
           }
         }
@@ -1782,6 +1885,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_13, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1805,6 +1909,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_12, WLAN, LOG_ERROR);
           return status;
         }
 #endif
@@ -1816,6 +1921,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_14, WLAN, LOG_ERROR);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -1832,6 +1938,10 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
         } else if ((sec_type == RSI_WPS_PIN) || (sec_type == RSI_USE_GENERATED_WPSPIN)
                    || (sec_type == RSI_WPS_PUSH_BUTTON)) {
           join->security_type = RSI_OPEN;
+        } else if (sec_type == RSI_WPA3) {
+          join->security_type = SME_WPA3;
+        } else if (sec_type == RSI_WPA3_TRANSITION) {
+          join->security_type = SME_WPA3_TRANSITION;
         } else {
           join->security_type = sec_type;
         }
@@ -1878,9 +1988,11 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
     }
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_CONNECT_ASYNC_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR);
     return allow;
   }
   // Return status
+  SL_PRINTF(SL_WLAN_CONNECT_ASYNC_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -1888,9 +2000,11 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
 /**
  * @brief        Get background scan results or stop bgscan. This is a blocking API.
  * @pre             \ref rsi_wlan_connect() API needs to be called before this API.
- * @param[in]	 cmd - Command given by user
- * @param[out]   result - Result
- * @param[in]    length - Length
+ * @param[in]	 cmd - Command given by user, to enable or disable bgscan
+ *                   0 - disable bgscan
+ *                   1 - enable bgscan
+ * @param[out]   result - buffer to store bgscan results
+ * @param[in]    length - Length of bgscan result buffer
  * @return       0  	  -  Success \n
  *               Non-Zero Value - Failure\n
  *               		-3 - Command given in wrong state \n
@@ -1903,13 +2017,14 @@ int32_t rsi_wlan_bgscan_profile(uint8_t cmd, rsi_rsp_scan_t *result, uint32_t le
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_BGSCAN_PROFILE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // Check whether module is in valid state range or not
   if (wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_BGSCAN_PROFILE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -1930,6 +2045,7 @@ int32_t rsi_wlan_bgscan_profile(uint8_t cmd, rsi_rsp_scan_t *result, uint32_t le
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BGSCAN_PROFILE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -1958,10 +2074,12 @@ int32_t rsi_wlan_bgscan_profile(uint8_t cmd, rsi_rsp_scan_t *result, uint32_t le
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BGSCAN_PROFILE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_BGSCAN_PROFILE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -1987,13 +2105,14 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
   rsi_pkt_t *pkt;
 #endif
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_ENRTY, WLAN, LOG_INFO, "status: %4x", status);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // Check whether module is in valid state range or not
   if (wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -2008,6 +2127,7 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2031,6 +2151,7 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
       // Return status if error in sending command occurs
+      SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -2044,6 +2165,7 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     // Memset data
@@ -2066,10 +2188,12 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_NWK_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_EXECUTE_POST_CONNECT_CMDS_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2093,12 +2217,13 @@ int32_t rsi_wlan_wps_push_button_event(int8_t *ssid)
   rsi_pkt_t *pkt;
   rsi_req_join_t *join;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_WPS_PUSH_BUTTON_EVENT_ENRTY, WLAN, LOG_INFO, "status: %4x", status);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_WPS_PUSH_BUTTON_EVENT_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2112,6 +2237,7 @@ int32_t rsi_wlan_wps_push_button_event(int8_t *ssid)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_WPS_PUSH_BUTTON_EVENT_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2147,10 +2273,12 @@ int32_t rsi_wlan_wps_push_button_event(int8_t *ssid)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_WPS_PUSH_BUTTON_EVENT_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_WPS_PUSH_BUTTON_EVENT_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2166,12 +2294,13 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
   rsi_pkt_t *pkt;
   rsi_freq_offset_t *freq_offset = NULL;
   int32_t status                 = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_SEND_FREQ_OFFSET_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SEND_FREQ_OFFSET_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2184,6 +2313,7 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_SEND_FREQ_OFFSET_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     // Memset buffer
@@ -2209,34 +2339,39 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SEND_FREQ_OFFSET_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_SEND_FREQ_OFFSET_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
 /*==============================================*/
 /**
  * @brief             RF calibration process. This API will command the firmware to update the existing Flash/EFuse calibration data. This is a blocking API.
- * @pre    	\ref rsi_transmit_test_start(), rsi_send_freq_offset API needs to be called before this API.This API is relevant in PER mode only.
+ * @pre    	\ref rsi_transmit_test_start(), \ref rsi_send_freq_offset() API needs to be called before this API.This API is relevant in PER mode only.
  * @param[in]         Target \n
  * 			0 - BURN_INTO_EFUSE (Burns calibration data to EFuse) \n
  * 			1 - BURN_INTO_FLASH (Burns calibration data to Flash) \n
  * @param[in]         Flags - Validate information \n
  *                     Bit |	MACRO 		   |	Description
  *                     :---|:---------------------:|:---------------------------------------------------
- *                     0   |	BURN_GAIN_OFFSET   | 	1- Update gain offset to calibration data
- *                     ^   |	^		   |	0 - Skip gain offset update
+ *                     0   |	BURN_GAIN_OFFSET   | 	1 - Update gain offset to calibration data
+ *                     ^   |	^		               |	0 - Skip gain offset update
  *                     1   |	BURN_FREQ_OFFSET   |	1 - Update XO Ctune to calibration data
- *                     ^   |	^		   |	0 - Skip XO Ctune update
- *                     2   |	SW_XO_CTUNE_VALID  |	1- Use XO Ctune provided as argument to update calibration data
- *                     ^   |	^		   |	0 -Use XO Ctune value as read from hardware register
+ *                     ^   |	^		               |	0 - Skip XO Ctune update
+ *                     2   |	SW_XO_CTUNE_VALID  |	1 - Use XO Ctune provided as argument to update calibration data
+ *                     ^   |	^		               |	0 - Use XO Ctune value as read from hardware register
  *                     3   |	BURN_XO_FAST_DISABLE |     Used to apply patch for cold temperature issue(host interface detection) observed on CC0/CC1 modules. \ref appendix
  *                     7-4 ||	Reserved
- * @param[in]         Gain offset as observed in dBm
+ * @param[in]         gain_offset - gain_offset as observed in dBm
  * @param[in]         xo_ctune - Allow user to directly update xo_ctune value to calibration data bypassing the freq offset loop,
  * 			valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set.
+ * @note              To recalibrate gain offset after it has been burnt to flash, the user is required to first reset gain offset and then follow the calibration flow. \n
+ *                    e.g.: rsi_calib_write(BURN_INTO_FLASH,BURN_GAIN_OFFSET,0,0); // which resets gain offset \n
+ *                    Recalibration is not possible if EFuse is being used instead of flash as calibration data storage            
  * @return            0			- Success \n
  *                    Non-Zero Value	- Failure
  */
@@ -2246,12 +2381,13 @@ int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int3
   rsi_pkt_t *pkt;
   rsi_calib_write_t *calib_wr = NULL;
   int32_t status              = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_CALIB_WRITE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_CALIB_WRITE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2264,6 +2400,7 @@ int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int3
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_CALIB_WRITE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2300,10 +2437,12 @@ int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int3
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_CALIB_WRITE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_CALIB_WRITE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -2366,12 +2505,13 @@ int32_t rsi_wlan_wps_generate_pin(uint8_t *wps_pin, uint16_t length)
   rsi_pkt_t *pkt;
   rsi_req_wps_method_t *wps_method;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_WPS_GENERATE_PIN_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_WPS_GENERATE_PIN_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2384,6 +2524,7 @@ int32_t rsi_wlan_wps_generate_pin(uint8_t *wps_pin, uint16_t length)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_WPS_GENERATE_PIN_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2420,10 +2561,12 @@ int32_t rsi_wlan_wps_generate_pin(uint8_t *wps_pin, uint16_t length)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_WPS_GENERATE_PIN_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_WPS_GENERATE_PIN_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2442,12 +2585,13 @@ int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin)
   rsi_pkt_t *pkt;
   rsi_req_wps_method_t *wps_method;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_WPS_ENTER_PIN_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_WPS_ENTER_PIN_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2461,6 +2605,7 @@ int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_WPS_ENTER_PIN_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2494,10 +2639,12 @@ int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_WPS_ENTER_PIN_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_WPS_ENTER_PIN_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2514,11 +2661,12 @@ int32_t rsi_get_random_bytes(uint8_t *result, uint32_t length)
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_GET_RANDOM_BYTES_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_GET_RANDOM_BYTES_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2538,6 +2686,7 @@ int32_t rsi_get_random_bytes(uint8_t *result, uint32_t length)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_GET_RANDOM_BYTES_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2560,10 +2709,12 @@ int32_t rsi_get_random_bytes(uint8_t *result, uint32_t length)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_GET_RANDOM_BYTES_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_GET_RANDOM_BYTES_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2586,13 +2737,14 @@ int32_t rsi_wlan_disconnect(void)
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_DISCONNECT_ENTRY, WLAN, LOG_INFO);
 #ifndef RSI_CHIP_MFG_EN
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_DISCONNECT_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2606,6 +2758,7 @@ int32_t rsi_wlan_disconnect(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_DISCONNECT_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2628,11 +2781,13 @@ int32_t rsi_wlan_disconnect(void)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_DISCONNECT_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
 #endif
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_DISCONNECT_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -2656,13 +2811,14 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
   rsi_pkt_t *pkt;
   rsi_req_disassoc_t *disassoc_info;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_ENTRY, WLAN, LOG_INFO);
 #ifndef RSI_CHIP_MFG_EN
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -2677,6 +2833,7 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2707,11 +2864,13 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
 #endif
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -2761,18 +2920,17 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
   rsi_req_ipv6_parmas_t *ipv6_params;
   int32_t status                 = RSI_SUCCESS;
   int32_t rsi_response_wait_time = 0;
-
   // Get WLAN CB struct pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // WLAN radio init
   status = rsi_wlan_radio_init();
-
+  SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_ENTRY, WLAN, LOG_INFO);
   if (status != RSI_SUCCESS) {
     // Return status if error in sending command occurs
+    SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
-
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
 
@@ -2784,6 +2942,7 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -2821,6 +2980,9 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
 
       // Set vap_id
       ip_params->vap_id = vap_id;
+#ifndef RSI_WLAN_SEM_BITMAP
+      rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
 
       // Send ipconfig command
       status                 = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_IPCONFV4, pkt);
@@ -2865,7 +3027,7 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
       rsi_pkt_free(&wlan_cb->wlan_tx_pool, pkt);
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
+      SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_CHANGE_WLAN_CMD_STATE_TO_ALLOW, WLAN, LOG_ERROR, "status: %4x", status);
       return status;
     }
 
@@ -2879,10 +3041,12 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_WLAN_CONFIG_IPADDRESS_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -2921,18 +3085,20 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
   int32_t status = RSI_SUCCESS;
   rsi_req_set_certificate_t *rsi_chunk_ptr;
   int32_t rsi_response_wait_time = 0;
-
+  SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // Check if command is in correct state or not
   if ((wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE)) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   if ((buffer == NULL) && (certificate_length)) {
     // Throw error in case of invalid parameters
+    SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_INVALID_PARAM, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -2955,6 +3121,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
         // Change the WLAN CMD state to allow
         rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
         // Return packet allocation failure error
+        SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
         return RSI_ERROR_PKT_ALLOCATION_FAILURE;
       }
 
@@ -2993,6 +3160,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
         rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
         // Return status if error in sending command occurs
+        SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
         return status;
       }
     }
@@ -3005,6 +3173,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
         // Change the WLAN CMD state to allow
         rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
         // Return packet allocation failure error
+        SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
         return RSI_ERROR_PKT_ALLOCATION_FAILURE;
       }
 
@@ -3052,6 +3221,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 
@@ -3093,6 +3263,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_ERROR_IN_SENDING_COMMAND_3, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 
@@ -3107,6 +3278,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -3114,6 +3286,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
   status = rsi_wlan_get_status();
 
   // Return status
+  SL_PRINTF(SL_WLAN_SET_CERTIFICATE_INDEX_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -3149,6 +3322,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
  */
 int32_t rsi_wlan_set_certificate(uint8_t certificate_type, uint8_t *buffer, uint32_t certificate_length)
 {
+  SL_PRINTF(SL_WLAN_SET_CERTIFICATE_EXIT, NETWORK, LOG_INFO);
   return rsi_wlan_set_certificate_index(certificate_type, 0, buffer, certificate_length);
 }
 /** @} */
@@ -3166,6 +3340,7 @@ int32_t rsi_wlan_set_certificate(uint8_t certificate_type, uint8_t *buffer, uint
  */
 int32_t rsi_wlan_get_status(void)
 {
+  SL_PRINTF(SL_WLAN_GET_STATUS_EXIT, WLAN, LOG_INFO);
   return rsi_driver_cb->wlan_cb->status;
 }
 
@@ -3205,6 +3380,8 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
   rsi_pkt_t *pkt;
   int32_t rsi_response_wait_time = 0;
 
+  SL_PRINTF(SL_WLAN_GET_ENTRY, WLAN, LOG_INFO);
+
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -3221,12 +3398,14 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
       }
     } else
       // Command given in wrong state
-      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+      SL_PRINTF(SL_WLAN_GET_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   if (cmd_type == RSI_FW_VERSION) {
     // Send firmware version query request
     status = rsi_get_fw_version(response, length);
+    SL_PRINTF(SL_WLAN_GET_FW_VERSION_QUERY_REQ, WLAN, LOG_INFO, "status: %4x", status);
     return status;
   }
 
@@ -3258,6 +3437,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
         rsi_response_wait_time = RSI_WLAN_RSSI_RESPONSE_WAIT_TIME;
@@ -3279,6 +3459,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3301,6 +3482,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3319,6 +3501,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
+          SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_1, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_INSUFFICIENT_BUFFER;
         }
         if (wlan_cb->opermode == RSI_WLAN_ACCESS_POINT_MODE) {
@@ -3330,6 +3513,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3350,6 +3534,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3369,6 +3554,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
+          SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_INSUFFICIENT_BUFFER;
         }
         // Allocate command buffer from WLAN pool
@@ -3379,6 +3565,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3397,6 +3584,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
+          SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_INSUFFICIENT_BUFFER;
         }
 
@@ -3408,6 +3596,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_7, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3424,7 +3613,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         if (length < sizeof(rsi_cfgGetFrameRcv_t)) {
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
+          SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_4, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_INSUFFICIENT_BUFFER;
         }
         // Allocate command buffer from WLAN pool
@@ -3435,6 +3624,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_8, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3453,7 +3643,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         if (length < sizeof(rsi_rsp_wlan_stats_t)) {
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
+          SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_5, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_INSUFFICIENT_BUFFER;
         }
         // Allocate command buffer from WLAN pool
@@ -3464,6 +3654,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_9, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3490,10 +3681,12 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_GET_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_WLAN_GET_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3539,6 +3732,8 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
   // Statement added to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(length);
   int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_WLAN_SET_ENTRY, WLAN, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_user_store_config_t *user_store_ptr = NULL;
   // Get WLAN CB structure pointer
@@ -3550,11 +3745,13 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
   // If state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SET_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   if (!(cmd_type == 4)) {
     if (request == NULL) {
       // Command given in wrong state
+      SL_PRINTF(SL_WLAN_SET_NVALID_PARAM, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_INVALID_PARAM;
     }
   }
@@ -3580,6 +3777,7 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SET_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3615,6 +3813,7 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SET_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3636,6 +3835,7 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_SET_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
         user_store_ptr = (rsi_user_store_config_t *)pkt->data;
@@ -3666,10 +3866,12 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SET_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_WLAN_SET_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3695,16 +3897,16 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
  */
 int32_t rsi_wlan_buffer_config(void)
 {
-
   rsi_pkt_t *pkt;
   rsi_udynamic *dyn_buf;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_BUFFER_CONFIG_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_BUFFER_CONFIG_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -3718,6 +3920,7 @@ int32_t rsi_wlan_buffer_config(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BUFFER_CONFIG_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -3749,10 +3952,12 @@ int32_t rsi_wlan_buffer_config(void)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BUFFER_CONFIG_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status
+  SL_PRINTF(SL_WLAN_BUFFER_CONFIG_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -3760,8 +3965,8 @@ int32_t rsi_wlan_buffer_config(void)
 /**
  * @brief      Start the module in access point mode with the given configuration. This is a blocking API.
  * @pre           \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  ssid, SSID of the access point. Length of the SSID should be less than or equal to 32 bytes.
- * @param[in]  channel, Channel number. Refer the following channels for the valid channel numbers supported: \n
+ * @param[in]  ssid - SSID of the access point. Length of the SSID should be less than or equal to 32 bytes.
+ * @param[in]  channel - Channel number. Refer the following channels for the valid channel numbers supported: \n
  *                      2.4GHz Band Channel Mapping, 5GHz Band Channel Mapping \n
  *                      channel number 0 is to enable ACS feature
  *			####The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum####
@@ -3831,7 +4036,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
   rsi_pkt_t *pkt;
   rsi_req_join_t *join;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_AP_START_ENTRY, WLAN, LOG_INFO);
   rsi_req_ap_config_t *ap_config;
 
   // Get WLAN CB structure pointer
@@ -3839,6 +4044,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_AP_START_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -3855,6 +4061,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
             // Change the WLAN CMD state to allow
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
             // Return packet allocation failure error
+            SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
             return RSI_ERROR_PKT_ALLOCATION_FAILURE;
           }
           // Memset data
@@ -3880,6 +4087,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
             rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
             // Return status if error in sending command occurs
+            SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
             return status;
           }
         }
@@ -3891,6 +4099,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_2, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3915,6 +4124,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
       }
@@ -3929,6 +4139,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 #ifndef RSI_WLAN_SEM_BITMAP
@@ -3948,6 +4159,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_3, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #if RSI_SET_REGION_AP_SUPPORT
@@ -3959,6 +4171,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -3982,6 +4195,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -3999,6 +4213,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_4, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
         // Memset packet
@@ -4016,6 +4231,12 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 
         // Security type
         ap_config->security_type = security_type;
+        if (ap_config->security_type == RSI_WPA3) {
+          ap_config->security_type = SME_WPA3;
+        }
+        if (ap_config->security_type == RSI_WPA3_TRANSITION) {
+          ap_config->security_type = SME_WPA3_TRANSITION;
+        }
 
         // Encryption mode
         ap_config->encryption_mode = encryption_mode;
@@ -4050,6 +4271,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_5, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 
@@ -4062,6 +4284,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_5, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
 
@@ -4085,6 +4308,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_6, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 #endif
@@ -4096,6 +4320,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
           // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_AP_START_PKT_ALLOCATION_FAILURE_6, WLAN, LOG_ERROR, "status: %4x", status);
           return RSI_ERROR_PKT_ALLOCATION_FAILURE;
         }
         // Memset the PKT
@@ -4139,6 +4364,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
 
           // Return status if error in sending command occurs
+          SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_7, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
         }
 
@@ -4162,10 +4388,12 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 
   } else {
     // Return NWK command error
+    SL_PRINTF(SL_WLAN_AP_START_NWK_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_AP_START_ERROR_IN_SENDING_COMMAND_8, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4180,26 +4408,29 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
  * 		          :----------------------|:--------------------------------------------------------------------------------------------------
  *              psp_mode               |   Following psp_mode is defined.
  *              ^                      |   Active(0) : In this mode, module is active and power save is disabled. \n
- *              ^                      |   RSI_SLEEP_MODE_1 (1):Connected sleep mode. \n
+ *              ^                      |   RSI_SLEEP_MODE_1 (1): Connected sleep mode. \n
  *              ^                      |   In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
- *              ^                      |   RSI_SLEEP_MODE_2 (2):Connected sleep mode. In this sleep mode, SoC will go to sleep based on GPIO or Message based handshake. \n
+ *              ^                      |   RSI_SLEEP_MODE_2 (2): In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
  *              ^                      |   Therefore handshake is required before sending data to the module. \n
- * 		          ^                      |   RSI_SLEEP_MODE_8 (8):Unconnected sleep mode.\n
- * 		          ^                      |   In this sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
+ * 		          ^                      |   RSI_SLEEP_MODE_8 (8): Deep sleep mode with ULP RAM RETENTION. \n
+ *              ^                      |   RSI_SLEEP_MODE_10 (10): Deep sleep mode without ULP RAM RETENTION. \n
+ * 		          ^                      |   In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
  * 		          psp_type               |   Follwing psp_type is defined.
- * 		          ^                      |   RSI_MAX_PSP (0):This psp_type will be used for max power saving. \n
- * 		          ^                      |   RSI_FAST_PSP (1):This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
+ * 		          ^                      |   RSI_MAX_PSP (0): This psp_type will be used for max power saving. \n
+ * 		          ^                      |   RSI_FAST_PSP (1): This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
  * 		          ^                      |   (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
  * 		          ^                      |   If there is no data for monitor interval of time then module will again enable power save. \n
- * 		          ^                      |   RSI_UAPSD (2):This psp_type is used to enable WMM power save.
+ * 		          ^                      |   RSI_UAPSD (2): This psp_type is used to enable WMM power save.
  * 		          listen interval        |   Used to configure sleep duration in power save. \n
  * @note			  Valid only if BIT (7) in join_feature_bit_map is set. This value is given in time units (1024 microsecond). \n
  *							Used to configure sleep duration in power save and should be less than the listen interval configured by RSI_LISTEN_INTERVAL Macro in join command parameters in rsi_wlan_config.h file. \n
  * @note    		1. psp_type is only valid in psp_mode 1 and 2. \n
  * @note			  2. psp_type UAPSD is applicable only if WMM_PS is enabled in \ref rsi_wlan_config.h file. \n
  * @note			  3. In RSI_MAX_PSP mode, Few access points will not aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.
- * @note       4. For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
- * @note       5. For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
+ * @note       4. For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
+ * @note       5. For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
+ * @note       6. For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based. \n
+ * @note       7. For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file. \n 
  * @return      0               - Success \n
  *              Non-Zero	Value - Failure \n
  *	            If return value is less than 0 \n
@@ -4212,7 +4443,7 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_type, uint16_t listen_interval)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_POWER_SAVE_LISTEN_INTERVAL_ENTRY, WLAN, LOG_INFO);
   // Get commmon CB pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
@@ -4225,7 +4456,7 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
   rsi_wlan_cb_non_rom->ps_listen_interval = listen_interval;
 
   status = rsi_sleep_mode_decision(rsi_common_cb);
-
+  SL_PRINTF(SL_WLAN_POWER_SAVE_LISTEN_INTERVAL_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -4239,18 +4470,19 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  * 		          :----------------------|:--------------------------------------------------------------------------------------------------
  *              psp_mode               |   Following psp_mode is defined.
  *              ^                      |   Active(0) : In this mode, module is active and power save is disabled. \n
- *              ^                      |   RSI_SLEEP_MODE_1 (1):Connected sleep mode. \n
+ *              ^                      |   RSI_SLEEP_MODE_1 (1): Connected sleep mode. \n
  *              ^                      |   In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
- *              ^                      |   RSI_SLEEP_MODE_2 (2):Connected sleep mode. In this sleep mode, SoC will go to sleep based on GPIO or Message based Handshake. \n
+ *              ^                      |   RSI_SLEEP_MODE_2 (2): In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
  *              ^                      |   Therefore handshake is required before sending data to the module \n
- * 		          ^                      |   RSI_SLEEP_MODE_8 (8):Unconnected sleep mode.\n
- * 		          ^                      |   In this sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
+ * 		          ^                      |   RSI_SLEEP_MODE_8 (8): Deep sleep mode with ULP RAM RETENTION. \n
+ *              ^                      |   RSI_SLEEP_MODE_10 (10): Deep sleep mode without ULP RAM RETENTION. \n
+ * 		          ^                      |   In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
  * 		          psp_type               |   Follwing psp_type is defined.
- * 		          ^                      |   RSI_MAX_PSP (0):This psp_type will be used for max power saving. \n
- * 		          ^                      |   RSI_FAST_PSP (1):This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
+ * 		          ^                      |   RSI_MAX_PSP (0): This psp_type will be used for max power saving. \n
+ * 		          ^                      |   RSI_FAST_PSP (1): This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
  * 		          ^                      |   (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
  * 		          ^                      |   If there is no data for monitor interval of time then module will again enable power save. \n
- * 		          ^                      |   RSI_UAPSD (2):This psp_type is used to enable WMM power save.
+ * 		          ^                      |   RSI_UAPSD (2): This psp_type is used to enable WMM power save.
  *             #### Enhanced max psp ####
  *		         Enhanced max PSP is recommended. This essentially a MAX PSP mode but switches to Fast PSP mode if AP does not deliver data within 20ms for PS-Poll. \n
  *		         To enable this mode, follow procedure below: \n
@@ -4262,13 +4494,16 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  * @note       3. In RSI_MAX_PSP mode, Few Access points won't aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.\n
  * @note       4. For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
  * @note       5. For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
+ * @note       6. For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based.\n
+ * @note       7. For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file.\n 
  * @note	     Powersave handshake option: \n
  *					   - When sleep clock source is configured to '32KHz bypass clock on UULP_VBAT_GPIO_3', \n
  *						 use UULP_VBAT_GPIO_0 for SLEEP_IND_FROM_DEV \n
  *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P4_AND_ABOVE' \n
  *					   - If not using external clock on UULP_VBAT_GPIO_3' as sleep clock source, \n
  *						 use UULP_VBAT_GPIO_3 for SLEEP_IND_FROM_DEV \n
- *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P3'.
+ *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P3'. \n
+ *             EXT_FEAT_LOW_POWER_MODE is not supported for 1.3 version chipset(CHIP_VER_1P3).
  *            #### Power save modes description ####
  *	        + Power Save Mode 0\n
  *            In this mode, module is active and power save is disabled. It can be configured any time, while the module is configured in Power Save mode 2 or 8.\n
@@ -4298,11 +4533,14 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *		        Power Save mode 8 can be GPIO based. \n
  *            In case of GPIO based, host can wakeup the module from power save by asserting UULP GPIO #2. \n
  *		        After wakeup, if the module is ready for data transfer, it sends wakeup indication to host by asserting UULP GPIO #3 or UULP GPIO #0. \n
- *            Once the module wakes up, it continues to be in wakeup state until it gets power mode 8 commands from host. \n
+ *            Host is required to wait until module gives wakeup indication before sending any data to the module. \n
+ *            After the completion of data transfer, host can give sleep permission to module by de-asserting UULP GPIO #2. After recognizing sleep permission from host,
+ *	       	  module gives confirmation to host by de-asserting UULP GPIO #3 or UULP GPIO #0 and again goes back to its sleep-wakeup cycle. \n
+ *            Module can send received packets or responses to host at any instant of time. No handshake is required on Rx path. \n
  *          + Power save mode 9  \n
  *		        In Power Mode 9 both Radio and SOC of RS9116-WiSeConnect are in complete power save mode. This mode is significant when module is not connected with any AP. \n
- *		        Once power mode 9 command is given, the module goes to sleep immediately and wakes up after sleep duration and it can be configured by host using \ref rsi_wlan_set_sleep_timer API. \n
- *	          If host does not set any sleep time, then the module wakes up in 3sec by default. Upon wakeup module sends a wakeup message to the host and expects host to give ACK before \n
+ *		        Once power mode 9 command is given, the module sends ("SLP") request to host and wait for the ("ACK") from host and goes to sleep when ACK is given by host. Timer starts when power save command is issued and it can be configured by host using \ref rsi_wlan_set_sleep_timer API. \n
+ *	          If host does not set any sleep time, then the timer is configured for 3sec by default. Upon wakeup module sends a wakeup message to the host and expects host to give ACK before \n
  *		        it goes into next sleep cycle. Host either send ACK or any other messages but once ACK is sent no other packet should be sent before receiving next wakeup message. \n
  *            When ulp_mode_enable is set to '2', after waking up from sleep, the module sends WKP FRM SLEEP message to host when RAM retention is not enabled. \n
  *		        After receiving WKP FRM SLEEP message, host needs to start giving commands from beginning (opermode) as module's state is not retained.
@@ -4322,6 +4560,7 @@ int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
 {
   int32_t status = RSI_SUCCESS;
   status         = rsi_wlan_power_save_with_listen_interval(psp_mode, psp_type, 0);
+  SL_PRINTF(SL_WLAN_POWER_SAVE_PROFILE_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -4338,16 +4577,20 @@ int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
 int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_type)
 {
   int32_t status = RSI_SUCCESS;
-  status         = rsi_wlan_power_save_profile(RSI_ACTIVE, psp_type);
+  SL_PRINTF(SL_WLAN_POWER_SAVE_DISABLE_ENABLE_ENTRY, WLAN, LOG_INFO);
+  status = rsi_wlan_power_save_profile(RSI_ACTIVE, psp_type);
   if (status != RSI_SUCCESS) {
     // Return status if error in sending command occurs
+    SL_PRINTF(SL_WLAN_POWER_SAVE_DISABLE_ENABLE_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
   status = rsi_wlan_power_save_profile(psp_mode, psp_type);
   if (status != RSI_SUCCESS) {
     // Return status if error in sending command occurs
+    SL_PRINTF(SL_WLAN_POWER_SAVE_DISABLE_ENABLE_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
+  SL_PRINTF(SL_WLAN_POWER_SAVE_DISABLE_ENABLE_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -4444,12 +4687,13 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
   rsi_pkt_t *pkt;
   rsi_req_tx_test_info_t *tx_test_info;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_TX_TEXT_START_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // Check whether transmit test mode is selected
   if (wlan_cb->opermode != RSI_WLAN_TRANSMIT_TEST_MODE) {
+    SL_PRINTF(SL_WLAN_TX_TEXT_START_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -4458,6 +4702,7 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
 
   if (status != RSI_SUCCESS) {
     // Return status if error in sending command occurs
+    SL_PRINTF(SL_WLAN_TX_TEXT_START_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -4472,6 +4717,7 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_TX_TEXT_START_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4515,10 +4761,12 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_TX_TEXT_START_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_TX_TEXT_START_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4546,12 +4794,13 @@ int32_t rsi_transmit_test_stop(void)
   rsi_pkt_t *pkt;
   rsi_req_tx_test_info_t *tx_test_info;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_TX_TEXT_STOP_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_TX_TEXT_STOP_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -4565,6 +4814,7 @@ int32_t rsi_transmit_test_stop(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_TX_TEXT_STOP_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4593,10 +4843,12 @@ int32_t rsi_transmit_test_stop(void)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_TX_TEXT_STOP_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_TX_TEXT_STOP_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4622,12 +4874,13 @@ int32_t rsi_wlan_receive_stats_start(uint16_t channel)
   rsi_pkt_t *pkt;
   rsi_req_rx_stats_t *rx_stats;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_RX_STATS_START_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_RX_STATS_START_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -4641,6 +4894,7 @@ int32_t rsi_wlan_receive_stats_start(uint16_t channel)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_RX_STATS_START_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4674,10 +4928,12 @@ int32_t rsi_wlan_receive_stats_start(uint16_t channel)
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_RX_STATS_START_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_RX_STATS_START_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4701,12 +4957,13 @@ int32_t rsi_wlan_receive_stats_stop(void)
   rsi_pkt_t *pkt;
   rsi_req_rx_stats_t *rx_stats;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_RX_STATS_STOP_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_RX_STATS_STOP_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -4720,6 +4977,7 @@ int32_t rsi_wlan_receive_stats_stop(void)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_RX_STATS_STOP_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4752,10 +5010,12 @@ int32_t rsi_wlan_receive_stats_stop(void)
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_RX_STATS_STOP_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_RX_STATS_STOP_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4808,6 +5068,8 @@ int32_t rsi_wlan_wfd_start_discovery(
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_ENTRY, WLAN, LOG_INFO);
+
   rsi_req_configure_p2p_t *config_p2p;
 
   // Get WLAN CB structure pointer
@@ -4815,6 +5077,7 @@ int32_t rsi_wlan_wfd_start_discovery(
 
   // Check whether Wi-Fi-Direct mode is selected
   if (wlan_cb->opermode != RSI_WLAN_WIFI_DIRECT_MODE) {
+    SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -4823,6 +5086,7 @@ int32_t rsi_wlan_wfd_start_discovery(
 
   if (status != RSI_SUCCESS) {
     // Return status if error in sending command occurs
+    SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -4837,6 +5101,7 @@ int32_t rsi_wlan_wfd_start_discovery(
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4893,10 +5158,12 @@ int32_t rsi_wlan_wfd_start_discovery(
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -4937,12 +5204,13 @@ int32_t rsi_wlan_wfd_connect(int8_t *device_name,
   rsi_pkt_t *pkt;
   rsi_req_join_t *join;
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_WFD_CONNECT_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_WFD_CONNECT_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -4956,6 +5224,7 @@ int32_t rsi_wlan_wfd_connect(int8_t *device_name,
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_WFD_CONNECT_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -4996,10 +5265,12 @@ int32_t rsi_wlan_wfd_connect(int8_t *device_name,
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_WFD_CONNECT_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_WFD_CONNECT_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -5024,10 +5295,11 @@ int32_t rsi_wlan_send_data(uint8_t *buffer, uint32_t length)
   int32_t status = RSI_SUCCESS;
   uint8_t *host_desc;
   rsi_pkt_t *pkt;
-
+  SL_PRINTF(SL_WLAN_SEND_DATA_ENTRY, WLAN, LOG_INFO);
   // If buffer is not valid
   if ((buffer == NULL) || (length == 0)) {
     // Return packet allocation failure error
+    SL_PRINTF(SL_WLAN_SEND_DATA_INVALID_PARAM, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -5035,6 +5307,7 @@ int32_t rsi_wlan_send_data(uint8_t *buffer, uint32_t length)
   pkt = rsi_pkt_alloc(&rsi_driver_cb->wlan_cb->wlan_tx_pool);
 
   if (pkt == NULL) {
+    SL_PRINTF(SL_WLAN_SEND_DATA_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_PKT_ALLOCATION_FAILURE;
   }
 
@@ -5065,10 +5338,12 @@ int32_t rsi_wlan_send_data(uint8_t *buffer, uint32_t length)
 
   if (rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->send_data_sem, RSI_SEND_DATA_RESPONSE_WAIT_TIME)
       != RSI_ERROR_NONE) {
+    SL_PRINTF(SL_WLAN_SEND_DATA_RESPONSE_TIMEOUT, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_RESPONSE_TIMEOUT;
   }
   status = rsi_wlan_get_status();
   // Return status
+  SL_PRINTF(SL_WLAN_SEND_DATA_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -5109,16 +5384,18 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
   int32_t status = RSI_SUCCESS;
   rsi_pkt_t *pkt;
   rsi_req_ping_t *ping;
-
+  SL_PRINTF(SL_WLAN_PING_ASYNC_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
   if (wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_PING_ASYNC_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   // If IP address is not valid
   if ((ip_address == NULL) || (size == 0)) {
     // Return packet allocation failure error
+    SL_PRINTF(SL_WLAN_PING_ASYNC_INVALID_PARAM, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -5134,6 +5411,7 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
 
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_PING_ASYNC_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -5184,10 +5462,12 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
     }
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_PING_ASYNC_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_PING_ASYNC_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -5195,8 +5475,10 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
 /**
  * @brief      Register auto-configuration response handler.. This is a non-blocking API.
  * @param[in]  rsi_auto_config_rsp_handler - Pointer to rsi_auto_config_rsp_handler
- * @param[out] status			   - Response status
- * @param[]    state			   -  
+ * @param[out] status			   - Response status, 0 if success else failure.
+ * @param[out] state			   - BIT(1) RSI_AUTO_CONFIG_FAILED 
+ *                             BIT(2) RSI_AUTO_CONFIG_GOING_ON 
+ *                             BIT(3) RSI_AUTO_CONFIG_DONE 
  * @return     Void
  */
 
@@ -5204,6 +5486,7 @@ void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(ui
 {
 
   // Register callback handler
+  SL_PRINTF(SL_WLAN_REGISTER_AUTO_CONFIG_RSP_HANDLER_EXIT, WLAN, LOG_INFO);
   rsi_wlan_cb_non_rom->callback_list.auto_config_rsp_handler = rsi_auto_config_rsp_handler;
 }
 
@@ -5237,12 +5520,13 @@ int32_t rsi_wlan_add_profile(uint32_t type, uint8_t *profile)
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   rsi_config_profile_t *config_profile;
-
+  SL_PRINTF(SL_WLAN_ADD_PROFILE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_ADD_PROFILE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -5256,6 +5540,7 @@ int32_t rsi_wlan_add_profile(uint32_t type, uint8_t *profile)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_ADD_PROFILE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -5305,10 +5590,12 @@ int32_t rsi_wlan_add_profile(uint32_t type, uint8_t *profile)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_ADD_PROFILE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_ADD_PROFILE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -5335,6 +5622,7 @@ int32_t rsi_wlan_add_profile(uint32_t type, uint8_t *profile)
 uint8_t rsi_wlan_get_state(void)
 {
   // Return WLAN state
+  SL_PRINTF(SL_WLAN_GET_STATE_EXIT, WLAN, LOG_INFO);
   return rsi_driver_cb->wlan_cb->state;
 }
 
@@ -5365,12 +5653,13 @@ int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, u
   int32_t status                 = RSI_SUCCESS;
   rsi_pkt_t *pkt                 = NULL;
   rsi_profile_req_t *profile_req = NULL;
-
+  SL_PRINTF(SL_WLAN_GET_PROFILE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_GET_PROFILE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -5384,6 +5673,7 @@ int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, u
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_GET_PROFILE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -5417,10 +5707,12 @@ int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, u
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_GET_PROFILE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_GET_PROFILE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -5437,8 +5729,8 @@ int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, u
 
 uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
 {
+  SL_PRINTF(SL_WLAN_FILL_CONFIG_PROFILE_ENTRY, WLAN, LOG_INFO);
   int i, j = 0;
-
   uint32_t ip_addr                             = 0;
   uint32_t mask                                = 0;
   uint32_t gw                                  = 0;
@@ -5808,7 +6100,7 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
   } else {
     profile_buffer = NULL;
   }
-
+  SL_PRINTF(SL_WLAN_FILL_CONFIG_PROFILE_EXIT, WLAN, LOG_INFO);
   return profile_buffer;
 }
 
@@ -5830,11 +6122,12 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
 #ifndef RSI_CHIP_MFG_EN
   rsi_pkt_t *pkt                 = NULL;
   rsi_profile_req_t *profile_req = NULL;
-
+  SL_PRINTF(SL_WLAN_DELETE_PROFILE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_DELETE_PROFILE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
@@ -5849,6 +6142,7 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_DELETE_PROFILE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -5876,11 +6170,13 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_DELETE_PROFILE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
 #endif
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_DELETE_PROFILE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -5916,12 +6212,13 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
   int32_t status                              = RSI_SUCCESS;
   rsi_pkt_t *pkt                              = NULL;
   rsi_auto_config_enable_t *config_enable_req = NULL;
-
+  SL_PRINTF(SL_WLAN_ENABLE_AUTO_CONFIG_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_ENABLE_AUTO_CONFIG_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -5935,6 +6232,7 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_ENABLE_AUTO_CONFIG_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     // Memset buffer
@@ -5964,10 +6262,12 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_ENABLE_AUTO_CONFIG_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_ENABLE_AUTO_CONFIG_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /*==============================================*/
@@ -5993,12 +6293,13 @@ int32_t rsi_wlan_pmk_generate(int8_t type, int8_t *psk, int8_t *ssid, uint8_t *p
   int32_t status         = RSI_SUCCESS;
   rsi_pkt_t *pkt         = NULL;
   rsi_req_psk_t *psk_ptr = NULL;
-
+  SL_PRINTF(SL_WLAN_PMK_GENERATE_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_PMK_GENERATE_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -6012,6 +6313,7 @@ int32_t rsi_wlan_pmk_generate(int8_t type, int8_t *psk, int8_t *ssid, uint8_t *p
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_PMK_GENERATE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -6051,10 +6353,64 @@ int32_t rsi_wlan_pmk_generate(int8_t type, int8_t *psk, int8_t *ssid, uint8_t *p
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_PMK_GENERATE_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_PMK_GENERATE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
+  return status;
+}
+/*==============================================*/
+/**
+ * @fn       int32_t rsi_wlan_11ax_config(void)
+ * @brief    Configure the 11ax params. This is a blocking API.
+ * @pre    	\ref rsi_wlan_11ax_config() API needs to be called after opermode command only
+ * @return 
+ * 		Non-Zero Value  - Failure \n
+ *              0 		- Success \n
+ *              -2 - Invalid parameters \n
+ *		-3 - Command given in wrong state \n
+ *		-4 - Buffer not availableto serve the command \n
+ *		If return value is greater than zero : 0x0021
+ * @note        Refer to Error Codes section for the description of the above error codes  \ref SP16
+ * 		Parameters given here are used internally by the API
+ *
+ *
+ */
+int32_t rsi_wlan_11ax_config(void)
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+  if (wlan_cb->state >= RSI_WLAN_STATE_INIT_DONE) {
+    // Change WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+    // Return command given in wrong state error
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+  // Allocate command buffer from WLAN pool
+  pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+  // If allocation of packet fails
+  if (pkt == NULL) {
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+    // Return packet allocation failure error
+    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  }
+#ifndef RSI_WLAN_SEM_BITMAP
+  rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+  // Send antenna select command
+  status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_11AX_PARAMS, pkt);
+
+  // Wait on WLAN semaphore
+  rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_WLAN_11AX_WAIT_TIME);
+
+  // Get WLAN/network command response status
+  status = rsi_wlan_get_status();
+  // Return status
   return status;
 }
 /*==============================================*/
@@ -6071,12 +6427,13 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
   int16_t status               = RSI_SUCCESS;
   rsi_pkt_t *pkt               = NULL;
   rsi_set_sleep_timer_t *timer = NULL;
-
+  SL_PRINTF(SL_WLAN_SET_SLEEP_TIMER_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_SET_SLEEP_TIMER_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -6089,6 +6446,7 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_SET_SLEEP_TIMER_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -6115,10 +6473,12 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_SET_SLEEP_TIMER_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_SET_SLEEP_TIMER_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -6183,11 +6543,13 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
                                                                   uint8_t *buffer,
                                                                   const uint32_t length))
 {
+  SL_PRINTF(SL_WLAN_REGISTER_CALLBACKS_ENTRY, WLAN, LOG_INFO);
   if (callback_id > RSI_MAX_NUM_CALLBACKS) {
     /*
      *Return , if the callback number exceeds the RSI_MAX_NUM_CALLBACKS ,or
      * the callback is already registered
      */
+    SL_PRINTF(SL_WLAN_REGISTER_CALLBACKS_NUMBER_EXCEEDS_MAX_NUM_CALLBACKS_OR_CALLBACK_ALREADY_REG, WLAN, LOG_INFO);
     return 1;
   }
   if (callback_id == RSI_JOIN_FAIL_CB) // check for NULL or not
@@ -6252,6 +6614,7 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
       rsi_wlan_cb_non_rom->callback_list.rsi_max_available_rx_window = callback_handler_ptr;
     }
   }
+  SL_PRINTF(SL_WLAN_REGISTER_CALLBACKS_EXIT, WLAN, LOG_INFO);
   return 0;
 }
 /** @} */
@@ -6402,12 +6765,13 @@ int32_t rsi_wlan_req_radio(uint8_t enable)
   rsi_pkt_t *pkt                   = NULL;
   int32_t status                   = RSI_SUCCESS;
   rsi_wlan_req_radio_t *wlan_radio = NULL;
-
+  SL_PRINTF(SL_WLAN_REQ_RADIO_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
     // Command given in wrong state
+    SL_PRINTF(SL_WLAN_REQ_RADIO_COMMAND_GIVEN_IN_WRONG_STATE, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
@@ -6420,6 +6784,7 @@ int32_t rsi_wlan_req_radio(uint8_t enable)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_REQ_RADIO_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
     wlan_radio = (rsi_wlan_req_radio_t *)pkt->data;
@@ -6451,10 +6816,12 @@ int32_t rsi_wlan_req_radio(uint8_t enable)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_REQ_RADIO_WLAN_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_REQ_RADIO_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -6494,6 +6861,7 @@ int32_t rsi_wlan_radio_deinit(void)
   status = rsi_wlan_req_radio(RSI_DISABLE);
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_RADIO_DEINIT_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -6517,7 +6885,7 @@ int32_t rsi_wlan_radio_deinit(void)
 int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 {
   int32_t status = RSI_SUCCESS;
-
+  SL_PRINTF(SL_WLAN_ADD_MFI_IE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt;
   rsi_req_add_mfi_ie_t *mfi_ie_req = NULL;
 
@@ -6535,6 +6903,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_ADD_MFI_IE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -6565,10 +6934,12 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_ADD_MFI_IE_WLAN_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_ADD_MFI_IE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 
@@ -6797,7 +7168,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *payload, uint16_t payload_len)
 {
   int32_t status = 0;
-
+  SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_ENTRY, NETWORK, LOG_INFO);
   rsi_pkt_t *pkt = NULL;
 
   rsi_gain_table_info_t *gain_table = NULL;
@@ -6807,6 +7178,7 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
 
   // Check for gain table max supported payload length
   if (payload_len > GAIN_TABLE_MAX_PAYLOAD_LEN) {
+    SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -6821,6 +7193,7 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
@@ -6858,10 +7231,12 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
 
   } else {
     // Return WLAN command error
+    SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_WLAN_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */
@@ -7298,6 +7673,7 @@ int32_t rsi_reset_mac()
 
 uint8_t translate_channel(uint8_t channelNum)
 {
+  SL_PRINTF(SL_WLAN_TRANSLATE_CHANNEL_ENTRY, WLAN, LOG_INFO);
   if (channelNum) {
     if (channelNum < 9) {
       channelNum = (channelNum * 4 + 32);
@@ -7307,6 +7683,7 @@ uint8_t translate_channel(uint8_t channelNum)
       channelNum = ((channelNum - 20) * 4) + 149;
     } /* End if <condition> */
   }
+  SL_PRINTF(SL_WLAN_TRANSLATE_CHANNEL_EXIT, WLAN, LOG_INFO);
   return channelNum;
 }
 
@@ -7514,7 +7891,6 @@ int32_t program_bb_rf()
 
   // Get WLAN/network command response status
   status = rsi_wlan_get_status();
-
   return status;
 }
 /*==============================================*/
@@ -7586,8 +7962,8 @@ int32_t set_channel(uint8_t channel_num, uint8_t power_level)
     return status;
   }
   // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
 
+  status = rsi_wlan_get_status();
   return 0;
 }
 /*==============================================*/
@@ -7805,8 +8181,8 @@ uint16_t seq_num = 0;
 /*==============================================*/
 /**
  * @brief      Prepare PER packet
- * @param[in]  per_params  - Parameters
- * @param[in]  length - Length
+ * @param[in]  per_params  - Parameters \ref tx_per_params_t
+ * @param[in]  length - Length of the parameters buffer
  * @return     0  -  Success \n
  *             Non-Zero Value - Failure
  */
@@ -7952,7 +8328,7 @@ uint32_t rsi_prepare_per_pkt(tx_per_params_t *per_params, uint16_t length)
 /*==============================================*/
 /**
  * @brief     Transmit packets frame
- * @param[in] tx_per_params -  Transmitted parameter
+ * @param[in] tx_per_params -  Transmitted parameter \ref tx_per_params_t
  * @return     0  -  Success \n
  *             Non-Zero Value - Failure
  */

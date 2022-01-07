@@ -75,7 +75,7 @@ uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
 #define RSI_BLE_DEV_ADDR "00:23:A7:80:70:B9"
 
 //! Remote Device Name to connect
-#define RSI_REMOTE_DEVICE_NAME "REDPINE_DEV"
+#define RSI_REMOTE_DEVICE_NAME "SILABS_DEV"
 
 //! attribute properties
 #define RSI_BLE_ATT_PROPERTY_READ   0x02
@@ -192,6 +192,10 @@ rsi_ble_resp_att_descs_t attr_desc_list;
 int8_t notify_start            = 0;
 heart_rate_t rate              = { 0x00, 75, 73, 70, 0 };
 uint8_t str_remote_address[18] = { '\0' };
+
+rsi_semaphore_handle_t ble_main_task_sem;
+static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
 
 /*==============================================*/
 /**
@@ -401,9 +405,16 @@ static void rsi_ble_app_init_events()
  * @section description
  * This function is used to set/raise the specific event.
  */
-static void rsi_ble_app_set_event(uint32_t event_num)
+void rsi_ble_app_set_event(uint32_t event_num)
 {
-  ble_app_event_map |= BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map |= BIT(event_num);
+  } else {
+    ble_app_event_map1 |= BIT((event_num - 32));
+  }
+  rsi_semaphore_post(&ble_main_task_sem);
+
   return;
 }
 
@@ -418,7 +429,13 @@ static void rsi_ble_app_set_event(uint32_t event_num)
  */
 static void rsi_ble_app_clear_event(uint32_t event_num)
 {
-  ble_app_event_map &= ~BIT(event_num);
+
+  if (event_num < 32) {
+    ble_app_event_map &= ~BIT(event_num);
+  } else {
+    ble_app_event_map1 &= ~BIT((event_num - 32));
+  }
+
   return;
 }
 
@@ -437,14 +454,21 @@ static int32_t rsi_ble_app_get_event(void)
 {
   uint32_t ix;
 
-  for (ix = 0; ix < 32; ix++) {
-    if (ble_app_event_map & (1 << ix)) {
-      return ix;
+  for (ix = 0; ix < 64; ix++) {
+    if (ix < 32) {
+      if (ble_app_event_map & (1 << ix)) {
+        return ix;
+      }
+    } else {
+      if (ble_app_event_map1 & (1 << (ix - 32))) {
+        return ix;
+      }
     }
   }
 
   return (-1);
 }
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_simple_central_on_adv_report_event
@@ -678,6 +702,9 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
 #else
   uint8_t adv[31] = { 2, 1, 6 };
 #endif
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
 
 #ifndef RSI_WITH_OS
   //! Driver initialization
@@ -686,7 +713,7 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
     return status;
   }
 
-  //! Redpine module intialisation
+  //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -695,7 +722,20 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #endif
-
+#ifdef RSI_WITH_OS
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -744,7 +784,8 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
                                   NULL,
                                   NULL,
                                   NULL);
-
+  //! create ble main task if ble protocol is selected
+  rsi_semaphore_create(&ble_main_task_sem, 0);
   //!  initializing the application events map
   rsi_ble_app_init_events();
 
@@ -822,6 +863,7 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
           rsi_ble_set_local_att_value(rsi_ble_measurement_hndl, len, (uint8_t *)data);
         }
       }
+      rsi_semaphore_wait(&ble_main_task_sem, 0);
 #endif
       continue;
     }
@@ -1058,8 +1100,7 @@ int main(void)
 {
 #ifdef RSI_WITH_OS
   int32_t status;
-  rsi_task_handle_t bt_task_handle     = NULL;
-  rsi_task_handle_t driver_task_handle = NULL;
+  rsi_task_handle_t bt_task_handle = NULL;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -1081,11 +1122,6 @@ int main(void)
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
     return status;
   }
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
 
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
@@ -1098,14 +1134,6 @@ int main(void)
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

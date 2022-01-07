@@ -27,8 +27,9 @@
  *
  *
  */
+#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
-
+#endif
 #ifdef RSI_UART_INTERFACE
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_uart.h"
@@ -87,6 +88,7 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
 
 int32_t rsi_uart_init(void)
 {
+  SL_PRINTF(SL_UART_INIT_ENTRY, DRIVER, LOG_INFO);
   huart1.Instance          = USART1;
   huart1.Init.BaudRate     = 921600;
   huart1.Init.WordLength   = UART_WORDLENGTH_8B;
@@ -95,6 +97,7 @@ int32_t rsi_uart_init(void)
   huart1.Init.Mode         = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  SL_PRINTF(SL_UART_INIT_EXIT, DRIVER, LOG_INFO);
   return 0;
 }
 
@@ -108,7 +111,6 @@ int32_t rsi_uart_init(void)
 
 int32_t rsi_uart_deinit(void)
 {
-
   return 0;
 }
 #endif

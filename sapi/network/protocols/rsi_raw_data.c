@@ -31,12 +31,14 @@
 int32_t rsi_send_raw_data(uint8_t *buffer, uint32_t length)
 {
   int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_SEND_RAW_DATA_ENTRY, NETWORK, LOG_INFO);
   uint8_t *host_desc;
   rsi_pkt_t *pkt;
 
   // If buffer is invalid
   if ((buffer == NULL) || (length == 0)) {
     // Return packet allocation failure error
+    SL_PRINTF(SL_SEND_RAW_DATA_INVALID_PARAM, NETWORK, LOG_ERROR);
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -45,6 +47,7 @@ int32_t rsi_send_raw_data(uint8_t *buffer, uint32_t length)
 
   if (pkt == NULL) {
     // Return packet allocation failure error
+    SL_PRINTF(SL_SEND_RAW_DATA_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR);
     return RSI_ERROR_PKT_ALLOCATION_FAILURE;
   }
 
@@ -83,6 +86,7 @@ int32_t rsi_send_raw_data(uint8_t *buffer, uint32_t length)
   status = rsi_wlan_get_status();
 
   // Return status
+  SL_PRINTF(SL_SEND_RAW_DATA_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
 /** @} */

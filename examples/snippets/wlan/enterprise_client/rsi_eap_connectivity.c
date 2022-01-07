@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -130,7 +130,32 @@ int32_t rsi_eap_connectivity()
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
   rsi_eap_credentials_t credentials;
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
 
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\ndevice init Failed,Error Code is:0x%04lx\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\ndevice init success\r\n");
+#ifdef RSI_WITH_OS
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! configuring user name
   rsi_strcpy(credentials.username, USER_IDENTITY);
 
@@ -221,25 +246,8 @@ int main()
   int32_t status;
 
 #ifdef RSI_WITH_OS
-
   rsi_task_handle_t wlan_task_handle = NULL;
-
-  rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\ndevice init Failed,Error Code is:0x%04lx\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\ndevice init success\r\n");
 
 #ifdef RSI_WITH_OS
   //! OS case
@@ -250,14 +258,6 @@ int main()
                   NULL,
                   RSI_WLAN_TASK_PRIORITY,
                   &wlan_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

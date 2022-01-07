@@ -88,7 +88,9 @@ void rsi_critical_section_exit(rsi_reg_flags_t flags);
 /* --------------  MUTEX FUNCTIONS -------------- */
 rsi_error_t rsi_mutex_create(rsi_mutex_handle_t *p_mutex);
 rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *p_mutex);
+void rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex);
 rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *p_mutex);
+void rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex);
 rsi_error_t rsi_mutex_destroy(rsi_mutex_handle_t *p_mutex);
 
 /*  ------------- SEMAPHORE FUNCTIONS ----------- */

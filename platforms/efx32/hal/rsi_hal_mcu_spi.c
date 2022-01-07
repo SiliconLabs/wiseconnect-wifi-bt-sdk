@@ -1,15 +1,19 @@
-/*************************************************************************
- *
- * Copyright (c) 2019 Redpine Signals Incorporated. All Rights Reserved.
- *
- * NOTICE:  All  information  contained  herein is, and  remains  the  property of
- * Redpine Signals Incorporated. The intellectual and technical concepts contained
- * herein  are  proprietary to  Redpine Signals Incorporated and may be covered by
- * U.S. and Foreign Patents, patents in process, and are protected by trade secret
- * or copyright law. Dissemination  of this  information or reproduction  of  this
- * material is strictly forbidden unless prior written permission is obtained from
- * Redpine Signals Incorporated.
- */
+/*******************************************************************************
+* @file  rsi_hal_mcu_spi.c
+* @brief
+*******************************************************************************
+* # License
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+*******************************************************************************
+*
+* The licensor of this software is Silicon Laboratories Inc. Your use of this
+* software is governed by the terms of Silicon Labs Master Software License
+* Agreement (MSLA) available at
+* www.silabs.com/about-us/legal/master-software-license-agreement. This
+* software is distributed to you in Source Code format and is governed by the
+* sections of the MSLA applicable to Source Code.
+*
+******************************************************************************/
 /**
  * Includes
  */

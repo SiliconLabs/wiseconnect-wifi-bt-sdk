@@ -25,6 +25,11 @@
 #define NULL 0
 #endif
 
+//! Enable feature
+#define RSI_ENABLE 1
+//! Disable feature
+#define RSI_DISABLE 0
+
 /******************************************************
  * *                    Constants
  * ******************************************************/

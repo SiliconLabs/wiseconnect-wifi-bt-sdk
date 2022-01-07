@@ -73,6 +73,7 @@ int32_t rsi_ble_get_profiles_async(uint8_t *dev_addr,
   req_profiles.start_handle = start_handle;
   req_profiles.end_handle   = end_handle;
 
+  SL_PRINTF(SL_RSI_BLE_GET_PROFILES_HANDLE_ASYNC, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_REQ_PROFILES_ASYNC, &req_profiles, p_prof_list);
 }
 
@@ -100,6 +101,8 @@ int32_t rsi_ble_get_profiles_async(uint8_t *dev_addr,
  */
 int32_t rsi_ble_get_profile_async(uint8_t *dev_addr, uuid_t profile_uuid, profile_descriptors_t *p_profile)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_PROFILES_UUID_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_profile_t req_profile;
   memset(&req_profile, 0, sizeof(req_profile));
 #ifdef BD_ADDR_IN_ASCII
@@ -142,6 +145,8 @@ int32_t rsi_ble_get_char_services_async(uint8_t *dev_addr,
                                         uint16_t end_handle,
                                         rsi_ble_resp_char_services_t *p_char_serv_list)
 {
+
+  SL_PRINTF(SL_RSI_BLE_CHAR_SERVICES_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_char_services_t req_char_services;
   memset(&req_char_services, 0, sizeof(req_char_services));
 #ifdef BD_ADDR_IN_ASCII
@@ -186,6 +191,8 @@ int32_t rsi_ble_get_inc_services_async(uint8_t *dev_addr,
                                        uint16_t end_handle,
                                        rsi_ble_resp_inc_services_t *p_inc_serv_list)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_INC_SERVICES_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_inc_services_t req_inc_services;
   memset(&req_inc_services, 0, sizeof(req_inc_services));
 
@@ -234,6 +241,8 @@ int32_t rsi_ble_get_char_value_by_uuid_async(uint8_t *dev_addr,
                                              uuid_t char_uuid,
                                              rsi_ble_resp_att_value_t *p_char_val)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_CHAR_VALUE_BY_UUID_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_char_val_by_uuid_t req_char_val;
   memset(&req_char_val, 0, sizeof(req_char_val));
 
@@ -279,6 +288,8 @@ int32_t rsi_ble_get_att_descriptors_async(uint8_t *dev_addr,
                                           uint16_t end_handle,
                                           rsi_ble_resp_att_descs_t *p_att_desc)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_ATT_DESCRIPTORS_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_att_descs_t req_att_desc;
   memset(&req_att_desc, 0, sizeof(req_att_desc));
 #ifdef BD_ADDR_IN_ASCII
@@ -316,6 +327,8 @@ int32_t rsi_ble_get_att_descriptors_async(uint8_t *dev_addr,
 
 int32_t rsi_ble_get_att_value_async(uint8_t *dev_addr, uint16_t handle, rsi_ble_resp_att_value_t *p_att_val)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_ATT_VALUE_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_att_value_t req_att_val;
   memset(&req_att_val, 0, sizeof(req_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -357,6 +370,8 @@ int32_t rsi_ble_get_multiple_att_values_async(uint8_t *dev_addr,
                                               uint16_t *handles,
                                               rsi_ble_resp_att_value_t *p_att_vals)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_MULTIPLE_ATT_VALUES_ASYNC, BLE, LOG_INFO, "NUMBER_OF_HANDLERS: %1x", num_of_handlers);
   rsi_ble_req_multi_att_values_t req_att_vals;
   memset(&req_att_vals, 0, sizeof(req_att_vals));
   uint8_t ix;
@@ -402,6 +417,8 @@ int32_t rsi_ble_get_long_att_value_async(uint8_t *dev_addr,
                                          uint16_t offset,
                                          rsi_ble_resp_att_value_t *p_att_vals)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_LONG_ATT_VALUE_ASYNC, BLE, LOG_INFO, "HANDLE: %2x, OFFSET: %2x", handle, offset);
   rsi_ble_req_long_att_value_t req_long_att_val;
   memset(&req_long_att_val, 0, sizeof(req_long_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -438,6 +455,8 @@ int32_t rsi_ble_get_long_att_value_async(uint8_t *dev_addr,
 
 int32_t rsi_ble_set_att_value_async(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_ATT_VALUE_ASYNC, BLE, LOG_INFO, "HANDLE: %2x, DATA_LEN: %1x", handle, data_len);
   rsi_ble_set_att_value_t set_att_val;
   memset(&set_att_val, 0, sizeof(set_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -482,6 +501,14 @@ int32_t rsi_ble_prepare_write_async(uint8_t *dev_addr,
                                     uint8_t data_len,
                                     uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_PREPARE_WRITE_ASYNC,
+            BLE,
+            LOG_INFO,
+            "HANDLE: %2x, OFFSET: %2x, DATA_LEN: %1x",
+            handle,
+            offset,
+            data_len);
   rsi_ble_req_prepare_write_t req_prepare_write;
   memset(&req_prepare_write, 0, sizeof(req_prepare_write));
 
@@ -518,6 +545,7 @@ int32_t rsi_ble_prepare_write_async(uint8_t *dev_addr,
 
 int32_t rsi_ble_execute_write_async(uint8_t *dev_addr, uint8_t exe_flag)
 {
+  SL_PRINTF(SL_RSI_BLE_EXECUTE_WRITE_ASYNC, BLE, LOG_INFO);
   rsi_ble_req_execute_write_t req_exe_write;
   memset(&req_exe_write, 0, sizeof(req_exe_write));
 #ifdef BD_ADDR_IN_ASCII
@@ -563,6 +591,8 @@ int32_t rsi_ble_get_profiles(uint8_t *dev_addr,
                              uint16_t end_handle,
                              rsi_ble_resp_profiles_list_t *p_prof_list)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_PROFILES, BLE, LOG_INFO);
   rsi_ble_req_profiles_list_t req_profiles;
   memset(&req_profiles, 0, sizeof(req_profiles));
 
@@ -598,6 +628,8 @@ int32_t rsi_ble_get_profiles(uint8_t *dev_addr,
 
 int32_t rsi_ble_get_profile(uint8_t *dev_addr, uuid_t profile_uuid, profile_descriptors_t *p_profile)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_PROFILE, BLE, LOG_INFO);
   rsi_ble_req_profile_t req_profile;
   memset(&req_profile, 0, sizeof(req_profile));
 #ifdef BD_ADDR_IN_ASCII
@@ -636,6 +668,8 @@ int32_t rsi_ble_get_char_services(uint8_t *dev_addr,
                                   uint16_t end_handle,
                                   rsi_ble_resp_char_services_t *p_char_serv_list)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_CHAR_SERVICES, BLE, LOG_INFO);
   rsi_ble_req_char_services_t req_char_services;
   memset(&req_char_services, 0, sizeof(req_char_services));
 #ifdef BD_ADDR_IN_ASCII
@@ -676,6 +710,8 @@ int32_t rsi_ble_get_inc_services(uint8_t *dev_addr,
                                  uint16_t end_handle,
                                  rsi_ble_resp_inc_services_t *p_inc_serv_list)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_INC_SERVICES, BLE, LOG_INFO);
   rsi_ble_req_inc_services_t req_inc_services;
   memset(&req_inc_services, 0, sizeof(req_inc_services));
 #ifdef BD_ADDR_IN_ASCII
@@ -719,6 +755,8 @@ int32_t rsi_ble_get_char_value_by_uuid(uint8_t *dev_addr,
                                        uuid_t char_uuid,
                                        rsi_ble_resp_att_value_t *p_char_val)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_CHAR_VALUE_BY_UUID, BLE, LOG_INFO);
   rsi_ble_req_char_val_by_uuid_t req_char_val;
   memset(&req_char_val, 0, sizeof(req_char_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -761,6 +799,8 @@ int32_t rsi_ble_get_att_descriptors(uint8_t *dev_addr,
                                     uint16_t end_handle,
                                     rsi_ble_resp_att_descs_t *p_att_desc)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_ATT_DESCRIPTORS, BLE, LOG_INFO);
   rsi_ble_req_att_descs_t req_att_desc;
   memset(&req_att_desc, 0, sizeof(req_att_desc));
 
@@ -794,6 +834,8 @@ int32_t rsi_ble_get_att_descriptors(uint8_t *dev_addr,
 
 int32_t rsi_ble_get_att_value(uint8_t *dev_addr, uint16_t handle, rsi_ble_resp_att_value_t *p_att_val)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_ATT_VALUE, BLE, LOG_INFO);
   rsi_ble_req_att_value_t req_att_val;
   memset(&req_att_val, 0, sizeof(req_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -832,6 +874,7 @@ int32_t rsi_ble_get_multiple_att_values(uint8_t *dev_addr,
                                         uint16_t *handles,
                                         rsi_ble_resp_att_value_t *p_att_vals)
 {
+  SL_PRINTF(SL_RSI_BLE_GET_MULTIPLE_ATT_VALUES, BLE, LOG_INFO, "NUMBER_OF_HANDLERS: %1x", num_of_handlers);
   rsi_ble_req_multi_att_values_t req_att_vals;
   memset(&req_att_vals, 0, sizeof(req_att_vals));
   uint8_t ix;
@@ -874,6 +917,8 @@ int32_t rsi_ble_get_long_att_value(uint8_t *dev_addr,
                                    uint16_t offset,
                                    rsi_ble_resp_att_value_t *p_att_vals)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_LONG_ATT_VALUE, BLE, LOG_INFO, "HANDLES: %2x, OFFSET: %2x", handle, offset);
   rsi_ble_req_long_att_value_t req_long_att_val;
   memset(&req_long_att_val, 0, sizeof(req_long_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -907,6 +952,8 @@ int32_t rsi_ble_get_long_att_value(uint8_t *dev_addr,
 
 int32_t rsi_ble_set_att_value(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_ATT_VALUE, BLE, LOG_INFO);
   rsi_ble_set_att_value_t set_att_val;
   memset(&set_att_val, 0, sizeof(set_att_val));
 #ifdef BD_ADDR_IN_ASCII
@@ -944,6 +991,8 @@ int32_t rsi_ble_set_att_value(uint8_t *dev_addr, uint16_t handle, uint8_t data_l
 
 int32_t rsi_ble_set_att_cmd(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_ATT_COMMAND, BLE, LOG_INFO, "HANDLE: %2x, DATA_LEN: %1x", handle, data_len);
   rsi_ble_set_att_cmd_t set_att_cmd;
   memset(&set_att_cmd, 0, sizeof(set_att_cmd));
 #ifdef BD_ADDR_IN_ASCII
@@ -987,6 +1036,14 @@ int32_t rsi_ble_set_long_att_value(uint8_t *dev_addr,
                                    uint8_t data_len,
                                    uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_LONG_ATT_VALUE,
+            BLE,
+            LOG_INFO,
+            "HANDLE: %2x, DATA_LEN: %1x, OFFSET: %2x",
+            handle,
+            data_len,
+            offset);
   rsi_ble_set_long_att_value_t set_long_att;
   memset(&set_long_att, 0, sizeof(set_long_att));
 #ifdef BD_ADDR_IN_ASCII
@@ -1024,6 +1081,13 @@ int32_t rsi_ble_set_long_att_value(uint8_t *dev_addr,
 
 int32_t rsi_ble_prepare_write(uint8_t *dev_addr, uint16_t handle, uint16_t offset, uint8_t data_len, uint8_t *p_data)
 {
+  SL_PRINTF(SL_RSI_BLE_PREPARE_WRITE,
+            BLE,
+            LOG_INFO,
+            "HANDLE: %2x, DATA_LEN: %1x, OFFSET: %2x",
+            handle,
+            data_len,
+            offset);
   rsi_ble_req_prepare_write_t req_prepare_write;
   memset(&req_prepare_write, 0, sizeof(req_prepare_write));
 #ifdef BD_ADDR_IN_ASCII
@@ -1059,6 +1123,8 @@ int32_t rsi_ble_prepare_write(uint8_t *dev_addr, uint16_t handle, uint16_t offse
 
 int32_t rsi_ble_execute_write(uint8_t *dev_addr, uint8_t exe_flag)
 {
+
+  SL_PRINTF(SL_RSI_BLE_EXECUTABLE_WRITE, BLE, LOG_INFO);
   rsi_ble_req_execute_write_t req_exe_write;
   memset(&req_exe_write, 0, sizeof(req_exe_write));
 #ifdef BD_ADDR_IN_ASCII
@@ -1094,6 +1160,8 @@ int32_t rsi_ble_execute_write(uint8_t *dev_addr, uint8_t exe_flag)
 
 int32_t rsi_ble_add_service(uuid_t service_uuid, rsi_ble_resp_add_serv_t *p_resp_serv)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ADD_SERVICE, BLE, LOG_INFO);
   rsi_ble_req_add_serv_t new_service;
   memset(&new_service, 0, sizeof(new_service));
 
@@ -1118,6 +1186,8 @@ int32_t rsi_ble_add_service(uuid_t service_uuid, rsi_ble_resp_add_serv_t *p_resp
 
 int32_t rsi_ble_add_attribute(rsi_ble_req_add_att_t *p_attribute)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ADD_ATTRIBUTE, BLE, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BLE_ADD_ATTRIBUTE, p_attribute, NULL);
 }
 
@@ -1150,6 +1220,8 @@ int32_t rsi_ble_add_attribute(rsi_ble_req_add_att_t *p_attribute)
 
 int32_t rsi_ble_set_local_att_value(uint16_t handle, uint16_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_LOCAL_ATT_VALUE, BLE, LOG_INFO, "HANDLE: %2x", handle);
   rsi_ble_set_local_att_value_t rec_data = { 0 };
 
   rec_data.handle   = handle;
@@ -1170,8 +1242,11 @@ int32_t rsi_ble_set_local_att_value(uint16_t handle, uint16_t data_len, uint8_t 
 			 1 - BLE_BIG_BUFF_MODE \n
  * @param[in]  buf_count - no of buffers to be configured \n
 			only value 1 and 2 are supporetd in BLE_SMALL_BUFF_MODE  \n
-			values from 1 to less than (RSI_BLE_NUM_CONN_EVENTS - RSI_BLE_MAX_NBR_SLAVES - RSI_BLE_MAX_NBR_MASTERS - N) are supported in BLE_BIG_BUFF_MODE \n 
-			Here, N - refer to the number of buffers allocated for the existing connections previously \n			
+
+			in BLE_BIG_BUFF_MODE, buffers allocated based on the below notations.
+			intial available_buf_cnt = RSI_BLE_NUM_CONN_EVENTS,
+			a) When connection 1 is formed, the possible range of buffers is (available_buf_cnt - remaining possible no.connections)
+			b) After allocating X buffers using \ref rsi_ble_set_wo_resp_notify_buf_info to the 1st connection remaiining available_buf_cnt = (available_buf_cnt - X ) \n
  * @return     0		-	Success \n
  *             Non-Zero Value	-	Failure
  *             0x4046  -  Invalid Arguments \n
@@ -1185,6 +1260,8 @@ int32_t rsi_ble_set_local_att_value(uint16_t handle, uint16_t data_len, uint8_t 
  */
 int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt)
 {
+
+  SL_PRINTF(SL_RSI_BLE_SET_WO_RESP_NOTIFY_BUF_INFO, BLE, LOG_INFO, "BUF_MODE: %1x, BUF_COUNT: %1x", buf_mode, buf_cnt);
   rsi_ble_set_wo_resp_notify_buf_info_t buf_info = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(buf_info.dev_addr, dev_addr);
@@ -1224,6 +1301,8 @@ int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode,
  */
 int32_t rsi_ble_notify_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_NOTIFY_VALUE_TRIGGER, BLE, LOG_INFO, "HANDLE: %2x", handle);
   rsi_ble_notify_att_value_t rec_data;
   memset(&rec_data, 0, sizeof(rec_data));
 #ifdef BD_ADDR_IN_ASCII
@@ -1260,6 +1339,8 @@ int32_t rsi_ble_notify_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_l
 
 int32_t rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_INDICATE_VOLUME_TRIGGER, BLE, LOG_INFO);
   rsi_ble_notify_att_value_t rec_data;
   memset(&rec_data, 0, sizeof(rec_data));
 #ifdef BD_ADDR_IN_ASCII
@@ -1273,6 +1354,47 @@ int32_t rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data
   memcpy(rec_data.data, p_data, rec_data.data_len);
 
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_INDICATE, &rec_data, NULL);
+}
+/** @} */
+/** @addtogroup BT-LOW-ENERGY4
+ * * @{
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_indicate_value_sync(uint8_t *dev_addr, uint16_t handle,
+ *                                            uint16_t data_len, uint8_t *p_data)
+ * @brief      Indicate the local value to the remote device. This is a blocking API. \n
+ *             This will not send any confirmation event to the application instead  \n
+ *             send the status as success on receiving confirmation from remote side.
+ * @pre        \ref rsi_ble_connect() API needs to be called before this API.
+ * @param[in]  dev_addr - remote device address
+ * @param[in]  handle 	- local attribute handle
+ * @param[in]  data_len - attribute value length
+ * @param[in]  p_data 	- attribute value
+ * @return     0		-	Success \n
+ *             Non-Zero Value	-	Failure \n
+ *             0x4D05  -  BLE socket not available \n 
+ *             0x4E60  -  Invalid Handle Range \n
+ * @note       Refer Error Codes section for above error codes \ref error-codes \n 
+ *
+ */
+
+int32_t rsi_ble_indicate_value_sync(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data)
+{
+
+  SL_PRINTF(SL_RSI_BLE_INDICATE_VALUE_SYNC, BLE, LOG_INFO);
+  rsi_ble_notify_att_value_t rec_data;
+  memset(&rec_data, 0, sizeof(rec_data));
+#ifdef BD_ADDR_IN_ASCII
+  rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
+#else
+  memcpy(rec_data.dev_addr, dev_addr, 6);
+#endif
+
+  rec_data.handle   = handle;
+  rec_data.data_len = RSI_MIN(data_len, sizeof(rec_data.data));
+  memcpy(rec_data.data, p_data, rec_data.data_len);
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_INDICATE_SYNC, &rec_data, NULL);
 }
 /** @} */
 
@@ -1293,6 +1415,8 @@ int32_t rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data
  */
 int32_t rsi_ble_indicate_confirm(uint8_t *dev_addr)
 {
+
+  SL_PRINTF(SL_RSI_BLE_INDICATE_CONFIRM, BLE, LOG_INFO);
   rsi_ble_indicate_confirm_t rec_data = { { 0 } };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
@@ -1329,6 +1453,8 @@ int32_t rsi_ble_indicate_confirm(uint8_t *dev_addr)
  */
 int32_t rsi_ble_get_local_att_value(uint16_t handle, rsi_ble_resp_local_att_value_t *p_resp_local_att_val)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GET_LOCAL_ATT_VALUE, BLE, LOG_INFO);
   rsi_ble_get_local_att_value_t local_read_val = { 0 };
 
   local_read_val.handle = handle;
@@ -1366,6 +1492,8 @@ int32_t rsi_ble_gatt_read_response(uint8_t *dev_addr,
                                    uint16_t length,
                                    uint8_t *p_data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GATT_READ_RESPONSE, BLE, LOG_INFO);
   //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(offset);
   UNUSED_PARAMETER(handle);
@@ -1396,6 +1524,8 @@ int32_t rsi_ble_gatt_read_response(uint8_t *dev_addr,
  */
 int32_t rsi_ble_remove_gatt_service(uint32_t service_handler)
 {
+
+  SL_PRINTF(SL_RSI_BLE_REMOVE_GATT_SERVICE, BLE, LOG_INFO, "SERVICE_HANDLER: %4x", service_handler);
   rsi_ble_gatt_remove_serv_t rem_serv;
 
   rem_serv.serv_hndler = service_handler;
@@ -1417,6 +1547,13 @@ int32_t rsi_ble_remove_gatt_service(uint32_t service_handler)
  */
 int32_t rsi_ble_remove_gatt_attibute(uint32_t service_handler, uint16_t att_hndl)
 {
+
+  SL_PRINTF(SL_RSI_BLE_REMOVE_GATT_ATTRIBUTE,
+            BLE,
+            LOG_INFO,
+            "SERVICE_HANDLER: %4x, ATT_HANDLE: %2x",
+            service_handler,
+            att_hndl);
   rsi_ble_gatt_remove_att_t rem_att;
 
   rem_att.serv_hndler = service_handler;
@@ -1442,6 +1579,8 @@ int32_t rsi_ble_remove_gatt_attibute(uint32_t service_handler, uint16_t att_hndl
  */
 int32_t rsi_ble_att_error_response(uint8_t *dev_addr, uint16_t handle, uint8_t opcode, uint8_t err)
 {
+
+  SL_PRINTF(SL_RSI_BLE_ATT_ERROR_RESPONSE, BLE, LOG_INFO, "HANDLE: %2x", handle);
   rsi_ble_att_error_response_t att_error = { 0 };
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(att_error.dev_addr, dev_addr);
@@ -1477,6 +1616,8 @@ int32_t rsi_ble_att_error_response(uint8_t *dev_addr, uint16_t handle, uint8_t o
  */
 int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size)
 {
+
+  SL_PRINTF(SL_RSI_BLE_MTU_EXCHANGE_EVENT, BLE, LOG_INFO);
   rsi_ble_mtu_exchange_t mtu_req;
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(mtu_req.dev_addr, dev_addr);
@@ -1486,6 +1627,32 @@ int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size)
   mtu_req.req_mtu_size = mtu_size;
 
   return rsi_bt_driver_send_cmd(RSI_BLE_MTU_EXCHANGE_REQUEST, &mtu_req, NULL);
+}
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size)
+ * @brief      This function (Exchange MTU Response) is sent in reply to a received Exchange MTU Request. 
+ * @pre        \ref rsi_ble_connect() API needs to be called before this API.
+ * @param[in]  dev_addr - Remote Device Address
+ * @param[in]  mtu_size - requested MTU value
+ * @return     0		-	Success \n
+ *             0x4D0C   -   When RSI_BLE_MTU_EXCHANGE_FROM_HOST BIT is not SET.
+ *             0x4D05   -   BLE Socket Not Available.
+ *             Non-Zero Value	-	Failure
+ *             Refer Error Codes section for above error codes \ref error-codes
+ *
+ */
+int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size)
+{
+  rsi_ble_mtu_exchange_resp_t mtu_resp;
+#ifdef BD_ADDR_IN_ASCII
+  rsi_ascii_dev_address_to_6bytes_rev(mtu_resp.dev_addr, dev_addr);
+#else
+  memcpy((uint8_t *)mtu_resp.dev_addr, (int8_t *)dev_addr, 6);
+#endif
+  mtu_resp.req_mtu_size = mtu_size;
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_MTU_EXCHANGE_RESP, &mtu_resp, NULL);
 }
 
 /** @} */
@@ -1511,6 +1678,8 @@ int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size)
  */
 int32_t rsi_ble_gatt_write_response(uint8_t *dev_addr, uint8_t type)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GATT_WRITE_RESPONSE, BLE, LOG_INFO);
   rsi_ble_gatt_write_response_t local_write_resp;
   memset(&local_write_resp, 0, sizeof(local_write_resp));
 #ifdef BD_ADDR_IN_ASCII
@@ -1549,6 +1718,14 @@ int32_t rsi_ble_gatt_prepare_write_response(uint8_t *dev_addr,
                                             uint16_t length,
                                             uint8_t *data)
 {
+
+  SL_PRINTF(SL_RSI_BLE_GATT_PREPARE_WRITE_RESPONSE,
+            BLE,
+            LOG_INFO,
+            "HANDLE: %2x, LENGTH: %2x, OFFSET: %2x",
+            handle,
+            length,
+            offset);
   rsi_ble_gatt_prepare_write_response_t local_prepare_write_resp;
   memset(&local_prepare_write_resp, 0, sizeof(local_prepare_write_resp));
 #ifdef BD_ADDR_IN_ASCII

@@ -3,7 +3,7 @@
 * @brief 
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -21,7 +21,7 @@
 /*================================================================================
  * @brief : This file contains example application for Station Ping
  * @section Description :
- * The application demonstrates how to configure Redpine device in client mode to
+ * The application demonstrates how to configure SiLabs device in client mode to
  * send ping request to target IP address.
  =================================================================================*/
 
@@ -157,7 +157,33 @@ int32_t rsi_station_ping_app()
 #if CONNECT_WITH_PMK
   uint8_t pmk[PMK_SIZE];
 #endif
+#ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
+#endif
 
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
@@ -284,23 +310,7 @@ int main()
 
   rsi_task_handle_t wlan_task_handle = NULL;
 
-  rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Redpine module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 
 #ifdef RSI_WITH_OS
   //! OS case
@@ -311,14 +321,6 @@ int main()
                   NULL,
                   RSI_WLAN_TASK_PRIORITY,
                   &wlan_task_handle);
-
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();
