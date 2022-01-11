@@ -210,8 +210,12 @@ typedef struct rsi_driver_cb_s {
 
 } rsi_driver_cb_t;
 
+#if !defined(RSI_PKT_ALLOC_RESPONSE_WAIT_TIME)
 #define RSI_PKT_ALLOC_RESPONSE_WAIT_TIME 600000
+#endif
+#if !defined(RSI_PKT_FREE_RESPONSE_WAIT_TIME)
 #define RSI_PKT_FREE_RESPONSE_WAIT_TIME  600000
+#endif
 
 extern rsi_driver_cb_t *rsi_driver_cb;
 /******************************************************
