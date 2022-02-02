@@ -365,7 +365,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_readWrapper( AWS_IoT_Client *pClient, 
     size_t byteRead = 0;
 
     byteToRead = ( offset + size ) - pClient->clientData.readBufIndex;
-
     if ( byteToRead > 0 )
     {
         rc = pClient->networkStack.read( &( pClient->networkStack ),
@@ -435,7 +434,14 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 
     rc = _aws_iot_mqtt_internal_readWrapper( pClient, offset, 1, pTimer, &read_len );
 	/* 1. read the header byte.  This has the packet type in it */
-	if(NETWORK_SSL_NOTHING_TO_READ == rc) {
+	/* If the header byte that we get back is null, we have to consider that as
+	 * the same case as reading nothing.  Due to a likely bug in the rsi interface,
+	 * even when the rsi_recv() times out, it still says that we read a character.
+	 * And, since we've cleared out the buffer prior to calling this function, we
+	 * can detect that situation by checking for a null byte.  We flush the buffer
+	 * before returning since we *think* we actually read a single byte. */
+	if(NETWORK_SSL_NOTHING_TO_READ == rc || pClient->clientData.readBuf[0] == '\0') {
+		aws_iot_mqtt_internal_flushBuffers(pClient);
 		return MQTT_NOTHING_TO_READ;
 	} else if(SUCCESS != rc) {
 		return rc;
@@ -575,7 +581,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient
 	uint16_t topicNameLen;
 	uint32_t len;
 	IoT_Error_t rc;
-	IoT_Publish_Message_Params msg;
+	IoT_Publish_Message_Params msg = {QOS0, 0};
 	Timer sendTimer;
 
 	FUNC_ENTRY;
@@ -650,6 +656,10 @@ IoT_Error_t aws_iot_mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTi
 		FUNC_EXIT_RC(threadRc);
 	}
 #endif
+	/* Clear out the remaining buffer so that when we read from the socket, we
+	 * can be certain that what's in the buffer is not left over data. */
+	memset(pClient->clientData.readBuf + pClient->clientData.readBufIndex, 0,
+	       sizeof(pClient->clientData.readBuf) - pClient->clientData.readBufIndex);
 
 	/* read the socket, see what work is due */
 	rc = _aws_iot_mqtt_internal_read_packet(pClient, pTimer, pPacketType);
