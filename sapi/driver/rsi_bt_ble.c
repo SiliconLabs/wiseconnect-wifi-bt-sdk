@@ -3954,9 +3954,6 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
   // Allocate command buffer from ble pool
   pkt = rsi_pkt_alloc(&bt_cb->bt_tx_pool);
 
-  // Get host descriptor pointer
-  host_desc = (pkt->desc);
-
   // If allocation of packet fails
   if (pkt == NULL) {
     rsi_bt_clear_wait_bitmap(protocol_type, BT_CMD_SEM);
@@ -3965,6 +3962,9 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
     // Return packet allocation failure error
     return RSI_ERROR_PKT_ALLOCATION_FAILURE;
   }
+
+  // Get host descriptor pointer
+  host_desc = (pkt->desc);
 
   // Memset host descriptor
   memset(host_desc, 0, RSI_HOST_DESC_LENGTH);
