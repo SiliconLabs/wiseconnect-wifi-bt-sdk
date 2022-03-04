@@ -51,7 +51,11 @@ extern "C" {
 #include "rsi_wlan.h"
 #include "rsi_nwk.h"
 #include "rsi_utils.h"
+#include "aws_iot_config.h"
 
+#ifndef AWS_IOT_TLS_CONNECT_TIMEOUT
+#define AWS_IOT_TLS_CONNECT_TIMEOUT 120000
+#endif
 
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
@@ -233,9 +237,11 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 
 		if(flags & RSI_SSL_ENABLE) {
 			n->socket_id = rsi_socket(AF_INET, type, 0);
-    	status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_SSL_ENABLE,&ssl_bit_map,sizeof(ssl_bit_map));
-    	status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_CERT_INDEX,&ssl_cert_bit_map,sizeof(ssl_cert_bit_map));
-    }
+			if (n->socket_id >= 0) {
+				status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_SSL_ENABLE,&ssl_bit_map,sizeof(ssl_bit_map));
+				status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_CERT_INDEX,&ssl_cert_bit_map,sizeof(ssl_cert_bit_map));
+			}
+		}
 		else
 			n->socket_id = rsi_socket(AF_INET, type, 0);
 
@@ -245,7 +251,7 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 		/* Set all bits of the padding field to 0 */
 		memset(clientAddr.sin_zero, '\0', sizeof(clientAddr.sin_zero));
 	}
-	if (n->socket_id == -1)
+	if (n->socket_id < 0)
 	{
 		return NETWORK_ERR_NET_SOCKET_FAILED;
 	}
@@ -277,7 +283,7 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 		rc = rsi_connect(n->socket_id, (struct rsi_sockaddr*)&address, sizeof(address));
 
 	}
-	if(rc == -1)
+	if(rc == RSI_SOCK_ERROR)
 	{
 		status = rsi_wlan_socket_get_status(n->socket_id);
 		rsi_shutdown(n->socket_id, 0);
@@ -290,30 +296,40 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 {
 	int32_t     status       = 0;
-	rsi_rsp_dns_query_t dns_query_rsp;
+	rsi_rsp_dns_query_t dns_query_rsp = {0};
 	uint32_t    server_address =  0;
 	uint16_t  count = DNS_REQ_COUNT;
 	uint16_t ip_count = 0;
 	int client_port = CLIENT_PORT;
+	const uint8_t ip_version = RSI_IP_VERSION_4;
+	Timer timer;
+
+	/* Timer to limit the connection time. */
+	init_timer(&timer);
+	countdown_ms(&timer, AWS_IOT_TLS_CONNECT_TIMEOUT);
 
   do{
-    status = rsi_dns_req(RSI_IP_VERSION_4, (uint8_t *)pNetwork->tlsConnectParams.pDestinationURL, NULL, NULL, &dns_query_rsp, sizeof(dns_query_rsp));
+    status = rsi_dns_req(ip_version, (uint8_t *)pNetwork->tlsConnectParams.pDestinationURL, NULL, NULL, &dns_query_rsp, sizeof(dns_query_rsp));
     if(status == SUCCESS)
     {			
       break;
     }		
     count --;
-  }while(count != 0);
+  }while(count != 0 && !has_timer_expired(&timer));
 
-	if(status != SUCCESS)
+	/* Adding a sanity check on the dns result. */
+	if(status != SUCCESS || rsi_bytes2R_to_uint16(dns_query_rsp.ip_version) != ip_version)
 	{
 		return NETWORK_ERR_NET_UNKNOWN_HOST;
 	}
 	status = FAILURE;
 	ip_count = rsi_bytes2R_to_uint16(dns_query_rsp.ip_count);
-	for(count = 0; status != SUCCESS && count < ip_count; count++) {
+
+	/* Do not continue looping if we are successful or we are unable to create a socket. */
+	for(count = 0; status != SUCCESS && status != NETWORK_ERR_NET_SOCKET_FAILED &&
+		       !has_timer_expired(&timer) && count < ip_count; count++) {
 		server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[count].ipv4_address);
-		status = ConnecttoNetwork(pNetwork, RSI_SSL_ENABLE,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, client_port + count);       //fixme:flags kept as 0
+		status = ConnecttoNetwork(pNetwork, RSI_SSL_ENABLE, (char *)&server_address, pNetwork->tlsConnectParams.DestinationPort, client_port + count);
 	}
 	return (IoT_Error_t)status;
 }
