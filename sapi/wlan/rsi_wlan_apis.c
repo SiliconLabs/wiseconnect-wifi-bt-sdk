@@ -3214,9 +3214,19 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
   // If state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     if (cmd_type == RSI_FW_VERSION) {
+#ifdef RSI_WITH_OS
+      uint32_t wait_count = 0;
+      const uint32_t wait_interval = 100; /* ms */
+      const uint32_t wait_card_ready = RSI_CARD_READY_WAIT_TIME / wait_interval;
+#endif
       while (common_cb->state != RSI_COMMON_CARDREADY) {
 #ifndef RSI_WITH_OS
         rsi_scheduler(&rsi_driver_cb->scheduler_cb);
+#else
+        if (++wait_count > wait_card_ready) {
+          return RSI_ERROR_CARD_READY_TIMEOUT;
+        }
+        rsi_delay_ms(wait_interval);
 #endif
       }
     } else
