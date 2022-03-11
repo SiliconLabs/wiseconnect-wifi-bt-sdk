@@ -3216,8 +3216,8 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
     if (cmd_type == RSI_FW_VERSION) {
 #ifdef RSI_WITH_OS
       uint32_t wait_count = 0;
-      const uint32_t wait_interval = 100; /* ms */
-      const uint32_t wait_card_ready = RSI_CARD_READY_WAIT_TIME / wait_interval;
+      const uint32_t wait_interval_ms = 100; 
+      const uint32_t wait_card_ready = RSI_CARD_READY_WAIT_TIME / wait_interval_ms;
 #endif
       while (common_cb->state != RSI_COMMON_CARDREADY) {
 #ifndef RSI_WITH_OS
@@ -3226,7 +3226,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         if (++wait_count > wait_card_ready) {
           return RSI_ERROR_CARD_READY_TIMEOUT;
         }
-        rsi_delay_ms(wait_interval);
+        rsi_delay_ms(wait_interval_ms);
 #endif
       }
     } else
