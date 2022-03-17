@@ -398,6 +398,10 @@ void rsi_bt_common_tx_done(rsi_pkt_t *pkt)
   // Get the protocol Type
   protocol_type = rsi_bt_get_proto_type(rsp_type, &bt_cb);
 
+  if (bt_cb == NULL) {
+    return;
+  }
+
   if (protocol_type == 0xFF) {
     return;
   }
@@ -561,6 +565,10 @@ int32_t rsi_driver_process_bt_resp(
   uint16_t payload_length;
   uint16_t expected_resp = 0;
 
+  if (bt_cb == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
   // Get Host Descriptor
   host_desc = pkt->desc;
 
@@ -677,6 +685,10 @@ uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt)
 
   // Get the protocol Type
   protocol_type = rsi_bt_get_proto_type(rsp_type, &bt_cb);
+
+  if (bt_cb == NULL) {
+    return 0;
+  }
 
   if (protocol_type == 0xFF) {
     return 0;
@@ -3923,6 +3935,10 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
   }
 
   protocol_type = rsi_bt_get_proto_type(cmd, &bt_cb);
+
+  if (bt_cb == NULL) {
+    return RSI_ERROR_INVALID_MEMORY;
+  }
 
   if (protocol_type == 0xFF) {
     // Return packet allocation failure error
