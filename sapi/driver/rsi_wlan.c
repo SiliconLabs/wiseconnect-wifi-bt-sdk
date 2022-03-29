@@ -21,9 +21,6 @@
 
 #include "rsi_driver.h"
 #include "rsi_wlan_non_rom.h"
-#ifdef RSI_CHIP_MFG_EN
-#include "rsi_qspi_defines.h"
-#endif
 /*
   Global Variables
  * */
@@ -108,9 +105,6 @@ int8_t rsi_wlan_cb_init(rsi_wlan_cb_t *wlan_cb)
  *
  */
 
-#ifdef RSI_CHIP_MFG_EN
-#define RSI_SOC_FREQ 0x50
-#endif
 /// @private
 int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
 {
@@ -122,25 +116,6 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
   // Get host descriptor pointer
   uint8_t *host_desc = (pkt->desc);
   switch (cmd) {
-#ifdef RSI_CHIP_MFG_EN
-    case RSI_BOOTUP_PARAMS: {
-      // fill payload size
-      payload_size = sizeof(bootup_params_t);
-    } break;
-    case RSI_FLASH_WRITE: {
-      // fill payload size
-      payload_size = sizeof(rsi_flash_write_t) + sizeof(spi_config_t);
-    } break;
-    case RSI_FEATURE_FRAME: {
-      payload_size = sizeof(rsi_wlan_9116_features_t);
-    } break;
-    case RSI_EFUSE_WRITE_REQ: {
-      payload_size = PKT_CHUNK_SIZE - sizeof(rsi_frame_desc_t) - sizeof(rsi_efuse_write_t);
-    } break;
-    case RSI_EFUSE_READ_REQ: {
-      payload_size = sizeof(rsi_efuse_read_t);
-    } break;
-#endif
 
     case RSI_WLAN_REQ_BAND: {
       rsi_req_band_t *rsi_band = (rsi_req_band_t *)pkt->data;
@@ -425,14 +400,12 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = sizeof(rsi_req_wps_method_t);
 
     } break;
-#ifndef RSI_CHIP_MFG_EN
     case RSI_WLAN_REQ_DISCONNECT: {
       // fill payload size for disconnect parameters
       payload_size                              = sizeof(rsi_req_disassoc_t);
       rsi_driver_cb->wlan_cb->expected_response = RSI_WLAN_RSP_DISCONNECT;
 
     } break;
-#endif
     case RSI_WLAN_REQ_TX_TEST_MODE: {
       rsi_req_tx_test_info_t *rsi_tx_test_info = (rsi_req_tx_test_info_t *)pkt->data;
 
@@ -662,10 +635,7 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = rsi_bytes2R_to_uint16(host_desc);
     } break;
     case RSI_WLAN_REQ_GET_PROFILE:
-#ifndef RSI_CHIP_MFG_EN
-    case RSI_WLAN_REQ_DELETE_PROFILE:
-#endif
-    {
+    case RSI_WLAN_REQ_DELETE_PROFILE: {
       payload_size = sizeof(rsi_profile_req_t);
     } break;
     case RSI_WLAN_REQ_AUTO_CONFIG_ENABLE: {
@@ -775,12 +745,6 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
   // Fill frame type
   host_desc[2] = cmd;
 
-#ifdef RSI_CHIP_MFG_EN
-  // WLAN soc frequency
-  if (cmd == RSI_BOOTUP_PARAMS)
-    host_desc[14] = RSI_SOC_FREQ;
-#endif
-
   // Enqueue packet to WLAN TX queue
   rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
 
@@ -886,33 +850,6 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
   wlan_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->wlan_tx_q);
 
   switch (cmd_type) {
-#ifdef RSI_CHIP_MFG_EN
-    case RSI_WLAN_RSP_CLEAR: {
-      // if success, update state  wlan_cb state to band done
-      if (status == RSI_SUCCESS) {
-        rsi_wlan_cb->state = RSI_WLAN_STATE_OPERMODE_DONE;
-        // semaphore shouldn't be posted for RSI_WLAN_RSP_CLEAR
-        return RSI_SUCCESS;
-      }
-    } break;
-    case RSI_WLAN_RSP_CONFIRM: {
-      // for nlink cmd_type is in desc[15] as sub-type
-      cmd_type = pkt->desc[15];
-      if (cmd_type == RSI_FLASH_WRITE) {
-        if (rsi_wlan_cb_non_rom->callback_list.flash_write_response_handler) {
-          rsi_wlan_cb_non_rom->callback_list.flash_write_response_handler(status);
-        }
-        return RSI_SUCCESS;
-      } else if (cmd_type == RSI_EFUSE_READ_REQ) {
-        if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
-          copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? (payload_length)
-                                                                          : (rsi_wlan_cb->app_buffer_length);
-          memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
-          rsi_wlan_cb->app_buffer = NULL;
-        }
-      }
-    } break;
-#endif
     case RSI_WLAN_RSP_DNS_UPDATE: {
       if (rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler != NULL) {
         rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler(status);
@@ -2272,26 +2209,21 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_TIMEOUT) || (cmd_type == RSI_WLAN_REQ_INIT)
              || (cmd_type == RSI_WLAN_REQ_SET_WEP_KEYS) || (cmd_type == RSI_WLAN_REQ_GET_RANDOM)
              || (cmd_type == RSI_WLAN_REQ_SET_REGION) || (cmd_type == RSI_WLAN_REQ_HOST_PSK)
-#ifndef RSI_CHIP_MFG_EN
-             || (cmd_type == RSI_WLAN_REQ_DISCONNECT)
-#endif
-             || (cmd_type == RSI_WLAN_REQ_CONFIG) || (cmd_type == RSI_WLAN_REQ_REJOIN_PARAMS)
-             || (cmd_type == RSI_WLAN_REQ_IPCONFV4) || (cmd_type == RSI_WLAN_REQ_SCAN)
-             || (cmd_type == RSI_WLAN_REQ_JOIN) || (cmd_type == RSI_WLAN_REQ_SET_CERTIFICATE)
-             || (cmd_type == RSI_WLAN_REQ_WMM_PS) || (cmd_type == RSI_WLAN_REQ_BG_SCAN)
-             || (cmd_type == RSI_WLAN_REQ_RSSI) || (cmd_type == RSI_WLAN_REQ_EAP_CONFIG)
-             || (cmd_type == RSI_WLAN_REQ_ROAM_PARAMS) || (cmd_type == RSI_WLAN_REQ_MAC_ADDRESS)
-             || (cmd_type == RSI_WLAN_REQ_WPS_METHOD) || (cmd_type == RSI_WLAN_REQ_GET_CFG)
-             || (cmd_type == RSI_WLAN_REQ_CONNECTION_STATUS) || (cmd_type == RSI_WLAN_REQ_QUERY_GO_PARAMS)
-             || (cmd_type == RSI_WLAN_REQ_USER_STORE_CONFIG) || (cmd_type == RSI_WLAN_REQ_CONFIGURE_P2P)
-             || (cmd_type == RSI_WLAN_REQ_QUERY_NETWORK_PARAMS) || (cmd_type == RSI_WLAN_REQ_AP_CONFIGURATION)
-             || (cmd_type == RSI_WLAN_REQ_SET_MULTICAST_FILTER) || (cmd_type == RSI_WLAN_REQ_HT_CAPABILITIES)
-             || (cmd_type == RSI_WLAN_REQ_SET_PROFILE) || (cmd_type == RSI_WLAN_REQ_CFG_SAVE)
-             || (cmd_type == RSI_WLAN_REQ_TX_TEST_MODE) || (cmd_type == RSI_WLAN_REQ_GET_PROFILE)
-             || (cmd_type == RSI_WLAN_REQ_FREQ_OFFSET) || (cmd_type == RSI_WLAN_REQ_CALIB_WRITE)
-#ifndef RSI_CHIP_MFG_EN
-             || (cmd_type == RSI_WLAN_REQ_DELETE_PROFILE)
-#endif
+             || (cmd_type == RSI_WLAN_REQ_DISCONNECT) || (cmd_type == RSI_WLAN_REQ_CONFIG)
+             || (cmd_type == RSI_WLAN_REQ_REJOIN_PARAMS) || (cmd_type == RSI_WLAN_REQ_IPCONFV4)
+             || (cmd_type == RSI_WLAN_REQ_SCAN) || (cmd_type == RSI_WLAN_REQ_JOIN)
+             || (cmd_type == RSI_WLAN_REQ_SET_CERTIFICATE) || (cmd_type == RSI_WLAN_REQ_WMM_PS)
+             || (cmd_type == RSI_WLAN_REQ_BG_SCAN) || (cmd_type == RSI_WLAN_REQ_RSSI)
+             || (cmd_type == RSI_WLAN_REQ_EAP_CONFIG) || (cmd_type == RSI_WLAN_REQ_ROAM_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_MAC_ADDRESS) || (cmd_type == RSI_WLAN_REQ_WPS_METHOD)
+             || (cmd_type == RSI_WLAN_REQ_GET_CFG) || (cmd_type == RSI_WLAN_REQ_CONNECTION_STATUS)
+             || (cmd_type == RSI_WLAN_REQ_QUERY_GO_PARAMS) || (cmd_type == RSI_WLAN_REQ_USER_STORE_CONFIG)
+             || (cmd_type == RSI_WLAN_REQ_CONFIGURE_P2P) || (cmd_type == RSI_WLAN_REQ_QUERY_NETWORK_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_AP_CONFIGURATION) || (cmd_type == RSI_WLAN_REQ_SET_MULTICAST_FILTER)
+             || (cmd_type == RSI_WLAN_REQ_HT_CAPABILITIES) || (cmd_type == RSI_WLAN_REQ_SET_PROFILE)
+             || (cmd_type == RSI_WLAN_REQ_CFG_SAVE) || (cmd_type == RSI_WLAN_REQ_TX_TEST_MODE)
+             || (cmd_type == RSI_WLAN_REQ_GET_PROFILE) || (cmd_type == RSI_WLAN_REQ_FREQ_OFFSET)
+             || (cmd_type == RSI_WLAN_REQ_CALIB_WRITE) || (cmd_type == RSI_WLAN_REQ_DELETE_PROFILE)
              || (cmd_type == RSI_WLAN_REQ_SET_SLEEP_TIMER) || (cmd_type == RSI_WLAN_REQ_FILTER_BCAST_PACKETS)
              || (cmd_type == RSI_WLAN_REQ_AUTO_CONFIG_ENABLE) || (cmd_type == RSI_WLAN_REQ_SOCKET_CONFIG)
              || (cmd_type == RSI_WLAN_RSP_IPCONFV6) || (cmd_type == RSI_WLAN_REQ_SET_REGION_AP)
@@ -2300,10 +2232,6 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_GET_STATS) || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
-#endif
-#ifdef RSI_CHIP_MFG_EN
-             || (cmd_type == RSI_BOOTUP_PARAMS) || (cmd_type == RSI_FEATURE_FRAME) || (cmd_type == RSI_EFUSE_READ_REQ)
-             || (cmd_type == RSI_FLASH_WRITE) || (cmd_type == RSI_EFUSE_WRITE_REQ)
 #endif
   ) {
 #ifndef RSI_WLAN_SEM_BITMAP

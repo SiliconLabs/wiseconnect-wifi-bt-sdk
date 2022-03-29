@@ -365,8 +365,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 
 	if(status != SUCCESS)
 	{
-		status = rsi_wlan_socket_get_status(pNetwork->socket_id);
-		return (IoT_Error_t)get_aws_error(status);
+		return NETWORK_SSL_READ_ERROR;
 	}
 	while (len > 0)
 	{
@@ -380,7 +379,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 		}
 		else if (ret == 0)
 		{
-			return NETWORK_DISCONNECTED_ERROR;
+			return NETWORK_SSL_READ_ERROR;
 		}
 		else //ret<0
 		{

@@ -423,7 +423,6 @@ void rsi_tx_event_handler(void)
 
     // Get packet length
     length = (*(uint16_t *)buf_ptr & 0x0FFF);
-#ifndef RSI_CHIP_MFG_EN
     if ((frame_type == RSI_COMMON_REQ_PWRMODE) && (queueno == RSI_WLAN_MGMT_Q)) {
       // Mask Tx events while sending pwr mode req
       rsi_mask_event(RSI_TX_EVENT);
@@ -431,7 +430,6 @@ void rsi_tx_event_handler(void)
       // Adding small delay
       rsi_delay_ms(3);
     }
-#endif
 #ifdef RSI_M4_INTERFACE
     rsi_mask_event(RSI_TX_EVENT);
 #endif
@@ -627,138 +625,122 @@ void rsi_rx_event_handler(void)
 #endif
 #if ((defined RSI_SPI_INTERFACE) || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-#ifdef RSI_SPI_INTERFACE
-  if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-#ifdef RSI_SDIO_INTERFACE
-    if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-      rsi_clear_event(RSI_RX_EVENT);
-      rsi_hal_intr_unmask();
-#ifdef RSI_SPI_INTERFACE
-      if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-#ifdef RSI_SDIO_INTERFACE
-        if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-          // Set RX event
-          rsi_set_event(RSI_RX_EVENT);
-        }
-        if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
-          rsi_unmask_event(RSI_TX_EVENT);
-          // lock the mutex
-          rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
-          rsi_driver_cb_non_rom->tx_mask_event = 0;
-          // unlock mutex
-          rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
-        }
+  if (!rsi_get_intr_status()) {
+
+    rsi_clear_event(RSI_RX_EVENT);
+    rsi_hal_intr_unmask();
+    if (rsi_get_intr_status()) {
+      // Set RX event
+      rsi_set_event(RSI_RX_EVENT);
+    }
+    if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
+      rsi_unmask_event(RSI_TX_EVENT);
+      // lock the mutex
+      rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
+      rsi_driver_cb_non_rom->tx_mask_event = 0;
+      // unlock mutex
+      rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
+    }
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-        rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
+    rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
-        return;
-      }
+    return;
+  }
 #endif
-      if (rsi_common_cb->power_save.power_save_enable) {
+  if (rsi_common_cb->power_save.power_save_enable) {
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
 
 #if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
-        // request wakeup if module is in GPIO_BASED handshake power save
+    // request wakeup if module is in GPIO_BASED handshake power save
 #if (RSI_WMM_PS_ENABLE && RSI_WMM_PS_TYPE)
-        status = rsi_wait4wakeup();
-        if (status != 0) {
+    status = rsi_wait4wakeup();
+    if (status != 0) {
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-          rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
+      rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
 #endif
-          return;
-        }
+      return;
+    }
 #else
-        status = rsi_req_wakeup();
-        if (status != 0) {
+    status = rsi_req_wakeup();
+    if (status != 0) {
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-          rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
+      rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
 #endif
-          return;
-        }
-        //rsi_delay_ms(5);
+      return;
+    }
+    //rsi_delay_ms(5);
 #endif
 #elif (RSI_HAND_SHAKE_TYPE == MSG_BASED)
 #if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
 #ifdef RSI_SPI_INTERFACE
-  rsi_ulp_wakeup_init();
+    rsi_ulp_wakeup_init();
 #endif
 #endif
 #endif
 #endif
-      }
+  }
 #if (RSI_SPI_DUP_INTR_HANDLE || RSI_ASSERT_ENABLE)
-      ret_status = rsi_device_interrupt_status(&int_status);
-      if (ret_status != 0x0) {
-        // if SPI fail then return
+  ret_status = rsi_device_interrupt_status(&int_status);
+  if (ret_status != 0x0) {
+    // if SPI fail then return
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-        rsi_error_timeout_and_clear_events(ret_status, RX_EVENT_CMD);
+    rsi_error_timeout_and_clear_events(ret_status, RX_EVENT_CMD);
 #endif
-        return;
-      }
+    return;
+  }
 #endif //! (RSI_SPI_DUP_INTR_HANDLE || RSI_ASSERT_ENABLE)
 #if RSI_ASSERT_ENABLE
-      // Check for assertion interrupt
-      if (int_status & RSI_ASSERT_INTR) {
-        int_status &= (~RSI_ASSERT_INTR);
-        ret_status = rsi_mem_rd(RSI_ASSERT_VAL_RD_REG, 4, (uint8_t *)&assert_val);
-        if (ret_status == RSI_SUCCESS) {
-          if (rsi_wlan_cb_non_rom->callback_list.rsi_assertion_cb != NULL) {
-            // Call asynchronous response handler to indicate to host
-            rsi_wlan_cb_non_rom->callback_list.rsi_assertion_cb(assert_val, NULL, 0);
-          }
-          assert_intr_clear = RSI_ASSERT_INTR;
-          ret_status        = rsi_mem_wr(RSI_ASSERT_INTR_CLR_REG, 4, (uint8_t *)&assert_intr_clear);
-        }
-        if (ret_status != 0x0) {
-          // if SPI fail then return
-#ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-          rsi_error_timeout_and_clear_events(ret_status, RX_EVENT_CMD);
-#endif
-          return;
-        }
+  // Check for assertion interrupt
+  if (int_status & RSI_ASSERT_INTR) {
+    int_status &= (~RSI_ASSERT_INTR);
+    ret_status = rsi_mem_rd(RSI_ASSERT_VAL_RD_REG, 4, (uint8_t *)&assert_val);
+    if (ret_status == RSI_SUCCESS) {
+      if (rsi_wlan_cb_non_rom->callback_list.rsi_assertion_cb != NULL) {
+        // Call asynchronous response handler to indicate to host
+        rsi_wlan_cb_non_rom->callback_list.rsi_assertion_cb(assert_val, NULL, 0);
       }
+      assert_intr_clear = RSI_ASSERT_INTR;
+      ret_status        = rsi_mem_wr(RSI_ASSERT_INTR_CLR_REG, 4, (uint8_t *)&assert_intr_clear);
+    }
+    if (ret_status != 0x0) {
+      // if SPI fail then return
+#ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
+      rsi_error_timeout_and_clear_events(ret_status, RX_EVENT_CMD);
+#endif
+      return;
+    }
+  }
 #endif //! (RSI_ASSERT_ENABLE)
-      if (!(int_status & RSI_RX_PKT_PENDING)) {
-        rsi_clear_event(RSI_RX_EVENT);
-        rsi_hal_intr_unmask();
+  if (!(int_status & RSI_RX_PKT_PENDING)) {
+    rsi_clear_event(RSI_RX_EVENT);
+    rsi_hal_intr_unmask();
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-#ifdef RSI_SPI_INTERFACE
-        if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN))
-#endif
-#ifdef RSI_SDIO_INTERFACE
-          // If SDIO interuupt PIN is low then set RX event
-          if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN))
-#endif
-          {
-            // Set RX event
-            rsi_set_event(RSI_RX_EVENT);
-          }
+    if (rsi_get_intr_status()) {
+      // Set RX event
+      rsi_set_event(RSI_RX_EVENT);
+    }
 #endif
 
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-        if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
-          rsi_unmask_event(RSI_TX_EVENT);
-          // lock the mutex
-          rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
-          rsi_driver_cb_non_rom->tx_mask_event = 0;
-          // unlock mutex
-          rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
-        }
+    if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
+      rsi_unmask_event(RSI_TX_EVENT);
+      // lock the mutex
+      rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
+      rsi_driver_cb_non_rom->tx_mask_event = 0;
+      // unlock mutex
+      rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
+    }
 #endif
-        if (rsi_common_cb->power_save.power_save_enable) {
+    if (rsi_common_cb->power_save.power_save_enable) {
 #if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
-          rsi_allow_sleep();
+      rsi_allow_sleep();
 #endif
-        }
+    }
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-        rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
+    rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
-        return;
-      }
+    return;
+  }
 #endif
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
 #else
@@ -779,203 +761,192 @@ void rsi_rx_event_handler(void)
 #endif
 
 #ifdef RSI_M4_INTERFACE
-      rx_pkt  = (rsi_pkt_t *)rsi_frame_read();
-      buf_ptr = (uint8_t *)&rx_pkt->desc[0];
+  rx_pkt  = (rsi_pkt_t *)rsi_frame_read();
+  buf_ptr = (uint8_t *)&rx_pkt->desc[0];
 #elif ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
   status  = (uint16_t)rsi_frame_read(rsi_driver_cb_non_rom->sdio_read_buff);
 #else
   // Read packet from module
   status = rsi_frame_read(buf_ptr);
 #endif
-      // Allow Power save again
-      if (rsi_common_cb->power_save.power_save_enable) {
+  // Allow Power save again
+  if (rsi_common_cb->power_save.power_save_enable) {
 #if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
-        rsi_allow_sleep();
+    rsi_allow_sleep();
 #endif
-      }
-      if (status) {
+  }
+  if (status) {
 #ifdef LINUX_PLATFORM
 #ifdef RSI_UART_INTERFACE
-        if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
+    if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
 #if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
-          if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
+      if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif
-            rsi_clear_event(RSI_RX_EVENT);
+        rsi_clear_event(RSI_RX_EVENT);
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
 // rx_pkt is not from pool, so not freeing
 #else
     rsi_pkt_free(&rsi_driver_cb->rx_pool, rx_pkt);
 #endif
 #ifndef RSI_M4_INTERFACE
-        rsi_hal_intr_unmask();
+    rsi_hal_intr_unmask();
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-#ifdef RSI_SPI_INTERFACE
-        if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-#ifdef RSI_SDIO_INTERFACE
-          // If SDIO interuupt PIN is low then set RX event
-          if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-            // Set RX event
-            rsi_set_event(RSI_RX_EVENT);
-          }
+    if (rsi_get_intr_status()) {
+      // Set RX event
+      rsi_set_event(RSI_RX_EVENT);
+    }
 #endif
 #endif
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-          if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
-            rsi_unmask_event(RSI_TX_EVENT);
-            // lock the mutex
-            rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
-            rsi_driver_cb_non_rom->tx_mask_event = 0;
-            // unlock mutex
-            rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
-          }
+    if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
+      rsi_unmask_event(RSI_TX_EVENT);
+      // lock the mutex
+      rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
+      rsi_driver_cb_non_rom->tx_mask_event = 0;
+      // unlock mutex
+      rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
+    }
 #endif
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-          rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
+    rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
-          SL_PRINTF(SL_RSI_ERROR_TIMEOUT_READ, BLUETOOTH, LOG_ERROR, "STATUS: %4x", status);
+    SL_PRINTF(SL_RSI_ERROR_TIMEOUT_READ, BLUETOOTH, LOG_ERROR, "STATUS: %4x", status);
 
-          return;
-        }
+    return;
+  }
 
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
-        actual_offset = rsi_driver_cb_non_rom->sdio_read_buff[2];
-        actual_offset |= (rsi_driver_cb_non_rom->sdio_read_buff[3] << 8);
-        buf_ptr = (uint8_t *)&rsi_driver_cb_non_rom->sdio_read_buff[actual_offset];
-        rx_pkt  = (rsi_pkt_t *)(buf_ptr - 4);
+  actual_offset = rsi_driver_cb_non_rom->sdio_read_buff[2];
+  actual_offset |= (rsi_driver_cb_non_rom->sdio_read_buff[3] << 8);
+  buf_ptr = (uint8_t *)&rsi_driver_cb_non_rom->sdio_read_buff[actual_offset];
+  rx_pkt  = (rsi_pkt_t *)(buf_ptr - 4);
 #endif
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
-        rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
+  rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
-        if (rsi_driver_cb_non_rom->rx_driver_flag) {
-          rsi_driver_cb_non_rom->rx_driver_flag = 0;
-        }
-        // Extract the queue number from the receivec frame
-        queue_no = ((buf_ptr[1] & 0xF0) >> 4);
+  if (rsi_driver_cb_non_rom->rx_driver_flag) {
+    rsi_driver_cb_non_rom->rx_driver_flag = 0;
+  }
+  // Extract the queue number from the receivec frame
+  queue_no = ((buf_ptr[1] & 0xF0) >> 4);
 
-        // Extract the frame type from the received frame
-        frame_type = *(uint8_t *)(buf_ptr + RSI_RESP_OFFSET);
+  // Extract the frame type from the received frame
+  frame_type = *(uint8_t *)(buf_ptr + RSI_RESP_OFFSET);
 #if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
-        rsi_handle_slp_wkp(frame_type);
+  rsi_handle_slp_wkp(frame_type);
 #endif
-#ifndef RSI_CHIP_MFG_EN
 #if (RSI_HAND_SHAKE_TYPE != GPIO_BASED)
-        if ((queue_no == RSI_WLAN_MGMT_Q)
-            && ((frame_type == RSI_COMMON_RSP_ULP_NO_RAM_RETENTION) || (frame_type == RSI_RSP_SLP)
-                || (frame_type == RSI_RSP_WKP))) {
-          rsi_handle_slp_wkp(frame_type);
+  if ((queue_no == RSI_WLAN_MGMT_Q)
+      && ((frame_type == RSI_COMMON_RSP_ULP_NO_RAM_RETENTION) || (frame_type == RSI_RSP_SLP)
+          || (frame_type == RSI_RSP_WKP))) {
+    rsi_handle_slp_wkp(frame_type);
 #ifndef RSI_M4_INTERFACE
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
 #else
-          rsi_pkt_free(&rsi_driver_cb->rx_pool, rx_pkt);
+    rsi_pkt_free(&rsi_driver_cb->rx_pool, rx_pkt);
 #endif
 #ifdef LINUX_PLATFORM
 #if RSI_UART_INTERFACE
-          if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
+    if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
 #if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
-            if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
+      if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif
-              rsi_clear_event(RSI_RX_EVENT);
-          // Unmask RX event
-          rsi_unmask_event(RSI_RX_EVENT);
+        rsi_clear_event(RSI_RX_EVENT);
+    // Unmask RX event
+    rsi_unmask_event(RSI_RX_EVENT);
 
-          rsi_hal_intr_unmask();
+    rsi_hal_intr_unmask();
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-          if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
-            rsi_unmask_event(RSI_TX_EVENT);
-            // lock the mutex
-            rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
-            rsi_driver_cb_non_rom->tx_mask_event = 0;
-            // unlock mutex
-            rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
-          }
+    if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
+      rsi_unmask_event(RSI_TX_EVENT);
+      // lock the mutex
+      rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
+      rsi_driver_cb_non_rom->tx_mask_event = 0;
+      // unlock mutex
+      rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
+    }
 #endif
-          return;
+    return;
 #endif
-        }
+  }
 #endif
-#endif
-        if ((queue_no == RSI_WLAN_MGMT_Q)
-              && ((frame_type == RSI_COMMON_RSP_CARDREADY) || (frame_type == RSI_COMMON_RSP_OPERMODE)
-                  || (frame_type == RSI_COMMON_RSP_PWRMODE) || (frame_type == RSI_COMMON_RSP_ANTENNA_SELECT)
-                  || (frame_type == RSI_COMMON_RSP_FEATURE_FRAME) || (frame_type == RSI_COMMON_RSP_SOFT_RESET)
-                  || (frame_type == RSI_COMMON_REQ_UART_FLOW_CTRL_ENABLE) || (frame_type == RSI_COMMON_RSP_FW_VERSION)
-                  || (frame_type == RSI_COMMON_RSP_DEBUG_LOG) || (frame_type == RSI_COMMON_RSP_SWITCH_PROTO)
-                  || (frame_type == RSI_COMMON_RSP_GET_RAM_DUMP) || (frame_type == RSI_COMMON_RSP_SET_RTC_TIMER)
-                  || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER) || (frame_type == RSI_COMMON_REQ_SET_CONFIG)
+  if ((queue_no == RSI_WLAN_MGMT_Q)
+        && ((frame_type == RSI_COMMON_RSP_CARDREADY) || (frame_type == RSI_COMMON_RSP_OPERMODE)
+            || (frame_type == RSI_COMMON_RSP_PWRMODE) || (frame_type == RSI_COMMON_RSP_ANTENNA_SELECT)
+            || (frame_type == RSI_COMMON_RSP_FEATURE_FRAME) || (frame_type == RSI_COMMON_RSP_SOFT_RESET)
+            || (frame_type == RSI_COMMON_REQ_UART_FLOW_CTRL_ENABLE) || (frame_type == RSI_COMMON_RSP_FW_VERSION)
+            || (frame_type == RSI_COMMON_RSP_DEBUG_LOG) || (frame_type == RSI_COMMON_RSP_SWITCH_PROTO)
+            || (frame_type == RSI_COMMON_RSP_GET_RAM_DUMP) || (frame_type == RSI_COMMON_RSP_SET_RTC_TIMER)
+            || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER) || (frame_type == RSI_COMMON_REQ_SET_CONFIG)
 #ifdef RSI_ASSERT_API
-                  || (frame_type == RSI_COMMON_RSP_ASSERT)
+            || (frame_type == RSI_COMMON_RSP_ASSERT)
 #endif
 #ifdef RSI_M4_INTERFACE
-                  || (frame_type == RSI_COMMON_RSP_TA_M4_COMMANDS)
+            || (frame_type == RSI_COMMON_RSP_TA_M4_COMMANDS)
 #endif
 #ifdef RSI_WAC_MFI_ENABLE
-                  || (frame_type == RSI_COMMON_RSP_IAP_INIT) || (frame_type == RSI_COMMON_RSP_IAP_GET_CERTIFICATE)
-                  || (frame_type == RSI_COMMON_RSP_IAP_GENERATE_SIGATURE)
+            || (frame_type == RSI_COMMON_RSP_IAP_INIT) || (frame_type == RSI_COMMON_RSP_IAP_GET_CERTIFICATE)
+            || (frame_type == RSI_COMMON_RSP_IAP_GENERATE_SIGATURE)
 #endif
 #ifdef RSI_PUF_ENABLE
-                  || (frame_type == RSI_COMMON_RSP_PUF_DIS_ENROLL) || (frame_type == RSI_COMMON_RSP_PUF_DIS_GET_KEY)
-                  || (frame_type == RSI_COMMON_RSP_PUF_DIS_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_ENROLL)
-                  || (frame_type == RSI_COMMON_RSP_PUF_GET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_LOAD_KEY)
-                  || (frame_type == RSI_COMMON_RSP_PUF_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_START)
-                  || (frame_type == RSI_COMMON_RSP_AES_DECRYPT) || (frame_type == RSI_COMMON_RSP_AES_ENCRYPT)
-                  || (frame_type == RSI_COMMON_RSP_AES_MAC) || (frame_type == RSI_COMMON_RSP_PUF_INTR_KEY)
+            || (frame_type == RSI_COMMON_RSP_PUF_DIS_ENROLL) || (frame_type == RSI_COMMON_RSP_PUF_DIS_GET_KEY)
+            || (frame_type == RSI_COMMON_RSP_PUF_DIS_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_ENROLL)
+            || (frame_type == RSI_COMMON_RSP_PUF_GET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_LOAD_KEY)
+            || (frame_type == RSI_COMMON_RSP_PUF_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_START)
+            || (frame_type == RSI_COMMON_RSP_AES_DECRYPT) || (frame_type == RSI_COMMON_RSP_AES_ENCRYPT)
+            || (frame_type == RSI_COMMON_RSP_AES_MAC) || (frame_type == RSI_COMMON_RSP_PUF_INTR_KEY)
 #endif
 #ifdef RSI_CRYPTO_ENABLE
-                  || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
+            || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
 #endif
-                    )
-#ifdef RSI_CHIP_MFG_EN
-            || ((queue_no == RSI_COMMON_Q) && (frame_type == RSI_COMMON_RSP_CLEAR))
-#endif
+              )
 #ifdef CONFIGURE_GPIO_FROM_HOST
-            || (frame_type == RSI_COMMON_RSP_GPIO_CONFIG)
+      || (frame_type == RSI_COMMON_RSP_GPIO_CONFIG)
 #endif
-        ) {
-          // Process common packet
-          rsi_driver_process_common_recv_cmd(rx_pkt);
-        }
+  ) {
+    // Process common packet
+    rsi_driver_process_common_recv_cmd(rx_pkt);
+  }
 #ifdef SAPIS_BT_STACK_ON_HOST
-        else if ((queue_no == RSI_BT_INT_MGMT_Q) || (queue_no == RSI_BT_HCI_Q) || (queue_no == RSI_ZB_Q))
+  else if ((queue_no == RSI_BT_INT_MGMT_Q) || (queue_no == RSI_BT_HCI_Q) || (queue_no == RSI_ZB_Q))
 #else
   else if ((queue_no == RSI_BT_Q) || (queue_no == RSI_ZB_Q))
 #endif
-        {
-          // Process BT/ZB packet
+  {
+    // Process BT/ZB packet
 #ifdef RSI_ZB_ENABLE
-          rsi_driver_process_zigb_recv_cmd(rx_pkt);
+    rsi_driver_process_zigb_recv_cmd(rx_pkt);
 #endif
 #if (defined RSI_BT_ENABLE || defined RSI_BLE_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE)
 #ifdef SAPIS_BT_STACK_ON_HOST
-          if ((queue_no == RSI_BT_INT_MGMT_Q) || (queue_no == RSI_BT_HCI_Q)) {
+    if ((queue_no == RSI_BT_INT_MGMT_Q) || (queue_no == RSI_BT_HCI_Q)) {
 
-            //Post Packet to BT Stack
-            frame_from_module_to_bt_stack(rx_pkt);
-          } else
+      //Post Packet to BT Stack
+      frame_from_module_to_bt_stack(rx_pkt);
+    } else
 #endif
-          {
-            rsi_driver_process_bt_resp_handler(rx_pkt);
-          }
+    {
+      rsi_driver_process_bt_resp_handler(rx_pkt);
+    }
 #endif
-        }
+  }
 #ifdef RSI_WLAN_ENABLE
-        else if (queue_no == RSI_WLAN_MGMT_Q) {
-          // Process WLAN packet
-          rsi_driver_process_wlan_recv_cmd(rx_pkt);
-        } else if (queue_no == RSI_WLAN_DATA_Q) {
+  else if (queue_no == RSI_WLAN_MGMT_Q) {
+    // Process WLAN packet
+    rsi_driver_process_wlan_recv_cmd(rx_pkt);
+  } else if (queue_no == RSI_WLAN_DATA_Q) {
 #if (RSI_TCP_IP_BYPASS || TCP_IP_ETHERNET_BRIDGE)
-          // Process Raw DATA packet
-          rsi_wlan_process_raw_data(rx_pkt);
+    // Process Raw DATA packet
+    rsi_wlan_process_raw_data(rx_pkt);
 #else
     // Process DATA packet
     rsi_driver_process_recv_data(rx_pkt);
 #endif
-        }
+  }
 #endif
 
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
@@ -985,78 +956,66 @@ void rsi_rx_event_handler(void)
 #endif
 #ifdef LINUX_PLATFORM
 #ifdef RSI_UART_INTERFACE
-        if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
+  if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
 #if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
-          if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
+    if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif
 #ifdef RSI_M4_INTERFACE
 
-            mask_ta_interrupt(RX_PKT_TRANSFER_DONE_INTERRUPT);
+      mask_ta_interrupt(RX_PKT_TRANSFER_DONE_INTERRUPT);
 
-        if (!rsi_check_queue_status(&global_cb_p->rsi_driver_cb->m4_rx_q))
+  if (!rsi_check_queue_status(&global_cb_p->rsi_driver_cb->m4_rx_q))
 #endif
-#ifdef RSI_SPI_INTERFACE
-          if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN))
-
+#if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
+    if (!rsi_get_intr_status()) {
+      // Clear RX event
+      rsi_clear_event(RSI_RX_EVENT);
+    }
 #endif
-#ifdef RSI_SDIO_INTERFACE
-            // If SDIO interuupt PIN is high then Clear RX event
-            if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN))
-#endif
-            {
-              // Clear RX event
-              rsi_clear_event(RSI_RX_EVENT);
-            }
-
 #if !THROUGHPUT_EN
 #if RSI_SPI_DUP_INTR_HANDLE
-        if (!rsi_common_cb->power_save.power_save_enable) {
-          // Read interrupt status register
-          ret_status = rsi_device_interrupt_status(&int_status);
-          // Check packet pending in interrupt status register
-          if (int_status & RSI_RX_PKT_PENDING) {
-            rsi_set_event(RSI_RX_EVENT);
-            return;
-          }
-        }
+  if (!rsi_common_cb->power_save.power_save_enable) {
+    // Read interrupt status register
+    ret_status = rsi_device_interrupt_status(&int_status);
+    // Check packet pending in interrupt status register
+    if (int_status & RSI_RX_PKT_PENDING) {
+      rsi_set_event(RSI_RX_EVENT);
+      return;
+    }
+  }
 #endif
 #endif
-        // Unmask RX event
-        rsi_unmask_event(RSI_RX_EVENT);
+  // Unmask RX event
+  rsi_unmask_event(RSI_RX_EVENT);
 #ifdef RSI_M4_INTERFACE
-        // submit to TA submit packet
-        rsi_submit_rx_pkt();
+  // submit to TA submit packet
+  rsi_submit_rx_pkt();
 
-        unmask_ta_interrupt(RX_PKT_TRANSFER_DONE_INTERRUPT);
+  unmask_ta_interrupt(RX_PKT_TRANSFER_DONE_INTERRUPT);
 #endif
 #ifndef RSI_M4_INTERFACE
-        rsi_hal_intr_unmask();
+  rsi_hal_intr_unmask();
 #endif
 
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-#ifdef RSI_SPI_INTERFACE
-        if (rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#elif (defined RSI_SDIO_INTERFACE)
-  // If SDIO interrupt PIN is low then set RX event
-  if (!rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN)) {
-#endif
-          // Set RX event
-          rsi_set_event(RSI_RX_EVENT);
-        }
+  if (rsi_get_intr_status()) {
+    // Set RX event
+    rsi_set_event(RSI_RX_EVENT);
+  }
 #endif
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-        if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
-          rsi_unmask_event(RSI_TX_EVENT);
-          // lock the mutex
-          rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
-          rsi_driver_cb_non_rom->tx_mask_event = 0;
-          // unlock mutex
-          rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
-        }
+  if (rsi_driver_cb_non_rom->tx_mask_event == 1) {
+    rsi_unmask_event(RSI_TX_EVENT);
+    // lock the mutex
+    rsi_mutex_lock(&rsi_driver_cb_non_rom->tx_mutex);
+    rsi_driver_cb_non_rom->tx_mask_event = 0;
+    // unlock mutex
+    rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
+  }
 #endif
 
-        return;
-      }
-  /** @} */
+  return;
+}
+/** @} */

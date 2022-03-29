@@ -103,71 +103,67 @@ uint32_t rsi_get_event_non_rom(rsi_scheduler_cb_t *scheduler_cb)
   // Get current event map after applying mask
   active_int_event_map = (scheduler_cb->event_map & scheduler_cb->mask_map);
 #if ((defined RSI_SPI_INTERFACE) || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
-#ifdef RSI_SPI_INTERFACE
-  if (rsi_hal_intr_pin_status() && (!(active_int_event_map & BIT(RSI_RX_EVENT)))) {
-#endif
-#ifdef RSI_SDIO_INTERFACE
-    if ((!rsi_hal_intr_pin_status()) && (!(active_int_event_map & BIT(RSI_RX_EVENT)))) {
-#endif
-      // Disable the interrupt
-      rsi_hal_intr_mask();
-      // Set event RX pending from device
-      rsi_set_event(RSI_RX_EVENT);
-    }
-#endif
 
-    // Enable all the interrupts
-    RSI_CRITICAL_SECTION_EXIT(flags);
-
-    return active_int_event_map;
+  if (rsi_get_intr_status() && (!(active_int_event_map & BIT(RSI_RX_EVENT)))) {
+    // Disable the interrupt
+    rsi_hal_intr_mask();
+    // Set event RX pending from device
+    rsi_set_event(RSI_RX_EVENT);
   }
+#endif
+
+  // Enable all the interrupts
+  RSI_CRITICAL_SECTION_EXIT(flags);
+
+  return active_int_event_map;
+}
 
 #if (defined(RSI_WITH_OS) && (RSI_TASK_NOTIFY))
-  /*====================================================*/
-  /**
+/*====================================================*/
+/**
  * @fn          void rsi_scheduler_non_rom(rsi_scheduler_cb_t *scheduler_cb)
  * @brief       Scheduler function handles events
  * @param[in]   scheduler_cb - pointer to scheduler cb structure \n 
  * @return      void  
  */
 
-  void rsi_scheduler_non_rom(rsi_scheduler_cb_t * scheduler_cb)
-  {
-    uint32_t event_no;
-    rsi_event_cb_t *temp_event;
+void rsi_scheduler_non_rom(rsi_scheduler_cb_t *scheduler_cb)
+{
+  uint32_t event_no;
+  rsi_event_cb_t *temp_event;
 
-    rsi_driver_cb_t *rsi_driver_cb = global_cb_p->rsi_driver_cb;
-    uint32_t max_block_time        = 0xFFFFFFFF;
-    rsi_base_type_t retval;
-    // Wait for events
+  rsi_driver_cb_t *rsi_driver_cb = global_cb_p->rsi_driver_cb;
+  uint32_t max_block_time        = 0xFFFFFFFF;
+  rsi_base_type_t retval;
+  // Wait for events
 
-    retval = rsi_task_notify_wait(0,                                /* Don't clear bits on entry. */
-                                  max_block_time,                   /* Clear all bits on exit. */
-                                  (uint32_t *)&rsi_driver_eventmap, /* Stores the notified value. */
-                                  max_block_time);
-    if (retval == 1) {
-      while (rsi_get_event(scheduler_cb)) {
-        // Find event event
+  retval = rsi_task_notify_wait(0,                                /* Don't clear bits on entry. */
+                                max_block_time,                   /* Clear all bits on exit. */
+                                (uint32_t *)&rsi_driver_eventmap, /* Stores the notified value. */
+                                max_block_time);
+  if (retval == 1) {
+    while (rsi_get_event(scheduler_cb)) {
+      // Find event event
 
-        event_no = rsi_find_event((scheduler_cb->event_map & scheduler_cb->mask_map));
+      event_no = rsi_find_event((scheduler_cb->event_map & scheduler_cb->mask_map));
 
-        // Get event handler
-        temp_event = &rsi_driver_cb->event_list[event_no];
+      // Get event handler
+      temp_event = &rsi_driver_cb->event_list[event_no];
 
-        if (temp_event->event_handler) {
-          // Call event handler
-          temp_event->event_handler();
-        } else {
+      if (temp_event->event_handler) {
+        // Call event handler
+        temp_event->event_handler();
+      } else {
 
-          rsi_clear_event(event_no); //Clear unregistered events
-          global_cb_p->rsi_driver_cb->unregistered_event_callback(event_no);
-        }
+        rsi_clear_event(event_no); //Clear unregistered events
+        global_cb_p->rsi_driver_cb->unregistered_event_callback(event_no);
+      }
 
-        if (global_cb_p->os_enabled != 1) {
-          break;
-        }
+      if (global_cb_p->os_enabled != 1) {
+        break;
       }
     }
   }
+}
 #endif
-  /** @} */
+/** @} */

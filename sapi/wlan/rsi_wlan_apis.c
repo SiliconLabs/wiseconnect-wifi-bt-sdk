@@ -18,9 +18,6 @@
 #include "rsi_driver.h"
 #include "rsi_wlan_non_rom.h"
 #define GAIN_TABLE_MAX_PAYLOAD_LEN 128
-#ifdef RSI_CHIP_MFG_EN
-#include "rsi_qspi_defines.h"
-#endif
 
 extern struct wpa_scan_results_arr *scan_results_array;
 
@@ -383,6 +380,42 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           // Return status if error in sending command occurs
           SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_ERROR_IN_SENDING_COMMAND_5, WLAN, LOG_ERROR);
           return status;
+        }
+#endif
+#if RSI_SET_REGION_AP_SUPPORT
+        if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE) {
+          // allocate command buffer  from wlan pool
+          pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+          // If allocation of packet fails
+          if (pkt == NULL) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+            // return packet allocation failure error
+            return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+          }
+          // Memset data
+          memset(&pkt->data, 0, sizeof(rsi_req_set_region_ap_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+          rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+          // send set region AP command
+          status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_REGION_AP, pkt);
+
+          // wait on wlan semaphore
+          rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_REGION_AP_RESPONSE_WAIT_TIME);
+
+          // get wlan/network command response status
+          status = rsi_wlan_get_status();
+
+          if (status != RSI_SUCCESS) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+            // Return the status if error in sending command occurs
+            return status;
+          }
         }
 #endif
       }
@@ -961,6 +994,42 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           // Return status if error in sending command occurs
           SL_PRINTF(SL_WLAN_SCAN_ASYNC_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR, "status: %4x", status);
           return status;
+        }
+#endif
+#if RSI_SET_REGION_AP_SUPPORT
+        if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE) {
+          // allocate command buffer  from wlan pool
+          pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+          // If allocation of packet fails
+          if (pkt == NULL) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+            // return packet allocation failure error
+            return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+          }
+          // Memset data
+          memset(&pkt->data, 0, sizeof(rsi_req_set_region_ap_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+          rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+          // send set region AP command
+          status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_REGION_AP, pkt);
+
+          // wait on wlan semaphore
+          rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_REGION_AP_RESPONSE_WAIT_TIME);
+
+          // get wlan/network command response status
+          status = rsi_wlan_get_status();
+
+          if (status != RSI_SUCCESS) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+            // Return the status if error in sending command occurs
+            return status;
+          }
         }
 #endif
       }
@@ -1542,6 +1611,42 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           // Return status if error in sending command occurs
           SL_PRINTF(SL_WLAN_CONNECT_ASYNC_ERROR_IN_SENDING_COMMAND_4, WLAN, LOG_ERROR);
           return status;
+        }
+#endif
+#if RSI_SET_REGION_AP_SUPPORT
+        if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE) {
+          // allocate command buffer  from wlan pool
+          pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+          // If allocation of packet fails
+          if (pkt == NULL) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+            // return packet allocation failure error
+            return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+          }
+          // Memset data
+          memset(&pkt->data, 0, sizeof(rsi_req_set_region_ap_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+          rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+          // send set region AP command
+          status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_REGION_AP, pkt);
+
+          // wait on wlan semaphore
+          rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_REGION_AP_RESPONSE_WAIT_TIME);
+
+          // get wlan/network command response status
+          status = rsi_wlan_get_status();
+
+          if (status != RSI_SUCCESS) {
+            //Changing the wlan cmd state to allow
+            rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+            // Return the status if error in sending command occurs
+            return status;
+          }
         }
 #endif
       }
@@ -2738,7 +2843,6 @@ int32_t rsi_wlan_disconnect(void)
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_WLAN_DISCONNECT_ENTRY, WLAN, LOG_INFO);
-#ifndef RSI_CHIP_MFG_EN
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -2785,7 +2889,6 @@ int32_t rsi_wlan_disconnect(void)
     return status;
   }
 
-#endif
   // Return status if error in sending command occurs
   SL_PRINTF(SL_WLAN_DISCONNECT_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
@@ -2812,7 +2915,6 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
   rsi_req_disassoc_t *disassoc_info;
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_ENTRY, WLAN, LOG_INFO);
-#ifndef RSI_CHIP_MFG_EN
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
@@ -2868,7 +2970,6 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
     return status;
   }
 
-#endif
   // Return status if error in sending command occurs
   SL_PRINTF(SL_WLAN_DISCONNECT_STATIONS_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
@@ -6118,8 +6219,7 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
 
 int32_t rsi_wlan_delete_profile(uint32_t type)
 {
-  int32_t status = RSI_SUCCESS;
-#ifndef RSI_CHIP_MFG_EN
+  int32_t status                 = RSI_SUCCESS;
   rsi_pkt_t *pkt                 = NULL;
   rsi_profile_req_t *profile_req = NULL;
   SL_PRINTF(SL_WLAN_DELETE_PROFILE_ENTRY, WLAN, LOG_INFO);
@@ -6174,7 +6274,6 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
     return status;
   }
 
-#endif
   // Return status if error in sending command occurs
   SL_PRINTF(SL_WLAN_DELETE_PROFILE_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
@@ -6203,6 +6302,9 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
  *		        -4             - Buffer not available to serve the command
  * @note      If user tries to give any other command during autojoin, then user gets error 0x002C. \n
  *            To avoid this, user have to disable auto_join feature and give other commands.
+ * @note      The parameters of the following APIs are saved when rsi_wlan_enable_auto_config() is called: \n
+ *            rsi_wireless_init(), rsi_wlan_scan(), rsi_wlan_scan_with_bitmap_options(), rsi_wlan_connect(), \n
+ *            rsi_config_ipaddress(), rsi_wireless_antenna(), rsi_wlan_bgscan_profile(), rsi_radio_caps(), rsi_wlan_ap_start
  *
  *
  */
@@ -6599,11 +6701,6 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
     rsi_wlan_cb_non_rom->callback_list.wlan_async_module_state = callback_handler_ptr;
   }
 #endif
-#ifdef RSI_CHIP_MFG_EN
-  else if (callback_id == RSI_FLASH_WRITE_RESPONSE) {
-    rsi_wlan_cb_non_rom->callback_list.flash_write_response_handler = callback_handler_ptr;
-  }
-#endif
   else if (callback_id == RSI_WLAN_ASSERT_NOTIFY_CB) {
     // Register assert notify callback handler
     rsi_wlan_cb_non_rom->callback_list.rsi_assertion_cb = callback_handler_ptr;
@@ -6643,7 +6740,7 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
  *  ^                               |    socket create command.
  *  tcp_rx_window_size_cap          |    Desired total to increase the TCP RX window size
  *  tcp_ack_window_div_factor       |    In case of high latency networks to configure the TCP ACK division factor with respective to the \n 
- *  ^                               |    window size \n
+ *  ^                               |    window size; Increases the ACK frequency for asynchronous sockets \n
  *  ^                               |    Note: \n
  *  ^                               |    Default value is tcp_rx_window_size_cap.
  *
@@ -7240,1314 +7337,4 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
   return status;
 }
 /** @} */
-#ifdef RSI_CHIP_MFG_EN
-static bootup_params_t bootup_params = {
-  .magic_number                 = 0x5aa5,
-  .crystal_good_time            = 0x0,
-  .valid                        = 0x10001e3,
-  .reserved_for_valids          = 0x0,
-  .bootup_mode_info             = 0x0,
-  .digital_loop_back_params     = 0x0,
-  .rtls_timestamp_en            = 0x0,
-  .host_spi_intr_cfg            = 0x0,
-  .device_clk_info              = { { .pll_config_g = { .modem_pll_info_g = { .pll_ctrl_set_reg         = 0xd518,
-                                                                 .pll_ctrl_clr_reg         = 0x2ae7,
-                                                                 .modem_config_reg         = 0x2000,
-                                                                 .soc_clk_config_reg       = 0xc18,
-                                                                 .adc_dac_strm1_config_reg = 0x1100,
-                                                                 .adc_dac_strm2_config_reg = 0x6600 } },
-                         .switch_clk_g = { .switch_tass_clk              = 0x1,
-                                           .switch_qspi_clk              = 0x0,
-                                           .switch_slp_clk_2_32          = 0x0,
-                                           .switch_wlan_bbp_lmac_clk_reg = 0x1,
-                                           .switch_zbbt_bbp_lmac_clk_reg = 0x0,
-                                           .switch_bbp_lmac_clk_reg      = 0x1,
-                                           .modem_clk_is_160mhz          = 0x0,
-                                           .reserved                     = 0x0,
-                                           .tass_clock_config_reg1       = 0x83c0503,
-                                           .wlan_bbp_lmac_clk_reg_val    = 0x1042001,
-                                           .zbbt_bbp_lmac_clk_reg_val    = 0x2010001,
-                                           .bbp_lmac_clk_en_val          = 0x3b } } },
-  .buckboost_wakeup_cnt         = 0x0,
-  .pmu_wakeup_wait              = 0x0,
-  .shutdown_wait_time           = 0x0,
-  .pmu_slp_clkout_sel           = 0x0,
-  .wdt_prog_value               = 0x0,
-  .wdt_soc_rst_delay            = 0x0,
-  .dcdc_operation_mode          = 0x0,
-  .soc_reset_wait_cnt           = 0x0,
-  .waiting_time_at_fresh_sleep  = 0x0,
-  .max_threshold_to_avoid_sleep = 0x0,
-  .beacon_resedue_algo_en       = 0x0
-};
-/** @addtogroup WLAN
-* @{
-*/
-
-/*==============================================*/
-/**
- * @brief     Send Boot_up parameters to the Firmware.
- * @param[in]  Void
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_load_bootup_params()
-{
-  rsi_pkt_t *pkt;
-  uint8_t status = 0;
-  bootup_params_t *bootup_params_p;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    bootup_params_p = (bootup_params_t *)pkt->data;
-
-    memcpy(bootup_params_p, &bootup_params, sizeof(bootup_params_t));
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Send command
-    status = rsi_driver_wlan_send_cmd(RSI_BOOTUP_PARAMS, pkt);
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_BOOTUP_PARAMS_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  return status;
-}
-/** @} */
-
-/** @addtogroup DRIVER2
-* @{
-*/
-/*==============================================*/
-/**
- * @brief      Get SPI configuration. This is a non-blocking API.
- * @param[in]  which_flash_type  - Flash type    
- * @param[in]  pinset - Pin set           
- * @param[in]  spi_config - SPI configuration
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-void rsi_get_spi_config(uint32_t which_flash_type, uint32_t pinset, spi_config_t *spi_config)
-{
-  spi_config_1_t *spi_config1 = (spi_config_1_t *)&spi_config->spi_config_1;
-  spi_config_2_t *spi_config2 = (spi_config_2_t *)&spi_config->spi_config_2;
-  spi_config_3_t *spi_config3 = (spi_config_3_t *)&spi_config->spi_config_3;
-  spi_config_4_t *spi_config4 = (spi_config_4_t *)&spi_config->spi_config_4;
-  spi_config_5_t *spi_config5 = (spi_config_5_t *)&spi_config->spi_config_5;
-  spi_config_6_t *spi_config6 = (spi_config_6_t *)&spi_config->spi_config_6;
-  spi_config_7_t *spi_config7 = (spi_config_7_t *)&spi_config->spi_config_7;
-
-  // Default SPI configuration
-  spi_config1->inst_mode         = QUAD_MODE;
-  spi_config1->addr_mode         = QUAD_MODE;
-  spi_config1->data_mode         = QUAD_MODE;
-  spi_config1->dummy_mode        = QUAD_MODE;
-  spi_config1->extra_byte_mode   = QUAD_MODE;
-  spi_config1->prefetch_en       = DIS_PREFETCH;
-  spi_config1->dummy_W_or_R      = DUMMY_READS;
-  spi_config1->extra_byte_en     = 0;
-  spi_config1->d3d2_data         = 3;
-  spi_config1->continuous        = CONTINUOUS;
-  spi_config1->read_cmd          = FREAD_QUAD_O;
-  spi_config1->flash_type        = MICRON_QUAD_FLASH;
-  spi_config1->no_of_dummy_bytes = 1;
-
-  spi_config2->auto_mode                   = EN_AUTO_MODE;
-  spi_config2->cs_no                       = CHIP_ZERO;
-  spi_config2->neg_edge_sampling           = NEG_EDGE_SAMPLING;
-  spi_config2->qspi_clk_en                 = QSPI_FULL_TIME_CLK;
-  spi_config2->protection                  = REM_WR_PROT;
-  spi_config2->dma_mode                    = NO_DMA;
-  spi_config2->swap_en                     = SWAP;
-  spi_config2->full_duplex                 = IGNORE_FULL_DUPLEX;
-  spi_config2->wrap_len_in_bytes           = NO_WRAP;
-  spi_config2->addr_width_valid            = 0;
-  spi_config2->addr_width                  = _24BIT_ADDR;
-  spi_config2->dummy_cycles_for_controller = 0;
-  spi_config2->pinset_valid                = 0; //(1) FIXME : This is not in ta_mbr_efuse
-  spi_config2->flash_pinset                = pinset;
-
-  spi_config3->en_word_swap           = 0;
-  spi_config3->_16bit_cmd_valid       = 0;
-  spi_config3->_16bit_rd_cmd_msb      = 0;
-  spi_config3->xip_mode               = 0;
-  spi_config3->no_of_dummy_bytes_wrap = 0;
-  spi_config3->ddr_mode_en            = 0;
-  spi_config3->wr_cmd                 = 0x2;
-  spi_config3->wr_inst_mode           = QUAD_MODE;
-  spi_config3->wr_addr_mode           = QUAD_MODE;
-  spi_config3->wr_data_mode           = QUAD_MODE;
-  spi_config3->dummys_4_jump          = 1;
-
-  spi_config4->_16bit_wr_cmd_msb      = 0;
-  spi_config4->qspi_ddr_clk_en        = 1; //(0) FIXME : This is not in ta_mbr_efuse
-  spi_config4->qspi_loop_back_mode_en = 0;
-  spi_config4->qspi_manual_ddr_phasse = 0;
-  spi_config4->ddr_data_mode          = 0;
-  spi_config4->ddr_inst_mode          = 0;
-  spi_config4->ddr_addr_mode          = 0;
-  spi_config4->ddr_dummy_mode         = 0;
-  spi_config4->ddr_extra_byte         = 0;
-  spi_config4->dual_flash_mode        = 0;
-  spi_config4->secondary_csn          = 0;
-  spi_config4->polarity_mode          = 0;
-  spi_config4->valid_prot_bits        = 4;
-  spi_config4->no_of_ms_dummy_bytes   = 0;
-  spi_config4->ddr_dll_en             = 0;
-  spi_config4->continue_fetch_en      = 0;
-  spi_config4->dma_write              = 0;
-  spi_config4->prot_top_bottom        = 0;
-  spi_config4->auto_csn_based_addr_en = 0;
-
-  spi_config5->block_erase_cmd      = BLOCK_ERASE;
-  spi_config5->busy_bit_pos         = 0;
-  spi_config5->d7_d4_data           = 0xf;
-  spi_config5->dummy_bytes_for_rdsr = 0x0;
-  spi_config5->reset_type           = 0x0;
-
-  spi_config6->chip_erase_cmd   = CHIP_ERASE;
-  spi_config6->sector_erase_cmd = SECTOR_ERASE;
-
-  spi_config7->status_reg_read_cmd  = 0x05;
-  spi_config7->status_reg_write_cmd = 0x01;
-
-  if (which_flash_type == GIGA_DEVICE_FLASH) {
-    spi_config1->read_cmd          = 0x0B;
-    spi_config1->flash_type        = GIGA_DEVICE_FLASH;
-    spi_config1->no_of_dummy_bytes = 4;
-    spi_config4->valid_prot_bits   = 5;
-    spi_config5->reset_type        = 0x3;
-  }
-
-  if (which_flash_type == MX_QUAD_FLASH) {
-    spi_config1->inst_mode = SINGLE_MODE;
-#if 1
-    spi_config1->addr_mode  = QUAD_MODE;
-    spi_config1->dummy_mode = QUAD_MODE;
-#else
-    spi_config1->addr_mode         = SINGLE_MODE;
-    spi_config1->dummy_mode        = SINGLE_MODE;
-#endif
-    spi_config3->wr_inst_mode  = SINGLE_MODE;
-    spi_config3->wr_addr_mode  = SINGLE_MODE;
-    spi_config3->wr_data_mode  = SINGLE_MODE;
-    spi_config1->extra_byte_en = 1;
-#if 1
-    spi_config1->read_cmd          = 0xEB; // (0xB) FIXME :This is not in ta_mbr_efuse
-    spi_config1->no_of_dummy_bytes = 2;    // (2)FIXME : This is not in ta_mbr_efuse
-#else
-    spi_config1->read_cmd          = 0x6B; // (0xB) FIXME :This is not in ta_mbr_efuse
-    spi_config1->no_of_dummy_bytes = 1;    // (2)FIXME : This is not in ta_mbr_efuse
-#endif
-    spi_config1->flash_type = MX_QUAD_FLASH;
-
-    spi_config4->prot_top_bottom = 1;
-    spi_config5->reset_type      = 0x0; //(4) FIXME : This is not in ta_mbr_efuse
-  }
-
-  if (which_flash_type == MICRON_QUAD_FLASH) {
-    spi_config1->read_cmd          = FREAD_QUAD_O;
-    spi_config1->flash_type        = MICRON_QUAD_FLASH;
-    spi_config1->no_of_dummy_bytes = 1;
-    spi_config5->reset_type        = 0x3;
-  }
-
-  if (which_flash_type == ADESTO_OCTA_FLASH) {
-    spi_config1->inst_mode         = OCTA_MODE;
-    spi_config1->addr_mode         = OCTA_MODE;
-    spi_config1->data_mode         = OCTA_MODE;
-    spi_config1->dummy_mode        = OCTA_MODE;
-    spi_config1->extra_byte_mode   = OCTA_MODE;
-    spi_config1->dummy_W_or_R      = DUMMY_WRITES;
-    spi_config1->read_cmd          = 0x0B;
-    spi_config1->flash_type        = ADESTO_OCTA_FLASH;
-    spi_config1->no_of_dummy_bytes = 8;
-
-    spi_config3->wr_inst_mode = OCTA_MODE;
-    spi_config3->wr_addr_mode = OCTA_MODE;
-    spi_config3->wr_data_mode = OCTA_MODE;
-
-    spi_config5->dummy_bytes_for_rdsr = 4;
-    spi_config5->reset_type           = 0x3;
-    spi_config5->block_erase_cmd      = BLOCK_ERASE;
-
-    //mbr_p->qspi_ctrl_flags |= OCTA_FLASH;
-  }
-
-  if (which_flash_type == MX_OCTA_FLASH) {
-    spi_config1->inst_mode         = OCTA_MODE;
-    spi_config1->addr_mode         = OCTA_MODE;
-    spi_config1->data_mode         = OCTA_MODE;
-    spi_config1->dummy_mode        = OCTA_MODE;
-    spi_config1->extra_byte_mode   = OCTA_MODE;
-    spi_config1->dummy_W_or_R      = DUMMY_WRITES;
-    spi_config1->read_cmd          = 0xEC;
-    spi_config1->flash_type        = MX_OCTA_FLASH;
-    spi_config1->no_of_dummy_bytes = 4;
-
-    spi_config2->addr_width_valid = 1;
-    spi_config2->addr_width       = _32BIT_ADDR;
-
-    spi_config3->_16bit_cmd_valid  = 1;
-    spi_config3->_16bit_rd_cmd_msb = 0x13;
-    spi_config3->wr_cmd            = 0x12;
-    spi_config3->wr_inst_mode      = OCTA_MODE;
-    spi_config3->wr_addr_mode      = OCTA_MODE;
-    spi_config3->wr_data_mode      = OCTA_MODE;
-
-    spi_config4->_16bit_wr_cmd_msb    = 0xED;
-    spi_config4->no_of_ms_dummy_bytes = 1;
-
-    spi_config5->dummy_bytes_for_rdsr = 4;
-    spi_config5->reset_type           = 0x7;
-    spi_config5->block_erase_cmd      = 0xDC23;
-
-    spi_config6->chip_erase_cmd   = 0xC738;
-    spi_config6->sector_erase_cmd = 0x21DE;
-
-    spi_config7->status_reg_read_cmd  = 0x05FA;
-    spi_config7->status_reg_write_cmd = 0x01FE;
-
-#ifdef PHASE_2
-    mbr_p->qspi_ctrl_flags |= OCTA_FLASH;
-#endif
-  }
-}
-/** @} */
-
-/** @addtogroup DRIVER5
-* @{
-*/
-/*==============================================*/
-/**
- * @brief     Write content to flash memory.
- * @param[in] write_req - Content to be written to flash memory
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_flash_mem_wr(rsi_flash_write_t *write_req)
-{
-  rsi_pkt_t *pkt;
-  spi_config_t spi_configs;
-  uint8_t status = 0;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    rsi_get_spi_config(write_req->flash_type, write_req->flash_pinset, &spi_configs);
-
-    memcpy(pkt->data, write_req, sizeof(rsi_flash_write_t));
-
-    memcpy(pkt->data + sizeof(rsi_flash_write_t), &spi_configs, sizeof(spi_config_t));
-
-    // Send command
-    status = rsi_driver_wlan_send_cmd(RSI_FLASH_WRITE, pkt);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  return status;
-}
-/** @} */
-
-/** @addtogroup WLAN
-* @{
-*/
-/*==============================================*/
-/**
- * @brief     Reset MAC
- * @param[in] Void
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_reset_mac()
-{
-  rsi_pkt_t *pkt;
-  uint8_t status         = 0;
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-  status                 = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-    memset(pkt->desc, 0, 256);
-
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_MGMT_Q << 4);
-
-    // Fill frame type
-    pkt->desc[2] = RSI_RESET_MAC;
-
-    // Bypass RX path
-    pkt->desc[8] = 1;
-
-    // MAX retries
-    pkt->desc[9] = 0xf;
-
-    // PER mode enable
-    pkt->desc[10] = 1;
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    rsi_driver_cb->wlan_cb->expected_response = RSI_RESET_MAC;
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_RESET_MAC_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-
-  return status;
-}
-
-/*==============================================*/
-/**
- * @brief     Channel translate.
- * @param[in] channelNum  - Channel number
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- */
-/// @private
-
-uint8_t translate_channel(uint8_t channelNum)
-{
-  SL_PRINTF(SL_WLAN_TRANSLATE_CHANNEL_ENTRY, WLAN, LOG_INFO);
-  if (channelNum) {
-    if (channelNum < 9) {
-      channelNum = (channelNum * 4 + 32);
-    } else if (channelNum < 20) {
-      channelNum = ((channelNum - 9) * 4 + 100);
-    } else if (channelNum < 25) {
-      channelNum = ((channelNum - 20) * 4) + 149;
-    } /* End if <condition> */
-  }
-  SL_PRINTF(SL_WLAN_TRANSLATE_CHANNEL_EXIT, WLAN, LOG_INFO);
-  return channelNum;
-}
-
-/*==============================================*/
-/**
- * @brief      Radio capabilities of the operating channel.
- * @param[in]  operating_channel - Operating channel number
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_radio_caps(uint8_t operating_channel)
-{
-  rsi_pkt_t *pkt;
-  uint8_t status = 0;
-  uint32_t ii;
-  uint8_t radio_id;
-  radio_caps_t *radio_caps = NULL;
-
-  uint16_t gc[20] = { 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0,
-                      0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0 };
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    memset(pkt->desc, 0, 256);
-
-    // Fill payload length
-    rsi_uint16_to_2bytes(pkt->desc, (sizeof(radio_caps_t) & 0xFFF));
-
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_MGMT_Q << 4);
-
-    // Fill frame type
-    pkt->desc[2] = RSI_RADIO_CAPS;
-
-    if (operating_channel > 14) {
-      rsi_uint16_to_2bytes(&pkt->desc[8], translate_channel(operating_channel));
-    } else {
-      rsi_uint16_to_2bytes(&pkt->desc[8], operating_channel);
-    }
-
-    // RF type
-    pkt->desc[9] |= 1;
-
-    pkt->desc[14] |= ONEBOX_LMAC_CLOCK_FREQ_40MHZ; //FIXME Radio config info
-
-    radio_id = 0;
-
-    pkt->desc[15] |= radio_id; // radio_id
-
-    radio_caps = (radio_caps_t *)pkt->data;
-
-    for (ii = 0; ii < MAX_HW_QUEUES; ii++) {
-      radio_caps->qos_params[ii].cont_win_min_q = 3;
-      radio_caps->qos_params[ii].cont_win_max_q = 0x3f;
-      radio_caps->qos_params[ii].aifsn_val_q    = 2;
-      radio_caps->qos_params[ii].txop_q         = 0;
-    }
-
-    // In PER mode, queue id have mix-7, max-0x3f, txop-0 and aifsn-2
-    radio_caps->qos_params[1].cont_win_min_q = 7;
-    radio_caps->qos_params[1].cont_win_max_q = 0x3f;
-    radio_caps->qos_params[1].aifsn_val_q    = 2;
-    radio_caps->qos_params[1].txop_q         = 0;
-
-    ii = 0;
-    // memcpy(radio_caps->gcpd_per_rate, &gc[0], 40);
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_1 & 0x00FF);    /*1*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_2 & 0x00FF);    /*2*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_5_5 & 0x00FF);  /*5.5*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_11 & 0x00FF);   /*11*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_48 & 0x00FF);   /*48*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_24 & 0x00FF);   /*24*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_12 & 0x00FF);   /*12*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_6 & 0x00FF);    /*6*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_54 & 0x00FF);   /*54*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_36 & 0x00FF);   /*36*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_18 & 0x00FF);   /*18*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_9 & 0x00FF);    /*9*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS0 & 0x00FF); /*MCS0*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS1 & 0x00FF); /*MCS1*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS2 & 0x00FF); /*MCS2*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS3 & 0x00FF); /*MCS3*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS4 & 0x00FF); /*MCS4*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS5 & 0x00FF); /*MCS5*/
-    radio_caps->gcpd_per_rate[ii++] = (RSI_RATE_MCS6 & 0x00FF); /*MCS6*/
-    radio_caps->gcpd_per_rate[ii]   = (RSI_RATE_MCS7 & 0x00FF); /*MCS7*/
-    radio_caps->sifs_tx_11n         = 0x244;
-    radio_caps->sifs_tx_11b         = 0x15a;
-    radio_caps->slot_rx_11n         = 0x168;
-    radio_caps->ofdm_ack_tout       = 0xaa0;
-    radio_caps->cck_ack_tout_reg    = 0x24e0;
-    radio_caps->preamble_type       = 0;
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    rsi_driver_cb->wlan_cb->expected_response = RSI_RADIO_CAPS;
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_RADIO_CAPS_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-
-  return status;
-}
-
-/*==============================================*/
-/**
- * @brief     Program radio frequency
- * @param[in] Void
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- */
-///@private
-int32_t program_bb_rf()
-{
-  static uint32_t rf_reset = 1;
-  rsi_pkt_t *pkt;
-  uint8_t status   = 0;
-  uint8_t endpoint = 0;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    memset(pkt->desc, 0, 256);
-
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_MGMT_Q << 4);
-
-    // Fill frame type
-    pkt->desc[2] = RSI_BB_RF_INIT;
-
-    pkt->desc[8] = endpoint;
-
-    if (rf_reset) {
-      pkt->desc[14] = (RF_RESET_ENABLE);
-      rf_reset      = 0;
-    }
-    *(uint16_t *)&pkt->desc[14] |= (PUT_BBP_RESET | BB_RF_WRITE_PROG | (RSI_RF_TYPE << 4));
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    rsi_driver_cb->wlan_cb->expected_response = RSI_BB_RF_INIT;
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_BBRF_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-  return status;
-}
-/*==============================================*/
-/**
- * @brief     Set the operating channel.
- * @param[in] channel_num - Operating channel number
- * @param[in] power_level - Power level
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- */
-/// @private
-
-int32_t set_channel(uint8_t channel_num, uint8_t power_level)
-{
-  rsi_pkt_t *pkt;
-  uint8_t status   = 0;
-  uint8_t endpoint = 0;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    memset(pkt->desc, 0, 256);
-
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_MGMT_Q << 4);
-
-    // Fill frame type
-    pkt->desc[2] = RSI_SCAN_REQ;
-
-    pkt->desc[8]  = channel_num;
-    pkt->desc[9]  = 0; //RSI_ANTENNA_GAIN_2G;
-    pkt->desc[10] = 0; //RSI_ANTENNA_GAIN_5G;
-
-    pkt->desc[12] = power_level;
-
-    pkt->desc[14] |= (PUT_BBP_RESET | BB_RF_WRITE_PROG | (RSI_RF_TYPE << 4));
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    rsi_driver_cb->wlan_cb->expected_response = RSI_SCAN_REQ;
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_SCAN_REQ_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-  // Get WLAN/network command response status
-
-  status = rsi_wlan_get_status();
-  return 0;
-}
-/*==============================================*/
-/**
- * @brief    Select internal or external RF type and clock frequency.
- * @pre     \ref rsi_wireless_init() API needs to be called before this API
- * @param[in] Void
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_feature_frame()
-{
-  rsi_pkt_t *pkt;
-  rsi_wlan_9116_features_t *features;
-  uint8_t status = 0;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    features = (rsi_wlan_9116_features_t *)pkt->data;
-
-    features->pll_mode            = 0x0;
-    features->rf_type             = 0x1;
-    features->wireless_mode       = 0x0;
-    features->enable_ppp          = 0x0;
-    features->afe_type            = 0x1;
-    features->disable_programming = 0x0;
-
-    // For PER mode
-    features->feature_enables = (0x4 << LMAC_BEACON_DROP_FEATURES_THOLD_OFFET) | DUTY_CYCLING | END_OF_FRAME_DROP
-                                | ASSOC_LP_CHAIN_ENABLE | (0x5 << LMAC_BEACON_DROP_ENABLES_OFFSET);
-
-    // Send command
-    status = rsi_driver_wlan_send_cmd(RSI_FEATURE_FRAME, pkt);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  return status;
-}
-/** @} */
-/*40 MHz specific */
-const uint8_t permanent_address[6] = { 0x88, 0xda, 0x1a, 0x11, 0x22, 0x33 };
-const uint8_t per_packet[1500]     = { 0x0,  0x00, 0x00, 0x00, 0xc0, 0x08, 0x3a, 0x01, 0x00, 0x23,
-                                   0xa7, 0x1b, 0x16, 0x38, 0x00, 0x23, 0xa7, 0x1b, 0x15, 0x1c,
-                                   0x00, 0x23, 0xa7, 0x1b, 0x15, 0x1c, 0x10, 0x10, 0x02, 0x00 };
-
-/** @addtogroup WLAN
-* @{
-*/
-
-/*==============================================*/
-/**
- * @brief     Send packets
- * @param[in] per_params -  This is the parameter 
- * @param[in] pkt_size   - Packet size
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_send_per_packet(tx_per_params_t *per_params, uint32_t pkt_size)
-{
-  rsi_pkt_t *pkt;
-  int32_t status = 0;
-
-  uint8_t *data = NULL;
-  // Get WLAN CB structure pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-    memset(pkt->desc, 0, 256);
-
-    data = pkt->data;
-
-    rsi_uint16_to_2bytes(pkt->desc, (pkt_size & 0xFFF));
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_DATA_Q << 4);
-
-    // Add queue id for PER packets
-    pkt->desc[14] = 1;
-
-    // Set the data rate
-    pkt->desc[6] = 1 << 0; //setting rate info
-
-    rsi_uint16_to_2bytes(&pkt->desc[8], per_params->rate);
-
-#ifdef ENABLE_40MHz_BANDWIDTH
-    if (operating_chwidth == BW_40Mhz) {
-      pkt->desc[10] |= FULL_40M_ENABLE;
-    }
-#endif
-    memcpy(&data[0], per_packet, pkt_size);
-    // Copy modules MAC address into source address & BSSID of MAC address
-    memcpy(&data[10], permanent_address, 6);
-    memcpy(&data[16], permanent_address, 6);
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-
-  return status;
-}
-/*==============================================*/
-/**
- * @brief     Send packets frame
- * @param[in] tx_per_params -  Transmitted parameter
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_send_per_frame(tx_per_params_t *tx_per_params)
-{
-  rsi_pkt_t *pkt;
-  tx_per_params_t *tx_per_params_p;
-  uint8_t status = 0;
-
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    memset(pkt->desc, 0, 256);
-
-    tx_per_params_p = (tx_per_params_t *)pkt->data;
-
-    // Fill payload length
-    rsi_uint16_to_2bytes(pkt->desc, (sizeof(tx_per_params_t) & 0xFFF));
-
-    // Fill frame type
-    pkt->desc[1] |= (RSI_WLAN_MGMT_Q << 4);
-    pkt->desc[2] = RSI_PER_CMD_PKT;
-    pkt->desc[6] = tx_per_params->mode;
-
-    memcpy(tx_per_params_p, tx_per_params, sizeof(tx_per_params_t));
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-  rsi_driver_cb->wlan_cb->expected_response = RSI_WLAN_RSP_CLEAR;
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-
-  return status;
-}
-/** @} */
-uint16_t seq_num = 0;
-/** @addtogroup WLAN
-* @{
-*/
-
-/*==============================================*/
-/**
- * @brief      Prepare PER packet
- * @param[in]  per_params  - Parameters \ref tx_per_params_t
- * @param[in]  length - Length of the parameters buffer
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-uint32_t rsi_prepare_per_pkt(tx_per_params_t *per_params, uint16_t length)
-{
-#define FRAME_DESC_SZ      16
-#define MIN_802_11_HDR_LEN 24
-#define BROADCAST_IND      BIT(9)
-#define ENABLE_MAC_INFO    BIT(0)
-#define CONTINUOUS_MODE    BIT(10)
-
-  rsi_pkt_t *pkt;
-  uint8_t status                = 0;
-  ieee80211_macframe_t *tmp_hdr = NULL;
-  uint8_t *data                 = NULL;
-  uint8_t size_of_hdr; // frame_desc + MAC_HDR + Extended_desc   16 + 24 + 4
-  /* For future use */
-  uint8_t extended_desc = 4;
-
-  uint8_t mac_addr[6] = { 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5 };
-  uint8_t mac_hdr[24] = { 0x8,  0x1,  0,    0,    0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0x0, 0x23,
-                          0xa7, 0xa1, 0xa2, 0xa3, 0x0,  0x23, 0xa7, 0xa1, 0xa2, 0xa3, 0,   0 };
-  uint8_t offset = 0, min_len = 0;
-  uint32_t rate_flags, greenfield, ch_bw, i = 0;
-  uint32_t *frame_desc, temp_word;
-  // Get WLAN CB struct pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    memset(pkt->desc, 0, 256);
-
-    size_of_hdr = FRAME_DESC_SZ + extended_desc + MIN_802_11_HDR_LEN;
-
-    frame_desc = (uint32_t *)pkt->desc;
-    data       = (uint8_t *)pkt->desc;
-
-    *(uint16_t *)frame_desc = (length - FRAME_DESC_SZ) & 0xfff;
-
-    if (length >= (MIN_802_11_HDR_LEN + FRAME_DESC_SZ + extended_desc)) {
-      frame_desc[1] = (MIN_802_11_HDR_LEN << 8);
-    }
-    if (per_params->aggr_enable) {
-      temp_word = ((ENABLE_MAC_INFO) << 16); // In mac_info set bit0 and bit9 for bcast pkt
-      frame_desc[3] |= (QOS_EN);             // Indication of QOS in mac_flags
-    } else {
-      temp_word = ((BROADCAST_IND | ENABLE_MAC_INFO) << 16); //In mac_info set bit0 and bit9 for bcast pkt
-    }
-    rate_flags = (per_params->rate_flags << 2);
-    /*FIXME: Put macros for these mask values */
-    ch_bw      = (rate_flags & 0x00F0);
-    greenfield = (rate_flags & 0x0008);
-    greenfield = (greenfield << 17);
-    if (rate_flags & 0x0004) // Checking short_GI
-    {
-      per_params->rate |= BIT(9);
-    }
-    if (per_params->mode) {
-      rate_flags |= CONTINUOUS_MODE;
-    }
-
-    /* Rates are sent in word 5 and channel bandwidth in word 6
-     * */
-    frame_desc[1] |= (temp_word | extended_desc);
-    frame_desc[2] = ((per_params->rate & 0x3ff) | (ch_bw << 12) | greenfield);
-    frame_desc[4] = (per_params->power);
-    if (per_params->mode == PER_CONT_MODE) {
-      frame_desc[4] |= (3 << 8);
-      //txPkt->flags  |= CONT_TRANSFER;
-    }
-    offset += FRAME_DESC_SZ + extended_desc;
-    /* Form the MAC header for the PER Packet to be transmitted */
-    tmp_hdr = (ieee80211_macframe_t *)&data[offset];
-
-    if (length >= size_of_hdr) {
-      tmp_hdr->fc[0] = 0x8;
-      tmp_hdr->fc[1] = 0x01;
-
-      tmp_hdr->dur[0] = 0x00;
-      tmp_hdr->dur[1] = 0x00;
-      memcpy(tmp_hdr->addr1, mac_addr, MAC_ADDR_LEN);
-      memcpy(tmp_hdr->addr2, permanent_address, MAC_ADDR_LEN);
-      memcpy(tmp_hdr->addr3, permanent_address, MAC_ADDR_LEN);
-
-      offset += MIN_802_11_HDR_LEN;
-
-      /*Fill the PER packet with dummy data */
-      for (i = offset; i <= (length); i += 4) {
-        data[i]     = 0xff;
-        data[i + 1] = 0x00;
-        data[i + 2] = 0xbb;
-        data[i + 3] = 0x55;
-      }
-      if (((length - offset) % 4))
-        memset(&data[i - 4], 0xdd, ((length - offset) % 4));
-    } else {
-
-      memcpy(tmp_hdr, mac_hdr, min_len);
-    }
-    data[1] |= (RSI_WLAN_DATA_Q << 4);
-    if (per_params->aggr_enable == 1)
-      data[14] |= 1; // Send pkts in queue no: 1
-    else
-      data[14] |= 1; // Send pkts in queue no: 1
-    if (length > (FRAME_DESC_SZ + MIN_802_11_HDR_LEN + extended_desc)) {
-      data[FRAME_DESC_SZ + MIN_802_11_HDR_LEN + extended_desc - 2] = (seq_num << 4) & 0xff;
-      data[FRAME_DESC_SZ + MIN_802_11_HDR_LEN + extended_desc - 1] = ((seq_num << 4) >> 8);
-      seq_num                                                      = ((seq_num + 1) % 4096);
-    }
-
-    // Enqueue packet to WLAN TX queue
-    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
-
-    // Set TX packet pending event
-    rsi_set_event(RSI_TX_EVENT);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Get WLAN/network command response status
-  status = rsi_wlan_get_status();
-
-  return status;
-}
-
-/*==============================================*/
-/**
- * @brief     Transmit packets frame
- * @param[in] tx_per_params -  Transmitted parameter \ref tx_per_params_t
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- */
-///@private
-int32_t rsi_process_transmit(tx_per_params_t *per_params)
-{
-  uint32_t length;
-  int32_t status = 0;
-
-  per_params->aggr_count = (per_params->length / PER_AGGR_LIMIT_PER_PKT);
-  if (per_params->aggr_count == 0) {
-    per_params->aggr_count = 1; // Added this check to ensure aggr_count value is not 0
-  }
-  if (per_params->enable) {
-#ifdef CONFIG_IEEE_80211J
-    if (sme_info_nonrom_g.enable_11j && ((Origregdmn == REGION_JAP_NUM))) {
-      if (!valid_80211J_channel(per_params->channel)) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-      if (((per_params->rate == 0) || (per_params->rate == 2) || (per_params->rate == 4) || (per_params->rate == 6))) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-
-    } else
-#endif
-      if (per_params->channel <= 14) {
-
-    } else if (((per_params->channel >= 36) && (per_params->channel <= 165))) {
-      /*Check for b rates, Only a/n rates are valid*/
-      if ((per_params->rate == 0) || (per_params->rate == 2) || (per_params->rate == 4) || (per_params->rate == 6)) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-    } else {
-      status = RSI_ERROR_INVALID_PARAM;
-    }
-
-    // Set channel number
-#if 0
-        if(operating_band == BAND_5GHZ
-                && (Origregdmn != REGION_JAP_NUM) )
-        {
-            cur_scan_channel = reverse_translate_channel(per_params->channel);
-        }
-        else if (Origregdmn == REGION_JAP_NUM)
-        {
-            cur_scan_channel = get_80211J_channel(adapter,per_params->channel);
-        }
-        else
-        {
-            cur_scan_channel = per_params->channel;
-        }
-#endif
-    if (set_channel(per_params->channel, per_params->power)) {
-      status = RSI_ERROR_INVALID_PARAM;
-    }
-#ifdef CW_MODE_ENABLED
-    if ((per_params->mode >= 2) && (per_params->mode <= 6)) {
-      cw_mode_start_stop(per_params, 0);
-      break;
-    }
-#endif
-    if (per_params->mode == PER_CONT_MODE) {
-      if (per_params->aggr_enable == 1) {
-        length = (per_params->length - ((per_params->aggr_count - 1) * PER_AGGR_LIMIT_PER_PKT));
-      } else
-        length =
-          (per_params
-             ->length); // > FIRST_SCATTER_AVALIABLE_LENGTH ) ? FIRST_SCATTER_AVALIABLE_LENGTH : per_params->length;
-      if ((per_params->length < 24) || (per_params->length > 260)) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-
-      rsi_prepare_per_pkt(per_params, (length + FRAME_DESC_SZ));
-    }
-
-    if (per_params->mode == PER_BURST_MODE) {
-      if (per_params->rate_flags & 0x01) // Check for Short GI enable
-        per_params->rate |= BIT(9);      // Set Bit 9 to enable short GI in rate
-      if ((per_params->length < 24) || (per_params->length > 1500)) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-
-      status = rsi_send_per_frame(per_params);
-      if (per_params->aggr_enable == 1) {
-      } else {
-        length = (per_params->length > MAX_PER_PACKET_SIZE) ? MAX_PER_PACKET_SIZE : per_params->length;
-        status = rsi_send_per_packet(per_params, length);
-      }
-    }
-  } else {
-    // Disable PER
-#ifdef CW_MODE_ENABLED
-    if (cw_iter > 0) {
-      if (set_channel(per_params->channel, per_params->power_level)) {
-        status = RSI_ERROR_INVALID_PARAM;
-      }
-      cw_mode_start_stop(per_params, 2);
-    } else
-#endif
-      status = rsi_send_per_frame(per_params);
-  }
-  return status;
-}
-
-/*==============================================*/
-/**
- * @brief      Write content to efuse.
- * @param[in]  efuse_write_p - Write efuse content
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure
- * 
- */
-///@private
-int32_t rsi_efuse_write(rsi_efuse_write_t *efuse_write_p)
-{
-
-  rsi_pkt_t *pkt;
-  int8_t status = RSI_SUCCESS;
-
-  // Get WLAN CB structure pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    // Take the user provided data and fill it in antenna select structure
-    memcpy(pkt->data, (uint8_t *)efuse_write_p, sizeof(rsi_efuse_write_t) + efuse_write_p->length);
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Send antenna select command
-    status = rsi_driver_wlan_send_cmd(RSI_EFUSE_WRITE_REQ, pkt);
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_EFUSE_WRITE_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Return status
-  return status;
-}
-
-/*==============================================*/
-/**
- * @brief     Get efuse content
- * @param[in] efuse_read_p - Read efuse content
- * @param[in] buf          - Pointer to buffer to store efuse content
- * @param[in] length       - Length of the efuse content
- * @return    0  -  Success \n
- *            Non-Zero Value - Failure
- * 
- */
-///@private
-int32_t rsi_efuse_read(rsi_efuse_read_t *efuse_read_p, uint8_t *buf, uint32_t length)
-{
-
-  rsi_pkt_t *pkt;
-  int8_t status = RSI_SUCCESS;
-
-  // Get WLAN CB structure pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-
-  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-    // Allocate command buffer from WLAN pool
-    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    // Take the user provided data and fill it in antenna select structure
-    memcpy(pkt->data, (uint8_t *)efuse_read_p, sizeof(rsi_efuse_read_t));
-
-    // Attach the buffer given by user
-    wlan_cb->app_buffer = (uint8_t *)buf;
-
-    // Length of the buffer provided by user
-    wlan_cb->app_buffer_length = length;
-
-#ifndef RSI_WLAN_SEM_BITMAP
-    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-    // Send antenna select command
-    status = rsi_driver_wlan_send_cmd(RSI_EFUSE_READ_REQ, pkt);
-
-    // Wait on WLAN semaphore
-    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_EFUSE_READ_RESPONSE_WAIT_TIME);
-
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
-  } else {
-    // Return WLAN command error
-    return status;
-  }
-
-  // Return status
-  return status;
-}
-#endif
 /** @} */

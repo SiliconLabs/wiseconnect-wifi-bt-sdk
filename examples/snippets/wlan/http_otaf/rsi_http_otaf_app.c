@@ -173,15 +173,15 @@ char *hostname = "rs9116updates.blob.core.windows.net";
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x650AA8C0
+#define DEVICE_IP "192.168.10.101" //0x650AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
@@ -271,6 +271,7 @@ rsi_wlan_app_cb_t rsi_wlan_app_cb; //! application control block
 rsi_task_handle_t wlan_task_handle   = NULL;
 rsi_task_handle_t driver_task_handle = NULL;
 rsi_semaphore_handle_t rsi_http_otaf_sem;
+rsi_semaphore_handle_t rsi_http_response_sem;
 #endif
 
 void join_fail_notify_handler(uint16_t sock_no, uint8_t *buffer, uint32_t length)
@@ -292,15 +293,16 @@ int32_t rsi_http_response_status(int32_t *rsp_var);
 //! http client Application
 int32_t rsi_http_otaf_app()
 {
+  uint8_t ip_buff[20];
   int32_t status = RSI_SUCCESS;
   uint8_t resp_buf[RSI_FIRMWARE_NAME_SIZE];
   //! memset the buffer
   memset(resp_buf, 0, sizeof(resp_buf));
 
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
@@ -341,6 +343,9 @@ int32_t rsi_http_otaf_app()
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef RSI_WITH_OS
+  rsi_semaphore_create(&rsi_http_response_sem, 0);
+#endif
 
   status = rsi_wlan_get(RSI_FW_VERSION, resp_buf, RSI_FIRMWARE_NAME_SIZE);
   if (status != RSI_SUCCESS) {
@@ -416,7 +421,7 @@ int32_t rsi_http_otaf_app()
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
-        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, NULL, 0, 0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, ip_buff, sizeof(ip_buff), 0);
 #else
         status = rsi_config_ipaddress(RSI_IP_VERSION_4,
                                       RSI_STATIC,
@@ -428,12 +433,14 @@ int32_t rsi_http_otaf_app()
                                       0);
 #endif
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nIP Config Failed\r\n");
+          LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
           rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
         } else {
           LOG_PRINT("\r\nIP Config Success\r\n");
-          rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE; //! update WLAN application state to ipconfig done state
-        }
+          LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
+          rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
+        } //! update WLAN application state to ipconfig done state
+
 #ifdef RSI_WITH_OS
         rsi_semaphore_post(&rsi_http_otaf_sem);
 #endif
@@ -537,7 +544,7 @@ int32_t rsi_http_otaf_app()
 #endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nWireless deint failed\r\n");
+          LOG_PRINT("\r\nWireless deinit failed\r\n");
         }
 #ifdef RSI_WITH_OS
         // Task created for Driver task
@@ -639,19 +646,23 @@ void http_otaf_response_handler(uint16_t status, const uint8_t *buffer)
     LOG_PRINT("\r\nFirmware update FAILED , error code : %X\r\n", status);
     http_recv_status = RSI_HTTP_OTAF_UPGRADE_FAILED;
   }
+#ifdef RSI_WITH_OS
+  rsi_semaphore_post(&rsi_http_response_sem);
+#endif
 }
 
 int32_t rsi_http_response_status(int32_t *rsp_var)
 {
   //! wait for the success response
+#ifndef RSI_WITH_OS
   do {
     //! event loop
-#ifndef RSI_WITH_OS
     rsi_wireless_driver_task();
-#endif
 
   } while (!(*rsp_var));
-
+#else
+  rsi_semaphore_wait(&rsi_http_response_sem, 0);
+#endif
   if (*rsp_var != RSI_HTTP_OTAF_UPGRADE_SUCCESS) {
     return *rsp_var;
   } else {

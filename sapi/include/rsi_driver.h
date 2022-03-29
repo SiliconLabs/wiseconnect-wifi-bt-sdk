@@ -262,20 +262,5 @@ int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt);
 //int32_t rsi_driver_send_data(int32_t sock_no, uint8_t* buffer, uint32_t length, struct rsi_sockaddr *destAddr);
 int32_t rsi_send_raw_data(uint8_t *buffer, uint32_t length);
 int32_t rsi_ftp_mode_set(uint8_t mode);
-#ifdef RSI_CHIP_MFG_EN
-typedef void (*rsi_host_packet_recv_notify_t)(uint8_t *buf, uint32_t length);
-
-// prototypes
-int32_t rsi_host_packet_recv(uint8_t *buffer, uint32_t length);
-void rsi_host_send(uint8_t *tx_buff, uint16_t transfer_length);
-
-//rsi_common_apis.c function declarations
-int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en);
-int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
-int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
-void rsi_uregister_events_callbacks(void (*callback_handler_ptr)(uint32_t event_num));
-int32_t rsi_get_rtc_timer(module_rtc_time_t *response);
-
-#endif
 
 #endif

@@ -412,6 +412,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
  *			                        6 - Access point mode \n
  *			                        8 - Transmit test mode \n
  *			                        9 - Concurrent mode
+ * @note 			  Opermode WiFi-Direct(1) mode is not supported.
  * @param[in]  coex_mode       -    Coexistence mode
  *                                  0 - WLAN only mode \n
  *                                  1 - WLAN \n
@@ -624,110 +625,6 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 /** @} */
 /*==============================================*/
 
-#ifdef RSI_CHIP_MFG_EN
-
-#define RSI_WAIT_TIMEOUT 50000000
-#define RSI_INC_TIMER    timer_count++
-int32_t rsi_wait_for_card_ready(uint32_t queue_type)
-{
-  uint32_t timer_count = 0;
-  uint32_t status      = RSI_SUCCESS;
-
-  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
-  rsi_wlan_cb_t *wlan_cb     = rsi_driver_cb->wlan_cb;
-  volatile rsi_common_state_t *state_p;
-
-  if (queue_type == RSI_COMMON_Q) {
-    state_p = &common_cb->state;
-  } else {
-    state_p = &wlan_cb->state;
-  }
-  // If state is not in card ready received state
-  while (*state_p == RSI_COMMON_STATE_NONE) {
-    if (RSI_INC_TIMER > RSI_WAIT_TIMEOUT) {
-      status = RSI_FAILURE;
-      break;
-    }
-#ifndef RSI_WITH_OS
-    // Wait until receive card ready
-    rsi_scheduler(&rsi_driver_cb->scheduler_cb);
-#else
-#ifndef RSI_COMMON_SEM_BITMAP
-    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(3);
-#endif
-    if (rsi_wait_on_common_semaphore(&common_cb->common_card_ready_sem, RSI_WAIT_FOREVER) != RSI_ERROR_NONE) {
-      return RSI_ERROR_RESPONSE_TIMEOUT;
-    }
-#endif
-  }
-  return status;
-}
-
-int32_t rsi_common_dev_params()
-{
-  int32_t status = RSI_SUCCESS;
-  rsi_pkt_t *pkt;
-  common_dev_config_params_t *rsi_common_dev_params_p;
-
-  // Get common cb structure pointer
-  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
-
-  if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
-    // Command given in wrong state
-    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
-  }
-  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
-  if (status == RSI_SUCCESS) {
-
-    // Allocate command buffer from common pool
-    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
-
-    // If allocation of packet fails
-    if (pkt == NULL) {
-      //Change common state to allow state
-      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-      // Return packet allocation failure error
-      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-    }
-
-    // Take the user provided data and fill it in debug UART print select structure
-    rsi_common_dev_params_p = (common_dev_config_params_t *)pkt->data;
-
-    rsi_common_dev_params_p->lp_sleep_handshake           = 0x0;
-    rsi_common_dev_params_p->ulp_sleep_handshake          = 0x1;
-    rsi_common_dev_params_p->sleep_config_param           = 0x0;
-    rsi_common_dev_params_p->host_wakeup_intr_enable      = 0xf;
-    rsi_common_dev_params_p->host_wakeup_intr_active_high = 0x4;
-    rsi_common_dev_params_p->lp_wakeup_threshold          = 0x100;
-    rsi_common_dev_params_p->ulp_wakeup_threshold         = 0x2030200;
-    rsi_common_dev_params_p->wakeup_threshold             = 0x0;
-    rsi_common_dev_params_p->unused_soc_gpio_bitmap       = 0x10000;
-    rsi_common_dev_params_p->unused_ulp_gpio_bitmap       = 0x13;
-    rsi_common_dev_params_p->ext_pa_or_bt_coex_en         = 0x0;
-    rsi_common_dev_params_p->opermode                     = 0x0;
-    rsi_common_dev_params_p->driver_mode                  = 0x0;
-    rsi_common_dev_params_p->no_of_stations_supported     = 0x1;
-    rsi_common_dev_params_p->peer_distance                = 0x0;
-    rsi_common_dev_params_p->bt_feature_bitmap            = 0x13;
-
-    // Send firmware version query request
-    status = rsi_driver_common_send_cmd(RSI_COMMON_DEV_CONFIG, pkt);
-
-    // Change common state to allow state
-    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
-    // Return common command error
-    return status;
-  }
-
-  // Return status
-  return status;
-}
-#endif
 /** @addtogroup COMMON 
 * @{
 */
@@ -746,6 +643,9 @@ int32_t rsi_common_dev_params()
  *                                     UART_RTS:    GPIO - 12 
  * @return     0              - Success \n
  *             Negative Value - Failure
+ * @note       Hardware flow control feature is not supported in Auto-Join/Auto-Create mode. \n
+ *             In such a case, the feature has to be enabled separately.
+ * 
  */
 int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
 {
@@ -950,19 +850,6 @@ int32_t rsi_wireless_deinit(void)
 #ifdef SOFT_RESET_ENABLE
   // Mask interrupts
   rsi_hal_intr_mask();
-#endif
-#ifdef RSI_SPI_INTERFACE
-  // Poll for interrupt status
-  while (!rsi_hal_intr_pin_status())
-    ;
-
-  // SPI interface initialization
-  status = rsi_spi_iface_init();
-  if (status != RSI_SUCCESS) {
-    // Return status
-    SL_PRINTF(SL_WIRELESS_DEINIT_SPI_INIT_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
-    return status;
-  }
 #endif
 #ifdef SOFT_RESET_ENABLE
   // Unmask interrupts
@@ -1873,7 +1760,7 @@ int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "2.5.0.26"
+#define RSI_DRIVER_VERSION "2.5.1.5"
 int32_t rsi_driver_version(uint8_t *request)
 {
   SL_PRINTF(SL_DRIVER_VERSION_ENTRY, COMMON, LOG_INFO);

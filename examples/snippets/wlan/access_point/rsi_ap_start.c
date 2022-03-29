@@ -79,15 +79,15 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x010AA8C0
+#define DEVICE_IP "192.168.10.1" //0x010AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 //! Device port number
 #define DEVICE_PORT 5001
@@ -124,7 +124,7 @@ uint8_t station_mac[6];
 //! Buffer has the MAC address of the station connected
 void stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
-
+  LOG_PRINT("\r\nStation Connected\r\n");
   UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(station_mac, buffer, 6);
@@ -134,6 +134,7 @@ void stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const uin
 //! Buffer has the MAC address of the station disconnected
 void stations_disconnect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  LOG_PRINT("\r\nStation Disonnected\r\n");
   UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
@@ -157,23 +158,23 @@ int32_t rsi_ap_start()
   int32_t server_socket, new_socket;
   struct rsi_sockaddr_in server_addr, client_addr;
   int32_t status        = RSI_SUCCESS;
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
   int32_t addr_size;
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
-  //! Register callbacks for Station conencted and disconnected events
-  rsi_wlan_register_callbacks(RSI_STATIONS_CONNECT_NOTIFY_CB, stations_connect_notify_handler);
-  rsi_wlan_register_callbacks(RSI_STATIONS_DISCONNECT_NOTIFY_CB, stations_disconnect_notify_handler);
 
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
+
+  //! Register callbacks for Station conencted and disconnected events
+  rsi_wlan_register_callbacks(RSI_STATIONS_CONNECT_NOTIFY_CB, stations_connect_notify_handler);
+  rsi_wlan_register_callbacks(RSI_STATIONS_DISCONNECT_NOTIFY_CB, stations_disconnect_notify_handler);
 
   //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);

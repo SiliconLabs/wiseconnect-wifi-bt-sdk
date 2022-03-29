@@ -66,15 +66,15 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x650AA8C0
+#define DEVICE_IP "192.168.10.101" //0x650AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 #define RECV_BUFFER_SIZE 1000
@@ -125,9 +125,9 @@ int32_t status       = RSI_SUCCESS;
 int32_t packet_count = 0, recv_size = 0, addr_size;
 uint8_t max_tcp_retry = RSI_MAX_TCP_RETRIES;
 #if !(DHCP_MODE)
-uint32_t ip_addr      = DEVICE_IP;
-uint32_t network_mask = NETMASK;
-uint32_t gateway      = GATEWAY;
+uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #endif
 uint8_t count = 0;
 int8_t recv_buffer[RECV_BUFFER_SIZE];
@@ -173,6 +173,7 @@ void async_socket_select(rsi_fd_set *fd_read, rsi_fd_set *fd_write, rsi_fd_set *
 
 int32_t rsi_socket_select()
 {
+  uint8_t ip_buff[20];
   int32_t status = RSI_SUCCESS;
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
@@ -232,7 +233,7 @@ int32_t rsi_socket_select()
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
-        status = rsi_config_ipaddress(RSI_IP_VERSION_4, RSI_DHCP, 0, 0, 0, NULL, 0, 0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4, RSI_DHCP, 0, 0, 0, ip_buff, sizeof(ip_buff), 0);
 #else
         status = rsi_config_ipaddress(RSI_IP_VERSION_4,
                                       RSI_STATIC,
@@ -247,6 +248,8 @@ int32_t rsi_socket_select()
           LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
           break;
         } else {
+          LOG_PRINT("\r\nIP Config Success\r\n");
+          LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
           break;

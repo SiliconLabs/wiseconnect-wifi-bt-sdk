@@ -22,12 +22,12 @@
  *
  *  @section Licenseremote_name
  *  This program should be used on your own responsibility.
- *  Redpine Signals assumes no responsibility for any losses
+ *  Silicon Labs assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contains example application for device initialization
  *
- *  @section Description  This application initiates Redpine device and create tasks.
+ *  @section Description  This application initiates Silabs  device and create tasks.
  *
  */
 
@@ -411,7 +411,7 @@ void rsi_common_app_task(void)
     rsi_semaphore_wait(&common_task_sem, 0);
 #endif
 
-    //! Redpine module initialization
+    //!  Silabs module initialization
     status = rsi_device_init(LOAD_NWP_FW);
     if (status != RSI_SUCCESS) {
       LOG_PRINT("\r\n device init failed \n");

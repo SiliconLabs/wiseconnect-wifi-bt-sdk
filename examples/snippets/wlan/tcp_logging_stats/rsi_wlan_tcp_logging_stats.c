@@ -57,24 +57,23 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x650AA8C0
+#define DEVICE_IP "192.168.10.101" //0x650AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
 //! Server port number
 #define SERVER_PORT 5001
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x0401A8C0
+//! Server IP address.
+#define SERVER_IP_ADDRESS "192.168.10.100"
 
 //! Number of packet to send or receive
 #define NUMBER_OF_PACKETS 5000
@@ -358,13 +357,13 @@ void rsi_tx_send_handler()
 }
 int32_t rsi_wlan_tcp_logging_stats()
 {
-
+  uint8_t ip_buff[20];
   uint8_t max_tcp_retry        = RSI_MAX_TCP_RETRIES;
   uint16_t tcp_keep_alive_time = RSI_SOCKET_KEEPALIVE_TIMEOUT;
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
@@ -426,7 +425,7 @@ int32_t rsi_wlan_tcp_logging_stats()
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
-        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, NULL, 0, 0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, ip_buff, sizeof(ip_buff), 0);
 #else
         status = rsi_config_ipaddress(RSI_IP_VERSION_4,
                                       RSI_STATIC,
@@ -437,10 +436,13 @@ int32_t rsi_wlan_tcp_logging_stats()
                                       0,
                                       0);
 #endif
+
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("Ip config fail...\n");
+          LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
           rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
         } else {
+          LOG_PRINT("\r\nIP Config Success\r\n");
+          LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
         }
       } break;
@@ -513,7 +515,7 @@ int32_t rsi_wlan_tcp_logging_stats()
         server_addr.sin_port = htons(SERVER_PORT);
 
         //! Set IP address to localhost
-        server_addr.sin_addr.s_addr = SERVER_IP_ADDRESS;
+        server_addr.sin_addr.s_addr = ip_to_reverse_hex(SERVER_IP_ADDRESS);
         LOG_PRINT("\r\nSocket Connecting\r\n");
         //! Connect to server socket
         status = rsi_connect(client_socket, (struct rsi_sockaddr *)&server_addr, sizeof(server_addr));

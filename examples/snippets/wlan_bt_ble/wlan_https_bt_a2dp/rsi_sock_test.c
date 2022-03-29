@@ -1,14 +1,14 @@
 /********************************************************************/
 /** \file rsi_sock_test.c
  *
- * \brief Test code to run HTTP/HTTPS download test using Redpine
+ * \brief Test code to run HTTP/HTTPS download test using Silabs
  *        implementation of BSD socket API
  *
  *   \par MODULE NAME:
- *       redpine_sock_test.c - Redpine sockets test
+ *       redpine_sock_test.c - Silabs sockets test
  *
  *   \par DESCRIPTION:
- *       This module exercises Redpine BSD socket API implementation
+ *       This module exercises Silabs BSD socket API implementation
  *       by connecting to an HTTP/S server and downloading a test file
  *       with a known pattern. A few runtime knobs are provided via
  *       a few variables which control certain aspects of the test.
@@ -674,7 +674,7 @@ Proper handling should be made using the rsi_wlan_rsp_socket_create callback not
     if (RSI_FD_ISSET(ctx->sock_fd, &readfds)) {
       ctx->selrdfd_ready_cnt++;
       /* recv() has been seen to return -1 on occasion. We don't have errno available yet */
-      /* from Redpine but it has been observed that calling recv again works sometimes. */
+      /* from Silabs but it has been observed that calling recv again works sometimes. */
       for (k = 0; k < 3; k++) {
         bytes_read = rsi_recv(ctx->sock_fd,
                               ctx->http_buffer + ctx->http_buffer_bytes_saved,

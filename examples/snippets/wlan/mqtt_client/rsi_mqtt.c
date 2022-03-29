@@ -74,15 +74,15 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x650AA8C0
+#define DEVICE_IP "192.168.10.101" //0x650AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
@@ -219,12 +219,12 @@ void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const
 
 int32_t rsi_mqtt_client_app()
 {
-
+  uint8_t ip_buff[20];
   int32_t status = RSI_SUCCESS;
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
@@ -301,7 +301,7 @@ int32_t rsi_mqtt_client_app()
 
   //! Configure IP
 #if DHCP_MODE
-  status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, NULL, 0, 0);
+  status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, ip_buff, sizeof(ip_buff), 0);
 #else
   status            = rsi_config_ipaddress(RSI_IP_VERSION_4,
                                 RSI_STATIC,
@@ -315,9 +315,9 @@ int32_t rsi_mqtt_client_app()
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
     return status;
-  } else {
-    LOG_PRINT("\r\nIP Config Success\r\n");
   }
+  LOG_PRINT("\r\nIP Config Success\r\n");
+  LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
 
 #if ENABLE_POWER_SAVE
   //! Apply power save profile

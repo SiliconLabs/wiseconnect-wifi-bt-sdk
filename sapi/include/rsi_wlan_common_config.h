@@ -589,11 +589,13 @@
 #endif
 
 #ifndef TCP_RX_WINDOW_SIZE_CAP
-#define TCP_RX_WINDOW_SIZE_CAP 10 //@ TCP RX Window size
+#define TCP_RX_WINDOW_SIZE_CAP \
+  10 //@ TCP RX Window size - To scale the window size linearly according to the value (TCP MSS * TCP_RX_WINDOW_SIZE_CAP)
 #endif
 
 #ifndef TCP_RX_WINDOW_DIV_FACTOR
-#define TCP_RX_WINDOW_DIV_FACTOR 10 //@ TCP RX Window division factor
+#define TCP_RX_WINDOW_DIV_FACTOR \
+  10 //@ TCP RX Window division factor - To increase the ACK frequency for asynchronous sockets
 #endif
 
 /*=======================================================================*/

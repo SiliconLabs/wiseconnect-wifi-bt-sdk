@@ -251,9 +251,9 @@ int32_t rsi_wlan_app_task(void)
   uint8_t stop_download = 0;
   uint8_t ip[20]        = { 0 };
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif

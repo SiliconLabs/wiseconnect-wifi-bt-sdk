@@ -363,7 +363,11 @@ void MX_GPIO_Init(void)
 
 	/*Configure GPIO pin : PA9 */
 	GPIO_InitStruct.Pin = GPIO_PIN_9;
+#ifndef RSI_ACTIVE_LOW
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+#else
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+#endif
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

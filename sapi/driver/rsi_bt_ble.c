@@ -689,7 +689,7 @@ int32_t rsi_driver_process_bt_resp(
 
     // Copy the expected response to response structure/buffer, if any, passed in API
     if (bt_cb->expected_response_buffer != NULL) {
-      // If (payload_length <= RSI_BLE_GET_MAX_PAYLOAD_LENGTH(expected_response_type)) //TODO Give the proper error code
+      // If (payload_length <= RSI_BLE_GET_MAX_PAYLOAD_LENGTH(expected_response_type))
       memcpy(bt_cb->expected_response_buffer, payload, payload_length);
 
       // Save expected_response pointer to a local variable, since it is being cleared below
@@ -829,7 +829,7 @@ int8_t rsi_bt_cb_init(rsi_bt_cb_t *bt_cb, uint16_t protocol_type)
   }
 
   // Initialize bt control block with default values
-  bt_cb->state  = 0; // TODO
+  bt_cb->state  = 0;
   bt_cb->status = 0;
 
   // Create bt mutex
@@ -1586,7 +1586,7 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
         bt_specific_cb->bt_on_remote_name_request_cancel_event(status, (void *)payload);
       }
     } break;
-    case RSI_BT_EVT_DISCONNECTED: // TODO: how is it diff from unbond?
+    case RSI_BT_EVT_DISCONNECTED: //Physical Level Disconnection (GAP Disconnected)
     {
       if (bt_specific_cb->bt_on_disconnect_event != NULL) {
         /* GAR-7701: Removing reset of powersave state, as
@@ -4063,11 +4063,11 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
         } else if (le_buf_check) {
           rsi_mutex_lock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
           if (le_cb->remote_ble_info[inx].avail_buf_cnt == 0) {
-            le_cb->buf_status = RSI_TRUE; //FIXME: ADD proper error ID
+            le_cb->buf_status = SI_LE_BUFFER_FULL;
             rsi_mutex_unlock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
             break;
           } else {
-            le_cb->buf_status = 0;
+            le_cb->buf_status = SI_LE_BUFFER_AVL;
             le_cb->remote_ble_info[inx].avail_buf_cnt -= 1;
             rsi_mutex_unlock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
             break;
@@ -4212,12 +4212,12 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
   if (bt_cb->buf_status || bt_cb->cmd_status) {
     rsi_pkt_free(&bt_cb->bt_tx_pool, pkt);
 
-    if (bt_cb->buf_status == RSI_TRUE) {
+    if (bt_cb->buf_status == SI_LE_BUFFER_FULL) {
       status = RSI_ERROR_BLE_DEV_BUF_FULL;
     } else if (bt_cb->cmd_status) {
       status = RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS;
     }
-    bt_cb->buf_status = 0;
+    bt_cb->buf_status = SI_LE_BUFFER_AVL;
     bt_cb->cmd_status = 0;
     rsi_bt_clear_wait_bitmap(protocol_type, BT_CMD_SEM);
     rsi_semaphore_post(&bt_cb->bt_cmd_sem);

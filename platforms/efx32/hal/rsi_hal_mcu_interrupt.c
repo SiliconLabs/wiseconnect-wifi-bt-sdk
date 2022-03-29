@@ -150,7 +150,8 @@ uint8_t rsi_hal_intr_pin_status(void)
 {
   volatile uint8_t status = 0;
   // Return interrupt pin  status(high(1) /low (0))
-  status = NVIC_GetPendingIRQ(GPIO_ODD_IRQn);
+  status = rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN);
+ // status = NVIC_GetPendingIRQ(GPIO_ODD_IRQn);
 
   return status;
 }

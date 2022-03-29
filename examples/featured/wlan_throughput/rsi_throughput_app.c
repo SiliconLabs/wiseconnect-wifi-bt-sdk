@@ -82,15 +82,15 @@
 
 // IP address of the module
 // E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x6500A8C0
+#define DEVICE_IP "192.168.10.101" //0x6500A8C0
 
 // IP address of Gateway
 // E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 // IP address of netmask
 // E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
@@ -356,9 +356,9 @@ int32_t application()
   uint8_t high_performance_socket = RSI_HIGH_PERFORMANCE_SOCKET;
   uint8_t ssl_bit_map             = RSI_SSL_BIT_ENABLE;
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif

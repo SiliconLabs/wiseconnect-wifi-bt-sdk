@@ -131,12 +131,6 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
     case RSI_COMMON_REQ_FW_VERSION: {
 
     } break;
-#ifdef RSI_CHIP_MFG_EN
-    case RSI_COMMON_DEV_CONFIG: {
-      // fill payload size
-      payload_size = sizeof(common_dev_config_params_t);
-    } break;
-#endif
     case RSI_COMMON_REQ_OPERMODE: {
       // opermode Parameters
       rsi_opermode_t *rsi_opermode = (rsi_opermode_t *)pkt->data;
@@ -376,21 +370,15 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
   // Fill payload length
   rsi_uint16_to_2bytes(host_desc, (payload_size & 0xFFF));
 
-#ifdef RSI_CHIP_MFG_EN
-  // common dev config should go in common queue
-  if (cmd != RSI_COMMON_DEV_CONFIG)
-#endif
-    // Fill frame type
-    host_desc[1] |= (RSI_WLAN_MGMT_Q << 4);
+  // Fill frame type
+  host_desc[1] |= (RSI_WLAN_MGMT_Q << 4);
 
   // Fill frame type
   host_desc[2] = cmd;
 
   if ((cmd == RSI_COMMON_REQ_PWRMODE) || (cmd == RSI_COMMON_REQ_OPERMODE) || (cmd == RSI_COMMON_REQ_SOFT_RESET)) {
-#ifndef RSI_CHIP_MFG_EN
     // Block WLAN TX queue
     rsi_block_queue(&rsi_driver_cb->wlan_tx_q);
-#endif
 #ifdef RSI_ZB_ENABLE
     // Block ZB TX queue
     rsi_block_queue(&rsi_driver_cb->zigb_tx_q);
@@ -454,18 +442,10 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
   rsi_common_set_status(status);
 
   switch (cmd_type) {
-#ifdef RSI_CHIP_MFG_EN
-    // nlink card ready frame
-    case RSI_COMMON_RSP_CLEAR:
-#endif
     case RSI_COMMON_RSP_CARDREADY: {
       // if success, update state common_cb state
       if (status == RSI_SUCCESS) {
         rsi_common_cb->state = RSI_COMMON_CARDREADY;
-#ifdef RSI_CHIP_MFG_EN
-        // reset the common_sem
-        rsi_driver_cb->common_cb->common_sem = 0;
-#endif
         // Check for auto config status
         if (host_desc[15] & RSI_AUTO_CONFIG_GOING_ON) {
           // Set auto config failed status
@@ -480,9 +460,6 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
         else if (host_desc[15] & RSI_AUTO_CONFIG_FAILED) {
           // Set auto config failed status
           rsi_wlan_cb->auto_config_state = RSI_WLAN_STATE_AUTO_CONFIG_FAILED;
-
-          // Set auto config failed status
-          //FIXME:
 
           // Check for auto config handler
           if (rsi_wlan_cb_non_rom->callback_list.auto_config_rsp_handler) {
@@ -594,9 +571,6 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
         else if (host_desc[15] & RSI_AUTO_CONFIG_FAILED) {
           // Set auto config failed status
           rsi_wlan_cb->auto_config_state = RSI_WLAN_STATE_AUTO_CONFIG_FAILED;
-
-          // Set auto config failed status
-          //FIXME:
 
           // Check for auto config handler
           if (rsi_wlan_cb_non_rom->callback_list.auto_config_rsp_handler) {
@@ -839,11 +813,7 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
     rsi_semaphore_post(&rsi_common_cb->common_card_ready_sem);
   }
 #endif
-  if ((cmd_type != RSI_COMMON_RSP_CARDREADY)
-#ifdef RSI_CHIP_MFG_EN
-      && (cmd_type != RSI_COMMON_RSP_CLEAR)
-#endif
-  ) {
+  if ((cmd_type != RSI_COMMON_RSP_CARDREADY)) {
     // signal the common_cb semaphore
     if (cmd_type == RSI_COMMON_RSP_SWITCH_PROTO) {
       if (rsi_common_cb->sync_mode) {

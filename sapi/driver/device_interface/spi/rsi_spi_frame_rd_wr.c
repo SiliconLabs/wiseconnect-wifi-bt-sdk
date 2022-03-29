@@ -47,82 +47,6 @@ char debug_output[DEBUG_OUTPUT_SZ];
   Global Variables
  */
 
-#ifdef RSI_CHIP_MFG_EN
-uint8_t spi_read_pkt[1600];
-/** @addtogroup DRIVER2
-* @{
-*/
-/*===========================================================================*/
-/**
- * @brief       Perform frame decriptor and payload read.
- * @param[in]   buf       -  Pointer to the buffer into which  decriptor and payload has to be read
- * @param[in]   total_len  -  Number of bytes to be read
- * @return      0  - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
- *
- */
-int16_t rsi_nlink_pkt_rd(uint8_t *buf, uint16_t total_len)
-{
-
-  int16_t retval;
-  uint8_t c1;
-  uint8_t c2;
-  uint8_t c3;
-  uint8_t c4;
-  uint32_t aligned_len = 0;
-  uint16_t frame_len;
-  uint16_t frame_offset;
-  uint16_t pkt_len;
-
-  aligned_len = ((total_len) + 3) & ~3;
-
-  c1 = RSI_C1FRMRD16BIT1BYTE;
-#ifdef RSI_BIT_32_SUPPORT
-  c2 = RSI_C2SPIADDR1BYTE;
-#else
-  c2 = RSI_C2MEMRDWRNOCARE;
-#endif
-  // Command frame response descriptor
-  c3 = aligned_len & 0xff;
-
-  // Upper byte of transfer length
-  c4 = (aligned_len & 0xff00) >> 8;
-
-  // Send C1/C2
-  retval = rsi_send_c1c2(c1, c2);
-  if (retval != 0) {
-    // Exit with error if timed out waiting for the SPI to get ready
-    return retval;
-  }
-
-  // Send C3/C4
-  retval = rsi_send_c3c4(c3, c4);
-
-  // Wait for start token
-  retval = rsi_spi_wait_start_token(RSI_START_TOKEN_TIMEOUT, RSI_MODE_32BIT);
-  if (retval != 0) {
-    // Exit with error if timed out waiting for the SPI to get ready
-    return retval;
-  }
-
-  retval = rsi_spi_transfer(NULL, spi_read_pkt, aligned_len, RSI_MODE_8BIT);
-  if (retval != 0) {
-    // Exit with error if timed out waiting for the SPI to get ready
-    return retval;
-  }
-
-  pkt_len      = *(uint16_t *)&spi_read_pkt[0];
-  frame_offset = *(uint16_t *)&spi_read_pkt[2];
-  frame_len    = pkt_len - frame_offset;
-  // Actual spi read for descriptor and payload
-  if (buf) {
-    memcpy(buf, &spi_read_pkt[frame_offset], frame_len);
-  }
-
-  return retval;
-}
-#endif
 /** @} */
 /** @addtogroup DRIVER2
 * @{
@@ -145,7 +69,6 @@ int16_t rsi_frame_read(uint8_t *pkt_buffer)
 
   int16_t retval;
   uint8_t local_buffer[8];
-#ifndef RSI_CHIP_MFG_EN
   // Read first 4 bytes
   retval = rsi_pre_dsc_rd(&local_buffer[0]);
   if (retval != RSI_SUCCESS) {
@@ -158,17 +81,6 @@ int16_t rsi_frame_read(uint8_t *pkt_buffer)
   if (retval != RSI_SUCCESS) {
     return retval;
   }
-#else
-  // Read first 4 bytes
-  retval = rsi_spi_pkt_len(&local_buffer[0]);
-  if (retval != 0x00) {
-    return retval;
-  }
-  retval = rsi_nlink_pkt_rd(pkt_buffer, rsi_bytes2R_to_uint16(&local_buffer[0]) & 0xFFF);
-  if (retval != 0x00) {
-    return retval;
-  }
-#endif
 
 #ifdef DEBUG_PACKET_EXCHANGE
   uint16_t size = rsi_bytes2R_to_uint16(pkt_buffer) & 0x0FFF;
@@ -222,7 +134,6 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
   }
   LOG_PRINT("%s\r\n", debug_output);
 #endif
-#ifndef RSI_CHIP_MFG_EN
   // Write host descriptor
   retval = rsi_spi_frame_dsc_wr(uFrameDscFrame);
   if (retval != RSI_SUCCESS) {
@@ -230,17 +141,10 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
   }
 
   // Write payload if present
-  if (size_param)
-#endif
-  {
+  if (size_param) {
     // 4 byte align for payload size
     size_param = (size_param + 3) & ~3;
-#ifdef RSI_CHIP_MFG_EN
-    size_param += RSI_HOST_DESC_LENGTH;
-    retval = rsi_spi_frame_data_wr(size_param, uFrameDscFrame, 0, NULL);
-#else
-    retval = rsi_spi_frame_data_wr(size_param, payloadparam, 0, NULL);
-#endif
+    retval     = rsi_spi_frame_data_wr(size_param, payloadparam, 0, NULL);
     if (retval != RSI_SUCCESS) {
       return retval;
     }

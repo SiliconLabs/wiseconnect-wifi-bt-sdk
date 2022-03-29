@@ -318,4 +318,22 @@ int32_t rsi_device_deinit(void)
   SL_PRINTF(SL_DEVICE_INIT_EXIT, COMMON, LOG_INFO);
   return RSI_SUCCESS;
 }
+#if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
+/*==================================================*/
+/**
+ * @brief       get the interrupt status.
+ * @param[in]   
+ * @return      1 - when there is an interrupt \n
+ *              0 - when there is no interrupt
+*/
+
+uint8_t rsi_get_intr_status()
+{
+#if ((defined RSI_SPI_INTERFACE) && (!(defined RSI_ACTIVE_LOW)))
+  return rsi_hal_intr_pin_status();
+#else
+  return !rsi_hal_intr_pin_status();
+#endif
+}
+#endif
 /** @} */

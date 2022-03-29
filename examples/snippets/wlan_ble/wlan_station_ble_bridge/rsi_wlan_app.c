@@ -69,15 +69,15 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x6500A8C0
+#define DEVICE_IP "192.168.10.101" //0x6500A8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
@@ -89,7 +89,7 @@
 
 //! Server IP address. Should be in reverse long format
 //! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x6400A8C0
+#define SERVER_IP_ADDRESS "192.168.10.100" //0x6400A8C0
 
 //! Load certificate to device flash :
 //! Certificate could be loaded once and need not be loaded for every boot up
@@ -104,13 +104,13 @@ struct rsi_sockaddr_in server_addr, client_addr;
 #if !(DHCP_MODE)
 
 //! device static ip address
-uint32_t ip_addr = DEVICE_IP;
+uint32_t ip_addr = ip_to_reverse_hex(DEVICE_IP);
 
 //! Network mask
-uint32_t network_mask = NETMASK;
+uint32_t network_mask = ip_to_reverse_hex(NETMASK);
 
 //! Gateway
-uint32_t gateway = GATEWAY;
+uint32_t gateway = ip_to_reverse_hex(GATEWAY);
 #else
 uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
@@ -185,6 +185,7 @@ int32_t rsi_wlan_app_init(void)
 
 void rsi_wlan_app_task(void)
 {
+  uint8_t ip_buff[20];
   int32_t status = RSI_SUCCESS;
 #ifdef RSI_WITH_OS
   while (1) {
@@ -214,7 +215,7 @@ void rsi_wlan_app_task(void)
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
-        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, NULL, 0, 0);
+        status = rsi_config_ipaddress(RSI_IP_VERSION_4, dhcp_mode, 0, 0, 0, ip_buff, sizeof(ip_buff), 0);
 #else
       status = rsi_config_ipaddress(RSI_IP_VERSION_4,
                                     RSI_STATIC,
@@ -230,6 +231,7 @@ void rsi_wlan_app_task(void)
           break;
         } else {
           LOG_PRINT("\r\nIP Config Success\r\n");
+          LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
         }
@@ -277,7 +279,7 @@ void rsi_wlan_app_task(void)
         server_addr.sin_port = htons(SERVER_PORT);
 
         //! Set IP address to localhost
-        server_addr.sin_addr.s_addr = SERVER_IP_ADDRESS;
+        server_addr.sin_addr.s_addr = ip_to_reverse_hex(SERVER_IP_ADDRESS);
 
         //! Connect to server socket
         status = rsi_connect(client_socket, (struct rsi_sockaddr *)&server_addr, sizeof(server_addr));

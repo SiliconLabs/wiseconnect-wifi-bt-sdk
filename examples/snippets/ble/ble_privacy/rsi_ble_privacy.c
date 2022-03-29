@@ -160,6 +160,7 @@ typedef struct rsi_ble_resolve_key_s {
 
 //LE resolvlist.
 typedef struct rsi_ble_dev_ltk_list_s {
+  uint8_t enc_enable;
   uint8_t sc_enable;
   uint8_t remote_dev_addr_type;
   uint8_t remote_dev_addr[6];
@@ -652,8 +653,9 @@ int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
     }
 
     if (ble_dev_ltk_list[ix].used == 0) {
-      ble_dev_ltk_list[ix].used      = 1;
-      ble_dev_ltk_list[ix].sc_enable = enc_enabled->sc_enable;
+      ble_dev_ltk_list[ix].used       = 1;
+      ble_dev_ltk_list[ix].enc_enable = enc_enabled->enabled;
+      ble_dev_ltk_list[ix].sc_enable  = enc_enabled->sc_enable;
       memcpy(ble_dev_ltk_list[ix].remote_dev_addr, enc_enabled->dev_addr, 6);
       memcpy(ble_dev_ltk_list[ix].localltk, enc_enabled->localltk, 16);
       memcpy(ble_dev_ltk_list[ix].localrand, enc_enabled->localrand, 8);
@@ -1043,15 +1045,18 @@ int32_t rsi_ble_privacy_app(void)
         ix = rsi_get_ltk_list(ble_dev_ltk_list, &temp_le_ltk_req);
 
         ble_dev_ltk = &ble_dev_ltk_list[ix];
-
-        if ((temp_le_ltk_req.localediv == ble_dev_ltk->local_ediv)
-            && !((memcmp(temp_le_ltk_req.localrand, ble_dev_ltk->localrand, 8)))) {
+        if ((ix != -1) && (ble_dev_ltk != NULL)) {
           LOG_PRINT("\n positive reply\n");
-          //! give le ltk req reply cmd with positive reply
-          status = rsi_ble_ltk_req_reply(temp_le_ltk_req.dev_addr,
-                                         (uint8_t)(1 & (ble_dev_ltk->sc_enable << 7)),
+          //!  give le ltk req reply cmd with positive reply
+          status = rsi_ble_ltk_req_reply(ble_dev_ltk->remote_dev_addr,
+                                         (1 | (ble_dev_ltk->enc_enable) | (ble_dev_ltk->sc_enable << 7)),
                                          ble_dev_ltk->localltk);
-        } else {
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\n failed to restart smp pairing with status: 0x%x \r\n", status);
+          }
+        }
+
+        else {
           LOG_PRINT("\n negative reply\n");
           //! give le ltk req reply cmd with negative reply
           status = rsi_ble_ltk_req_reply(temp_le_ltk_req.dev_addr, 0, NULL);

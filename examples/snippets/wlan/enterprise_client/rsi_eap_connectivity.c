@@ -51,15 +51,15 @@
 
 //! IP address of the module
 //! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP 0x650AA8C0
+#define DEVICE_IP "192.168.10.101" //0x650AA8C0
 
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY 0x010AA8C0
+#define GATEWAY "192.168.10.1" //0x010AA8C0
 
 //! IP address of netmask
 //! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK 0x00FFFFFF
+#define NETMASK "255.255.255.0" //0x00FFFFFF
 
 #endif
 
@@ -79,9 +79,8 @@
 //! Server port number
 #define SERVER_PORT 5001
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define REMOTE_IP 0x6B01A8C0
+//! Server IP address.
+#define REMOTE_IP "192.168.10.100"
 
 //! Number of packet to send or receive
 #define NUMBER_OF_PING_PKTS 1000
@@ -119,13 +118,13 @@ int32_t rsi_eap_connectivity()
 
   int32_t status = RSI_SUCCESS;
 
-  uint32_t remote_ip_addr = REMOTE_IP;
+  uint32_t remote_ip_addr = ip_to_reverse_hex(REMOTE_IP);
   uint16_t size           = PING_SIZE;
 
 #if !(DHCP_MODE)
-  uint32_t ip_addr      = DEVICE_IP;
-  uint32_t network_mask = NETMASK;
-  uint32_t gateway      = GATEWAY;
+  uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
+  uint32_t network_mask = ip_to_reverse_hex(NETMASK);
+  uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif

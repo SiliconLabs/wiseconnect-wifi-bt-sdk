@@ -116,10 +116,7 @@ typedef enum rsi_wlan_state_e {
 
 // enumeration for WLAN command response codes
 typedef enum rsi_wlan_cmd_response_e {
-  RSI_WLAN_RSP_CLEAR = 0x00,
-#ifdef RSI_CHIP_MFG_EN
-  RSI_WLAN_RSP_CONFIRM = 0x01,
-#endif
+  RSI_WLAN_RSP_CLEAR                  = 0x00,
   RSI_WLAN_RSP_BAND                   = 0x11,
   RSI_WLAN_RSP_INIT                   = 0x12,
   RSI_WLAN_RSP_SCAN                   = 0x13,
@@ -188,10 +185,6 @@ typedef enum rsi_wlan_cmd_response_e {
 #ifdef RSI_WAC_MFI_ENABLE
   RSI_WLAN_RSP_ADD_MFI_IE = 0xB5,
 #endif
-#ifdef RSI_CHIP_MFG_EN
-  RSI_EFUSE_WRITE_RSP = 0xB6,
-  RSI_EFUSE_READ_RSP  = 0xB7,
-#endif
 #ifndef RSI_M4_INTERFACE
   RSI_WLAN_RSP_CERT_VALID = 0xBC,
 #endif
@@ -238,41 +231,26 @@ typedef enum rsi_wlan_cmd_response_e {
 
 // enumeration for WLAN command request codes
 typedef enum rsi_wlan_cmd_request_e {
-#ifdef RSI_CHIP_MFG_EN
-  RSI_RESET_MAC     = 0x01,
-  RSI_RADIO_CAPS    = 0x02,
-  RSI_SCAN_REQ      = 0x06,
-  RSI_BOOTUP_PARAMS = 0x0c,
-  RSI_VAP_CAPS      = 0x0d,
-  RSI_FLASH_WRITE   = 0x0f,
-  RSI_BB_RF_INIT    = 0x15,
-  RSI_PER_CMD_PKT   = 0x19,
-  RSI_FEATURE_FRAME = 0x33,
-#endif
-  RSI_WLAN_REQ_BAND                 = 0x11,
-  RSI_WLAN_REQ_INIT                 = 0x12,
-  RSI_WLAN_REQ_SCAN                 = 0x13,
-  RSI_WLAN_REQ_JOIN                 = 0x14,
-  RSI_WLAN_REQ_CONFIG               = 0xBE,
-  RSI_WLAN_REQ_SET_SLEEP_TIMER      = 0x16,
-  RSI_WLAN_REQ_SET_MAC_ADDRESS      = 0x17,
-  RSI_WLAN_REQ_QUERY_NETWORK_PARAMS = 0x18,
-#ifndef RSI_CHIP_MFG_EN
-  RSI_WLAN_REQ_DISCONNECT = 0x19,
-#endif
-  RSI_WLAN_REQ_SET_REGION         = 0x1D,
-  RSI_WLAN_REQ_CFG_SAVE           = 0x20,
-  RSI_WLAN_REQ_AUTO_CONFIG_ENABLE = 0x21,
-  RSI_WLAN_REQ_GET_CFG            = 0x22,
-  RSI_WLAN_REQ_USER_STORE_CONFIG  = 0x23,
-  RSI_WLAN_REQ_AP_CONFIGURATION   = 0x24,
-  RSI_WLAN_REQ_SET_WEP_KEYS       = 0x25,
-  RSI_WLAN_REQ_PING_PACKET        = 0x29,
-  RSI_WLAN_REQ_SET_PROFILE        = 0x31,
-  RSI_WLAN_REQ_GET_PROFILE        = 0x32,
-#ifndef RSI_CHIP_MFG_EN
-  RSI_WLAN_REQ_DELETE_PROFILE = 0x33,
-#endif
+  RSI_WLAN_REQ_BAND                  = 0x11,
+  RSI_WLAN_REQ_INIT                  = 0x12,
+  RSI_WLAN_REQ_SCAN                  = 0x13,
+  RSI_WLAN_REQ_JOIN                  = 0x14,
+  RSI_WLAN_REQ_CONFIG                = 0xBE,
+  RSI_WLAN_REQ_SET_SLEEP_TIMER       = 0x16,
+  RSI_WLAN_REQ_SET_MAC_ADDRESS       = 0x17,
+  RSI_WLAN_REQ_QUERY_NETWORK_PARAMS  = 0x18,
+  RSI_WLAN_REQ_DISCONNECT            = 0x19,
+  RSI_WLAN_REQ_SET_REGION            = 0x1D,
+  RSI_WLAN_REQ_CFG_SAVE              = 0x20,
+  RSI_WLAN_REQ_AUTO_CONFIG_ENABLE    = 0x21,
+  RSI_WLAN_REQ_GET_CFG               = 0x22,
+  RSI_WLAN_REQ_USER_STORE_CONFIG     = 0x23,
+  RSI_WLAN_REQ_AP_CONFIGURATION      = 0x24,
+  RSI_WLAN_REQ_SET_WEP_KEYS          = 0x25,
+  RSI_WLAN_REQ_PING_PACKET           = 0x29,
+  RSI_WLAN_REQ_SET_PROFILE           = 0x31,
+  RSI_WLAN_REQ_GET_PROFILE           = 0x32,
+  RSI_WLAN_REQ_DELETE_PROFILE        = 0x33,
   RSI_WLAN_REQ_RSSI                  = 0x3A,
   RSI_WLAN_REQ_IPCONFV4              = 0x41,
   RSI_WLAN_REQ_SOCKET_CREATE         = 0x42,
@@ -313,10 +291,6 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_HTTP_CREDENTIALS      = 0xB4,
 #ifdef RSI_WAC_MFI_ENABLE
   RSI_WLAN_REQ_ADD_MFI_IE = 0xB5,
-#endif
-#ifdef RSI_CHIP_MFG_EN
-  RSI_EFUSE_WRITE_REQ = 0xB6,
-  RSI_EFUSE_READ_REQ  = 0xB7,
 #endif
 #ifndef RSI_M4_INTERFACE
   RSI_WLAN_REQ_CERT_VALID = 0xBC,
@@ -1691,132 +1665,6 @@ typedef struct rsi_ram_dump_s {
 typedef struct rsi_switch_proto_s {
   uint8_t mode_value;
 } rsi_switch_proto_t;
-#ifdef RSI_CHIP_MFG_EN
-// structure to store configs related to PLL960 programming
-typedef struct modem_pll_info_s {
-  uint16_t pll_ctrl_set_reg;
-  uint16_t pll_ctrl_clr_reg;
-  uint16_t modem_config_reg;
-  uint16_t soc_clk_config_reg;
-  uint16_t adc_dac_strm1_config_reg;
-  uint16_t adc_dac_strm2_config_reg;
-} __attribute__((__packed__)) modem_pll_info_t;
-
-// structure to store configs related to pll configs
-typedef struct pll_config_s {
-  // modem pll info is a daughter structure
-  modem_pll_info_t modem_pll_info_g;
-} __attribute__((__packed__)) pll_config_t;
-
-// structure to store configs related to UMAC clk programming
-typedef struct switch_clk_s {
-  uint32_t switch_tass_clk : 1;
-  uint32_t switch_qspi_clk : 1;
-  uint32_t switch_slp_clk_2_32 : 1;
-  uint32_t switch_wlan_bbp_lmac_clk_reg : 1;
-  uint32_t switch_zbbt_bbp_lmac_clk_reg : 1;
-  uint32_t switch_bbp_lmac_clk_reg : 1;
-  uint32_t modem_clk_is_160mhz : 1;
-  uint32_t reserved : 25;
-
-  uint32_t tass_clock_config_reg1 : 32;
-  uint32_t wlan_bbp_lmac_clk_reg_val : 32;
-  uint32_t zbbt_bbp_lmac_clk_reg_val : 32;
-  uint32_t bbp_lmac_clk_en_val : 32;
-
-} switch_clk_t;
-
-typedef struct device_clk_info_s {
-  pll_config_t pll_config_g;
-  switch_clk_t switch_clk_g;
-} device_clk_info_t;
-
-// structure contains bootup params use for configuring device
-typedef struct bootup_params_s {
-  // indicates whether the params are loaded by external source or by bootloading
-  uint16_t magic_number;
-#define LOADED_TOKEN 0x5AA5 /* Bootup params are installed by host or OTP/FLASH (Bootloader) */
-#define ROM_TOKEN    0x55AA /* Bootup params are taken from ROM itself in MCU mode. */
-  uint16_t
-    crystal_good_time; //TODO: not used currently; need to be removed; instead of this XTAL_WAIT_TIME, SOC_RESET_WAIT_TIME are used.
-  uint32_t valid;
-#define CRYSTAL_GOOD_TIME         BIT(0)
-#define BOOTUP_MODE_INFO          BIT(1)
-#define DIGITAL_LOOP_BACK_PARAMS  BIT(2)
-#define RTLS_TIMESTAMP_EN         BIT(3)
-#define HOST_SPI_INTR_CFG         BIT(4)
-#define WIFI_TAPLL_CONFIGS        BIT(5)
-#define WIFI_PLL960_CONFIGS       BIT(6)
-#define WIFI_AFEPLL_CONFIGS       BIT(7)
-#define WIFI_SWITCH_CLK_CONFIGS   BIT(8)
-#define BT_TAPLL_CONFIGS          BIT(9)
-#define BT_PLL960_CONFIGS         BIT(10)
-#define BT_AFEPLL_CONFIGS         BIT(11)
-#define BT_SWITCH_CLK_CONFIGS     BIT(12)
-#define ZB_TAPLL_CONFIGS          BIT(13)
-#define ZB_PLL960_CONFIGS         BIT(14)
-#define ZB_AFEPLL_CONFIGS         BIT(15)
-#define ZB_SWITCH_CLK_CONFIGS     BIT(16)
-#define BUCKBOOST_WAIT_INFO       BIT(17)
-#define PMU_WAKEUP_SHUTDOWN_W     BIT(18)
-#define WDT_PROG_VALUES           BIT(19)
-#define WDT_RESET_DELAY_VALUE     BIT(20)
-#define DCDC_OPERATION_MODE_VALID BIT(21)
-#define PMU_SLP_CLKOUT_SEL        BIT(22)
-#define SOC_RESET_WAIT_CNT        BIT(23)
-#define LED_FUNCTIONALITY_SUPPORT BIT(24)
-  // reserved for future use
-  uint32_t reserved_for_valids;
-  // FIXME Add proper comment
-  uint16_t bootup_mode_info;
-#define BT_COEXIST   BIT(0)
-#define BOOTUP_MODE  (BIT(2) | BIT(1))
-#define CUR_DEV_MODE (bootup_params_p->bootup_mode_info >> 1)
-  // configuration used for digital loop back
-  uint16_t digital_loop_back_params;
-  // FIXME Add proper comment
-  uint16_t rtls_timestamp_en;
-  // reserved
-  uint16_t host_spi_intr_cfg;
-
-  device_clk_info_t device_clk_info[1];
-  // ulp buckboost wait time
-  uint32_t buckboost_wakeup_cnt;
-  // pmu wakeup wait time & WDT EN info
-  uint16_t pmu_wakeup_wait;
-  // ulp shutdown wait time
-  uint8_t shutdown_wait_time;
-  // Sleep clock source selection
-  uint8_t pmu_slp_clkout_sel;
-  // WDT programming values
-  uint32_t wdt_prog_value;
-  // WDT soc reset delay
-  uint32_t wdt_soc_rst_delay;
-  // dcdc modes configs
-  uint32_t dcdc_operation_mode;
-  // FIXME update doc and make changes here, this is not in proper position
-  uint32_t soc_reset_wait_cnt;
-  uint32_t waiting_time_at_fresh_sleep;
-  uint32_t max_threshold_to_avoid_sleep;
-  uint8_t beacon_resedue_algo_en;
-} __attribute__((__packed__)) bootup_params_t;
-
-typedef struct rsi_flash_write_s {
-  uint32_t flash_offset;
-  uint16_t length;
-  uint16_t flash_init_req : 1;
-  uint16_t flash_erase_req : 1;
-  uint16_t flash_write_req : 1;
-  uint16_t reserved1 : 1;
-  uint16_t flash_type : 4;
-  uint16_t flash_pinset : 4;
-  uint16_t reserved : 4;
-  uint32_t src_buf_addr;
-} __attribute__((packed)) rsi_flash_write_t;
-#define UPPER_20_ENABLE (0x2)
-#define LOWER_20_ENABLE (0x4)
-#define FULL_40M_ENABLE (0x6)
-#endif
 
 typedef struct rsi_freq_offset_s {
   int32_t freq_offset_in_khz;
@@ -1890,16 +1738,5 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
                             void (*wlan_ping_response_handler)(uint16_t status,
                                                                const uint8_t *buffer,
                                                                const uint16_t length));
-#endif
-#ifdef RSI_CHIP_MFG_EN
-int32_t rsi_load_bootup_params();
-int32_t rsi_flash_mem_wr(rsi_flash_write_t *write_req);
-int32_t rsi_radio_caps(uint8_t operating_channel);
-int32_t rsi_reset_mac();
-int32_t program_bb_rf();
-int32_t rsi_feature_frame();
-int32_t rsi_process_transmit(tx_per_params_t *tx_per_params);
-int32_t rsi_efuse_read(rsi_efuse_read_t *efuse_read_p, uint8_t *buf, uint32_t length);
-int32_t rsi_efuse_write(rsi_efuse_write_t *efuse_write_p);
 #endif
 #endif

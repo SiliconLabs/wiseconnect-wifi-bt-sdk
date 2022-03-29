@@ -106,7 +106,7 @@ int32_t rsi_timer_expired(rsi_timer_instance_t *timer)
 
 uint32_t rsi_timer_left(rsi_timer_instance_t *timer)
 {
-  long left = (rsi_timer_read_counter() - (timer->start_time));
+  int32_t left = (timer->timeout) - (rsi_timer_read_counter() - (timer->start_time));
   return (left < 0) ? 0 : left;
 }
 /** @} */

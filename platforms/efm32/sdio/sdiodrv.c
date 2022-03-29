@@ -468,10 +468,6 @@ uint32_t SDIODRV_Init (SDIODRV_Handle_t *handle, SDIODRV_Init_t *init)
   sdio_init.transferWidth = init->transferWidth;
   SDIO_Init(init->instance, &sdio_init);
 
-  if (SysTick_Config(CMU_ClockFreqGet(cmuClock_SDIOREF) / 1000))
-     {
-       DEBUG_BREAK;
-     }
 
 
   sdiodrv_initialized = true;

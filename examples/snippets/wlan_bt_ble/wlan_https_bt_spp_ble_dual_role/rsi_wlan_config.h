@@ -42,9 +42,9 @@
 #define DHCP_MODE     1            //! DHCP mode 1- Enable 0- Disable
 //! If DHCP mode is disabled give IP statically
 #if !(DHCP_MODE)
-#define DEVICE_IP 0x6500A8C0 //! IP address of the module  - E.g: 0x650AA8C0 == 192.168.0.101
-#define GATEWAY   0x0100A8C0 //! IP address of Gateway  - E.g: 0x010AA8C0 == 192.168.0.1
-#define NETMASK   0x00FFFFFF //! IP address of netmask - E.g: 0x00FFFFFF == 255.255.255.0
+#define DEVICE_IP "192.168.0.101" //0x6500A8C0 //! IP address of the module  - E.g: 0x650AA8C0 == 192.168.0.101
+#define GATEWAY   "192.168.0.1"   //0x0100A8C0 //! IP address of Gateway  - E.g: 0x010AA8C0 == 192.168.0.1
+#define NETMASK   "255.255.255.0" //0x00FFFFFF //! IP address of netmask - E.g: 0x00FFFFFF == 255.255.255.0
 #endif
 #define SERVER_PORT          80              //443             //! Server port number
 #define SERVER_IP_ADDRESS    "192.168.0.103" //! Server IP address
@@ -86,11 +86,11 @@ typedef enum rsi_wlan_app_state_e {
 
 //! WLAN application control block
 typedef struct rsi_wlan_app_cb_s {
-  rsi_wlan_app_state_t state;       //! WLAN application state
-  uint32_t length;                  //! length of buffer to copy
-  uint8_t buffer[RSI_APP_BUF_SIZE]; //! application buffer
-  uint8_t buf_in_use;               //! to check application buffer availability
-  uint32_t event_map;               //! application events bit map
+  volatile rsi_wlan_app_state_t state; //! WLAN application state
+  uint32_t length;                     //! length of buffer to copy
+  uint8_t buffer[RSI_APP_BUF_SIZE];    //! application buffer
+  uint8_t buf_in_use;                  //! to check application buffer availability
+  uint32_t event_map;                  //! application events bit map
 } rsi_wlan_app_cb_t;
 
 /*=======================================================================*/

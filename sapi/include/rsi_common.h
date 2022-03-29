@@ -87,15 +87,15 @@
 #define RSI_SOCKET_SELECT_INFO_POOL_SIZE 0
 #endif
 // Max packet length of BT COMMON tx packet
-#define RSI_BT_COMMON_CMD_LEN 300 //TODO Fix it
+#define RSI_BT_COMMON_CMD_LEN 300
 #if ENCODER_IN_RS9116
-#define RSI_BT_CLASSIC_CMD_LEN 4000 //1040 //300 //TODO Fix it //(512+16+8+4)
+#define RSI_BT_CLASSIC_CMD_LEN 4000
 #else
-#define RSI_BT_CLASSIC_CMD_LEN 1040 //1040 //300 //TODO Fix it //(512+16+8+4)
+#define RSI_BT_CLASSIC_CMD_LEN 1040
 #endif
-#define RSI_BLE_CMD_LEN 300 //TODO Fix it
+#define RSI_BLE_CMD_LEN 300
 #ifdef RSI_PROP_PROTOCOL_ENABLE
-#define RSI_PROP_PROTOCOL_CMD_LEN 300 //TODO Fix it
+#define RSI_PROP_PROTOCOL_CMD_LEN 300
 #endif
 
 #ifdef SAPIS_BT_STACK_ON_HOST
@@ -334,20 +334,6 @@
 #define RSI_NWK_SEND_CMD_RESPONSE_WAIT_TIME    ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_GPIO_CONFIG_RESP_WAIT_TIME         ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
-#ifdef RSI_MFG_ENABLE
-#define RSI_BOOTUP_PARAMS_RESPONSE_WAIT_TIME   600000
-#define RSI_SCAN_REQ_RESPONSE_WAIT_TIME        600000
-#define RSI_EFUSE_WRITE_RESPONSE_WAIT_TIME     600000
-#define RSI_EFUSE_READ_RESPONSE_WAIT_TIME      600000
-#define RSI_RESET_MAC_RESPONSE_WAIT_TIME       600000
-#define RSI_SEND_PER_PKT_RESPONSE_WAIT_TIME    600000
-#define RSI_PREPARE_PER_PKT_RESPONSE_WAIT_TIME 600000
-#define RSI_SET_CHANNEL_RESPONSE_WAIT_TIME     600000
-#define RSI_SEND_PER_FRAME_RESPONSE_WAIT_TIME  600000
-#define RSI_RADIO_CAPS_RESPONSE_WAIT_TIME      600000
-#define RSI_BBRF_RESPONSE_WAIT_TIME            600000
-#endif
-
 //BT/BLE command timeouts in ms
 #define RSI_BT_COMMON_CMD_RESP_WAIT_TIME    ((500 * BT_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_BT_A2DP_CMD_RESP_WAIT_TIME      ((500 * BT_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
@@ -451,9 +437,6 @@ typedef enum rsi_common_cmd_response_e {
 
 // enumeration for command request used in common control block
 typedef enum rsi_common_cmd_request_e {
-#ifdef RSI_CHIP_MFG_EN
-  RSI_COMMON_DEV_CONFIG = 0x28,
-#endif
 
   RSI_COMMON_REQ_OPERMODE              = 0x10,
   RSI_COMMON_REQ_ANTENNA_SELECT        = 0x1B,
@@ -667,54 +650,6 @@ typedef struct rsi_set_sleep_timer_s {
   uint8_t timeval[2];
 } rsi_set_sleep_timer_t;
 
-#ifdef RSI_CHIP_MFG_EN
-typedef struct common_dev_config_params_s {
-  uint8_t lp_sleep_handshake;
-  uint8_t ulp_sleep_handshake;
-#define NO_HANDSHAKE         0
-#define PKT_BASED_HANDSHAKE  2
-#define GPIO_BASED_HANDSHAKE 1
-#define M4_BASED_HANDSHAKE   3
-
-#define DEV_TO_HOST_TA_OR_ULP_GPIO    BIT(0)
-#define TA_GPIO                       0
-#define ULP_GPIO                      1
-#define RF_SUPPLY_VOLTAGE_1_9_OR_3_3V BIT(1)
-#define RF_LDO_EXCSS_SETTLE_TIME_1_9V 300
-  /* If RF_SUPPLY_VOLTAGE_1_9_OR_3_3V is set, then RF @ 3.3V and if reset
-	 * RF @ 1.9V. */
-  uint8_t
-    sleep_config_param; /* 0 for no handshake (pm will make the decision),1 for GPIO based handshake, 2 packet handshake */
-  uint8_t host_wakeup_intr_enable;
-  uint8_t host_wakeup_intr_active_high;
-  uint32_t lp_wakeup_threshold;
-  uint32_t ulp_wakeup_threshold;
-  uint32_t wakeup_threshold; /* should be the last field, this is nt configurable by host */
-  // This variable should be assigned as per the SoC GPIOs unused in the schematics.
-  uint32_t unused_soc_gpio_bitmap;
-  // This variable should be assigned as per the ULP GPIOs unused in the schematics.
-  uint8_t unused_ulp_gpio_bitmap;
-  // If zero -> niether EXT PA nor EXT BT is enabled
-  uint8_t ext_pa_or_bt_coex_en;
-  uint8_t opermode;
-  uint8_t driver_mode;
-  uint8_t no_of_stations_supported;
-
-#define EXT_PA      1
-#define EXT_BT_COEX 2
-
-  /*
-   *  These will be added later
-   *  uint8_t sleep_clock_src;
-   *  uint8_t external_pa_enabled;
-   *  uint8_t external_bt_coex;
-   */
-  uint16_t peer_distance;
-  uint16_t bt_feature_bitmap;
-} common_dev_config_params_t;
-
-#endif
-
 // driver common block structure
 typedef struct rsi_common_cb_s {
   // driver common block state
@@ -915,10 +850,6 @@ void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type);
 #endif
 int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response);
 int32_t rsi_set_config(uint32_t code, uint8_t value);
-#ifdef RSI_CHIP_MFG_EN
-int32_t rsi_common_dev_params();
-int32_t rsi_wait_for_card_ready();
-#endif
 #ifdef WAKEUP_GPIO_INTERRUPT_METHOD
 void rsi_give_wakeup_indication(void);
 void rsi_hal_gpio_clear(void);

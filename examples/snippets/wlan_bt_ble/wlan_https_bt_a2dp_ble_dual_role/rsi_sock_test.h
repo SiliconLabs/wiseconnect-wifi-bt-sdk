@@ -1,14 +1,14 @@
 /********************************************************************/
 /** \file rsi_sock_test_DEMO_57.h
 *
-* \brief Test code to run HTTP/HTTPS download test using Redpine
+* \brief Test code to run HTTP/HTTPS download test using Silabs
 *        implementation of BSD socket API
 *
 *   \par MODULE NAME:
-*       redpine_sock_test.h - Redpine sockets test header
+*       redpine_sock_test.h - Silabs sockets test header
 *
 *   \par DESCRIPTION:
-*       This module exercises Redpine BSD socket API implementation
+*       This module exercises Silabs BSD socket API implementation
 *       by connecting to an HTTP/S server and downloading a test file
 *       with a known pattern. A few runtime knobs are provided via
 *       a few variables which control certain aspects of the test.

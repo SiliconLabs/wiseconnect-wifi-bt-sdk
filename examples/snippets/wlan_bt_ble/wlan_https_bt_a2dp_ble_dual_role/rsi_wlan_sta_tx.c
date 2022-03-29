@@ -187,7 +187,7 @@ int32_t rsi_app_task_wifi_tcp_tx_ps(void)
 #ifdef RSI_WITH_OS
 
 #if 0
-  //! Redpine module initialization
+  //! Silabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     return status;
