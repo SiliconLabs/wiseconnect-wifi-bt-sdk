@@ -1,7 +1,7 @@
 /********************************************************************/
 /** \file rsi_sock_test.c
  *
- * \brief Test code to run HTTP/HTTPS download test using Redpine
+ * \brief Test code to run HTTP/HTTPS download test using Silicon Labs
  *        implementation of BSD socket API
  *
  *   \par MODULE NAME:

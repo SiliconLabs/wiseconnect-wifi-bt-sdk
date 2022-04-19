@@ -1760,7 +1760,7 @@ int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "2.5.1.5"
+#define RSI_DRIVER_VERSION "2.5.2.3"
 int32_t rsi_driver_version(uint8_t *request)
 {
   SL_PRINTF(SL_DRIVER_VERSION_ENTRY, COMMON, LOG_INFO);

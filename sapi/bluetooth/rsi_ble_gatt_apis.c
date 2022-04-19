@@ -647,10 +647,10 @@ int32_t rsi_ble_get_profile(uint8_t *dev_addr, uuid_t profile_uuid, profile_desc
  *                                               uint16_t start_handle,
  *                                               uint16_t end_handle,
  *                                               rsi_ble_resp_char_services_t *p_char_serv_list)
- * @brief      Get the service characteristics of the connected / remote device.
- * 			       \ref rsi_ble_on_inc_services_resp_t callback function is called after the included service
- * 			       characteristics response is received. This is a non-blocking API,
- *                 Still user need to wait untill the callback \ref rsi_ble_on_inc_services_resp_t is received from the device,
+ * @brief      Get the service characteristic services of the connected / remote device.
+ * 			       \ref rsi_ble_on_char_services_resp_t callback function is called after the charateristic service
+ * 			            response is received. This is a non-blocking API,
+ *                 Still user need to wait untill the callback \ref rsi_ble_on_char_services_resp_t is received from the device,
  *                 to initiate further attribute related transactions on this remote device address.
  * @pre        \ref rsi_ble_connect() API needs to be called before this API.
  * @param[in]  dev_addr 	- remote device address
@@ -690,9 +690,9 @@ int32_t rsi_ble_get_char_services(uint8_t *dev_addr,
  *                                             uint16_t end_handle,
  *                                             rsi_ble_resp_inc_services_t *p_inc_serv_list)
  * @brief      Get the supported include services of the connected / remote device.
- * 			       \ref rsi_ble_on_att_desc_resp_t callback function is called after
- * 			       the service characteristics response is received. This is a non-blocking API,
- *                 Still user need to wait untill the callback \ref rsi_ble_on_att_desc_resp_t is received from the device,
+ * 			       \ref rsi_ble_on_inc_services_resp_t callback function is called after
+ * 			       the include service response is received. This is a non-blocking API,
+ *                 Still user need to wait untill the callback \ref rsi_ble_on_inc_services_resp_t is received from the device,
  *                 to initiate further attribute related transactions on this remote device address.
  * @pre        \ref rsi_ble_connect() API needs to be called before this API.
  * @param[in]  dev_addr 	- remote device address
