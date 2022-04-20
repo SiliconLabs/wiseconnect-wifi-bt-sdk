@@ -2,7 +2,7 @@
 //! do not modifiy this file directly
 #ifndef DEBUGS_AUTOGEN_H
 #define DEBUGS_AUTOGEN_H
-#define SL_LOG_VERSION  "2022/04/19-10:40:46"
+#define SL_LOG_VERSION  "2022/04/20-11:10:44"
 
 enum {
 SL_DEVICE_INIT_ENTRY,
