@@ -139,42 +139,26 @@ int32_t rsi_device_init(uint8_t select_option)
   }
 #endif
 #else
-#ifdef RSI_SDIO_INTERFACE
-  // Power cycle the module
+#ifndef RSI_M4_INTERFACE
+  // power cycle the module
   status = rsi_bl_module_power_cycle();
   if (status != RSI_SUCCESS) {
     SL_PRINTF(SL_DEVICE_INIT_MODULE_POWER_CYCLE_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
-
-#ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
-  // delay for 100 milli seconds
-  rsi_delay_ms(100);
 #endif
-  // SPI interface initialization
+#if defined(RSI_SDIO_INTERFACE)
+  // SDIO interface initialization
   status = rsi_sdio_iface_init();
-
-  if (status != RSI_SUCCESS) {
-    SL_PRINTF(SL_DEVICE_INIT_SDIO_INIT_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
-    return status;
-  }
-#endif
-#ifdef RSI_SPI_INTERFACE
-  // Power cycle the module
-  status = rsi_bl_module_power_cycle();
-  if (status != RSI_SUCCESS) {
-    SL_PRINTF(SL_DEVICE_INIT_BL_MODULE_POWER_CYCLE_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
-    return status;
-  }
-  rsi_delay_ms(100);
+#elif defined(RSI_SPI_INTERFACE)
   // SPI interface initialization
   status = rsi_spi_iface_init();
-
+#endif
   if (status != RSI_SUCCESS) {
     SL_PRINTF(SL_DEVICE_INIT_SPI_INIT_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
-#endif
+
 #if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
   rsi_init_timer(&timer_instance, RSI_BOARD_READY_WAIT_TIME); //40000
   do {
@@ -191,7 +175,6 @@ int32_t rsi_device_init(uint8_t select_option)
     }
 
   } while (status == RSI_ERROR_WAITING_FOR_BOARD_READY);
-#endif
 #ifdef RSI_SPI_INTERFACE
   if (select_option == LOAD_NWP_FW) {
     rsi_set_intr_type(RSI_ACTIVE_HIGH_INTR);
@@ -204,7 +187,6 @@ int32_t rsi_device_init(uint8_t select_option)
     }
   }
 #endif
-#if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
 #if RSI_FAST_FW_UP
   status = rsi_set_fast_fw_up();
   if (status != RSI_SUCCESS) {
@@ -288,8 +270,6 @@ int32_t rsi_device_deinit(void)
   // Power cycle the module
   rsi_bl_module_power_cycle();
 #endif
-  // Delay for 100 milliseconds
-  rsi_delay_ms(100);
   if (rsi_driver_cb != NULL) {
     rsi_driver_cb->common_cb->state = RSI_COMMON_STATE_NONE;
 #ifdef RSI_WLAN_ENABLE

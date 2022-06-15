@@ -48,7 +48,16 @@
 #define RSI_BLE_APP_GATT_TEST   (void *)"SI_COEX_MAX_DEMO" //! local device name
 #define RSI_BLE_MAX_NBR_SLAVES  1
 #define RSI_BLE_MAX_NBR_MASTERS 1
-#define TOTAL_CONNECTIONS       RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS
+#ifdef RSI_M4_INTERFACE
+#define RSI_BLE_MAX_NBR_ATT_REC 20
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS 4
+#else
+#define RSI_BLE_MAX_NBR_ATT_REC 80
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS 20
+#endif
+#define TOTAL_CONNECTIONS RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS
 
 #define CONN_BY_ADDR   1
 #define CONN_BY_NAME   2
@@ -565,7 +574,11 @@ typedef struct rsi_ble_s {
 /*=======================================================================*/
 //! Power save command parameters
 /*=======================================================================*/
-#define RSI_HAND_SHAKE_TYPE GPIO_BASED //! set handshake type of power mode
+#ifdef RSI_M4_INTERFACE
+#define RSI_HAND_SHAKE_TYPE M4_BASED //! set handshake type of power mode
+#else
+#define RSI_HAND_SHAKE_TYPE GPIO_BASED
+#endif
 
 /*=======================================================================*/
 //! opermode command paramaters
@@ -576,21 +589,19 @@ typedef struct rsi_ble_s {
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
 
-#define RSI_TCP_IP_FEATURE_BIT_MAP \
-  (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
+#define RSI_TCP_IP_FEATURE_BIT_MAP RSI_DISABLE
 
-#define RSI_EXT_TCPIP_FEATURE_BITMAP                                                      \
-  (BIT(16) | EXT_DYNAMIC_COEX_MEMORY | EXT_TCP_IP_WINDOW_DIV | EXT_TCP_IP_TOTAL_SELECTS_4 \
-   | EXT_TCP_IP_BI_DIR_ACK_UPDATE)
+#define RSI_EXT_TCPIP_FEATURE_BITMAP RSI_DISABLE
 
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
 //! To set Extended custom feature select bit map
-#if ENABLE_1P8V
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
-  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE | EXT_FEAT_1P8V_SUPPORT)
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
 #else
+//! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
 #endif
 
@@ -617,3 +628,31 @@ typedef struct rsi_ble_s {
 #include "rsi_wlan_common_config.h" /* TESTAPPS_WLAN_HTTPS_BT_SPP_BLE_MULTICONNECTION_RSI_WLAN_CONFIG_H_ */
 #include "rsi_ble_common_config.h"
 #endif /* SAPIS_EXAMPLES_RSI_DEMO_APPS_INC_RSI_BLE_COMMON_BLE_MULTI_SLAVE_MASTER_H */
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
+#endif

@@ -134,9 +134,12 @@
 
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
-uint8_t ping_rsp_received;
+volatile uint8_t ping_rsp_received;
+uint64_t ip_to_reverse_hex(char *ip);
 void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uint16_t length);
+#ifndef RSI_WITH_OS
 static void main_loop(void);
+#endif
 
 //! Ping Application in station mode
 int32_t rsi_station_ping_app()
@@ -263,9 +266,9 @@ int32_t rsi_station_ping_app()
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nIP Config Success\r\n");
   }
-  LOG_PRINT("\r\nIP Config Success\r\n");
-  LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
 
   while (packet_count < NUMBER_OF_PACKETS) {
 
@@ -284,7 +287,7 @@ int32_t rsi_station_ping_app()
 
   return 0;
 }
-
+#ifndef RSI_WITH_OS
 void main_loop(void)
 {
   while (1) {
@@ -301,10 +304,10 @@ void main_loop(void)
     }
   }
 }
-
+#endif
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
 
@@ -315,7 +318,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_station_ping_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_station_ping_app,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

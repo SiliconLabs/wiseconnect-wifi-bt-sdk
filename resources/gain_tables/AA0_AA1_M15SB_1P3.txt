@@ -3,7 +3,7 @@
 //Antenna Gain-0.99 dBi
 AA0_AA1_1P3_WLAN_2.4GHZ_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  32,  18,  18,
         2,  32,  22,  22,
@@ -16,8 +16,6 @@ AA0_AA1_1P3_WLAN_2.4GHZ_20MHz = {
         9,  32,  28,  26,
         10, 32,  24,  26,
         11, 32,  22,  22,
-        12, 40,  40,  40,
-        13, 40,  40,  40,
     ETSI,0x11,
        255, 30,  28, 28,
     TELEC,0x11,
@@ -114,7 +112,7 @@ WORLDWIDE,
 
 AA0_AA1_1P3_WLAN_2.4GHZ_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  28,  14,  16,
         2,  30,  22,  22,
@@ -127,8 +125,6 @@ AA0_AA1_1P3_WLAN_2.4GHZ_20MHz = {
         9,  32,  24,  22,
         10, 32,  20,  16,
         11, 32,  14,  14,
-        12, 40,  40,  40,
-        13, 40,  40,  40,
     ETSI,0x11,
        255, 22,  22, 22,
     TELEC,0x11,

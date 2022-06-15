@@ -69,7 +69,6 @@ static rsi_ble_event_disconnect_t disconn_event_to_app;
 static uint8_t rsi_ble_app_data[RSI_BLE_MAX_DATA_LEN];
 static uint16_t rsi_ble_att2_val_hndl;
 extern void rsi_ble_app_send_to_bt(uint8_t data_type, uint8_t *data, uint16_t data_len);
-
 /*==============================================*/
 /**
  * @fn         rsi_ble_add_char_serv_att
@@ -402,6 +401,7 @@ void rsi_bt_app_send_to_ble(uint8_t data_type, uint8_t *data, uint16_t data_len)
 void rsi_ble_app_init(void)
 {
   uint8_t adv[31] = { 2, 1, 6 };
+  int32_t status  = 0;
 
   //!  initializing the application events map
   rsi_ble_app_init_events();
@@ -458,7 +458,11 @@ void rsi_ble_app_init(void)
   rsi_ble_set_advertise_data(adv, strlen(RSI_BLE_APP_DEVICE_NAME) + 5);
   rsi_delay_ms(100);
   //! set device in advertising mode.
-  rsi_ble_start_advertising();
+  status = rsi_ble_start_advertising();
+  LOG_PRINT("\r\n Advertising started \n");
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("start_advertising status: 0x%lX\r\n", status);
+  }
 }
 
 /*==============================================*/
@@ -473,6 +477,7 @@ void rsi_ble_app_task(void)
 {
   int32_t status = 0;
   int32_t event_id;
+  uint8_t str_remote_address[18] = { '\0' };
   //! checking for events list
   event_id = rsi_ble_app_get_event();
   if (event_id == -1) {
@@ -485,6 +490,8 @@ void rsi_ble_app_task(void)
 
       //! clear the served event
       rsi_ble_app_clear_event(RSI_BLE_CONN_EVENT);
+      rsi_6byte_dev_address_to_ascii(str_remote_address, conn_event_to_app.dev_addr);
+      LOG_PRINT("\r\n Module connected to address : %s \r\n", str_remote_address);
     } break;
 
     case RSI_BLE_DISCONN_EVENT: {
@@ -496,6 +503,7 @@ void rsi_ble_app_task(void)
       //! set device in advertising mode.
 adv:
       status = rsi_ble_start_advertising();
+      LOG_PRINT("\r\n Advertising started with status 0x%x \n", status);
       if (status != RSI_SUCCESS) {
         goto adv;
       }
@@ -508,7 +516,10 @@ adv:
       rsi_ble_app_clear_event(RSI_BLE_GATT_WRITE_EVENT);
 
       //! set the local attribute value.
-      rsi_ble_set_local_att_value(rsi_ble_att2_val_hndl, RSI_BLE_MAX_DATA_LEN, rsi_ble_app_data);
+      status = rsi_ble_set_local_att_value(rsi_ble_att2_val_hndl, RSI_BLE_MAX_DATA_LEN, rsi_ble_app_data);
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("\n Set Local att value cmd failed = 0x%x \n", status);
+      }
     } break;
     default: {
     }

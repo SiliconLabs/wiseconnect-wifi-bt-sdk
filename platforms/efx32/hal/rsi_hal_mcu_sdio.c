@@ -36,6 +36,9 @@
  */
 int16_t rsi_sdio_write_multiple(uint8_t *tx_data, uint32_t Addr, uint16_t no_of_blocks)
 { 
+  UNUSED_PARAMETER(tx_data); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(Addr); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(no_of_blocks); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }
@@ -55,6 +58,8 @@ int16_t rsi_sdio_write_multiple(uint8_t *tx_data, uint32_t Addr, uint16_t no_of_
 
 int8_t rsi_sdio_read_multiple(uint8_t *read_buff, uint32_t Addr)
 { 
+  UNUSED_PARAMETER(read_buff); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(Addr); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }
@@ -72,6 +77,8 @@ int8_t rsi_sdio_read_multiple(uint8_t *read_buff, uint32_t Addr)
  */
 int8_t sdio_reg_writeb(uint32_t Addr, uint8_t *dBuf)
 { 
+  UNUSED_PARAMETER(Addr); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(dBuf); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }
@@ -89,6 +96,8 @@ int8_t sdio_reg_writeb(uint32_t Addr, uint8_t *dBuf)
  */
 int8_t sdio_reg_readb(uint32_t Addr, uint8_t *dBuf)
 { 
+  UNUSED_PARAMETER(Addr); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(dBuf); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }
@@ -106,6 +115,9 @@ int8_t sdio_reg_readb(uint32_t Addr, uint8_t *dBuf)
  */
 int16_t rsi_sdio_readb(uint32_t addr, uint16_t len, uint8_t *dBuf)
 { 
+  UNUSED_PARAMETER(addr); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(len); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(dBuf); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }
@@ -123,6 +135,9 @@ int16_t rsi_sdio_readb(uint32_t addr, uint16_t len, uint8_t *dBuf)
  */
 int16_t rsi_sdio_writeb(uint32_t addr, uint16_t len, uint8_t *dBuf)
 { 
+  UNUSED_PARAMETER(addr); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(len); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(dBuf); //This statement is added only to resolve compilation warnings, value is unchanged
 	// Function is not Implemented 
 	return RSI_FAILURE;    
 }

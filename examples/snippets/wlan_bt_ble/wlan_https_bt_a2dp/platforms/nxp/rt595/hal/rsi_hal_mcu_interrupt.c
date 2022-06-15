@@ -246,7 +246,7 @@ uint8_t rsi_hal_intr_pin_status(void)
 /*===================================================*/
 /**
  * @fn           rsi_reg_flags_t rsi_hal_critical_section_entry(void)
- * @brief        hold interrupt status and disables the SPI interrupt
+ * @brief        hold interrupt status and disables the SDIO interrupt
  * @param[in]    none  
  * @param[out]   none
  * @return       stored interrupt status
@@ -265,7 +265,7 @@ uint32_t rsi_hal_critical_section_entry(void)
 /*===================================================*/
 /**
  * @fn           void rsi_hal_critical_section_exit(void)
- * @brief        Enables the SPI interrupt
+ * @brief        Enables the SDIO interrupt
  * @param[in]    none  
  * @param[out]   none
  * @return       none

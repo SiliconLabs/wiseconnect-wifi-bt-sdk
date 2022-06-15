@@ -31,6 +31,14 @@
 #include "rsi_ble.h"
 #include "rsi_driver.h"
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
+
 //! Address type of the device to connect
 #define RSI_BLE_DEV_ADDR_TYPE LE_PUBLIC_ADDRESS
 
@@ -42,6 +50,14 @@
 
 #define TX_LEN  0x001e
 #define TX_TIME 0x01f4
+
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
+//! Memory length for the driver
+#define BT_GLOBAL_BUFF_LEN 15000
+#endif
 
 //! Memory to initialize the driver
 uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
@@ -68,6 +84,20 @@ uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
 
 //! Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 3000
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
 
 void rsi_wireless_driver_task(void);
 
@@ -86,8 +116,7 @@ void rsi_wireless_driver_task(void);
 #endif
 
 //! Application global parameters.
-static uint8_t rsi_app_async_event_map = 0;
-static uint8_t remote_addr_type        = 0;
+static uint8_t remote_addr_type = 0;
 static uint8_t remote_name[31];
 static uint8_t remote_dev_addr[18]   = { 0 };
 static uint8_t remote_dev_bd_addr[6] = { 0 };
@@ -301,6 +330,10 @@ int32_t rsi_ble_central(void)
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
 #ifndef RSI_WITH_OS
   //! Driver initialization
   status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
@@ -340,7 +373,31 @@ int32_t rsi_ble_central(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
 
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
   //! BLE register GAP callbacks
   rsi_ble_gap_register_callbacks(rsi_ble_simple_central_on_adv_report_event,
                                  rsi_ble_simple_central_on_conn_status_event,
@@ -584,7 +641,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_central,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_central,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

@@ -14,9 +14,9 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
-#ifdef RSI_BLE_ENABLE
 #include "rsi_driver.h"
+#ifdef RSI_BLE_ENABLE
+
 #include "rsi_ble.h"
 #include "rsi_ble_apis.h"
 #include "rsi_ble_config.h"
@@ -648,7 +648,7 @@ int32_t rsi_ble_get_profile(uint8_t *dev_addr, uuid_t profile_uuid, profile_desc
  *                                               uint16_t end_handle,
  *                                               rsi_ble_resp_char_services_t *p_char_serv_list)
  * @brief      Get the service characteristic services of the connected / remote device.
- * 			       \ref rsi_ble_on_char_services_resp_t callback function is called after the charateristic service
+ * 			       \ref rsi_ble_on_char_services_resp_t callback function is called after the characteristic service
  * 			            response is received. This is a non-blocking API,
  *                 Still user need to wait untill the callback \ref rsi_ble_on_char_services_resp_t is received from the device,
  *                 to initiate further attribute related transactions on this remote device address.
@@ -1357,7 +1357,7 @@ int32_t rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data
 }
 /** @} */
 /** @addtogroup BT-LOW-ENERGY4
- * * @{
+ * * @{ */
 /*==============================================*/
 /**
  * @fn         int32_t rsi_ble_indicate_value_sync(uint8_t *dev_addr, uint16_t handle,

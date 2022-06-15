@@ -108,7 +108,7 @@ int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
                            int8_t *topic,
                            void (*call_back_handler_ptr)(MessageData *md));
 int32_t rsi_mqtt_unsubscribe(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic);
-int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, uint16_t time_out);
+int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, int time_out);
 void mqtt_disconnect(Network *n);
 
 #endif

@@ -702,6 +702,11 @@ void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_
     return;
   }
 
+  //! Need to ignore advertising reports when the max slave connections is reached
+  if (slave_task_instances >= RSI_BLE_MAX_NBR_SLAVES) {
+    return;
+  }
+
   rsi_6byte_dev_address_to_ascii(remote_dev_addr, (uint8_t *)adv_report->dev_addr);
 
 #if (CONNECT_OPTION == CONN_BY_NAME)

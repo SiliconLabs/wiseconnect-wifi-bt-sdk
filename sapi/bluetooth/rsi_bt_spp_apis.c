@@ -14,9 +14,9 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
-#ifdef RSI_BT_ENABLE
 #include "rsi_driver.h"
+#ifdef RSI_BT_ENABLE
+
 #include "rsi_bt.h"
 #include "rsi_bt_apis.h"
 #include "rsi_bt_config.h"
@@ -136,6 +136,7 @@ int32_t rsi_bt_spp_transfer(uint8_t *remote_dev_addr, uint8_t *data, uint16_t le
   SL_PRINTF(SL_RSI_BT_SPP_DISCONNECT_TRIGGER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_SPP_TRANSFER, &bt_req_spp_transfer, NULL);
 }
+
 #endif
 
 /** @} */

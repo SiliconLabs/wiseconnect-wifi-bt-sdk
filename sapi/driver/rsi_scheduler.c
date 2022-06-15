@@ -26,6 +26,10 @@
 #if (defined(RSI_WITH_OS) && (RSI_TASK_NOTIFY))
 volatile uint32_t rsi_driver_eventmap;
 #endif
+#if defined(FW_LOGGING_ENABLE) && !defined(RSI_WITH_OS)
+void sl_fw_log_task(void);
+#endif
+uint8_t rsi_get_intr_status(void);
 /** @addtogroup DRIVER15
 * @{
 */
@@ -81,6 +85,9 @@ void rsi_scheduler(rsi_scheduler_cb_t *scheduler_cb)
   ROMAPI_WL->rsi_scheduler(global_cb_p, scheduler_cb);
 #else
   api_wl->rsi_scheduler(global_cb_p, scheduler_cb);
+#if defined(FW_LOGGING_ENABLE) && !defined(RSI_WITH_OS)
+  sl_fw_log_task();
+#endif
 #endif
 }
 /*====================================================*/

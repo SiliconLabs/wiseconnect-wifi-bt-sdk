@@ -120,7 +120,6 @@ static rsi_bt_resp_get_local_name_t rsi_app_resp_get_local_name = { 0 };
 static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
 static uint16_t rsi_scan_in_progress;
 static uint16_t rsi_app_no_of_adv_reports_rcvd = 0;
-static uint8_t rsi_app_async_event_map         = 0;
 //! global variables
 uint8_t conn_dev_addr[18]   = { 0 };
 uint8_t remote_dev_addr[6]  = { 0 };
@@ -608,7 +607,7 @@ int32_t rsi_ble_dual_role(void)
               LOG_PRINT("\n Connect command \n");
               status = rsi_ble_connect(RSI_BLE_DEV_ADDR_TYPE, (int8_t *)remote_dev_addr);
               if (status != RSI_SUCCESS) {
-                LOG_PRINT("\r\n Connecting failed with status : 0x%x \n", status);
+                LOG_PRINT("\r\n Connecting failed with status : 0x%lx \n", status);
                 rsi_ble_app_set_event(RSI_BLE_SCAN_RESTART_EVENT);
               } else {
                 conn_req_pending = 1;
@@ -789,7 +788,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_dual_role,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_dual_role,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

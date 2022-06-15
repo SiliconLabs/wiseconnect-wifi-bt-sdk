@@ -63,6 +63,10 @@ int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb)
   // Creates tx mutex
   rsi_mutex_create(&rsi_driver_cb_non_rom->tx_mutex);
 
+#if defined(RSI_DEBUG_PRINTS) || defined(FW_LOGGING_ENABLE)
+  // Creates debug prints mutex
+  rsi_mutex_create(&rsi_driver_cb_non_rom->debug_prints_mutex);
+#endif
   // Creates common cmd mutex
   retval = rsi_semaphore_create(&rsi_driver_cb_non_rom->common_cmd_send_sem, 0);
   if (retval != RSI_ERROR_NONE) {
@@ -352,7 +356,15 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
 #endif
     case RSI_COMMON_REQ_TA_M4_COMMANDS: {
 #ifdef RSI_M4_INTERFACE
-      payload_size = sizeof(ta_m4_handshake_param_t);
+#ifdef CHIP_9117
+      rsi_req_ta2m4_t *ta2m4 = (rsi_req_ta2m4_t *)pkt->data;
+      if (ta2m4->sub_cmd == RSI_WRITE_TO_COMMON_FLASH) {
+        payload_size = ta2m4->chunk_len + (sizeof(rsi_req_ta2m4_t) - RSI_MAX_CHUNK_SIZE);
+      } else
+#endif
+      {
+        payload_size = sizeof(ta_m4_handshake_param_t);
+      }
 #endif
 
     } break;
@@ -364,6 +376,11 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
     case RSI_COMMON_REQ_SET_CONFIG: {
       payload_size = sizeof(rsi_set_config_t);
     } break;
+#ifdef FW_LOGGING_ENABLE
+    case RSI_COMMON_REQ_DEVICE_LOGGING_INIT: {
+      payload_size = sizeof(sl_fw_logging_t);
+    } break;
+#endif
     default: {
     }
   }
@@ -801,7 +818,32 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
       }
     } break;
 #endif
+#ifdef FW_LOGGING_ENABLE
+    case RSI_COMMON_RSP_DEVICE_LOGGING_INIT: {
+      // Check status
+      status = rsi_bytes2R_to_uint16(host_desc + RSI_STATUS_OFFSET);
 
+      // Get payoad length
+      payload_length = (rsi_bytes2R_to_uint16(host_desc) & 0xFFF);
+
+      // Get payload pointer
+      payload = pkt->data;
+
+      // if SUCCESS, notify application using callback
+      if (pkt->desc[15] == SL_LOG_DATA) {
+        if (status == RSI_SUCCESS) {
+          if (rsi_common_cb->sl_fw_log_callback != NULL) {
+            rsi_common_cb->sl_fw_log_callback(&payload[0], payload_length);
+            return RSI_SUCCESS;
+          } else {
+            return RSI_FAILURE;
+          }
+        } else {
+          return RSI_FAILURE;
+        }
+      }
+    } break;
+#endif
     default: {
     }
   }
@@ -865,12 +907,6 @@ void rsi_handle_slp_wkp(uint8_t frame_type)
     } break;
     case RSI_RSP_WKP: {
       rsi_common_cb->power_save.module_state = RSI_WKUP_RECEIVED;
-#if (RSI_HAND_SHAKE_TYPE == MSG_BASED)
-      if (rsi_common_cb->power_save.current_ps_mode == RSI_MSG_BASED_DEEP_SLEEP) {
-        rsi_common_cb->power_save.module_state = RSI_SLP_RECEIVED;
-        rsi_set_event(RSI_TX_EVENT);
-      }
-#endif
       rsi_unmask_event(RSI_TX_EVENT);
     } break;
     case RSI_COMMON_RSP_ULP_NO_RAM_RETENTION: {
@@ -1055,7 +1091,6 @@ void rsi_powersave_gpio_init(void)
   SL_PRINTF(SL_POWERSAVE_GPIO_INIT_ENTRY, DRIVER, LOG_INFO);
 #ifndef RSI_M4_INTERFACE
   rsi_hal_config_gpio(RSI_HAL_WAKEUP_INDICATION_PIN, 0, 0);
-  rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
 #if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
   rsi_hal_config_gpio(RSI_HAL_SLEEP_CONFIRM_PIN, 1, 0);
   rsi_hal_clear_gpio(RSI_HAL_SLEEP_CONFIRM_PIN);
@@ -1626,7 +1661,44 @@ void rsi_check_pkt_queue_and_dequeue(void)
   }
 #endif
 }
-
+/*==============================================*/
+/**
+ * @fn          void rsi_free_queue_pkt(uint8_t pkt_dequeued,rsi_pkt_t *pkt)
+ * @brief       free the queued packet.
+ * @param[in]   pkt_dequeued - pkt to be free
+ * @param[in]   pkt - pointer of the packet to be free
+ * @return      void
+ *
+ */
+void rsi_free_queue_pkt(uint8_t pkt_dequeued, rsi_pkt_t *pkt)
+{
+  if (pkt_dequeued == COMMON_PKT) {
+    rsi_pkt_free(&rsi_driver_cb->common_cb->common_tx_pool, pkt);
+  }
+#ifdef RSI_WLAN_ENABLE
+  if (pkt_dequeued == WLAN_PKT) {
+    rsi_pkt_free(&rsi_driver_cb->wlan_cb->wlan_tx_pool, pkt);
+  }
+#endif
+#if (defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE) || defined(RSI_PROP_PROTOCOL_ENABLE))
+  if (pkt_dequeued == BT_PKT) {
+#if (defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE) || defined(RSI_PROP_PROTOCOL_ENABLE))
+    rsi_pkt_free(&rsi_driver_cb->bt_common_cb->bt_tx_pool, pkt);
+#endif
+#ifdef RSI_BT_ENABLE
+    rsi_pkt_free(&rsi_driver_cb->bt_classic_cb->bt_tx_pool, pkt);
+#endif
+#ifdef RSI_BLE_ENABLE
+    rsi_pkt_free(&rsi_driver_cb->ble_cb->bt_tx_pool, pkt);
+#endif
+  }
+#endif
+#ifdef RSI_PROP_PROTOCOL_ENABLE
+  if (pkt_dequeued == PROP_PROTOCOL_PKT) {
+    rsi_pkt_free(&rsi_driver_cb->prop_protocol_cb->bt_tx_pool, pkt);
+  }
+#endif
+}
 /*==============================================*/
 /**
  * @fn          void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type)

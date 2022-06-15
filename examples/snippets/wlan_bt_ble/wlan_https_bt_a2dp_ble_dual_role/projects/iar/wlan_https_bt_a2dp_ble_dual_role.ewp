@@ -5191,6 +5191,21 @@
             <file>
                 <name>$PROJ_DIR$\..\..\..\..\..\..\sapi\include\rsi_zb_types.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\..\..\..\sapi\include\sl_app_logging.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\..\..\..\sapi\include\sl_fw_logging.h</name>
+            </file>
+        </group>
+        <group>
+            <name>logging</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\..\..\..\sapi\logging\sl_app_logging.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\..\..\..\sapi\logging\sl_fw_logging.c</name>
+            </file>
         </group>
         <group>
             <name>network</name>
@@ -5462,5 +5477,11 @@
                 </file>
             </group>
         </group>
+    </group>
+    <group>
+        <name>utilities</name>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\..\utilities\advanced_logging\firmware_logging\firmware_logging_utils.c</name>
+        </file>
     </group>
 </project>

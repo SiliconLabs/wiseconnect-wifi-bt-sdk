@@ -266,7 +266,7 @@ int main(void)
   rsi_task_handle_t application_handle = NULL;
 
   // Create application task
-  rsi_task_create((rsi_task_function_t)application,
+  rsi_task_create((rsi_task_function_t)(int32_t)application,
                   (uint8_t *)"application_task",
                   RSI_APPLICATION_TASK_STACK_SIZE,
                   NULL,

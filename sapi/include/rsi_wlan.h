@@ -133,6 +133,7 @@ typedef enum rsi_wlan_cmd_response_e {
   RSI_WLAN_RSP_AP_CONFIGURATION       = 0x24,
   RSI_WLAN_RSP_SET_WEP_KEYS           = 0x25,
   RSI_WLAN_RSP_PING_PACKET            = 0x29,
+  RSI_WLAN_RSP_TWT_PARAMS             = 0x2F,
   RSI_WLAN_RSP_P2P_CONNECTION_REQUEST = 0x30,
   RSI_WLAN_RSP_SET_PROFILE            = 0x31,
   RSI_WLAN_RSP_GET_PROFILE            = 0x32,
@@ -221,6 +222,7 @@ typedef enum rsi_wlan_cmd_response_e {
   RSI_WLAN_RSP_TIMEOUT               = 0xEA,
   RSI_WLAN_RSP_URL_REQUEST           = 0x64,
   RSI_WLAN_RSP_MODULE_STATE          = 0x70,
+  RSI_WLAN_RSP_TWT_ASYNC             = 0x71,
   RSI_WLAN_RSP_SELECT_REQUEST        = 0x74,
   RSI_WLAN_RSP_SCAN_RESULTS          = 0xAF,
   RSI_WLAN_RSP_RADIO                 = 0x81,
@@ -248,6 +250,7 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_AP_CONFIGURATION      = 0x24,
   RSI_WLAN_REQ_SET_WEP_KEYS          = 0x25,
   RSI_WLAN_REQ_PING_PACKET           = 0x29,
+  RSI_WLAN_REQ_TWT_PARAMS            = 0x2F,
   RSI_WLAN_REQ_SET_PROFILE           = 0x31,
   RSI_WLAN_REQ_GET_PROFILE           = 0x32,
   RSI_WLAN_REQ_DELETE_PROFILE        = 0x33,
@@ -873,7 +876,30 @@ typedef struct rsi_req_tx_test_info_s {
 
   // uint8_t, tx test mode delay
   uint8_t delay[4];
-
+#ifdef CHIP_9117
+  uint8_t enable_11ax;
+  uint8_t coding_type;
+  uint8_t nominal_pe;
+  uint8_t UL_DL;
+  uint8_t he_ppdu_type;
+  uint8_t beam_change;
+  uint8_t BW;
+  uint8_t STBC;
+  uint8_t Tx_BF;
+  uint8_t GI_LTF;
+  uint8_t DCM;
+  uint8_t NSTS_MIDAMBLE;
+  uint8_t spatial_reuse;
+  uint8_t BSS_color;
+  uint8_t HE_SIGA2_RESERVED[2];
+  uint8_t RU_ALLOCATION;
+  uint8_t N_HELTF_TOT;
+  uint8_t SIGB_DCM;
+  uint8_t SIGB_MCS;
+  uint8_t USER_STA_ID[2];
+  uint8_t USER_IDX;
+  uint8_t SIGB_COMPRESSION_FIELD;
+#endif
 } rsi_req_tx_test_info_t;
 
 // per stats command request structure
@@ -1719,7 +1745,7 @@ rsi_error_t rsi_wait_on_nwk_semaphore(rsi_semaphore_handle_t *semaphore, uint32_
 int32_t rsi_wlan_get_nwk_status(void);
 void rsi_wlan_set_nwk_status(int32_t status);
 int32_t rsi_post_waiting_semaphore(void);
-
+void rsi_call_asynchronous_callback(void);
 void rsi_assertion_cb(uint16_t assert_val, uint8_t *buffer, const uint32_t length);
 void rsi_max_available_rx_window(uint16_t status, uint8_t *buffer, const uint32_t length);
 
@@ -1731,7 +1757,6 @@ void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const
 void rsi_ip_change_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length);
 void rsi_stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length);
 void rsi_stations_disconnect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length);
-uint64_t ip_to_reverse_hex(char *ip);
 int32_t rsi_wlan_ping_async(uint8_t flags,
                             uint8_t *ip_address,
                             uint16_t size,

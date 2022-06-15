@@ -118,9 +118,12 @@
 #define FTP_FILE_TO_WRITE "write.txt"
 
 //! FTP client mode 1- Passive mode 0- Active mode
-#define FTP_ENABLE_PASSIVE 1
-#define FTP_ENABLE_ACTIVE  0
-#define FTP_CLIENT_MODE    FTP_ENABLE_ACTIVE
+#define FTP_CLIENT_MODE FTP_ENABLE_ACTIVE
+
+#ifdef CHIP_9117
+//! FTP data transfer modes 1- Block transfer mode 0- Stream transfer mode
+#define FTP_TRANSFER_MODE FTP_STREAM_TRANSFER_MODE
+#endif
 
 //! File to rename on FTP server
 #define FTP_FILE_TO_RENAME "read.txt"
@@ -159,6 +162,8 @@ uint32_t file_read_data_length = 0;
 uint32_t dir_list_offset = 0;
 
 uint32_t dir_list_length = 0;
+
+uint64_t ip_to_reverse_hex(char *ip);
 
 //! This call back is called when file read opertion is in progress
 void rsi_file_read_cb(uint16_t status, uint8_t *data, uint16_t length, uint8_t end_of_file)
@@ -219,6 +224,7 @@ int32_t rsi_ftp_client()
 
   uint32_t server_ip = ip_to_reverse_hex(SERVER_IP_ADDRESS);
   int32_t retval     = 0;
+  uint8_t mode_type;
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
@@ -307,9 +313,17 @@ int32_t rsi_ftp_client()
   ////// Note: By default FTP client will be in ACTIVE mode///////
   ////////////////////////////////////////////////////////////////
 
-  if (FTP_CLIENT_MODE) {
+  if (FTP_CLIENT_MODE
+#ifdef CHIP_9117
+      || FTP_TRANSFER_MODE
+#endif
+  ) {
     //! Set FTP client PASSIVE mode
-    retval = rsi_ftp_mode_set((uint8_t)FTP_CLIENT_MODE);
+    mode_type = FTP_CLIENT_MODE;
+#ifdef CHIP_9117
+    mode_type = mode_type | (FTP_TRANSFER_MODE << 1);
+#endif
+    retval = rsi_ftp_mode_set(mode_type);
     if (retval != RSI_SUCCESS) {
       LOG_PRINT("\r\nSet FTP client mode Failed, Error Code : 0x%lX\r\n", retval);
       return retval;
@@ -352,14 +366,23 @@ int32_t rsi_ftp_client()
 
   //! File Write
   retval = rsi_ftp_file_write((int8_t *)FTP_FILE_TO_WRITE);
-
   if (retval != RSI_SUCCESS) {
     LOG_PRINT("\r\nFile Write Failed, Error Code : 0x%lX\r\n", retval);
     return retval;
   } else {
     LOG_PRINT("\r\nFile Write Success\r\n");
   }
-
+#ifdef CHIP_9117
+  if (FTP_TRANSFER_MODE) {
+    retval = rsi_ftp_file_size_set(file_write_data_length);
+    if (retval != RSI_SUCCESS) {
+      LOG_PRINT("\r\nFile Size Set Failed, Error Code : 0x%lX\r\n", retval);
+      return retval;
+    } else {
+      LOG_PRINT("\r\nFile Size Set Success\r\n");
+    }
+  }
+#endif
   //! File Write Content
   retval = rsi_ftp_file_write_content(0, file_data_write, file_write_data_length, 1);
 

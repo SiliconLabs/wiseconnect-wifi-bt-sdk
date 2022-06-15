@@ -51,6 +51,7 @@ extern "C" {
 #include "rsi_wlan.h"
 #include "rsi_nwk.h"
 #include "rsi_utils.h"
+#include "rsi_driver.h"
 
 
 /* This is the value used for ssl read timeout */
@@ -154,6 +155,10 @@ int32_t get_aws_error(int32_t status)
 
 int _iot_tls_verify_cert(void *data, int *crt, int depth, uint32_t *flags)
 {
+  UNUSED_PARAMETER(data);
+  UNUSED_PARAMETER(crt);
+  UNUSED_PARAMETER(depth);
+  UNUSED_PARAMETER(flags);
 	return 0;
 }
 
@@ -189,6 +194,7 @@ IoT_Error_t iot_tls_init(Network *pNetwork, char *pRootCALocation, char *pDevice
 }
 
 IoT_Error_t iot_tls_is_connected(Network *pNetwork) {
+  UNUSED_PARAMETER(pNetwork);
 	/* Use this to add implementation which can check for physical layer disconnect */
 	return NETWORK_PHYSICAL_LAYER_CONNECTED;
 }
@@ -290,6 +296,7 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 }
 IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 {
+  UNUSED_PARAMETER(params);
 	int32_t     status       = 0;
 	rsi_rsp_dns_query_t dns_query_rsp;
 	uint32_t    server_address =  0;

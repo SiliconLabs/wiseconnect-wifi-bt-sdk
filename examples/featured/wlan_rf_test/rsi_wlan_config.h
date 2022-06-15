@@ -266,6 +266,10 @@
 // TX TEST delay
 #define RSI_TX_TEST_DELAY 0
 
+// TX TEST Number of packets
+// This macro sets the number of packets to be sent. If the value given is n then n number of packets will be sent on air, after that transmission will be stopped.
+// If this field is given as 0 then packets will be sent continuously until user stops the transmission.
+#define RSI_TX_TEST_NUM_PKTS 0
 /*=======================================================================*/
 
 // ssl parameters

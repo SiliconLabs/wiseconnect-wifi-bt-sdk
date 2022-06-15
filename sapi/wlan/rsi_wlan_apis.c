@@ -175,6 +175,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
 #ifdef PROCESS_SCAN_RESULTS_AT_HOST
   if (bitmap & RSI_SCAN_RESULTS_TO_HOST) {
     memset(scan_results_array, 0, sizeof(struct wpa_scan_results_arr));
+    rsi_wlan_cb_non_rom->scan_results_to_host = 1;
   }
 #endif
 
@@ -571,18 +572,41 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         40	        	           |       40
  * 		         44	        	           |       44
  * 		         48	        	           |       48
- * 		         100	                   |       100
- * 		         104	                   |       104
- * 		         108	                   |       108
- * 		         116	                   |       116
- * 		         132                     |       132
- * 		         136	          	       |       136
- * 		         140         		         |       140
  *		         149	                   |       149
  * 		         153		                 |       153
  * 		         157		                 |       157
  * 		         161        		         |       161
  *		         165	         	         |       165
+ *             #### DFS Channels supported in 5 GHz Band ####
+ * 		         Channel numbers         |	Ch no
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		         52(DFS)	        	     |       52
+ * 		         56(DFS)	        	     |       56
+ * 		         60(DFS)	        	     |       60
+ * 		         64(DFS)	        	     |       64
+ * 		         100(DFS)	               |       100
+ * 		         104(DFS)	               |       104
+ * 		         108(DFS)	               |       108
+ * 		         112(DFS)	               |       112
+ * 		         116(DFS)	               |       116
+ * 		         120(DFS)	               |       120
+ * 		         124(DFS)	               |       124
+ * 		         128(DFS)	               |       128
+ * 		         132(DFS)                |       132
+ * 		         136(DFS)	          	   |       136
+ * 		         140(DFS)         		   |       140
+ * 		         144(DFS)         		   |       144
+ *             #### Channels supported in 4.9 GHz Band ####
+ * 		         Channel numbers         |	Ch no
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		         All Channels		         |       0	
+ * 		         184	        	         |       184
+ * 		         188	        	         |       188
+ * 		         192	        	         |       192
+ * 		         196	        	         |       196
+ * 		         8	                     |       8
+ * 		         12	                     |       12
+ * 		         16	                     |       16
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			       #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			       #define RSI_TIMEOUT_BIT_MAP 4 \n
@@ -683,8 +707,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * 			       holds scan results in \ref rsi_rsp_scan_t structure format.
  * @brief      Scan the surrounding Wi-Fi networks. A scan response handler is registered with it to get the response for scan.This is a non-blocking API.
  * @pre 	     \ref rsi_wireless_init() API needs to be called before this API. 
- * @param[in]  ssid		        			 -  SSID size should be less than or equal to 32 bytes
- * @note       SSID is a null terminated string.
+ * @param[in]  ssid		        			 - SSID to scan. If this input parameter is present, module will scan for that particular SSID only. SSID size should be less than or equal to 32 bytes
  * @param[in]  chno 				         - Channel number to perform scan, if 0, then module will scan in all channels.
  * @param[in]  Scan_response_handler - Callback tht is called when the response for scan is received from the module. \n
  *				       The parameters involved are status, buffer, & length. \n
@@ -695,7 +718,8 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *@param[out]	 Length                - Length of the response buffer measured in bytes to hold scan results. \n Size of structure \ref rsi_rsp_scan_t is 54 bytes. \n
  *					                           Length for storing one scan result is sizeof(rsi_scan_info_t) which is 44 bytes. \n
  *						                         Maximum of 11 scan results will be returned by the module, \n in this case, length must be configured as 8 + 11*sizeof(rsi_scan_info_t).
- *             #### Channels supported in 2.4 GHz Band ####
+ * @note       SSID is a null terminated string.
+*             #### Channels supported in 2.4 GHz Band ####
  *         		 Channel numbers       	 |	Ch no
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	           All Channels	       	   |       0	
@@ -2389,10 +2413,14 @@ int32_t rsi_wlan_wps_push_button_event(int8_t *ssid)
 
 /*==============================================*/
 /**
- * @brief        Application to provide feedback of frequency error in KHz. This is a blocking API.
+ * @brief        Application to provide feedback of Frequency error in KHz. This is a blocking API.
  * @param[in]    freq_offset_in_khz - Frequency deviation observed in KHz
  * @return       0          - Success \n
- *                 Non zero Value - Failure
+ *               Non zero Value - Failure \n
+ *               0xFC - Frequency offset sent is zero \n
+ *		           0xFB - Frequency offset specified goes beyond the upper limit or lower limit and indicates that frequency offset cannot be changed further. \n
+ *        
+ * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  */
 int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
 {
@@ -2461,16 +2489,13 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
  * 			0 - BURN_INTO_EFUSE (Burns calibration data to EFuse) \n
  * 			1 - BURN_INTO_FLASH (Burns calibration data to Flash) \n
  * @param[in]         Flags - Validate information \n
- *                     Bit |	MACRO 		   |	Description
+ *                     Bit |	MACRO 		           |	Description
  *                     :---|:---------------------:|:---------------------------------------------------
- *                     0   |	BURN_GAIN_OFFSET   | 	1 - Update gain offset to calibration data
- *                     ^   |	^		               |	0 - Skip gain offset update
- *                     1   |	BURN_FREQ_OFFSET   |	1 - Update XO Ctune to calibration data
- *                     ^   |	^		               |	0 - Skip XO Ctune update
- *                     2   |	SW_XO_CTUNE_VALID  |	1 - Use XO Ctune provided as argument to update calibration data
- *                     ^   |	^		               |	0 - Use XO Ctune value as read from hardware register
+ *                     0   |	BURN_GAIN_OFFSET     | 	1 - Update gain offset to calibration data \n	0 - Skip gain offset update
+ *                     1   |	BURN_FREQ_OFFSET     |	1 - Update XO Ctune to calibration data \n	0 - Skip XO Ctune update
+ *                     2   |	SW_XO_CTUNE_VALID    |	1 - Use XO Ctune provided as argument to update calibration data \n	0 - Use XO Ctune value as read from hardware register
  *                     3   |	BURN_XO_FAST_DISABLE |     Used to apply patch for cold temperature issue(host interface detection) observed on CC0/CC1 modules. \ref appendix
- *                     7-4 ||	Reserved
+ *                     7-4 |                       |	Reserved
  * @param[in]         gain_offset - gain_offset as observed in dBm
  * @param[in]         xo_ctune - Allow user to directly update xo_ctune value to calibration data bypassing the freq offset loop,
  * 			valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set.
@@ -3497,10 +3522,11 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 #endif
       }
-    } else
+    } else {
       // Command given in wrong state
       SL_PRINTF(SL_WLAN_GET_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
-    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
   }
 
   if (cmd_type == RSI_FW_VERSION) {
@@ -3796,11 +3822,14 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
  * @brief       Request configuration based on the command type. This is a blocking API.
  * @pre   		  \ref rsi_wireless_init() API needs to be called before this API. \n
  *        		  For setting MAC address, call this API immediately after \n
- *		  		    \ref rsi_wireless_init() and before calling any other API.
+ *		  		    \ref rsi_wireless_init() and before calling any other API. \n
+ *		  		    \ref rsi_config_ipaddress() needs to be call for RSI_CFG_SAVE and RSI_CFG_STORE.
  * @param[in]   cmd_type  - 	Set command type:  : \n
  *                       	1 : RSI_SET_MAC_ADDRESS \n
  *                       	2 : RSI_MULTICAST_FILTER \n
- *                      	3 : RSI_JOIN_BSSID 
+ *                      	3 : RSI_JOIN_BSSID \n
+ *                      	4 : RSI_CFG_SAVE  \n
+ *                      	5 : RSI_CFG_STORE  \n
  * @param[in]  request    -   Request buffer
  * @param[in]  length     -   Length of the request buffer in bytes
  * 		         cmd type                |	Request structure	
@@ -3816,6 +3845,9 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
  *	           ^        	             |    	3 . RSI_MULTICAST_MAC_CLEAR_ALL (To clear all the bits in multicast bitmap) \n
  *	           ^        	             |    	4 . RSI_MULTICAST_MAC_SET_ALL (To set all the bits in multicast bitmap) \n
  * 	 	         RSI_JOIN_BSSID          |      uint8_t join_bssid[6]
+ * 	 	         RSI_CFG_SAVE            |      This cmd_type is used to save the parameters into non-volatile memory which are used either to join to an Access point (auto-join mode) or to create an Access point(auto-create mode).
+ * 	 	         RSI_CFG_STORE           |      This cmd_type is used to give the configuration values which are supposed to be stored in the module's non-volatile memory and that are used in auto-join or auto-create modes. 
+ *	           ^        	             |    	User configurations are stored in rsi_user_store_config_t structure. \n
  * @return     0              -  Success \n
  *             Non-Zero	Value - Failure \n
  *	           If return value is less than 0 \n
@@ -4113,8 +4145,8 @@ int32_t rsi_wlan_buffer_config(void)
  *                         2 : RSI_CCMP
  * @param[in]  password - PSK to be used in security mode. \n
  *                      Minimum and maximum length of PSK is 8 bytes and 63 bytes respectively
- * @param[in]  beacon_interval - Beacon interval
- * @param[in]  dtim_period - DTIM period
+ * @param[in]  beacon_interval - Beacon interval in ms. Allowed values are integers from 100 to 1000 which are multiples of 100.
+ * @param[in]  dtim_period - DTIM period. Allowed values are integers between 1 and 255.
  *
  * @return     Non-Zero Value  - Failure \n
  *                    0         - Success\n
@@ -4697,49 +4729,50 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
 
 /*==============================================*/
 /**
- * @brief    Start the transmit test. This is a blocking API.
- * @note     This API is relevant in PER mode.
- * @pre      \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @brief      Start the transmit test. This is a blocking API. \n 
+ *             This API is relevant in PER mode.
+ * @pre        \ref rsi_wlan_radio_init() API needs to be called before this API.
  * @param[in]  power  - Set TX power in dbm. The valid values are from 2dbm to 18dbm for WiSeConnect module.
- * @note       1. User can configure the maximum power level allowed for the given frequncey in the configured region by providing 127 as power level \n
- * @note       2. User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
+ * @note                1. User can configure the maximum power level allowed for the given frequncey in the configured region by providing 127 as power level \n
+ * @note                2. User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
  * @param[in]  rate   - Set transmit data rate
  * @param[in]  length - Configure length of the TX packet. \n
- *             The valid values are in the range of 24 to 1500 bytes in the burst mode and range of 24 to 260 bytes in the continuous mode. 
+ *                      The valid values are in the range of 24 to 1500 bytes in the burst mode and range of 24 to 260 bytes in the continuous mode. 
  * @param[in]  mode   - 0- Burst Mode \n
- *                        1- Continuous Mode \n
- *                        2- Continuous wave Mode (non modulation) in DC mode \n
- *                        3- Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) \n
- *                        4- Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz)
- * @param[in] channel - Set the channel number in 2.4 GHz / 5GHz.
- * @note     1. Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
- * @note          i.  Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
- * @note          ii. Stop Continuous mode \n 
- * @note          iii Start Continuous Wave mode \n
- * @note     2. If user wants to switch continuous wave mode, first need to stop the per mode and again need to give continous wave mode which user wants to switch. 
+ *                      1- Continuous Mode \n
+ *                      2- Continuous wave Mode (non modulation) in DC mode \n
+ *                      3- Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) \n
+ *                      4- Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz)
+ * @param[in]  channel - Set the channel number in 2.4 GHz / 5GHz.
+ * @note                 1. Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
+ *                          i.  Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
+ *                          ii. Stop Continuous mode \n 
+ *                          iii Start Continuous Wave mode \n
+ * @note                 2. If user wants to switch continuous wave mode, first need to stop the per mode and again need to give continous wave mode which user wants to switch. 
+ *      ### Data Rates ###       
  *			Data rate(Mbps)	|	Value of rate 
  *			:--------------:|:-------------------:
- *			1		|	0 
- *			2		|	2 \n
- *			5.5		|	4 \n
- *			11		|	6 \n
- *			6		|	139 \n
- *			9		|	143 \n
- *			12		|	138 \n
- *			18		|	142 \n
- *			24		|	137 \n
- *			36		|	141 \n
- *			48		|	136 \n
- *			54		|	140 \n
- *			MCS0		|	256 \n
- *			MCS1		|	257 \n
- *			MCS2		|	258 \n
- *			MCS3		|	259 \n
- *			MCS4		|	260 \n
- *			MCS5		|	261 \n
- *			MCS6		|	262 \n
- *			MCS7		|	263 \n			
- *			The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum.\n
+ *			1		            |	0 
+ *			2		            |	2 \n
+ *			5.5		          |	4 \n
+ *			11		          |	6 \n
+ *			6		            |	139 \n
+ *			9		            |	143 \n
+ *			12		          |	138 \n
+ *			18		          |	142 \n
+ *			24		          |	137 \n
+ *			36		          |	141 \n
+ *			48		          |	136 \n
+ *			54		          |	140 \n
+ *			MCS0		        |	256 \n
+ *			MCS1		        |	257 \n
+ *			MCS2		        |	258 \n
+ *			MCS3		        |	259 \n
+ *			MCS4		        |	260 \n
+ *			MCS5		        |	261 \n
+ *			MCS6		        |	262 \n
+ *			MCS7		        |	263 \n			
+ *			###The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum. ### 
  *			Channel numbers (2.4GHz)|	Center frequencies for 20MHz channel width 
  *			:----------------------:|:-----------------------------------------------:
  *			1			|	2412 
@@ -4757,7 +4790,7 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *			13			|	2472 
  *			14			|	2484 
  * @note	To start transmit test in 12,13,14 channels, configure set region parameters in rsi_wlan_config.h \n
- * @note	The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum for 20MHz channel bandwidth. The channel numbers in 5 GHz range is from 36 to 165.
+ *    ###	The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum for 20MHz channel bandwidth. The channel numbers in 5 GHz range is from 36 to 165. ###
  * 		Channel Numbers(5GHz) |	Center frequencies for 20MHz channel width 
  * 		:--------------------:|:------------------------------------------:
  *		36		      |5180 
@@ -4765,7 +4798,7 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *		44		      |5220 
  *		48		      |5240 
  *		52		      |5260 
- *		56	              |5280 
+ *		56	        |5280 
  *		60		      |5300 
  *		64		      |5320 
  *		149		      |5745 
@@ -4775,10 +4808,10 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *		165		      |5825 
  * @return      0 		- Success \n
  *              Non-Zero Value  - Failure \n
- *              		if less than zero\n
- *				-4 - Buffer not available to serve the command \n
- *				If greater than zero \n
- *				0x000A, 0x0021, 0x0025, 0x002C
+ *              If less than zero \n
+ *				         -4 - Buffer not available to serve the command \n
+ *				      If greater than zero \n
+ *				         0x000A, 0x0021, 0x0025, 0x002C
  * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -4845,7 +4878,35 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
 
     // Configure channel of TX test
     rsi_uint16_to_2bytes(tx_test_info->channel, channel);
-
+    rsi_uint16_to_2bytes(tx_test_info->aggr_enable, RSI_TX_TEST_AGGR_ENABLE);
+#ifdef CHIP_9117
+    tx_test_info->enable_11ax = RSI_11AX_ENABLE;
+    if (tx_test_info->enable_11ax) {
+      tx_test_info->coding_type   = RSI_CODING_TYPE;
+      tx_test_info->nominal_pe    = RSI_NOMINAL_PE;
+      tx_test_info->he_ppdu_type  = RSI_HE_PPDU_TYPE;
+      tx_test_info->beam_change   = RSI_BEAM_CHANGE;
+      tx_test_info->BW            = RSI_BW;
+      tx_test_info->UL_DL         = RSI_UL_DL;
+      tx_test_info->STBC          = RSI_STBC;
+      tx_test_info->Tx_BF         = RSI_TX_BF;
+      tx_test_info->GI_LTF        = RSI_GI_LTF;
+      tx_test_info->DCM           = RSI_DCM;
+      tx_test_info->NSTS_MIDAMBLE = RSI_NSTS_MIDAMBLE;
+      tx_test_info->spatial_reuse = RSI_SPATIAL_REUSE;
+      tx_test_info->BSS_color     = RSI_BSS_COLOR;
+      //tx_test_info->he_conf_params.HE_SIGA2_RESERVED = RSI_HE_SIGA2_RESERVED;
+      rsi_uint16_to_2bytes(tx_test_info->HE_SIGA2_RESERVED, RSI_HE_SIGA2_RESERVED);
+      tx_test_info->RU_ALLOCATION = RSI_RU_ALLOCATION;
+      tx_test_info->N_HELTF_TOT   = RSI_N_HELTF_TOT;
+      tx_test_info->SIGB_DCM      = RSI_SIGB_DCM;
+      tx_test_info->SIGB_MCS      = RSI_SIGB_MCS;
+      //tx_test_info->he_conf_params.USER_STA_ID = RSI_USER_STA_ID;
+      rsi_uint16_to_2bytes(tx_test_info->USER_STA_ID, RSI_USER_STA_ID);
+      tx_test_info->USER_IDX               = RSI_USER_IDX;
+      tx_test_info->SIGB_COMPRESSION_FIELD = RSI_SIGB_COMPRESSION_FIELD;
+    }
+#endif
 #ifndef RSI_WLAN_SEM_BITMAP
     rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
 #endif
@@ -5447,7 +5508,126 @@ int32_t rsi_wlan_send_data(uint8_t *buffer, uint32_t length)
   SL_PRINTF(SL_WLAN_SEND_DATA_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
+/// @cond DOCS_9117
+/**
+ * @fn          int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_params_t *twt_req_params)
+ * @brief       Configures TWT parameters. Enables or disables a TWT session. This is blocking API.
+ * @pre         needs to be called after @ref rsi_wireless_init() OPERMODE command.
+ * @param[in]   twt_enable - TWT session setup or teardown \n 1 - To setup TWT session with given parameters \n
+ *              0 - To teardown TWT session with given flow ID.
+ * @param[in]   twt_flow_id - TWT session flow ID. \n 0 - 7 are valid flow IDs. \n 0xFF value is used to teardown all active sessions. 
+ * @param[in]   twt_req_params Configurable TWT parameters. Refer \ref twt_user_params_s.
+ * @return      0      - Success \n
+ *              Non-Zero Value - Failure \n
+ * @note       Refer Error Codes section for above \ref error-codes .
+ */
+int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_params_t *twt_req_params)
+{
+  int32_t status         = RSI_SUCCESS;
+  rsi_pkt_t *pkt         = NULL;
+  rsi_twt_req_t *twt_req = NULL;
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+  if (twt_enable == 0) {
+    if ((twt_flow_id != 0xFF) && (twt_flow_id > 7)) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  } else if (twt_enable == 1) {
+    if (twt_flow_id > 7) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->wake_int_exp > 31) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->wake_int_exp_tol > 31) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->wake_duration_unit > 1) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->implicit_twt > 1 || twt_req_params->un_announced_twt > 1 || twt_req_params->triggered_twt > 1
+        || twt_req_params->restrict_tx_outside_tsp > 1) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->twt_retry_limit > 15) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->twt_retry_interval < 5) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if (twt_req_params->req_type > 2) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if ((twt_req_params->twt_channel != 0) || (twt_req_params->twt_protection != 0)) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  } else {
+    return RSI_ERROR_INVALID_PARAM;
+  }
 
+  rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+      // Return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Memset buffer
+    memset(&pkt->data, 0, sizeof(rsi_twt_req_t));
+
+    twt_req = (rsi_twt_req_t *)pkt->data;
+
+    /* copying input params into structure*/
+    twt_req->twt_enable  = twt_enable;
+    twt_req->twt_flow_id = twt_flow_id;
+    if (twt_enable) {
+      twt_req->wake_duration      = twt_req_params->wake_duration;
+      twt_req->wake_duration_tol  = twt_req_params->wake_duration_tol;
+      twt_req->wake_int_exp       = twt_req_params->wake_int_exp;
+      twt_req->wake_int_exp_tol   = twt_req_params->wake_int_exp_tol;
+      twt_req->wake_duration_unit = twt_req_params->wake_duration;
+      rsi_uint16_to_2bytes(twt_req->wake_int_mantissa, twt_req_params->wake_int_mantissa);
+      rsi_uint16_to_2bytes(twt_req->wake_int_mantissa_tol, twt_req_params->wake_int_mantissa_tol);
+      twt_req->implicit_twt            = twt_req_params->implicit_twt;
+      twt_req->un_announced_twt        = twt_req_params->un_announced_twt;
+      twt_req->triggered_twt           = twt_req_params->triggered_twt;
+      twt_req->negotiation_type        = 0; //Only Individual TWT is supported for now. Not taking input from user.
+      twt_req->twt_channel             = twt_req_params->twt_channel;
+      twt_req->twt_protection          = twt_req_params->twt_protection;
+      twt_req->restrict_tx_outside_tsp = twt_req_params->restrict_tx_outside_tsp;
+      twt_req->twt_retry_limit         = twt_req_params->twt_retry_limit;
+      twt_req->twt_retry_interval      = twt_req_params->twt_retry_interval;
+      twt_req->req_type                = twt_req_params->req_type;
+    }
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send twt command
+    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_TWT_PARAMS, pkt);
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_WLAN_TWT_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+  }
+  // Return status if error in sending command occurs
+  return status;
+}
+/// @endcond
 /*==============================================*/
 /**
  * @brief       Send a ping request to the target IP address.
@@ -5543,6 +5723,7 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
     // Register ping response handler
     if (wlan_ping_response_handler != NULL) {
       rsi_wlan_cb_non_rom->callback_list.wlan_ping_response_handler = wlan_ping_response_handler;
+      rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending |= PING_RESPONSE_PENDING;
     }
 
     if (wlan_ping_response_handler == NULL) {
@@ -6283,9 +6464,12 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
 /**
  * @brief     Enable or disable auto-config with respect to profile. This is a blocking API.
  * @pre  \ref rsi_wlan_set() API needs to be called before this API.
- * @param[in] enable - Enable/disable the profile configuration, first parameter value would be 1(CFG_ENABLE)- this command is used to enable or disable the feature of auto-join or \n
- *                     auto-create on powerup and 2(enable_auto_config) -for profile based.
- * @param[in] type   - Profile type \n
+ * @param[in] enable - 0 - Disable the auto configuration feature \n
+ *                     1 - Enable the auto configuration feature on power up \n
+ *                     2 - Enable the auto configuration for profile based.
+ * @note	    Currently Profile based feature is not supported.
+ * @param[in] type   - 0
+ * <!-- @param[in] type   - Profile type \n
  * @note	    Possible profile types: \n
  *		        // Client profile \n
  *		        #define RSI_WLAN_PROFILE_CLIENT 0 \n
@@ -6296,7 +6480,7 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
  *		        // AP profile \n
  *		        #define RSI_WLAN_PROFILE_AP 6 \n
  *		        // All profiles \n
- *		        #define RSI_WLAN_PROFILE_ALL 0xF
+ *		        #define RSI_WLAN_PROFILE_ALL 0xF -->
  * @return   	0              -  Success \n
  *            Non-Zero Value - Failure \n
  *		        -4             - Buffer not available to serve the command
@@ -6710,6 +6894,8 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
       // Register max available RX window callback handler
       rsi_wlan_cb_non_rom->callback_list.rsi_max_available_rx_window = callback_handler_ptr;
     }
+  } else if (callback_id == RSI_WLAN_TWT_RESPONSE_CB) {
+    rsi_wlan_cb_non_rom->callback_list.twt_response_handler = callback_handler_ptr;
   }
   SL_PRINTF(SL_WLAN_REGISTER_CALLBACKS_EXIT, WLAN, LOG_INFO);
   return 0;

@@ -64,7 +64,7 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 uint8_t ram_content[RAM_CONENT_LEN];
 
 uint32_t buf = 0;
-
+int16_t rsi_mem_rd(uint32_t addr, uint16_t len, uint8_t *dBuf);
 int32_t rsi_ram_dump_app()
 {
   int32_t status = RSI_SUCCESS;

@@ -276,7 +276,15 @@ rsi_semaphore_handle_t rsi_http_response_sem;
 
 void join_fail_notify_handler(uint16_t sock_no, uint8_t *buffer, uint32_t length)
 {
+  UNUSED_PARAMETER(sock_no); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);  //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(length);  //This statement is added only to resolve compilation warning, value is unchanged
   LOG_PRINT("\n join fail notify received \n");
+#ifdef RSI_WITH_OS
+  if (rsi_wlan_app_cb.state == RSI_WLAN_HTTP_OTA_UPDATE_STATE) {
+    rsi_semaphore_post(&rsi_http_response_sem);
+  }
+#endif
   rejoin_fail = 1;
   /* No explict response will be received from FW for OTA upgarde status, so change the http_recv_status to FAILED here */
   http_recv_status = RSI_HTTP_OTAF_UPGRADE_FAILED;
@@ -540,11 +548,16 @@ int32_t rsi_http_otaf_app()
       } break;
       case RSI_WLAN_HTTP_OTA_WIRELESS_DEINT_STATE: {
 #ifdef RSI_WITH_OS
-        rsi_task_destroy(driver_task_handle);
+        status = rsi_destroy_driver_task_and_driver_deinit(driver_task_handle);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nDriver deinit failed, Error Code : 0x%lX\r\n", status);
+        } else {
+          LOG_PRINT("\r\nTask destroy and driver deinit success\r\n");
+        }
 #endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nWireless deinit failed\r\n");
+          LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%1X\r\n", status);
         }
 #ifdef RSI_WITH_OS
         // Task created for Driver task
@@ -629,6 +642,7 @@ int main()
 
 void http_otaf_response_handler(uint16_t status, const uint8_t *buffer)
 {
+  UNUSED_CONST_PARAMETER(buffer); //This statement is added only to resolve compilation warning, value is unchanged
   uint8_t resp_buf[RSI_FIRMWARE_NAME_SIZE];
 
   //! memset the buffer
@@ -658,15 +672,14 @@ int32_t rsi_http_response_status(int32_t *rsp_var)
   do {
     //! event loop
     rsi_wireless_driver_task();
-
   } while (!(*rsp_var));
 #else
   rsi_semaphore_wait(&rsi_http_response_sem, 0);
 #endif
+  *rsp_var = 0;
   if (*rsp_var != RSI_HTTP_OTAF_UPGRADE_SUCCESS) {
     return *rsp_var;
   } else {
-    *rsp_var = 0;
     return RSI_SUCCESS;
   }
 }

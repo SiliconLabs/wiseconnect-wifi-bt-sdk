@@ -35,7 +35,6 @@
   	<file name="rsi_bt_app.c" uri="examples/snippets/bt_ble/bt_ble_dual_mode/rsi_bt_app.c" />
   	<file name="main.c" uri="examples/snippets/bt_ble/bt_ble_dual_mode/main.c" />
   	
-  	<file name="rsi_wlan_config.h" uri="examples/snippets/bt_ble/bt_ble_dual_mode/rsi_wlan_config.h" />
   	<file name="rsi_bt_config.h" uri="examples/snippets/bt_ble/bt_ble_dual_mode/rsi_bt_config.h" />
   	<file name="rsi_ble_config.h" uri="examples/snippets/bt_ble/bt_ble_dual_mode/rsi_ble_config.h" />
   	
@@ -62,6 +61,7 @@
   <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="utilities/advanced_logging/firmware_logging" uri="utilities/advanced_logging/firmware_logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
@@ -116,6 +116,8 @@
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/platform/service/device_init/inc"/>
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/platform/service/system/inc"/>
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/hardware/board/inc"/>
+   <includePath uri="$(projectLocation)/platform/hal"/>
+
   
    <macroDefinition name="WISECONNECT" />
    <macroDefinition name="RSI_SAMPLE_HAL" />

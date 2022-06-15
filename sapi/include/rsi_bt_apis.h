@@ -232,7 +232,9 @@ typedef struct rsi_bt_event_spp_connect_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
 
   /** MTU size supported by the remote device */
-  uint16_t rem_mtu_size;
+  uint16_t tx_mtu_size;
+  uint16_t rx_mtu_size;
+
 } rsi_bt_event_spp_connect_t;
 
 typedef struct rsi_bt_event_spp_disconnect_s {
@@ -1155,7 +1157,7 @@ typedef void (*rsi_bt_app_iap2_identification_complete_t)(uint16_t resp_status,
 typedef void (*rsi_bt_app_iap2_identification_reject_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap_disconn);
 typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
 typedef void (*rsi_bt_app_on_iap2_data_rx_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
-typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
+//typedef void (*rsi_bt_app_iap2_File_Tx_state_t)(uint16_t resp_status, rsi_bt_event_iap2_receive_t *iap2_receive);
 typedef void (*rsi_bt_app_iap2_File_Transfer_rx_data_t)(uint16_t resp_status,
                                                         rsi_bt_event_iap2_receive_t *iap2_receive);
 
@@ -2021,6 +2023,8 @@ typedef struct avrcp_notify_s {
   #define AVRCP_EVENT_VOLUME_CHANGED                     0x0d*/
   uint8_t eventid;
 
+  uint8_t rtype;
+  uint8_t Reserved[2];
   /** The below structure variable has elements corresponding to the above event ID's \n  
   Please refer \ref notify_val_s structure for more info*/
   notify_val_t notify_val;
@@ -2338,6 +2342,7 @@ typedef struct rsi_bt_event_avrcp_set_abs_vol_s {
 
   /** Absolute Volume*/
   uint8_t abs_vol;
+  uint8_t remote_req_or_cmd_resp; //0 - remote request event, 1 - host cmd resp
 } rsi_bt_event_avrcp_set_abs_vol_t;
 typedef struct rsi_bt_event_avrcp_set_addr_player_s {
 
@@ -2520,7 +2525,7 @@ typedef void (*rsi_bt_on_avrcp_reg_notify_event_t)(uint8_t *bd_addr, uint8_t eve
  * @return      void
  * @note       This callback has to be registered using rsi_bt_avrcp_target_register_callbacks API
  */
-typedef void (*rsi_bt_on_avrcp_set_abs_vol_event_t)(rsi_bt_event_avrcp_set_abs_vol_t *p_abs_vol);
+typedef void (*rsi_bt_on_avrcp_set_abs_vol_event_t)(uint16_t resp_status, rsi_bt_event_avrcp_set_abs_vol_t *p_abs_vol);
 
 /**
  * @typedef    void (*rsi_bt_on_avrcp_set_addr_player_event_t)(rsi_bt_event_avrcp_set_addr_player_t *p_set_addr_player);

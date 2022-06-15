@@ -108,4 +108,6 @@ void rsi_zigb_delay_ms(int delay)
 
 #endif
 #endif
+#else
+int unused_variable10 = 0; //This dummy variable is added to resolve strict gcc warnings in simplicity studio
 #endif

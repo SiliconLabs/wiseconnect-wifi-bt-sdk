@@ -4,7 +4,7 @@ import json
 
 current_path = os.getcwd()
 json_path = current_path
-search_path = current_path[:-len("\\utilities\\advanced_logging"):] + "/sapi"
+search_path = current_path[:-len("\\utilities\\advanced_logging\\app_logging"):] + "/sapi"
 autogen_path = search_path + "/include"
 preferred_database = {}
 database = {}

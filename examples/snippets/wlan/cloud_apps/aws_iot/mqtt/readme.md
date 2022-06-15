@@ -199,34 +199,34 @@ IP address of the network mask should also be in long format and in little endia
    #define AWS_IOT_MQTT_CLIENT_ID     "Test_IoT" 
    ```
  
-### 4.4 To Load certificate
+### 4.4 Setting up Security Certificates
 
-   **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the SDK `<SDK>/resources/certificates/certificate_script.py`.
-   
-   ```sh
-   For example : If the certificate is ca-certificate.pem, enter the command in the following way:
-   python certificate_script.py ca-certificate.pem 
-   The script will generate ca-certificate.pem in which one linear array named ca-certificate contains the certificate.
-   ```
-Root CA certificate, Device private key and Device client certificate needs to be converted as mentioned above
+To authenticate and securely connect with AWS, your Wi-Fi device requires a unique x.509 security certificate and private key, as well as a CA certificate which is used to verify the AWS server. Security credentials need to be converted into a C-array rather than [PEM format](https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail) provided by AWS; they also need to be added to your project. 
 
-After the conversion, place the converted files in `<SDK>/resources/certificates/` path and include the certificate files in `rsi_subscribe_publish_sample.c`
+The WiSeConnect SDK provides a conversion script (written in Python 3) to make the conversion straightforward. The script is provided in the SDK 'resources' directory and is called [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/).
 
-   ```c
-   Replace the default Device certificate and Private key certificate include in the application with the converted pem file name.
+To convert the device certificate and private key to C arrays, open a system command prompt and use the script as indicated in the following examples.
 
-   // Certificate includes
-   #include "aws_client_certificate.pem.crt.h"
-   #include "aws_client_private_key.pem.key.h"
+```sh
+$> python3 certificate_to_array.py <input filename> <output arrayname>
 
-   Replace the default Device certificate and Private key certificate given in `rsi_wlan_set_certificate()` API in the application with the converted pem array.
+For example:
+$> python3 certificate_to_array.py d8f3a44d3f.cert.pem    aws_client_certificate
+$> python3 certificate_to_array.py d8f3a44d3f.private.key aws_client_private_certificate
+```
 
-   // Load Security Certificates
-   status = rsi_wlan_set_certificate(RSI_SSL_CLIENT, aws_client_certificate, (sizeof(aws_client_certificate) - 1));
-  
-   status =
-   rsi_wlan_set_certificate(RSI_SSL_CLIENT_PRIVATE_KEY, aws_client_private_key, (sizeof(aws_client_private_key) - 1));
-   ```
+After running the script on the certificate and private key, two new files are created.
+
+```sh
+aws_client_certificate.pem.crt.h
+aws_client_private_key.pem.key.h
+```
+
+Before proceeding, copy both of the new files to the WiSeConnect directory: `<SDK>/resources/certificates`  
+Go ahead and overwrite any existing files with the same name in that directory, the originals are not needed.
+
+The Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the WiSeConnect SDK; no additional setup is required.
+For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/aws_starfield_ca.pem.h).
 
 > NOTE :
 > For AWS connectivity, StarField Root CA Class 2 certificate has the highest authority being at the top of the signing hierarchy.

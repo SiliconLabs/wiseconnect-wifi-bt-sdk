@@ -247,6 +247,11 @@ uint8_t rsi_check_dev_master_list(uint8_t *rem_dev_addr)
  */
 uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
 {
+#if (CONNECT_OPTION == CONN_BY_NAME)
+  UNUSED_PARAMETER(adv_dev_addr); //This statement is added only to resolve compilation warning, value is unchanged
+#else
+  UNUSED_PARAMETER(remote_dev_name); //This statement is added only to resolve compilation warning, value is unchanged
+#endif
   uint8_t i                  = 0;
   uint8_t slave_device_found = NO_DEV_FOUND;
 
@@ -930,6 +935,7 @@ static void ble_on_conn_update_complete_event(rsi_ble_event_conn_update_t *resp_
 static void rsi_ble_on_remote_conn_params_request_event(rsi_ble_event_remote_conn_param_req_t *remote_conn_param,
                                                         uint16_t status)
 {
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, remote_conn_param->dev_addr);
   //! get conn_id
@@ -1017,7 +1023,7 @@ static void rsi_ble_on_event_write_resp(uint16_t event_status, rsi_ble_set_att_r
 static void rsi_ble_on_event_indication_confirmation(uint16_t resp_status,
                                                      rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rsp)
 {
-
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_event_set_att_rsp->dev_addr);
 
   //! get conn_id
@@ -1039,6 +1045,7 @@ static void rsi_ble_on_event_indication_confirmation(uint16_t resp_status,
  */
 static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t *rsi_ble_write)
 {
+  UNUSED_PARAMETER(event_id); //This statement is added only to resolve compilation warning, value is unchanged
 #if RSI_DEBUG_EN
   LOG_PRINT("\r\n in write event \r\n");
 #endif
@@ -1068,6 +1075,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
 static void rsi_ble_on_gatt_prepare_write_event(uint16_t event_id,
                                                 rsi_ble_event_prepare_write_t *rsi_app_ble_prepared_write_event)
 {
+  UNUSED_PARAMETER(event_id); //This statement is added only to resolve compilation warning, value is unchanged
 #if RSI_DEBUG_EN
   LOG_PRINT("\r\n in rsi_ble_on_gatt_prepare_write_event \r\n");
 #endif
@@ -1098,7 +1106,7 @@ static void rsi_ble_on_gatt_prepare_write_event(uint16_t event_id,
  */
 static void rsi_ble_on_execute_write_event(uint16_t event_id, rsi_ble_execute_write_t *rsi_app_ble_execute_write_event)
 {
-
+  UNUSED_PARAMETER(event_id); //This statement is added only to resolve compilation warning, value is unchanged
 #if RSI_DEBUG_EN
   LOG_PRINT("\r\n in rsi_ble_on_execute_write_event \r\n");
 #endif
@@ -1129,6 +1137,7 @@ static void rsi_ble_on_execute_write_event(uint16_t event_id, rsi_ble_execute_wr
  */
 static void rsi_ble_on_read_req_event(uint16_t event_id, rsi_ble_read_req_t *rsi_ble_read_req)
 {
+  UNUSED_PARAMETER(event_id); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_read_req->dev_addr);
 
@@ -1223,7 +1232,7 @@ static void rsi_ble_profiles_list_event(uint16_t resp_status, rsi_ble_event_prof
  */
 static void rsi_ble_profile_event(uint16_t resp_status, rsi_ble_event_profile_by_uuid_t *rsi_ble_event_profile)
 {
-
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_event_profile->dev_addr);
 
@@ -1249,6 +1258,7 @@ static void rsi_ble_profile_event(uint16_t resp_status, rsi_ble_event_profile_by
 static void rsi_ble_char_services_event(uint16_t resp_status,
                                         rsi_ble_event_read_by_type1_t *rsi_ble_event_char_services)
 {
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_event_char_services->dev_addr);
 
@@ -1275,6 +1285,7 @@ static void rsi_ble_char_services_event(uint16_t resp_status,
  */
 static void rsi_ble_on_read_resp_event(uint16_t event_status, rsi_ble_event_att_value_t *rsi_ble_event_att_val)
 {
+  UNUSED_PARAMETER(event_status); //This statement is added only to resolve compilation warning, value is unchanged
 #if RSI_DEBUG_EN
   LOG_PRINT("in Gatt descriptor response event \r\n");
 #endif
@@ -1489,6 +1500,7 @@ static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *re
  */
 static void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled)
 {
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, enc_enabled->dev_addr);
 
@@ -1567,6 +1579,7 @@ static void rsi_ble_on_le_security_keys_event(rsi_bt_event_le_security_keys_t *l
  */
 static void rsi_ble_gatt_error_event(uint16_t resp_status, rsi_ble_event_error_resp_t *rsi_ble_gatt_error)
 {
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_gatt_error->dev_addr);
 

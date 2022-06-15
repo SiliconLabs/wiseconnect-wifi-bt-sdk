@@ -64,7 +64,11 @@ volatile uint32_t msTicks = 0;
 
 int32_t rsi_timer_start(uint8_t timer_node, uint8_t mode, uint8_t type, uint32_t duration, void (* rsi_timer_expiry_handler)(void))
 {
-
+  UNUSED_PARAMETER(rsi_timer_expiry_handler); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(duration); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(type); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(timer_node); //This statement is added only to resolve compilation warning, value is unchanged
   //! Initialise the timer
 
 
@@ -91,7 +95,7 @@ int32_t rsi_timer_start(uint8_t timer_node, uint8_t mode, uint8_t type, uint32_t
 
 int32_t rsi_timer_stop(uint8_t timer_node)
 {
-
+  UNUSED_PARAMETER(timer_node); //This statement is added only to resolve compilation warning, value is unchanged
 	//! Stop the timer
 
 	return 0;
@@ -115,7 +119,7 @@ int32_t rsi_timer_stop(uint8_t timer_node)
 
 uint32_t rsi_timer_read(uint8_t timer_node)
 {
-
+  UNUSED_PARAMETER(timer_node); //This statement is added only to resolve compilation warning, value is unchanged
 	volatile uint32_t timer_val = 0;
 
 	//! read the timer and return timer value
@@ -137,6 +141,7 @@ uint32_t rsi_timer_read(uint8_t timer_node)
  */
 void rsi_delay_us(uint32_t delay_us)
 {
+  UNUSED_PARAMETER(delay_us); //This statement is added only to resolve compilation warning, value is unchanged
 
   // call the API for delay in micro seconds
 

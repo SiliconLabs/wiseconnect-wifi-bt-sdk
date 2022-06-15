@@ -42,6 +42,8 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
+//! Memory length for driver
+#define BT_GLOBAL_BUFF_LEN 15000
 
 //! WLAN + BT Classic coex mode
 #define RSI_OPERMODE_WLAN_BT_CLASSIC 5

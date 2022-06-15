@@ -4,7 +4,7 @@
 
 CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  28,  26,  22,
         2,  28,  28,  26,
@@ -17,8 +17,6 @@ CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
         9,  28,  28,  30,
         10, 28,  24,  26,
         11, 26,  20,  18,
-        12, 32,  14,  14,
-        13, 32,  14,  14,
     ETSI,0x11,
        255, 32,  34, 34,
     TELEC,0x11,
@@ -140,7 +138,7 @@ WORLDWIDE,
 
 CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  28,  36,  22,
         2,  30,  36,  24,
@@ -153,8 +151,6 @@ CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
         9,  30,  34,  32,
         10, 30,  34,  30,
         11, 30,  32,  28,
-        12, 32,  14,  14,
-        13, 32,  14,  14,
     ETSI,0x11,
        255, 34,  34, 34,
     TELEC,0x11,
@@ -272,7 +268,7 @@ WORLDWIDE,
 
 CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  28,  32,  32,
         2,  30,  32,  34,
@@ -285,8 +281,6 @@ CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
         9,  30,  32,  30,
         10, 30,  32,  30,
         11, 28,  32,  28,
-        12, 32,  14,  14,
-        13, 32,  14,  14,
     ETSI,0x11,
        255, 30,  32, 34,
     TELEC,0x11,
@@ -405,7 +399,7 @@ WORLDWIDE,
             
 CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {           
 3,//NUM_OF_REGIONS            
-    FCC, 0xD,//NUM_OF_CHANNELS            
+    FCC, 0xB,//NUM_OF_CHANNELS            
 //   rate,  11b, 11g, 11n           
         1,  28,  26,  24,           
         2,  28,  30,  28,           
@@ -418,8 +412,6 @@ CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
         9,  28,  32,  32,           
         10, 28,  30,  30,           
         11, 30,  26,  26,           
-        12, 30,  18,  18,           
-        13, 30,  14,  14,           
     ETSI,0x11,            
        255, 28,  32, 32,          
     TELEC,0x11,             
@@ -539,7 +531,7 @@ WORLDWIDE,
             
 CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {           
 3,//NUM_OF_REGIONS            
-    FCC, 0xD,//NUM_OF_CHANNELS            
+    FCC, 0xB,//NUM_OF_CHANNELS            
 //   rate,  11b, 11g, 11n           
         1,  30,  36,  36,           
         2,  30,  36,  36,           
@@ -552,8 +544,6 @@ CC0_CC1_1P4_WLAN_2.4GHz_20MHz = {
         9,  30,  34,  36,           
         10, 32,  32,  36,           
         11, 34,  28,  36,           
-        12, 32,  40,  40,           
-        13, 32,  40,  40,           
     ETSI,0x11,            
        255, 30,  34, 34,          
                 

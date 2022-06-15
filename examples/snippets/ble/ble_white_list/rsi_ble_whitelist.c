@@ -30,6 +30,10 @@
 #include <rsi_common_apis.h>
 #include "rsi_driver.h"
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Address type of the device to connect
 #define RSI_BLE_DEV_ADDR_TYPE LE_PUBLIC_ADDRESS
 
@@ -88,8 +92,7 @@ void rsi_wireless_driver_task(void);
 #endif
 
 //! Application global parameters.
-static uint8_t rsi_app_async_event_map = 0;
-static uint8_t remote_addr_type        = 0;
+static uint8_t remote_addr_type = 0;
 static uint8_t remote_name[31];
 static uint8_t remote_dev_addr[18]   = { 0 };
 static uint8_t remote_dev_bd_addr[6] = { 0 };
@@ -491,7 +494,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_whitelist,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_whitelist,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

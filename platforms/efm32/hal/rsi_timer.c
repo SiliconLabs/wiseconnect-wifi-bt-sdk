@@ -14,7 +14,7 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
+#include "rsi_driver.h"
 /**
  * Includes
  */
@@ -110,6 +110,7 @@ void rsi_zigb_delay_ms(int delay)
 
 #endif
 #endif
+
 #endif
 
 

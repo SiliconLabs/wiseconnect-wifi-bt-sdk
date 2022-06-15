@@ -34,6 +34,10 @@
 #ifdef RSI_WITH_OS
 //! OS include file to refer OS specific functionality
 #include "rsi_os.h"
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 
 //! Wlan task priority
 #define RSI_WLAN_TASK_PRIORITY 1
@@ -99,7 +103,12 @@ rsi_semaphore_handle_t bt_sem;
 rsi_task_handle_t ui_task_handle = NULL;
 #endif
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
 #define GLOBAL_BUFF_LEN 50000 //16900
+#endif
 
 //! Flag for infinite loop
 #define RSI_FOREVER 1

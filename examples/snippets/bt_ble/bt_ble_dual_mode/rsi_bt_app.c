@@ -30,7 +30,8 @@
 #define SPP_SLAVE  0
 #define SPP_MASTER 1
 
-#define SPP_MODE SPP_SLAVE
+#define SPP_MODE                     SPP_SLAVE
+#define BT_THROUGHPUT_ENABLE_LOGGING 0 // enable macro for SPP prints on console
 
 #define RSI_BT_LOCAL_NAME      "BT_DUAL_MODE"
 #define REMOTE_BD_ADDR         "4c:4f:ee:4f:1f:b9" //00:1B:DC:07:2C:F0" //"E4:92:FB:F7:28:BA"
@@ -47,10 +48,19 @@
 #define RSI_APP_EVENT_SPP_CONN     7
 #define RSI_APP_EVENT_SPP_DISCONN  8
 #define RSI_APP_EVENT_SPP_RX       9
+/*** SNIFF RELATED DEFINES********/
+#define RSI_APP_EVENT_MODE_CHANGED    14
+#define RSI_APP_EVENT_SNIFF_SUBRATING 15
 
 //! Memory length for driver
 //#define BT_GLOBAL_BUFF_LEN            10000
 #define BT_DATA 0
+
+//! Sniff Parameters
+#define SNIFF_MAX_INTERVAL 0xA0
+#define SNIFF_MIN_INTERVAL 0XA0
+#define SNIFF_ATTEMPT      0X04
+#define SNIFF_TIME_OUT     0X02
 
 //! Enumeration for commands used in application
 typedef enum rsi_app_cmd_e { RSI_DATA = 0 } rsi_app_cmd_t;
@@ -66,7 +76,8 @@ static uint16_t spp_data_len;
 static uint8_t data[RSI_BT_MAX_PAYLOAD_SIZE];
 static uint16_t data_len;
 static uint8_t linkkey[RSI_LINKKEY_REPLY_SIZE];
-
+uint8_t sniff_mode;
+app_state_t app_state = (app_state_t)0;
 extern void rsi_bt_app_send_to_ble(uint8_t data_type, uint8_t *data, uint16_t data_len);
 
 /*==============================================*/
@@ -151,6 +162,7 @@ static int32_t rsi_bt_app_get_event(void)
 void rsi_bt_app_on_conn(uint16_t resp_status, rsi_bt_event_bond_t *conn_event)
 {
   if (resp_status == 0) {
+    app_state |= (1 << CONNECTED);
     rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
   } else {
     rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
@@ -228,6 +240,7 @@ void rsi_bt_app_on_linkkey_save(uint16_t status, rsi_bt_event_user_linkkey_save_
 void rsi_bt_app_on_auth_complete(uint16_t resp_status, rsi_bt_event_auth_complete_t *auth_complete)
 {
   if (resp_status == 0) {
+    app_state |= (1 << AUTHENTICATED);
     rsi_bt_app_set_event(RSI_APP_EVENT_AUTH_COMPLT);
   } else {
     memset(linkkey, 0, RSI_LINKKEY_REPLY_SIZE);
@@ -270,6 +283,7 @@ void rsi_bt_app_on_disconn(uint16_t resp_status, rsi_bt_event_disconnect_t *bt_d
 void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t *spp_connect)
 {
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  app_state |= (1 << SPP_CONNECTED);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_CONN);
   memcpy((int8_t *)remote_dev_addr, spp_connect->dev_addr, RSI_DEV_ADDR_LEN);
   rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_connect->dev_addr);
@@ -288,6 +302,7 @@ void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t 
 void rsi_bt_app_on_spp_disconnect(uint16_t resp_status, rsi_bt_event_spp_disconnect_t *spp_disconn)
 {
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  app_state &= ~(1 << SPP_CONNECTED);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_DISCONN);
   memcpy((int8_t *)remote_dev_addr, spp_disconn->dev_addr, RSI_DEV_ADDR_LEN);
   rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_disconn->dev_addr);
@@ -307,21 +322,65 @@ void rsi_bt_app_on_spp_data_rx(uint16_t resp_status, rsi_bt_event_spp_receive_t 
 {
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   uint16_t ix;
-
+  app_state |= (1 << SPP_TRANSMISSION);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_RX);
   data_len = spp_receive->data_len;
   memset(data, 0, sizeof(data));
   spp_receive->data[spp_receive->data_len] = '\0';
   memcpy(data, spp_receive->data, spp_receive->data_len);
+
+#if BT_THROUGHPUT_ENABLE_LOGGING
+  /* RSC-9583 To achieve higher BT throughputs, while continuous Tx/Rx BT_THROUGHPUT_ENABLE_LOGGING needs to be disabled
+  * to ensure there is no delay in Rx packet receiving */
+
   LOG_PRINT("spp_rx: data_len: %d, data: ", spp_receive->data_len);
-  for (ix = 0; ix < spp_receive->data_len; ix++) {
-    LOG_PRINT(" 0x%02x,", spp_receive->data[ix]);
-  }
   LOG_PRINT("\r\n");
   LOG_PRINT("data: %s", spp_receive->data);
-  //rsi_bt_app_send_to_ble ( BT_DATA, spp_receive->data, spp_receive->data_len);
+  rsi_bt_app_send_to_ble(BT_DATA, spp_receive->data, spp_receive->data_len);
+#endif
+}
+/*==============================================*/
+/**
+ * @fn         rsi_bt_on_mode_change
+ * @brief      invoked when mode is changed event is received
+ * @param[out] mode_change, mode related information
+ * @return     none.
+ * @section description
+ * This callback function indicates the mode change in BT device.
+ */
+
+void rsi_bt_on_mode_change(uint16_t resp_status, rsi_bt_event_mode_change_t *mode_change)
+{
+
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  sniff_mode = mode_change->current_mode;
+  /* 0x00 Active Mode.
+     * 0x01 Hold Mode.
+     * 0x02 Sniff Mode. */
+  LOG_PRINT("sniff_mode:%d", sniff_mode);
+  rsi_bt_app_set_event(RSI_APP_EVENT_MODE_CHANGED);
+  memcpy((int8_t *)remote_dev_addr, mode_change->dev_addr, RSI_DEV_ADDR_LEN);
+  LOG_PRINT("mode_change_event: str_conn_bd_addr: %s\r\n",
+            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, mode_change->dev_addr));
 }
 
+/*==============================================*/
+/**
+ * @fn         rsi_bt_on_sniff_subrating
+ * @brief      invoked when mode is changed(sniff subrating) event is received
+ * @param[out] mode_change, mode related information
+ * @return     none.
+ * @section description
+ * This callback function indicates the mode change in BT device.
+ */
+void rsi_bt_on_sniff_subrating(uint16_t resp_status, rsi_bt_event_sniff_subrating_t *mode_change)
+{
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  rsi_bt_app_set_event(RSI_APP_EVENT_SNIFF_SUBRATING);
+  memcpy((int8_t *)remote_dev_addr, mode_change->dev_addr, RSI_DEV_ADDR_LEN);
+  LOG_PRINT("mode_change_event: str_conn_bd_addr: %s\r\n",
+            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, mode_change->dev_addr));
+}
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_send_to_bt
@@ -334,15 +393,15 @@ void rsi_bt_app_on_spp_data_rx(uint16_t resp_status, rsi_bt_event_spp_receive_t 
  * This function is used to initialize the BLE module
  */
 
-void rsi_ble_app_send_to_bt(uint8_t data_type, uint8_t *data, uint16_t data_len)
+void rsi_ble_app_send_to_bt(uint8_t data_type, uint8_t *app_data, uint16_t app_data_len)
 {
   UNUSED_PARAMETER(data_type); //This statement is added only to resolve compilation warning, value is unchanged
-  if ((data == NULL) || (data_len == 0)) {
+  if ((app_data == NULL) || (app_data_len == 0)) {
     return;
   }
-  spp_data_len = RSI_MIN(sizeof(spp_data), data_len);
-  memset(spp_data, 0, sizeof(spp_data));
-  memcpy(spp_data, data, spp_data_len);
+  data_len = RSI_MIN(sizeof(data), app_data_len);
+  memset(data, 0, sizeof(data));
+  memcpy(data, app_data, data_len);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_RX);
 }
 /*==============================================*/
@@ -379,8 +438,8 @@ int32_t rsi_bt_app_init(void)
                                 rsi_bt_app_on_linkkey_save,
                                 NULL, //get services
                                 NULL,
-                                NULL,
-                                NULL, //search service
+                                rsi_bt_on_mode_change,
+                                rsi_bt_on_sniff_subrating, //search service
                                 NULL);
 
   //! initialize the event map
@@ -451,7 +510,7 @@ int32_t rsi_bt_app_init(void)
 #if (SPP_MODE == SPP_MASTER)
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
-    return status;
+    //return status;
   }
   LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif
@@ -496,7 +555,7 @@ int32_t rsi_bt_app_task()
       //! sending the pincode requet reply
       status = rsi_bt_pincode_request_reply((uint8_t *)remote_dev_addr, pin_code, 1);
       if (status != RSI_SUCCESS) {
-        return status;
+        //return status;
       }
     } break;
     case RSI_APP_EVENT_LINKKEY_SAVE: {
@@ -526,7 +585,7 @@ int32_t rsi_bt_app_task()
 #if (SPP_MODE == SPP_MASTER)
       status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
       if (status != RSI_SUCCESS) {
-        return status;
+        //return status;
       }
       LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif
@@ -583,6 +642,30 @@ int32_t rsi_bt_app_task()
       LOG_PRINT("tx_ix: %d\r\n", tx_ix);
       status = rsi_bt_spp_transfer(remote_dev_addr, data, strlen(data));
 #endif
+    } break;
+    case RSI_APP_EVENT_MODE_CHANGED: {
+      //! clear the ssp receive event.
+      rsi_bt_app_clear_event(RSI_APP_EVENT_MODE_CHANGED);
+      //! initiating bt powersave mode
+      if (sniff_mode == 2) { //sniff mode
+        LOG_PRINT("sniff mode\n");
+      }
+      //need to exit sniff in case of disconn to support for reconn
+      if ((sniff_mode == 0) && (app_state & (1 << SPP_CONNECTED))) //0 - unsniff mode
+      {
+        /* here we are initiating sniff mode req again*/
+        status =
+          rsi_bt_sniff_mode(remote_dev_addr, SNIFF_MAX_INTERVAL, SNIFF_MIN_INTERVAL, SNIFF_ATTEMPT, SNIFF_TIME_OUT);
+        if (status != RSI_SUCCESS) {
+          return status;
+        }
+      }
+    } break;
+
+    case RSI_APP_EVENT_SNIFF_SUBRATING: {
+      //! clear the ssp receive event.
+      rsi_bt_app_clear_event(RSI_APP_EVENT_SNIFF_SUBRATING);
+      LOG_PRINT("SNIFF SUBRATING IS COMPLETED\n");
     } break;
     default: {
     }

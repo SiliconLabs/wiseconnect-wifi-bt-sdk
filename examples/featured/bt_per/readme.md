@@ -194,7 +194,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 ### 5.2 Building the Application on the Host Platform
 
-### 5.2.1 Using STM32
+#### 5.2.1 Using STM32
 
 Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)  
 
@@ -206,7 +206,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
-### 5.2.2 Using EFX32
+#### 5.2.2 Using EFX32
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 

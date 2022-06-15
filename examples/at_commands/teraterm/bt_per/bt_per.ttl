@@ -11,7 +11,7 @@ wait 'Loading Done'
 message = 'Firmware Loading Done Successfully'
 messagebox message ''
 
-sendln 'at+rsi_opermode=327680,0,1,2147483648,2150629376,1073741824'
+sendln 'at+rsi_opermode=327680,0,2147483648,2147483648,2150629376,1073741824'
 wait 'OK' ; 'bt_loaded' 'ERROR'
 if result == 2 then
 	goto error

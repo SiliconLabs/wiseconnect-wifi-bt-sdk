@@ -37,7 +37,8 @@
  * @description This API is used to configure host gpio pin in output mode.
  */
 void rsi_hal_config_gpio(uint8_t gpio_number, uint8_t mode, uint8_t value) {
-
+  UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(value); //This statement is added only to resolve compilation warnings, value is unchanged
   CMU_ClockEnable(cmuClock_GPIO, true);
 
   switch(gpio_number)
@@ -115,14 +116,22 @@ uint8_t rsi_hal_get_gpio(uint8_t gpio_number) {
 void rsi_hal_clear_gpio(uint8_t gpio_number) {
   switch(gpio_number)
   {
-    case RSI_HAL_SLEEP_CONFIRM_PIN:     return GPIO_PinOutClear(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin);
+    case RSI_HAL_SLEEP_CONFIRM_PIN:
+         GPIO_PinOutClear(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin); break;
 #ifndef LOGGING_STATS
-    case RSI_HAL_WAKEUP_INDICATION_PIN: return GPIO_PinOutClear(WAKE_INDICATOR_PIN.port, WAKE_INDICATOR_PIN.pin);
+      //fall through
+    case RSI_HAL_WAKEUP_INDICATION_PIN:
+      GPIO_PinOutClear(WAKE_INDICATOR_PIN.port, WAKE_INDICATOR_PIN.pin); break;
 #else
-    case RSI_HAL_WAKEUP_INDICATION_PIN: return GPIO_PinOutClear(LOGGING_WAKE_INDICATOR_PIN.port, LOGGING_WAKE_INDICATOR_PIN.pin);
+     //fall through
+    case RSI_HAL_WAKEUP_INDICATION_PIN:
+      GPIO_PinOutClear(LOGGING_WAKE_INDICATOR_PIN.port, LOGGING_WAKE_INDICATOR_PIN.pin); break;
 #endif
-    case RSI_HAL_RESET_PIN:             return GPIO_PinOutClear(RESET_PIN.port, RESET_PIN.pin);
-    case RSI_HAL_LP_SLEEP_CONFIRM_PIN: return GPIO_PinOutClear(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin);
+    //fall through
+    case RSI_HAL_RESET_PIN:              GPIO_PinOutClear(RESET_PIN.port, RESET_PIN.pin); break;
+    //fall through
+    case RSI_HAL_LP_SLEEP_CONFIRM_PIN:   GPIO_PinOutClear(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin); break;
+    //fall through
     default: break;
   }
 }

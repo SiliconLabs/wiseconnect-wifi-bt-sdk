@@ -603,9 +603,15 @@ int32_t rsi_webpage_send(uint8_t flags, uint8_t *webpage, uint32_t length)
  *                         -4 - Buffer not available to serve the command 
  * @note        1. For Wireless firmware upgrade, \n
  *                 it will take approx. 85 sec duration for upgrading the firmware of 1.5 MB file.      
- * @note        2. Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @note        2. Need to call rsi_bl_module_power_cycle() api  for module reboot after firmware upgradation successful and also need to wait for 50 seconds(simply use rsi_delay_ms(50000)) to reflect updated firmware. \n
+ *              Example: \n
+ *                       rsi_bl_module_power_cycle(); \n
+ *                       LOG_PRINT("\nModule is Rebooted\r\n"); \n
+ *                       LOG_PRINT("\nwait for 50 seconds to reflect updated firmware\r\n"); \n
+ *                       rsi_delay_ms(50000); 
+ * @note        3. Refer to Error Codes section for the description of the above error codes \ref error-codes.
  */
-
+///@private
 int32_t rsi_req_wireless_fwup(void)
 {
   rsi_pkt_t *pkt;

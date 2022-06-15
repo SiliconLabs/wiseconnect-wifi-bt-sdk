@@ -37,6 +37,10 @@
 //! include the certificate
 #include "wifiuser.pem"
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
 
@@ -105,7 +109,7 @@
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 uint8_t ping_rsp_received;
-
+uint64_t ip_to_reverse_hex(char *ip);
 void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uint16_t length);
 #ifndef RSI_WITH_OS
 static void main_loop(void);
@@ -242,7 +246,7 @@ void main_loop(void)
 #endif
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t wlan_task_handle = NULL;
@@ -251,7 +255,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_eap_connectivity,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_eap_connectivity,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

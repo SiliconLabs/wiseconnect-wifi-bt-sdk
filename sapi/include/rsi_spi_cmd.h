@@ -251,5 +251,5 @@ int16_t rsi_device_interrupt_status(uint8_t *int_status);
 int16_t rsi_spi_high_speed_enable(void);
 int16_t rsi_set_intr_type(uint32_t interruptMaskVal);
 int16_t rsi_spi_pkt_len(uint16_t *length);
-uint8_t rsi_get_intr_status();
+uint8_t rsi_get_intr_status(void);
 #endif

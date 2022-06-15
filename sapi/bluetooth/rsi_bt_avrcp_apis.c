@@ -14,9 +14,9 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
-#ifdef RSI_BT_ENABLE
 #include "rsi_driver.h"
+#ifdef RSI_BT_ENABLE
+
 #include "rsi_bt.h"
 #include "rsi_bt_apis.h"
 #include "rsi_bt_config.h"

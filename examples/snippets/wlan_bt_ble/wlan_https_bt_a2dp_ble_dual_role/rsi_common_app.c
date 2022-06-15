@@ -45,6 +45,10 @@
 #include "rsi_ble_apis.h"
 #include "rsi_ble_config.h"
 #include "rsi_common_config.h"
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 
 /*=======================================================================*/
 //   ! MACROS
@@ -89,6 +93,21 @@ extern rsi_task_handle_t common_task_handle;
 #if RUN_TIME_CONFIG_ENABLE
 extern rsi_semaphore_handle_t common_task_sem;
 extern rsi_parsed_conf_t rsi_parsed_conf;
+#endif
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   1
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
 #endif
 
 /*========================================================================*/
@@ -405,6 +424,11 @@ void rsi_common_app_task(void)
   rsi_window_update_sem_waiting = false;
   uint8_t own_bd_addr[6]        = { 0x66, 0x55, 0x44, 0x33, 0x22, 0x11 };
 
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
+
   while (1) {
 #if RUN_TIME_CONFIG_ENABLE
     //! wait untill completion of parsing input file
@@ -435,6 +459,34 @@ void rsi_common_app_task(void)
       LOG_PRINT("\r\n wireless init failed \n");
       return;
     }
+
+#ifdef FW_LOGGING_ENABLE
+    //! Set log levels for firmware components
+    sl_set_fw_component_log_levels(&fw_component_log_level);
+
+    //! Configure firmware logging
+    status = sl_fw_log_configure(FW_LOG_ENABLE,
+                                 FW_TSF_GRANULARITY_US,
+                                 &fw_component_log_level,
+                                 FW_LOG_BUFFER_SIZE,
+                                 sl_fw_log_callback);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+    }
+
+#ifdef RSI_WITH_OS
+    //! Create firmware logging semaphore
+    rsi_semaphore_create(&fw_log_app_sem, 0);
+    //! Create firmware logging task
+    rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                    (uint8_t *)"fw_log_task",
+                    RSI_FW_TASK_STACK_SIZE,
+                    NULL,
+                    RSI_FW_TASK_PRIORITY,
+                    &fw_log_task_handle);
+#endif
+#endif
+
 #if !(PER_TEST_TX_ENABLE || PER_TEST_RX_ENABLE)
     status = rsi_bt_set_bd_addr(own_bd_addr);
     if (status != RSI_SUCCESS) {

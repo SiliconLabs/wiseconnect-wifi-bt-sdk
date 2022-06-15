@@ -64,6 +64,7 @@ void string2array(uint8_t *dst, uint8_t *src, uint32_t length);
 int32_t rsi_atoi(const int8_t *str);
 void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress);
 void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress);
+uint64_t ip_to_reverse_hex(char *ip);
 
 int8_t rsi_ascii_hex2num(int8_t ascii_hex_in);
 int8_t rsi_char_hex2dec(int8_t *cBuf);

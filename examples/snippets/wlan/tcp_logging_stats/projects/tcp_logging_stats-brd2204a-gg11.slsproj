@@ -58,6 +58,7 @@
   <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="utilities/advanced_logging/firmware_logging" uri="utilities/advanced_logging/firmware_logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
@@ -88,6 +89,8 @@
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/platform/service/device_init/inc"/>
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/platform/service/system/inc"/>
    <includePath uri="$(projectLocation)/platform/gecko_sdk_3.1.1/hardware/board/inc"/>
+   <includePath uri="$(projectLocation)/platform/hal"/>
+
   
    <macroDefinition name="WISECONNECT" />
    <macroDefinition name="RSI_SAMPLE_HAL" />

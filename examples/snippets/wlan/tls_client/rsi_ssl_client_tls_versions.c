@@ -143,6 +143,7 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
 #endif
+uint64_t ip_to_reverse_hex(char *ip);
 
 int32_t rsi_ssl_client()
 {
@@ -253,9 +254,9 @@ int32_t rsi_ssl_client()
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nIP Config Success\r\n");
   }
-  LOG_PRINT("\r\nIP Config Success\r\n");
-  LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip_buff[6], ip_buff[7], ip_buff[8], ip_buff[9]);
 
 #if ENABLE_POWER_SAVE
   //! Apply power save profile
@@ -423,7 +424,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
 
@@ -434,7 +435,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_ssl_client,
+  rsi_task_create((rsi_task_function_t)(uint32_t)rsi_ssl_client,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

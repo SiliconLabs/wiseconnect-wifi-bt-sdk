@@ -3,10 +3,12 @@ Follow the below description to execute examples in featured folder.
 featured folder contains following examples
 ===========================================
 1. aws_device_shadow
-2. firmware_update
-3. power_save_standby_associated
-4. wlan_rf_test
-5. wlan_throughput
+2. ble_per
+3. bt_per
+4. firmware_update
+5. power_save_standby_associated
+6. wlan_rf_test
+7. wlan_throughput
 
 The above examples can be tested on both 
 1. keil/STM32 platform and simplicity studio/EFR platform

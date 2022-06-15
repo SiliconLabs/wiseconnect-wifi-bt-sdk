@@ -38,6 +38,7 @@
 #include <limits.h>
 #include <string.h>
 
+#include "rsi_driver.h"
 //! Caws iot includes
 #include "aws_iot_config.h"
 #include "aws_iot_log.h"
@@ -201,12 +202,17 @@ extern void rsi_wlan_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t 
 //! Call back for Socket Async
 void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
 {
+  UNUSED_PARAMETER(sock_no); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);  //This statement is added only to resolve compilation warning, value is unchanged
   received_length += length;
 }
 
 //! rejoin failure call back handler in station mode
 void rsi_join_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   //! update wlan application state
   disconnected          = 1;
   connected             = 0;
@@ -229,7 +235,10 @@ static void iot_subscribe_callback_handler(AWS_IoT_Client *pClient,
                                            IoT_Publish_Message_Params *params,
                                            void *pData)
 {
-
+  UNUSED_PARAMETER(pClient);      //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(topicName);    //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(topicNameLen); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(pData);        //This statement is added only to resolve compilation warning, value is unchanged
   char dt[1000] = { 0 };
   uint32_t len;
   len = params->payloadLen;

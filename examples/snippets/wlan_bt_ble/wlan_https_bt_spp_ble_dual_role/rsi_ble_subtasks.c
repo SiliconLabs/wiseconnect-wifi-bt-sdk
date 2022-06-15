@@ -233,6 +233,8 @@ void rsi_ble_task_on_conn(void *parameters)
   rsi_ble_profile_list_by_conn.profile_info_uuid = NULL;
   rsi_ble_profile_list_by_conn.profile_char_info = NULL;
 
+  rsi_task_handle_t task_to_be_deleted = NULL;
+
   ble_conn_conf   = (rsi_ble_conn_config_t *)parameters;
   max_data_length = ble_conn_conf->buff_mode_sel.max_data_length;
   //! store connection identifier in local variable
@@ -542,9 +544,9 @@ void rsi_ble_task_on_conn(void *parameters)
             break;
           }
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%x \n", status);
+            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%lx \n", status);
           } else {
-            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%x \n", status);
+            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%lx \n", status);
           }
         }
       } break;
@@ -1189,6 +1191,10 @@ void rsi_ble_task_on_conn(void *parameters)
         rsi_free(rsi_ble_profile_list_by_conn.profile_char_info);
         memset(rsi_connected_dev_addr, 0, RSI_DEV_ADDR_LEN);
 
+        /*copying the subtask which needs to be deleted, to prevent any wrong task being deleted due to creation of new subtask
+    after scanning/advertising is enabled for new connection */
+        task_to_be_deleted = ble_app_task_handle[l_conn_id];
+
         //! check whether disconnection is from master
         if (rsi_ble_conn_info[l_conn_id].remote_device_role == MASTER_ROLE) {
           LOG_PRINT("\r\n master is disconnected, reason : 0x%x -conn%d \r\n",
@@ -1248,7 +1254,7 @@ void rsi_ble_task_on_conn(void *parameters)
 
         LOG_PRINT("\r\n delete task%d resources \r\n", l_conn_id);
         //! delete the task
-        rsi_task_destroy(ble_app_task_handle[l_conn_id]);
+        rsi_task_destroy(task_to_be_deleted);
         l_conn_id = 0xff;
       } break;
       case RSI_BLE_GATT_WRITE_EVENT: {

@@ -14,12 +14,11 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
+#include <rsi_driver.h>
 #ifndef RSI_WITH_OS
 /*
   Include files
  */
-#include <rsi_driver.h>
 
 /** @addtogroup DRIVER16
 * @{

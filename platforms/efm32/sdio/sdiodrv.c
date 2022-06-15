@@ -75,34 +75,34 @@ static void config_gpio (SDIODRV_Init_t *init)
 
   gpio_mode = init->portLocationClk == 0 ?
                gpioModePushPull : gpioModePushPullAlternate;
-   GPIO_PinModeSet(SL_GPIO_PORT_E, 13,
+   GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 13,
                    gpio_mode,
                    1);
 
    gpio_mode = init->portLocationCmd == 0 ?
                gpioModePushPull : gpioModePushPullAlternate;
-   GPIO_PinModeSet(SL_GPIO_PORT_E, 12,
+   GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 12,
                    gpio_mode,
                    1);
 
    gpio_mode = init->portLocationDat == 0 ?
                gpioModePushPull : gpioModePushPullAlternate;
-   GPIO_PinModeSet(SL_GPIO_PORT_E, 11,
+   GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 11,
                    gpio_mode,
                    1);
 
    if ((init->transferWidth == SDIO_TRANSFER_WIDTH_4BIT)
        || (init->transferWidth == SDIO_TRANSFER_WIDTH_8BIT)) {
 
-     GPIO_PinModeSet(SL_GPIO_PORT_E, 10,
+     GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 10,
                      gpio_mode,
                      1);
 
-     GPIO_PinModeSet(SL_GPIO_PORT_E, 9,
+     GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 9,
                      gpio_mode,
                      1);
 
-     GPIO_PinModeSet(SL_GPIO_PORT_E, 8,
+     GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 8,
                      gpio_mode,
                      1);
 
@@ -602,6 +602,9 @@ uint32_t SDIODRV_DeviceInitAndIdent (SDIODRV_Handle_t *handle, uint16_t *rca)
                    r4_nf = (ocr_tmp>>28)&0x7;
                    r4_mp = (ocr_tmp>>27)&0x1;
                    r4_ocr = (ocr_tmp>>0)&0xffffff;
+                   USED_PARAMETER(r4_ocr); //This statement is added only to resolve compilation warning, value is unchanged
+                   USED_PARAMETER(r4_mp); //This statement is added only to resolve compilation warning, value is unchanged
+                   USED_PARAMETER(r4_nf); //This statement is added only to resolve compilation warning, value is unchanged
                    if (r4_io_ready != 1)
                      {
                        continue;

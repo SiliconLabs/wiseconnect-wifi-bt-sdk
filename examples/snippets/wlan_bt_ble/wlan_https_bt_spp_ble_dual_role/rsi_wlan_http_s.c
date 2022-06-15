@@ -352,7 +352,8 @@ int32_t rsi_wlan_app_task(void)
           LOG_PRINT("\r\n WLAN ipconfig done state \r\n");
           LOG_PRINT("\r\n RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip[6], ip[7], ip[8], ip[9]);
         }
-
+        //no break
+        // fall through
 #if (SSL && LOAD_CERTIFICATE)
         status = rsi_app_load_ssl_cert();
         if (status != RSI_SUCCESS) {
@@ -360,7 +361,8 @@ int32_t rsi_wlan_app_task(void)
         }
 #endif
       }
-      //no break
+        //no break
+        //fall through
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
 #if (WLAN_CONNECTION_ONLY && WLAN_SYNC_REQ)
         static int8_t wlan_conn_only_check = 1;
@@ -422,6 +424,8 @@ int32_t rsi_wlan_app_task(void)
           LOG_PRINT("\r\n Module connected to the server \r\n");
         }
       }
+        //no break
+        //fall through
       case RSI_WLAN_SOCKET_CONNECTED_STATE: {
 #if WLAN_SYNC_REQ
         //! unblock other protocol activities

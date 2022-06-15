@@ -45,12 +45,21 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 
 //! Remote Device Name to connect
 #define RSI_REMOTE_DEVICE_NAME "BLE_SIMPLE_PRIVACY"
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
 //! Memory length for the driver
 #define BT_GLOBAL_BUFF_LEN 15000
+#endif
 
 //! Memory to initialize driver
 uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
@@ -125,6 +134,21 @@ uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
 
 //! Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 3000
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
 
 void rsi_wireless_driver_task(void);
 
@@ -361,6 +385,7 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
  */
 static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
+  UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(remote_dev_bd_addr, resp_disconnect->dev_addr, 6);
   LOG_PRINT("connect - str_remote_address : %s\r\n",
             rsi_6byte_dev_address_to_ascii(str_remote_address, resp_disconnect->dev_addr));
@@ -564,6 +589,9 @@ void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event
 void rsi_ble_on_conn_update_complete_event(rsi_ble_event_conn_update_t *rsi_ble_event_conn_update_complete,
                                            uint16_t resp_status)
 {
+  UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(
+    rsi_ble_event_conn_update_complete); //This statement is added only to resolve compilation warning, value is unchanged
   LOG_PRINT("\n CONN UPDATE COMPLETE\n");
   rsi_ble_app_set_event(RSI_APP_EVENT_CONN_UPDATE_COMPLETE);
 }
@@ -595,6 +623,7 @@ void rsi_ble_on_remote_features_event(rsi_ble_event_remote_features_t *rsi_ble_e
 static void rsi_ble_on_remote_conn_params_request_event(rsi_ble_event_remote_conn_param_req_t *remote_conn_param,
                                                         uint16_t status)
 {
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged
   uint8_t str_remote_address[18] = { 0 };
   memcpy(&rsi_app_remote_device_conn_params, remote_conn_param, sizeof(rsi_ble_event_remote_conn_param_req_t));
   LOG_PRINT("\tREMOTE CONN PARAMS REQUEST\n");
@@ -815,7 +844,10 @@ int32_t rsi_ble_privacy_app(void)
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
 #ifndef RSI_WITH_OS
   //! Driver initialization
   status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
@@ -858,7 +890,31 @@ int32_t rsi_ble_privacy_app(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
 
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
   //! registering the GAP callback functions
   rsi_ble_gap_register_callbacks(rsi_ble_simple_central_on_adv_report_event,
                                  rsi_ble_on_connect_event,
@@ -1048,7 +1104,7 @@ int32_t rsi_ble_privacy_app(void)
         if ((ix != -1) && (ble_dev_ltk != NULL)) {
           LOG_PRINT("\n positive reply\n");
           //!  give le ltk req reply cmd with positive reply
-          status = rsi_ble_ltk_req_reply(ble_dev_ltk->remote_dev_addr,
+          status = rsi_ble_ltk_req_reply(temp_le_ltk_req.dev_addr,
                                          (1 | (ble_dev_ltk->enc_enable) | (ble_dev_ltk->sc_enable << 7)),
                                          ble_dev_ltk->localltk);
           if (status != RSI_SUCCESS) {
@@ -1246,7 +1302,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_privacy_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_privacy_app,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

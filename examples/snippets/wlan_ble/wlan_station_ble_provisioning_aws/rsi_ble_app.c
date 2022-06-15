@@ -449,6 +449,7 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
  */
 static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
+  UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&disconn_event_to_app, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
   rsi_ble_app_set_event(RSI_BLE_DISCONN_EVENT);
 }
@@ -465,6 +466,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
+  UNUSED_PARAMETER(
+    remote_dev_address); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_ble_app_set_event(RSI_BLE_SMP_REQ_EVENT);
 }
 
@@ -480,6 +483,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {
+  UNUSED_PARAMETER(
+    remote_dev_address); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_ble_app_set_event(RSI_BLE_SMP_RESP_EVENT);
 }
 
@@ -495,6 +500,8 @@ void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
  */
 void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address)
 {
+  UNUSED_PARAMETER(
+    remote_dev_address); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_ble_app_set_event(RSI_BLE_SMP_PASSKEY_EVENT);
 }
 
@@ -509,6 +516,9 @@ void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address)
  */
 void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address)
 {
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(
+    remote_dev_address); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_ble_app_set_event(RSI_BLE_SMP_FAILED_EVENT);
 }
 
@@ -523,6 +533,8 @@ void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_de
  */
 void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled)
 {
+  UNUSED_PARAMETER(status);      //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(enc_enabled); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_ble_app_set_event(RSI_BLE_ENCRYPT_STARTED_EVENT);
 }
 
@@ -539,7 +551,7 @@ void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled
 static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t *rsi_ble_write)
 {
   uint8_t cmdid;
-
+  UNUSED_PARAMETER(event_id); //This statement is added only to resolve compilation warning, value is unchanged
   //  Requests will come from Mobile app
   if ((rsi_ble_att1_val_hndl) == *((uint16_t *)rsi_ble_write->handle)) {
     cmdid = rsi_ble_write->att_value[0];

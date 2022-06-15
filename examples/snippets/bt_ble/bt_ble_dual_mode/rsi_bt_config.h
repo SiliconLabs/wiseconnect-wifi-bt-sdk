@@ -27,6 +27,14 @@
 //! WLAN + BT Classic coex mode
 #define RSI_OPERMODE_WLAN_BT_CLASSIC 9
 
+typedef enum {
+  INQUIRY,
+  CONNECTED,
+  AUTHENTICATED,
+  SPP_CONNECTED,
+  SPP_TRANSMISSION,
+} app_state_t;
+
 /*=======================================================================*/
 //! Discovery command parameters
 /*=======================================================================*/
@@ -92,4 +100,5 @@
   1010 /*In Stack MAX_ACL_PKT_LEN is 1010*/ //310 /* Max supported is 200, but 190 gives optimum Tx throughput */
 #define BT_BDR_MODE 0                       // 1 - HP chain
 
+#include "rsi_bt_common_config.h"
 #endif

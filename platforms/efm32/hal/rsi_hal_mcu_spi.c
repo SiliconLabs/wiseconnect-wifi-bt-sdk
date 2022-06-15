@@ -66,6 +66,11 @@ void cs_disable(void)
  */
 int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_length,uint8_t mode)
 {
+  UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(transfer_length); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(rx_buff); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(tx_buff); //This statement is added only to resolve compilation warning, value is unchanged
+
   return 0;
 }
 

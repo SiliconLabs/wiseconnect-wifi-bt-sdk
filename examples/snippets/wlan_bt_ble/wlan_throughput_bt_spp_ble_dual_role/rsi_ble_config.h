@@ -109,10 +109,9 @@
 #define RSI_BLE_MAX_DATA_LEN_M1 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_M1 \
-  1600 //800//4000//200//9//6//3200//6//200	//! for conn interval of 250ms, conn_interval = N*1.25ms
+#define CONN_INTERVAL_M1            200 //! for conn interval of 250ms, conn_interval = N*1.25ms
 #define CONN_LATENCY_M1             0
-#define CONN_SUPERVISION_TIMEOUT_M1 1600
+#define CONN_SUPERVISION_TIMEOUT_M1 1000
 
 /*=================Master2 configurations=====================*/
 //! configure below macro to enable secure connection
@@ -536,3 +535,30 @@ typedef struct rsi_ble_s {
 
 #include "rsi_ble_common_config.h"
 #endif /* SAPIS_EXAMPLES_RSI_DEMO_APPS_INC_RSI_BLE_COMMON_BLE_MULTI_SLAVE_MASTER_H */
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
+#endif

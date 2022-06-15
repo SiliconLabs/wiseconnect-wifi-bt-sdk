@@ -142,6 +142,8 @@ void rsi_wlan_app_callbacks_init(void)
  * ====================================================*/
 void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
 {
+  UNUSED_PARAMETER(sock_no); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);  //This statement is added only to resolve compilation warning, value is unchanged
   num_bytes += length;
 #if WLAN_THROUGHPUT_TEST
 //! Measure throughput for every interval of 'THROUGHPUT_AVG_TIME'
@@ -279,7 +281,8 @@ int32_t rsi_wlan_app_task(void)
         LOG_PRINT("Module is in deepsleep \r\n");
 #endif
       }
-      //no break
+        //no break
+        //fall through
       case RSI_WLAN_UNCONNECTED_STATE: {
         LOG_PRINT("WLAN scan started \r\n");
         status = rsi_wlan_scan((int8_t *)SSID, (uint8_t)CHANNEL_NO, NULL, 0);
@@ -314,6 +317,8 @@ int32_t rsi_wlan_app_task(void)
 #endif
 #endif
       }
+      //no break
+      //fall through
       case RSI_WLAN_SCAN_DONE_STATE: {
         status = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
         if (status != RSI_SUCCESS) {
@@ -338,6 +343,7 @@ int32_t rsi_wlan_app_task(void)
 #endif
       }
       //no break
+      //fall through
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
@@ -361,7 +367,8 @@ int32_t rsi_wlan_app_task(void)
           LOG_PRINT("RSI_STA IP ADDR: %d.%d.%d.%d \r\n", ip[6], ip[7], ip[8], ip[9]);
         }
       }
-      //no break
+        //no break
+        //fall through
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
 #if WLAN_SYNC_REQ
         //! start wifi tx/rx after bt and ble start-up activities
@@ -428,7 +435,7 @@ int32_t rsi_wlan_app_task(void)
           wlan_thrput_conf[i].thread_id       = i;
           wlan_thrput_conf[i].throughput_type = socket_type[i];
 
-          status = rsi_task_create((rsi_task_function_t)wlan_throughput_task,
+          status = rsi_task_create((rsi_task_function_t)(int32_t)wlan_throughput_task,
                                    (uint8_t *)"wlan_throughput_task1",
                                    RSI_WLAN_THRGPUT_TASK_STACK_SIZE,
                                    &wlan_thrput_conf[i],
@@ -449,6 +456,8 @@ int32_t rsi_wlan_app_task(void)
         rsi_semaphore_wait(&wlan_thrghput_measurement_compl, 0);
         rsi_wlan_app_cb.state = RSI_WLAN_IDLE_STATE;
       }
+        //no break
+        // fall through
       case RSI_WLAN_IDLE_STATE: {
         //! Task has no work to do in this state, so adding a delay of 5sec
         rsi_os_task_delay(5000);
@@ -483,6 +492,9 @@ uint32_t rsi_convert_4R_to_BIG_Endian_uint32(uint32_t *pw)
  *=====================================================*/
 void rsi_join_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   LOG_PRINT("\r\n Module Failed to rejoin the AP \r\n");
   rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE; //! update wlan application state
 }
@@ -496,6 +508,9 @@ void rsi_join_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t leng
  *=====================================================*/
 void rsi_ip_renewal_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   LOG_PRINT("In IP renewal handler \r\n");
   //! update wlan application state
   rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
@@ -510,6 +525,10 @@ void rsi_ip_renewal_fail_handler(uint16_t status, uint8_t *buffer, const uint32_
  *=====================================================*/
 void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
+  LOG_PRINT("In IP renewal handler \r\n");
   data_recvd = 1; //! Set data receive flag
   //rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
   t_end = rsi_hal_gettickcount(); //! capture time-stamp after data transfer is completed
@@ -527,6 +546,10 @@ void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const
  *=====================================================*/
 void rsi_ip_change_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
+  LOG_PRINT("In IP renewal handler \r\n");
   LOG_PRINT("In IP change notify handler \r\n");
   //! update wlan application state
   rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
@@ -541,6 +564,10 @@ void rsi_ip_change_notify_handler(uint16_t status, uint8_t *buffer, const uint32
  *=====================================================*/
 void rsi_stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
+  LOG_PRINT("In IP renewal handler \r\n");
   LOG_PRINT("In Station Connect \r\n");
 }
 
@@ -553,6 +580,10 @@ void rsi_stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const
  *=====================================================*/
 void rsi_stations_disconnect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
+  LOG_PRINT("In IP renewal handler \r\n");
   LOG_PRINT("In Station Disconnect \r\n");
 }
 #endif

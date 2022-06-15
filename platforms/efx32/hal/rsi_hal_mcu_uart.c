@@ -37,6 +37,8 @@
  */
 int16_t rsi_uart_send(uint8_t *ptrBuf, uint16_t bufLen)
 {
+  UNUSED_PARAMETER(ptrBuf); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(bufLen); //This statement is added only to resolve compilation warnings, value is unchanged
   return 0;
 }
 
@@ -55,5 +57,7 @@ int16_t rsi_uart_send(uint8_t *ptrBuf, uint16_t bufLen)
 
 int16_t rsi_uart_recv(uint8_t *ptrBuf, uint16_t bufLen)
 {
+  UNUSED_PARAMETER(ptrBuf); //This statement is added only to resolve compilation warnings, value is unchanged
+  UNUSED_PARAMETER(bufLen); //This statement is added only to resolve compilation warnings, value is unchanged
   return 0;
 }

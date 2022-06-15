@@ -501,7 +501,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 #ifdef RSI_WITH_OS
 
   rsi_task_handle_t wlan_task_handle = NULL;
@@ -513,7 +513,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_mqtt_client_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_mqtt_client_app,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

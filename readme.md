@@ -20,8 +20,8 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--at_commands      > Scripts to demonstrate usage of AT Commands  
   |-   
   +--firmware                         > RS9116 firmware image(s)
-  |  +--RS916.2.5.2.0.4.rps            > This firmware image is valid for RS9116 1.5 revision chip/module
-  |  +--RS9116.2.5.2.0.4.rps           > This firmware image is valid for RS9116 1.4/1.3 revision chip/module
+  |  +--RS916.2.6.0.0.34.rps            > This firmware image is valid for RS9116 1.5 revision chip/module
+  |  +--RS9116.2.6.0.0.34.rps           > This firmware image is valid for RS9116 1.4/1.3 revision chip/module
   |-   
   +--platforms            
   |  +--efx32            > Board Support for EFR32 Hosts
@@ -29,7 +29,7 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--efm32            > Board Support for EFM32 Hosts
   |-   
   +--resources   
-  |  +--certificates     > Security certificates and keys to secure Wi-Fi, TCP and HTTP connections
+  |  +--certificates     > Security certificates and keys to secure Wi-Fi, TCP and HTTP connections 
   |  +--scripts          > Scripts to assist with testing of example applications
   |  +--gain_tables      > Gain tables are added
   |

@@ -37,6 +37,10 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 //! Error include files
 #include "rsi_error.h"
 
@@ -49,8 +53,13 @@
 #include <rsi_ble_apis.h>
 #include <rsi_ble_config.h>
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
+#endif
 
 #ifdef RSI_WITH_OS
 //!Wlan BLE task priority
@@ -78,6 +87,20 @@
 #define RSI_DRIVER_TASK_STACK_SIZE 3000
 
 #endif
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
 
 //! Wlan client mode
 #define RSI_WLAN_CLIENT_MODE 0
@@ -104,7 +127,10 @@ int32_t rsi_wlan_ble_app_init(void)
   int32_t status                     = RSI_SUCCESS;
   rsi_task_handle_t wlan_task_handle = NULL;
   rsi_task_handle_t ble_task_handle  = NULL;
-
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
 #ifdef RSI_WITH_OS
   //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
@@ -124,7 +150,31 @@ int32_t rsi_wlan_ble_app_init(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
 
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
   //! BLE initialization
   rsi_ble_app_init();
 

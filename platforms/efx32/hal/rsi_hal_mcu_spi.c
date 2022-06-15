@@ -77,7 +77,7 @@ void cs_disable(void)
  */
 int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_length, uint8_t mode)
 {
-
+  UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warnings, value is unchanged
   if (tx_buff == NULL) {
     tx_buff = (uint8_t*)&dummy;
   } else if (rx_buff == NULL) {

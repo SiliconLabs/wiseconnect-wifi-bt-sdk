@@ -213,6 +213,9 @@ typedef struct rsi_callback_cb_s {
 
   // Wlan tcp window update handler
   void (*rsi_max_available_rx_window)(uint16_t status, uint8_t *buffer, const uint32_t length);
+
+  //TWT status response handler
+  void (*twt_response_handler)(uint16_t status, uint8_t *buffer, const uint32_t length);
 } rsi_callback_cb_t;
 
 // enumerations for call back types
@@ -235,8 +238,8 @@ typedef enum rsi_callback_id_e {
   RSI_WLAN_ASYNC_STATS                      = 15,
   RSI_FLASH_WRITE_RESPONSE                  = 16,
   RSI_WLAN_ASSERT_NOTIFY_CB                 = 17,
-  RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         = 18
-
+  RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         = 18,
+  RSI_WLAN_TWT_RESPONSE_CB                  = 19
 } rsi_callback_id_t;
 typedef struct rsi_nwk_callback_s {
 
@@ -492,8 +495,22 @@ typedef struct rsi_wlan_cb_non_rom_s {
   uint16_t ps_listen_interval;
 
   uint8_t emb_mqtt_ssl_enable;
+
+  //! scan results to host
+  uint8_t scan_results_to_host;
+
+  //! socket connection request pending
+  uint32_t socket_cmd_rsp_pending;
+  //! network command request pending
+  uint32_t nwk_cmd_rsp_pending;
 } rsi_wlan_cb_non_rom_t;
 
+#define RSI_AP_NOT_FOUND 0x3
+
+// Network command Request pending bitmaps
+#define PING_RESPONSE_PENDING BIT(0)
+#define DNS_RESPONSE_PENDING  BIT(1)
+#define SNTP_RESPONSE_PENDING BIT(2)
 /*===================================================*/
 /**
  * RTC time from host
@@ -547,6 +564,21 @@ typedef struct rsi_socket_select_info_s {
 
 } rsi_socket_select_info_t;
 // 11ax params
+
+//TWT STATUS CODES
+#define TWT_SESSION_SUCC                   0
+#define TWT_UNSOL_SESSION_SUCC             1
+#define TWT_SETUP_AP_REJECTED              4
+#define TWT_SETUP_RSP_OUTOF_TOL            5
+#define TWT_SETUP_RSP_NOT_MATCHED          6
+#define TWT_SETUP_UNSUPPORTED_RSP          10
+#define TWT_TEARDOWN_SUCC                  11
+#define TWT_AP_TEARDOWN_SUCC               12
+#define TWT_SETUP_FAIL_MAX_RETRIES_REACHED 15
+#define TWT_INACTIVE_DUETO_ROAMING         16
+#define TWT_INACTIVE_DUETO_DISCONNECT      17
+#define TWT_INACTIVE_NO_AP_SUPPORT         18
+
 typedef struct wlan_11ax_config_params_s {
   uint8_t guard_interval;
   uint8_t nominal_pe;
@@ -558,5 +590,6 @@ typedef struct wlan_11ax_config_params_s {
   uint8_t trigger_rsp_ind;
   uint8_t ipps_valid_value;
   uint8_t tx_only_on_ap_trig;
+  uint8_t twt_support;
 } wlan_11ax_config_params_t;
 #endif

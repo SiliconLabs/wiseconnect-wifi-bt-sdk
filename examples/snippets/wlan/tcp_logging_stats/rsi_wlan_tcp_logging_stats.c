@@ -123,6 +123,7 @@ int32_t packet_count = 0;
 struct rsi_sockaddr_in client_addr;
 //! Event map for gpio application
 uint32_t rsi_gpio_app_event_map;
+uint64_t ip_to_reverse_hex(char *ip);
 //! Enumeration for states in application
 typedef enum rsi_wlan_app_state_e {
   RSI_WLAN_INITIAL_STATE       = 0,
@@ -159,6 +160,7 @@ void rsi_wlan_async_module_state(uint16_t status, uint8_t *payload, const uint32
 void join_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t length);
 void rsi_wlan_async_module_state(uint16_t status, uint8_t *payload, const uint32_t payload_length)
 {
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged
   int i = 0, j = 0;
   char *unknown       = "unknown";
   char *higher_nibble = unknown;
@@ -207,11 +209,17 @@ void rsi_wlan_async_module_state(uint16_t status, uint8_t *payload, const uint32
 }
 void join_fail_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   LOG_PRINT("Rejoin failure %ld\n", ++rejoin_failures);
   rsi_wlan_app_cb.state = RSI_POWER_STATE_ACTIVE;
 }
 void rsi_remote_socket_terminate_handler1(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   //! Remote socket has been terminated
   rsi_wlan_app_cb.state = RSI_POWER_SAVE_STATE;
 }

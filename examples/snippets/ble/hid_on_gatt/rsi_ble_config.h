@@ -23,7 +23,7 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
-
+#define BD_ADDR_ARRAY_LEN     0x18
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 
 //! local device IO capability
@@ -225,7 +225,11 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
+#ifdef WISECONNECT
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#endif
 
 #define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE | ENABLE_BLE_PROTOCOL)
 
@@ -235,4 +239,32 @@
 //! set handshake type of power mode
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
 
+#endif
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
 #endif

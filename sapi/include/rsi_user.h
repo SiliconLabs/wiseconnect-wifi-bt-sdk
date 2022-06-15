@@ -97,7 +97,7 @@
 // HAL specific maximum write buffer length in bytes
 #define RSI_HAL_MAX_WR_BUFF_LEN 4096
 
-#ifdef LOGGING_ENABLE
+#ifdef SAPI_LOGGING_ENABLE
 #define CONFIG_DEBUG_LEVEL        LOG_ERROR
 #define LOG_TSF_GRANULARITY_TICKS 1UL
 #endif

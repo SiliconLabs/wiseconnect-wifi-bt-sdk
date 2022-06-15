@@ -153,7 +153,8 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
-    // Send SNTP Get request command
+    rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending |= SNTP_RESPONSE_PENDING;
+    // send SNTP Get request command
     status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SNTP_CLIENT, pkt);
 
   } else {
@@ -578,7 +579,8 @@ int32_t rsi_sntp_client_delete_async(void)
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
-    // Send SNTP Get request command
+    rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending |= SNTP_RESPONSE_PENDING;
+    // send SNTP Get request command
     status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SNTP_CLIENT, pkt);
 
   } else {

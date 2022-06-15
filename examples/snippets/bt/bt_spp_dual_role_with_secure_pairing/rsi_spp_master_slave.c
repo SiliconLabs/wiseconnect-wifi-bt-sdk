@@ -30,12 +30,25 @@
 //! Common include file
 #include <rsi_common_apis.h>
 #include "rsi_driver.h"
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 //! application defines
 
 #define SPP_SLAVE  0
 #define SPP_MASTER 1
 
-#define SPP_MODE SPP_SLAVE
+#define SPP_MODE                     SPP_SLAVE
+#define BT_THROUGHPUT_ENABLE_LOGGING 0 //enable macro for SPP prints on console
+
+//! Braktooth vulnerability test define
+#if (SPP_MODE == SPP_SLAVE)
+#define BT_VUL_TEST 0 //! By default this define is disabled
+#if (BT_VUL_TEST == 1)
+#define BT_MULTIPLE_HOST_CONN_VUL 0
+#endif
+#endif
 
 #if (SPP_MODE == SPP_MASTER)
 #define RSI_BT_LOCAL_NAME "SPP_MASTER"
@@ -77,8 +90,13 @@
 #define RSI_APP_EVENT_REMOTE_NAME_REQ 17
 #define RSI_APP_EVENT_INQUIRY_COMPLT  18
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
+#endif
 
 //! Sniff Parameters
 #define SNIFF_MAX_INTERVAL 0xA0
@@ -123,7 +141,7 @@ uint8_t power_save_given = 0;
 uint8_t global_buf[GLOBAL_BUFF_LEN] = { 0 };
 
 //! Application global parameters.
-static uint32_t rsi_app_async_event_map        = 0;
+
 static rsi_bt_resp_get_local_name_t local_name = { 0 };
 static uint8_t str_conn_bd_addr[18];
 static uint8_t remote_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
@@ -133,7 +151,7 @@ static uint16_t data_len;
 static uint8_t linkkey[RSI_LINKKEY_REPLY_SIZE];
 uint8_t auth_resp_status = 0;
 uint8_t sniff_mode;
-app_state_t app_state = 0;
+app_state_t app_state = (app_state_t)0;
 
 rsi_semaphore_handle_t bt_main_task_sem;
 static uint32_t ble_app_event_map;
@@ -145,6 +163,23 @@ uint8_t rsi_inq_resp_list[MAX_NO_OF_RESPONSES][RSI_DEV_ADDR_LEN] = { 0 };
 uint8_t rsi_inq_resp_list_name_length[MAX_NAME_LENGTH]           = { 0 };
 static uint8_t inq_resp_name_length_index;
 #endif
+static uint16_t g_MaxTxMTU;
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   1
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -251,6 +286,10 @@ void rsi_bt_app_on_conn(uint16_t resp_status, rsi_bt_event_bond_t *conn_event)
     rsi_bt_app_set_event(RSI_APP_EVENT_CONNECTED);
   } else {
     rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+#if (BT_VUL_TEST == 1)
+    LOG_PRINT("\non connection event resp status = %x \n", resp_status);
+    return;
+#endif
   }
   memcpy((int8_t *)remote_dev_addr, conn_event->dev_addr, RSI_DEV_ADDR_LEN);
   LOG_PRINT("on_conn: str_conn_bd_addr: %s, resp_status: 0x%x\r\n",
@@ -385,8 +424,11 @@ void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t 
   app_state |= (1 << SPP_CONNECTED);
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_CONN);
   memcpy((int8_t *)remote_dev_addr, spp_connect->dev_addr, RSI_DEV_ADDR_LEN);
-  LOG_PRINT("spp_conn: str_conn_bd_addr: %s\r\n",
-            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_connect->dev_addr));
+  g_MaxTxMTU = spp_connect->tx_mtu_size;
+  LOG_PRINT("spp_conn: str_conn_bd_addr: %s spp max tx: %d, spp max receive: %d\r\n",
+            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_connect->dev_addr),
+            spp_connect->tx_mtu_size,
+            spp_connect->rx_mtu_size);
 }
 
 /*==============================================*/
@@ -469,6 +511,7 @@ void rsi_bt_on_ssp_complete(uint16_t resp_status, rsi_bt_event_ssp_complete_t *s
   memcpy((int8_t *)remote_dev_addr, ssp_complete->dev_addr, RSI_DEV_ADDR_LEN);
   LOG_PRINT("ssp_complete: str_conn_bd_addr: %s\r\n",
             rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, ssp_complete->dev_addr));
+  UNUSED_PARAMETER(resp_status);
 }
 
 /*==============================================*/
@@ -638,12 +681,13 @@ void rsi_bt_app_on_spp_data_rx(uint16_t resp_status, rsi_bt_event_spp_receive_t 
   memset(data, 0, sizeof(data));
   spp_receive->data[spp_receive->data_len] = '\0';
   memcpy(data, spp_receive->data, spp_receive->data_len);
+#if BT_THROUGHPUT_ENABLE_LOGGING
+  /* RSC-9583 To achieve higher BT throughputs, while continuous Tx/Rx BT_THROUGHPUT_ENABLE_LOGGING needs to be disabled
+ * to ensure there is no delay in Rx packet receiving */
   LOG_PRINT("spp_rx: data_len: %d, data: ", spp_receive->data_len);
-  for (ix = 0; ix < spp_receive->data_len; ix++) {
-    LOG_PRINT(" 0x%02x,", spp_receive->data[ix]);
-  }
   LOG_PRINT("\r\n");
   LOG_PRINT("data: %s", spp_receive->data);
+#endif
 }
 
 void switch_proto_async(uint16_t mode, uint8_t *bt_disabled_status)
@@ -669,6 +713,11 @@ int32_t rsi_bt_spp_slave(void)
   int32_t temp_event_map  = 0;
   uint8_t str_bd_addr[18] = { 0 };
   uint8_t eir_data[200]   = { 2, 1, 0 };
+
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
@@ -717,6 +766,33 @@ int32_t rsi_bt_spp_slave(void)
     LOG_PRINT("\n bt enable fail \n");
     //return status;
   }
+
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
+
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
 
   //! BT register GAP callbacks:
   rsi_bt_gap_register_callbacks(NULL, //role_change
@@ -805,7 +881,11 @@ int32_t rsi_bt_spp_slave(void)
     return status;
   }
 #endif
-
+  //! start the ssp mode
+  status = rsi_bt_set_ssp_mode(1, 1);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
   //! initilize the SPP profile
   status = rsi_bt_spp_init();
   if (status != RSI_SUCCESS) {
@@ -828,7 +908,7 @@ int32_t rsi_bt_spp_slave(void)
 #if ((SPP_MODE == SPP_MASTER) && (!INQUIRY_ENABLE))
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
-    return status;
+    LOG_PRINT("rsi_bt_connect: failed status 0x%x", status);
   }
   LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif
@@ -866,7 +946,7 @@ int32_t rsi_bt_spp_slave(void)
         if (auth_resp_status == 0) {
           status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
           if (status != RSI_SUCCESS) {
-            return status;
+            LOG_PRINT("\r\n reconnect status = %x \n", status);
           }
           LOG_PRINT("bt_conn resp is 0x%x \n", status);
         } else {
@@ -887,7 +967,7 @@ int32_t rsi_bt_spp_slave(void)
         //! sending the pincode requet reply
         status = rsi_bt_pincode_request_reply((uint8_t *)remote_dev_addr, pin_code, 1);
         if (status != RSI_SUCCESS) {
-          return status;
+          LOG_PRINT("rsi_bt_pincode_request_reply: failed status 0x%x", status);
         }
       } break;
       case RSI_APP_EVENT_LINKKEY_SAVE: {
@@ -905,7 +985,7 @@ int32_t rsi_bt_spp_slave(void)
         rsi_delay_ms(500);
         status = rsi_bt_spp_connect(remote_dev_addr);
         if (status != RSI_SUCCESS) {
-          //return status;
+          LOG_PRINT("rsi_bt_spp_connect: failed status 0x%x", status);
         }
 #endif
       } break;
@@ -914,7 +994,21 @@ int32_t rsi_bt_spp_slave(void)
 
         //! clear the disconnected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
-        app_state = 0;
+        app_state = (app_state_t)0;
+#if (BT_VUL_TEST == 1)
+        //! start the discover mode
+        status = rsi_bt_start_discoverable();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("rsi_bt_start_discoverable: failed status 0x%x", status);
+        }
+
+        //! start the connectability mode
+        status = rsi_bt_set_connectable();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("rsi_bt_set_connectable: failed status 0x%x", status);
+        }
+#endif
+
 #if (ENABLE_POWER_SAVE)
         //! initiating Active mode in BLE mode
         status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
@@ -934,7 +1028,7 @@ int32_t rsi_bt_spp_slave(void)
         LOG_PRINT("Looking for Device\r\n");
         status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
         if (status != RSI_SUCCESS) {
-          return status;
+          LOG_PRINT("rsi_bt_connect: failed status 0x%x", status);
         }
 #endif
       } break;
@@ -959,7 +1053,28 @@ int32_t rsi_bt_spp_slave(void)
 
         //! clear the spp connected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_CONN);
+#if (BT_VUL_TEST == 1)
+#if (BT_MULTIPLE_HOST_CONN_VUL == 1)
+        //! stop the discover mode
+        status = rsi_bt_stop_discoverable();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("rsi_bt_stop_discoverable: failed status 0x%x", status);
+          //return status;
+        }
 
+        //! stop the connectability mode
+        status = rsi_bt_set_non_connectable();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("rsi_bt_set_non_connectable: failed status 0x%x", status);
+          //return status;
+        }
+
+        LOG_PRINT("\nAttempt to connect to same BD addr device from host");
+        status = rsi_bt_connect(remote_dev_addr);
+        LOG_PRINT("\nConnection status: %x", status);
+        break;
+#endif
+#endif
 #if (SPP_MODE == SPP_MASTER)
         strcpy((char *)data, "spp_test_sample_1");
         spp_tx_data_len       = strlen((char *)data);
@@ -970,7 +1085,7 @@ int32_t rsi_bt_spp_slave(void)
         status =
           rsi_bt_sniff_mode(remote_dev_addr, SNIFF_MAX_INTERVAL, SNIFF_MIN_INTERVAL, SNIFF_ATTEMPT, SNIFF_TIME_OUT);
         if (status != RSI_SUCCESS) {
-          return status;
+          LOG_PRINT("rsi_bt_sniff_mode: failed status 0x%x", status);
         }
 
       } break;
@@ -993,7 +1108,7 @@ int32_t rsi_bt_spp_slave(void)
         rsi_bt_spp_transfer(remote_dev_addr, data, data_len);
 #else
         strcpy((char *)data, "spp_test_sample_1");
-        spp_tx_data_len = strlen((char *)data);
+        spp_tx_data_len       = strlen((char *)data);
         data[spp_tx_data_len] = (tx_ix++) % 10;
         LOG_PRINT("tx_ix: %d\r\n", tx_ix);
         status = rsi_bt_spp_transfer(remote_dev_addr, data, strlen(data));
@@ -1059,7 +1174,7 @@ int32_t rsi_bt_spp_slave(void)
           status =
             rsi_bt_sniff_mode(remote_dev_addr, SNIFF_MAX_INTERVAL, SNIFF_MIN_INTERVAL, SNIFF_ATTEMPT, SNIFF_TIME_OUT);
           if (status != RSI_SUCCESS) {
-            return status;
+            LOG_PRINT("rsi_bt_sniff_mode: failed status 0x%x", status);
           }
         }
 #endif
@@ -1157,7 +1272,10 @@ int main(void)
 {
   int32_t status;
 #ifdef RSI_WITH_OS
-  rsi_task_handle_t bt_task_handle     = NULL;
+  rsi_task_handle_t bt_task_handle = NULL;
+
+#endif
+#ifndef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
@@ -1186,7 +1304,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_bt_spp_slave,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_bt_spp_slave,
                   (uint8_t *)"bt_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

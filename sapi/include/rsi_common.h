@@ -25,6 +25,7 @@
 #endif
 #include "rsi_wlan_non_rom.h"
 #include "rsi_timer.h"
+#include "rsi_pkt_mgmt.h"
 
 /******************************************************
  * *                      Macros
@@ -35,10 +36,10 @@
 #define RSI_RSP_WKP 0xDD
 
 // Max packet length of WLAN tx packet
-#define RSI_WLAN_CMD_LEN 1600
+#define RSI_WLAN_CMD_LEN (1600 + SIZE_OF_HEADROOM)
 
 // Max packet length of ZigBee tx packet
-#define RSI_ZIGB_CMD_LEN 256
+#define RSI_ZIGB_CMD_LEN (256 + SIZE_OF_HEADROOM)
 
 // pool size of WLAN tx packets
 #define RSI_WLAN_POOL_SIZE                             \
@@ -51,8 +52,9 @@
    + ((RSI_ZIGB_CMD_LEN + sizeof(void *)) * RSI_ZIGB_TX_POOL_PKT_COUNT))
 
 // Max packet length of common command responses
-#ifdef RSI_PUF_ENABLE
-#define RSI_COMMON_CMD_LEN 1600 //Changed for PUF
+//changed cmd len for crypto and PUF
+#if defined(RSI_PUF_ENABLE) || (defined RSI_CRYPTO_ENABLE)
+#define RSI_COMMON_CMD_LEN 1600
 #else
 #define RSI_COMMON_CMD_LEN 100
 #endif
@@ -87,15 +89,15 @@
 #define RSI_SOCKET_SELECT_INFO_POOL_SIZE 0
 #endif
 // Max packet length of BT COMMON tx packet
-#define RSI_BT_COMMON_CMD_LEN 300
+#define RSI_BT_COMMON_CMD_LEN (300 + SIZE_OF_HEADROOM)
 #if ENCODER_IN_RS9116
 #define RSI_BT_CLASSIC_CMD_LEN 4000
 #else
-#define RSI_BT_CLASSIC_CMD_LEN 1040
+#define RSI_BT_CLASSIC_CMD_LEN (1040 + SIZE_OF_HEADROOM)
 #endif
-#define RSI_BLE_CMD_LEN 300
+#define RSI_BLE_CMD_LEN (300 + SIZE_OF_HEADROOM)
 #ifdef RSI_PROP_PROTOCOL_ENABLE
-#define RSI_PROP_PROTOCOL_CMD_LEN 300
+#define RSI_PROP_PROTOCOL_CMD_LEN (300 + SIZE_OF_HEADROOM)
 #endif
 
 #ifdef SAPIS_BT_STACK_ON_HOST
@@ -280,7 +282,9 @@
 #define RSI_WLAN_TCP_WINDOW_RESPONSE_WAIT_TIME ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_TIMEOUT_RESPONSE_WAIT_TIME         ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_SET_CONFIG_RESPONSE_WAIT_TIME      ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-
+#ifdef FW_LOGGING_ENABLE
+#define RSI_DEVICE_LOG_RESPONSE_WAIT_TIME ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#endif
 // WIFI WAIT timeout defines
 #define RSI_SCAN_RESPONSE_WAIT_TIME             ((10000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_JOIN_RESPONSE_WAIT_TIME             ((120000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
@@ -322,6 +326,7 @@
 #define RSI_PSK_RESPONSE_WAIT_TIME              ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_SOCKET_CLOSE_RESPONSE_WAIT_TIME     ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_WLAN_11AX_WAIT_TIME                 ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_TWT_RESPONSE_WAIT_TIME         ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 // WIFI BLOCKED timeout defines
 #define RSI_ACCEPT_RESPONSE_WAIT_TIME          (RSI_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF)
@@ -429,9 +434,14 @@ typedef enum rsi_common_cmd_response_e {
 #endif
   ,
   RSI_COMMON_RSP_SET_RTC_TIMER = 0xE9,
-  RSI_COMMON_RSP_GET_RTC_TIMER = 0xF2,
+  RSI_COMMON_RSP_GET_RTC_TIMER = 0xF2
 #ifdef CONFIGURE_GPIO_FROM_HOST
+  ,
   RSI_COMMON_RSP_GPIO_CONFIG = 0x28
+#endif
+#ifdef FW_LOGGING_ENABLE
+  ,
+  RSI_COMMON_RSP_DEVICE_LOGGING_INIT = 0x82
 #endif
 } rsi_common_cmd_response_t;
 
@@ -482,9 +492,14 @@ typedef enum rsi_common_cmd_request_e {
   ,
   RSI_COMMON_REQ_SET_RTC_TIMER = 0xE9,
   RSI_COMMON_REQ_GET_RTC_TIMER = 0xF2,
-  RSI_COMMON_REQ_SET_CONFIG    = 0xBA,
+  RSI_COMMON_REQ_SET_CONFIG    = 0xBA
 #ifdef CONFIGURE_GPIO_FROM_HOST
+  ,
   RSI_COMMON_REQ_GPIO_CONFIG = 0x28
+#endif
+#ifdef FW_LOGGING_ENABLE
+  ,
+  RSI_COMMON_REQ_DEVICE_LOGGING_INIT = 0x82
 #endif
 } rsi_common_cmd_request_t;
 
@@ -508,7 +523,9 @@ typedef enum ta_m4_commands_e {
   RSI_WRITE_TA_REGISTER           = 4,
   // This enum varibale added for M4 has to give indication to TA, for Configure the Clock switching between 1.3V to 3.3 .For more details check Jira Ticket RSC-3802.
   RSI_ENABLE_XTAL = 5,
-
+#ifdef CHIP_9117
+  RSI_WRITE_TO_COMMON_FLASH = 6,
+#endif
 } ta_m4_commands_t;
 //  M4 and TA secure handshake request structure.
 typedef struct ta_m4_handshake_param {
@@ -519,6 +536,31 @@ typedef struct ta_m4_handshake_param {
   // Input data. In this input data first byte is reserved for enable(1) or Disable(0) sub_cmd of this structure.
   uint8_t *input_data;
 } ta_m4_handshake_param_t;
+
+#ifdef CHIP_9117
+#define RSI_MAX_CHUNK_SIZE 1400
+
+// TA2M4 handshake request structure.
+typedef struct rsi_req_ta2m4_s {
+  // sub_cmd
+  uint8_t sub_cmd;
+
+  // TA flash location
+  uint32_t addr;
+
+  // total length of input data
+  uint16_t in_buf_len;
+
+  // total length of chunk
+  uint16_t chunk_len;
+
+  // more chunks or last chunk
+  uint8_t more_chunks;
+
+  //data
+  uint8_t input_data[RSI_MAX_CHUNK_SIZE];
+} __attribute__((__packed__)) rsi_req_ta2m4_t;
+#endif
 #endif
 
 #define RSI_DMA_VALID      0
@@ -696,6 +738,9 @@ typedef struct rsi_common_cb_s {
   rsi_semaphore_handle_t wakeup_gpio_sem;
 #endif
   uint8_t sync_mode;
+#ifdef FW_LOGGING_ENABLE
+  void (*sl_fw_log_callback)(uint8_t *log_message, uint16_t log_message_length);
+#endif
 } rsi_common_cb_t;
 
 typedef enum {
@@ -742,8 +787,11 @@ typedef struct rsi_driver_cb_non_rom {
   uint32_t rom_version_info;
   uint32_t tx_mask_event;
   rsi_mutex_handle_t tx_mutex;
-#ifdef LOGGING_ENABLE
+#ifdef SAPI_LOGGING_ENABLE
   rsi_mutex_handle_t logging_mutex;
+#endif
+#if defined(RSI_DEBUG_PRINTS) || defined(FW_LOGGING_ENABLE)
+  rsi_mutex_handle_t debug_prints_mutex;
 #endif
   rsi_semaphore_handle_t nwk_sem;
   rsi_semaphore_handle_t wlan_cmd_sem;
@@ -809,7 +857,14 @@ typedef struct rsi_set_config_s {
 } rsi_set_config_t;
 extern rsi_driver_cb_non_rom_t *rsi_driver_cb_non_rom;
 extern rsi_wlan_cb_non_rom_t *rsi_wlan_cb_non_rom;
-
+#define COMMON_PKT          1
+#define BT_BLE_STACK_PACKET 2
+#define BT_PKT              3
+#ifdef RSI_PROP_PROTOCOL_ENABLE
+#define PROP_PROTOCOL_PKT 4
+#endif
+#define ZB_PKT   5
+#define WLAN_PKT 6
 /******************************************************
  * *                 Global Variables
  * ******************************************************/
@@ -841,6 +896,7 @@ void rsi_post_waiting_common_semaphore(void);
 void rsi_post_waiting_bt_semaphore(void);
 int32_t rsi_release_waiting_semaphore(void);
 void rsi_check_pkt_queue_and_dequeue(void);
+void rsi_free_queue_pkt(uint8_t pkt_dequeued, rsi_pkt_t *pkt);
 #ifndef RSI_WAIT_TIMEOUT_EVENT_HANDLE_TIMER_DISABLE
 void rsi_wait_timeout_handler_error_cb(int32_t status, uint32_t cmd_type);
 void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int32_t status, uint32_t cmd_type));

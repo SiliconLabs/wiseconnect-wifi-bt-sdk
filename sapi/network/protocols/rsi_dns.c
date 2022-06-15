@@ -25,14 +25,14 @@
  * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  ip_version               - IP version 4: IPv4 6: IPv6
  * @param[in]  url_name                 - Pointer to the domain name to resolve IP address
- * @param[in]  primary_server_address   - IP address of the DNS server. This parameter is optional if module get DNS server address using DHCP.
+ * @param[in]  primary_server_address   - IP address of the DNS server. This parameter is optional if module gets the DNS server address using DHCP. If DNS server address is obtained using DHCP, in that case this param should be NULL.
  * @param[in]  secondary_server_address - IP address of the secondary  DNS server. In case of no secondary DNS server, IP is NULL.
  * @param[in]  dns_query_resp           - Pointer to hold DNS query results. This is an out parameter.
  * @param[in]  length                   - Length of the resultant buffer.
  * @return     0              -  Success \n
  *             Negative Value - Failure
  * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
- *
+ * @note        DNS mode is determined by the value of primary_server_address. If NULL, then DNS mode is set to DHCP (1), else it is set to Static IP Address (0).
  */
 
 int32_t rsi_dns_req(uint8_t ip_version,
@@ -375,6 +375,8 @@ int32_t rsi_dns_update(uint8_t ip_version,
 #ifndef RSI_NWK_SEM_BITMAP
       rsi_driver_cb_non_rom->nwk_wait_bitmap |= BIT(0);
 #endif
+    } else {
+      rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending |= DNS_RESPONSE_PENDING;
     }
     // Send DNS update command
     status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_DNS_UPDATE, pkt);

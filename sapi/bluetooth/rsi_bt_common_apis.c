@@ -327,9 +327,10 @@ int32_t rsi_bt_set_antenna_tx_power_level(uint8_t protocol_mode, int8_t tx_power
  *              0 - RSI_ACTIVE. In this mode module is active and power save is disabled. \n 
  *              1 - RSI_SLEEP_MODE_1. On mode. In this sleep mode, SoC will never turn off, therefore no \n
  *                  handshake is required before sending data to the module. BT/BLE does not support this mode. \n 
- *              2 - RSI_SLEEP_MODE_2. In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n 
- *              8 - RSI_SLEEP_MODE_8. Deep sleep mode with ULP RAM RETENTION. \n
- *              10- RSI_SLEEP_MODE_10. Deep sleep mode without ULP RAM RETENTION. \n
+ *              2 - RSI_SLEEP_MODE_2. Connected sleep mode. In this sleep mode, SoC will go to sleep based \n
+ *                  on GPIO or Message, therefore handshake is required before sending data to the module. \n 
+ *              8 - RSI_SLEEP_MODE_8 :Deep sleep mode with RAM RETENTION. \n
+ *              10- RSI_SLEEP_MODE_10 : Deep sleep mode without RAM RETENTION. \n
  *                  In this sleep mode, module will turn off the \n
  *                  SoC. Since SoC is turn off, therefore handshake is required before sending data to the module. \n
  * @param[in]   psp_type Following psp_type is defined. \n 

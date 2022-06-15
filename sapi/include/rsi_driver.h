@@ -27,7 +27,8 @@
 #include <rsi_data_types.h>
 #include <rsi_error.h>
 #include <rsi_wlan_defines.h>
-#ifdef WISECONNECT
+//#ifdef WISECONNECT
+#if (defined(__CC_ARM) || defined(WISECONNECT))
 #ifdef RSI_WLAN_API_ENABLE
 #include <rsi_wlan_config.h>
 #endif
@@ -97,9 +98,12 @@
 #endif
 #include "rsi_apis_rom.h"
 #include "rsi_wlan_non_rom.h"
-#ifdef LOGGING_ENABLE
+#ifdef SAPI_LOGGING_ENABLE
 #include "debug_auto_gen.h"
-#include "sl_logging.h"
+#include "sl_app_logging.h"
+#endif
+#ifdef FW_LOGGING_ENABLE
+#include "sl_fw_logging.h"
 #endif
 
 //#include <stdlib.h>
@@ -135,6 +139,11 @@
 
 // WLAN data queue type
 #define RSI_WLAN_DATA_Q 5
+
+#ifdef FW_LOGGING_ENABLE
+#define RSI_SL_LOG_DATA_Q 8
+#define SL_LOG_DATA       0x01
+#endif
 
 // frame descriptor length
 #define RSI_FRAME_DESC_LEN 16
@@ -234,6 +243,9 @@ typedef struct rsi_driver_cb_s {
 
   void (*unregistered_event_callback)(uint32_t event_num);
 
+#ifdef FW_LOGGING_ENABLE
+  sl_fw_log_cb_t *fw_log_cb;
+#endif
 } rsi_driver_cb_t;
 
 #define RSI_PKT_ALLOC_RESPONSE_WAIT_TIME 600000

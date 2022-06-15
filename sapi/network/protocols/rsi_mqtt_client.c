@@ -369,7 +369,7 @@ int32_t rsi_mqtt_unsubscribe(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *to
  * @return     Zero            - Success \n
  *             Negative value  - Failure
  */
-int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, uint16_t time_out)
+int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, int time_out)
 {
   if (rsi_mqtt_client == NULL) {
     // Return invalid command error

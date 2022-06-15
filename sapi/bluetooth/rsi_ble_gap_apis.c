@@ -14,9 +14,9 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
-#ifdef RSI_BLE_ENABLE
 #include "rsi_driver.h"
+#ifdef RSI_BLE_ENABLE
+
 #include "rsi_ble.h"
 #include "rsi_ble_config.h"
 #include "rsi_utils.h"
@@ -1707,9 +1707,53 @@ int32_t rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8
     return RSI_ERROR_INVALID_PARAM;
   }
 #else
-  ble_tx_power.tx_power = tx_power;
+  ble_tx_power.tx_power                        = tx_power;
 #endif
 
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_SET_BLE_TX_POWER, &ble_tx_power, NULL);
 }
+/*==============================================*/
+/**
+ * @fn          int32_t rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t bandedge_tx_power)
+ * @brief       Set the Proprietary Protocol and  BLE protocol bandedge tx power
+ * @param[in]   protocol
+ *              BLE_PROTOCOL                         0x01 \n
+ *              PROP_PROTOCOL_PROTOCOL               0x02 \n
+ * @param[in]   tx-power - power value ( -8 dBm to 15 dBm)
+ * @note        #define RSI_BLE_PWR_INX_DBM  0  indicate tx_power in index \n
+ *              Default Value for BLE Tx Power Index is 31, The range for the BLE Tx Power Index is 1 to 75 (0, 32 indexes are invalid) \n
+ *                      1 - 31    BLE - 0DBM Mode.  \n
+ *                     33 - 63    BLE - 10DBM Mode. \n
+ *                     64 - 75    BLE - HP Mode.    \n
+ *              Currently this API is supports only BLE LP mode . i.e. 1 to  63 BLE LP MODE \n
+ *              #define RSI_BLE_PWR_INX_DBM  1  indicate tx_power in dBm \n
+ *              tx_power in dBm (-8dBm to 15 dBm) \n
+ *              Currently this API is supports only BLE LP mode . i.e. -8 dBm to  4dBm BLE LP MODE \n
+ * @return      0 - Success \n
+ *              Non-Zero Value - Failure \n
+ *              0x4046 	Invalid Arguments \n 
+ *              0x4D14	BLE parameter out of mandatory range 
+ * @note        Refer Error Codes section for above error codes \ref error-codes.
+ * 
+ */
+
+int32_t rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t bandedge_tx_power)
+{
+  rsi_ble_set_prop_protocol_ble_bandedge_tx_power_t prop_protocol_ble_bandedge_tx_power = { 0 };
+
+  prop_protocol_ble_bandedge_tx_power.protocol = protocol;
+#if RSI_BLE_PWR_INX_DBM
+  prop_protocol_ble_bandedge_tx_power.tx_power = rsi_convert_db_to_powindex(bandedge_tx_power);
+  if (prop_protocol_ble_bandedge_tx_power.tx_power == 0) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+#else
+  prop_protocol_ble_bandedge_tx_power.tx_power = bandedge_tx_power;
+#endif
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_SET_PROP_PROTOCOL_BLE_BANDEDGE_TXPOWER,
+                                &prop_protocol_ble_bandedge_tx_power,
+                                NULL);
+}
+
 #endif

@@ -14,9 +14,9 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
-#ifdef RSI_BT_ENABLE
 #include "rsi_driver.h"
+#ifdef RSI_BT_ENABLE
+
 #include "rsi_bt.h"
 #include "rsi_bt_apis.h"
 #include "rsi_bt_config.h"
@@ -141,6 +141,7 @@ int32_t rsi_bt_a2dp_send_pcm_mp3_data(uint8_t *remote_dev_addr,
 {
 #if (!TA_BASED_ENCODER)
   /*These statement are added only to resolve compilation warning, value is unchanged*/
+  UNUSED_PARAMETER(bytes_consumed);
   UNUSED_PARAMETER(audio_type);
   USED_PARAMETER(remote_dev_addr);
   USED_PARAMETER(pcm_mp3_data);

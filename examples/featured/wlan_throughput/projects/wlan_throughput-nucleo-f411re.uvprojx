@@ -782,9 +782,19 @@
 	           <Files>
 	           
 	             <File>
-	                <FileName>sl_logging.c</FileName>
+	                <FileName>sl_app_logging.c</FileName>
 	                <FileType>1</FileType>
-	                <FilePath>../../../../sapi/logging/sl_logging.c</FilePath>
+	                <FilePath>../../../../sapi/logging/sl_app_logging.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>sl_fw_logging.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../sapi/logging/sl_fw_logging.c</FilePath>
+	             </File>
+	             <File>
+	                <FileName>firmware_logging_utils.c</FileName>
+	                <FileType>1</FileType>
+	                <FilePath>../../../../utilities/advanced_logging/firmware_logging/firmware_logging_utils.c</FilePath>
 	             </File>
 	           </Files>
 	        

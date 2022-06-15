@@ -30,10 +30,16 @@
 #include "sl_iostream_init_instances.h"
 #include "sl_iostream_handles.h"
 #include "sl_event_handler.h"
+#include "sl_rsi_host_api.h"
 
 //! systick interrupt priority
 #define SYSTICK_INTR_PRI ((1<<__NVIC_PRIO_BITS)-1)
 int platform_initialized = 0;
+sl_status_t sl_device_init_dcdc(void);
+sl_status_t sl_device_init_hfxo(void);
+sl_status_t sl_device_init_clocks(void);
+void sl_board_init(void);
+void sl_system_init(void);
 
 void app_iostream_usart_init(void)
 {
@@ -76,11 +82,11 @@ void rsi_hal_board_init(void)
 if(!platform_initialized)
   {
 #ifndef RSI_WITH_OS
-  sl_system_init();
+   sl_system_init();
 #else
-  sl_device_init_dcdc();
-  sl_device_init_hfxo();
-  sl_device_init_clocks();
+   sl_device_init_dcdc();
+   sl_device_init_hfxo();
+   sl_device_init_clocks();
 #endif
 
   CHIP_Init();
@@ -118,6 +124,10 @@ void rsi_switch_to_high_clk_freq(void)
   //! Initializes the high clock
 }
 
+void rsi_sdio_hal_efm_deinit(void)
+{
+  sl_rsi_host_deinit_bus();
+}
 
 
 

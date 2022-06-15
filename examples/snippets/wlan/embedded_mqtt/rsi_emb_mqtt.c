@@ -131,7 +131,7 @@ int8_t username[] = "username";
 
 //! password for login credentials
 int8_t password[] = "password";
-
+uint64_t ip_to_reverse_hex(char *ip);
 volatile int halt = 0;
 
 void rsi_emb_mqtt_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
@@ -349,7 +349,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 #ifdef RSI_WITH_OS
   rsi_task_handle_t wlan_task_handle = NULL;
 #endif
@@ -359,7 +359,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_mqtt_client_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_mqtt_client_app,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

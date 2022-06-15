@@ -99,7 +99,10 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 void rsi_remote_socket_terminate_handler1(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
-  //! Remote socket has been terminated
+  UNUSED_PARAMETER(status); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(buffer); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_CONST_PARAMETER(
+    length); //This statement is added only to resolve compilation warning, value is unchanged terminated
 }
 void rsi_wlan_app_callbacks_init(void)
 {
@@ -155,6 +158,14 @@ static void iot_subscribe_callback_handler(AWS_IoT_Client *pClient,
                                            IoT_Publish_Message_Params *params,
                                            void *pData)
 {
+  UNUSED_PARAMETER(
+    pClient); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(
+    topicName); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(
+    topicNameLen);          //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(params); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(pData);  //This statement is added only to resolve compilation warning, value is unchanged terminated
 }
 
 static void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data)

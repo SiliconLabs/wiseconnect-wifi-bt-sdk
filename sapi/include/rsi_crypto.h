@@ -101,6 +101,11 @@
 #define ECDH_224             2
 #define ECDH_256             4
 
+//! ECDH curve types
+#define ECDH_CURVE_P 0
+#define ECDH_CURVE_K 1
+#define ECDH_CURVE_B 2
+
 //!DMA Support
 #define DMA_ENABLE  1
 #define DMA_DISABLE 0
@@ -118,11 +123,13 @@
 #define CHACHAPOLY_ENCRYPTION 0
 #define CHACHAPOLY_DECRYPTION 1
 
-#define KEY_CHACHA_SIZE     32
-#define KEYR_SIZE           16
-#define KEYS_SIZE           16
-#define NONCE_SIZE          16
-#define MAX_DATA_SIZE_BYTES 1400 /*Data size*/
+#define KEY_CHACHA_SIZE                    32
+#define KEYR_SIZE                          16
+#define KEYS_SIZE                          16
+#define NONCE_SIZE                         16
+#define MAX_DATA_SIZE_BYTES                1400 /*Data size*/
+#define MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY 1200 /*Data size for chachapoly*/
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -158,7 +165,7 @@ typedef struct rsi_chachapoly_req_s {
   uint8_t keyr_in[16];
   uint8_t keys_in[16];
   uint8_t header_input[128];
-  uint8_t msg[1400];
+  uint8_t msg[1200];
 } rsi_chachapoly_req_t;
 typedef struct rsi_hmac_sha_req_s {
   uint16_t algorithm_type;
@@ -211,6 +218,7 @@ typedef struct rsi_ecdh_pm_req_s {
   uint8_t algorithm_type;
   uint8_t ecdh_mode;
   uint8_t ecdh_sub_mode;
+  uint8_t ecdh_curve_type;
   uint8_t d[32];
   uint8_t sx[32];
   uint8_t sy[32];
@@ -242,6 +250,7 @@ typedef struct rsi_ecdh_affine_req_s {
   uint8_t algorithm_type;
   uint8_t ecdh_mode;
   uint8_t ecdh_sub_mode;
+  uint8_t ecdh_curve_type;
   uint8_t sx[32];
   uint8_t sy[32];
   uint8_t sz[32];

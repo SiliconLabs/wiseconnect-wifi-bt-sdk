@@ -51,6 +51,8 @@ rsi_reg_flags_t rsi_critical_section_entry()
   // disable interrupts
   xflags = 0;
 
+  rsi_hal_intr_mask();
+
   taskENTER_CRITICAL();
 
   // return stored interrupt status
@@ -74,6 +76,8 @@ void rsi_critical_section_exit(rsi_reg_flags_t xflags)
   UNUSED_PARAMETER(xflags);
   // restore interrupts while exiting critical section
   taskEXIT_CRITICAL();
+
+  rsi_hal_intr_unmask();
 }
 
 /*==============================================*/

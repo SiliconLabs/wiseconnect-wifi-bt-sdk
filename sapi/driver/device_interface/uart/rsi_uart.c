@@ -27,6 +27,7 @@
  *
  *
  */
+#include "rsi_driver.h"
 #ifndef EFM32_SDIO // This file is not needed for EFM32 board. In order to avoid compilation warnings, we excluded the below code for EFM32
 #include "rsi_board_configuration.h"
 #endif
@@ -113,5 +114,6 @@ int32_t rsi_uart_deinit(void)
 {
   return 0;
 }
+
 #endif
 /** @} */

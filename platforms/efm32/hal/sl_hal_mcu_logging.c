@@ -36,7 +36,7 @@ int32_t sl_hal_send_log(uint8_t *buffer, uint32_t buffer_length)
 {
   // insert the token for identification
   LOG_PRINT("\r\n#@$ ");
-  for (int txCount = 0; txCount < buffer_length; txCount++){
+  for (int txCount = 0; txCount < (int)buffer_length; txCount++){
     LOG_PRINT("%02x ", *(buffer++));
   }
   LOG_PRINT("\r\n");

@@ -8,9 +8,10 @@
 #include "sl_iostream.h"
 #include "sl_iostream_uart.h"
 #include "sl_iostream_usart.h"
+#include "sli_iostream_uart.h"
 // Include instance config 
  #include "sl_iostream_usart_vcom_config.h"
-
+#include "rsi_driver.h"
 // MACROs for generating name and IRQ handler function  
 #define SL_IOSTREAM_USART_CONCAT_PASTER(first, second, third)        first ##  second ## third
  
@@ -156,7 +157,8 @@ void SL_IOSTREAM_USART_RX_IRQ_HANDLER(SL_IOSTREAM_USART_VCOM_PERIPHERAL_NO)(void
       if (sli_uart_is_rx_space_avail(usart_context)) {
         // There is room for data in the RX buffer so we store the data
         uint8_t c = USART_Rx(usart_context->usart);
-    //    ee_serial_callback(c);
+        UNUSED_PARAMETER(c); // This statement is added only to resolve compilation warning, value is unchanged
+        //    ee_serial_callback(c);
 
       }
       else {

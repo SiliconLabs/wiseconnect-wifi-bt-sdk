@@ -22,23 +22,23 @@ Before continuing, ensure that the RS9116W EVK is plugged into your computer and
 
 ![ABRD State](./resources/firmware-loading-done.png)
 
-![opermode success](./resources/opermode-successful.png)
+![opermode success](./resources/bt-per-opermode.png)
 
 Please follow the below steps when you select the BT_PER as "Transmit" .
 
 **Step 5.** Enter the value to run the script in PER "Transmit/Receive" mode.
 
-![select the tarnsmit/receive](./resources/per-transmit-4.png)
+![select the tarnsmit/receive](./resources/bt-per-transmit-4.png)
 
 **STEP 6.** Enter the value to enable/disable the PER mode.
 
-![Enable PER mode](./resources/per-enable-5.png)
+![Enable PER mode](./resources/bt-per-enable-5.png)
 
 **Step 7.** Enter the device address.
 A 48-bit address in hexadecimal format e.g. 0023A7010203.
 Does not need to be the modules BD address, it can be any 48bit BD address however the same address should be used for the transmit and receive command.
 
-![Enter the device address](./resources/bt-address-6.png)
+![Enter the device address](./resources/bt-per-address-6.png)
 
 **Step 8.** Enter the desired 'packet_length' which is mentioned in below.
 
@@ -187,22 +187,45 @@ Does not need to be the modules BD address, it can be any 48bit BD address howev
 
 **Step 19.** After giving all the inputs, BLE Transmit command executes successfully.
 
-![Final screen-shot](./resources/per-executed-tx-21.png)
+![Final screen-shot](./resources/bt-per-transmit-done.png)
+
+![Final screen-shot done](./resources/bt-per-transmit-final.png)
+
+### BLUETOOTH CW-Mode Selection
+
+**Step 20.** To run the BLUETOOTH_CW mode all the parameters you need to enter as mentioned step by step procedure in above
+method. But "Scrambler_seed" parameter you need to give input as 5.
+
+![Scrambler_seed](./resources/bt-per-cw-scrambler-seed.png)
+
+**Step 21.**  After "Scrambler_seed" parameter script will ask all the inputs as mentioned in above BLE_Trasmit method, you
+need to enter .
+
+**Step 22.** All the necessary inputs are completed , final input will ask for "Continuous Wave" selection you need to enter
+2.Like as below pic.
+
+![PER mode selection](./resources/bt-per-cw-mode-selection.png)
+
+**Step 23.** After giving all the inputs BLUETOOTH CW mode Transmit command executed successfully.
+
+![CW mode success](./resources/bt-per-cw-tx-done.png)
+
+![CW mode Final](./resources/bt-per-cw-mode-tx-final.png)
 
 Please follow the below steps when you select the BT_PER as "Receive".
 
 **Step 1.** Enter the value to run the script in PER "Transmit/Receive" mode.
 
-![PER Receive](./resources/bt-per-receive.png)
+![PER Receive](./resources/bt-per-rx-selection.png)
 
 **STEP 2.** Enter the value to enable/disable the PER mode.
 
-![Enable PER mode](./resources/per-enable-5.png)
+![Enable PER mode](./resources/bt-per-enable-5.png)
 
 **Step 3.** Enter the device address.
 It is a 48-bit address in hexadecimal format, e.g.,0x000012345678
 
-![Enter the device address](./resources/bt-address-6.png)
+![Enter the device address](./resources/bt-per-address-6.png)
 
 **Step 4.** Enter the desired 'packet_length' which is mentioned in below
 
@@ -336,7 +359,7 @@ It is a 48-bit address in hexadecimal format, e.g.,0x000012345678
 
 **Step 12.** Enter the "loop-back" mode .
 
-![Loop-back-mode](./resources/loop-back-mode.png)
+![Loop-back-mode](./resources/bt-per-rx-loopback.png)
 
 **Step 13.** After giving all the inputs, BT PER Receive command executes and PER stats command also executes simultaneously.
 
@@ -345,6 +368,24 @@ It is a 48-bit address in hexadecimal format, e.g.,0x000012345678
 ![PER Stats command](./resources/bt-receive-stats.png)
 
 ![Final per receive and stats command](./resources/bt-complete-rx-screen-shot.png)
+
+### BLUETOOTH CW-Mode Selection
+
+**Step 14.** To run the BLUETOOTH_CW mode all the parameters you need to enter as mentioned step by step procedure in above
+method. But "Scrambler_seed" parameter you need to give input as 5.
+
+![Scrambler_seed](./resources/bt-per-cw-scrambler-seed.png)
+
+**Step 15.**  After "Scrambler_seed" parameter script will ask all the inputs as mentioned in above BLE_Trasmit method, you
+need to enter .
+
+**Step 16.** After giving all the inputs BLUETOOTH CW mode Receive command executed successfully.
+
+![CW mode success](./resources/bt-cw-rx-done.png)
+
+![CW mode Final](./resources/bt-per-rx-stats-done.png)
+
+![CW mode stats Final](./resources/bt-per-cw-stats-final.png)
 
 
 Refer to the [BLE Programming Reference Manual](https://docs.silabs.com/rs9116/wiseconnect/rs9116w-bt-classic-at-command-prm/latest/08-bt-classic-commands) for further details on how to change the parameters.

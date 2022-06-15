@@ -39,7 +39,7 @@
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/
-
+#define BT_THROUGHPUT_ENABLE_LOGGING 0 //enable macro for SPP prints on console
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
 /*=======================================================================*/
@@ -283,8 +283,10 @@ void rsi_bt_app_on_spp_connect(uint16_t resp_status, rsi_bt_event_spp_connect_t 
   UNUSED_PARAMETER(resp_status); //This statement is added only to resolve compilation warning, value is unchanged
   rsi_bt_app_set_event(RSI_APP_EVENT_SPP_CONN);
   memcpy((int8_t *)remote_dev_addr, spp_connect->dev_addr, RSI_DEV_ADDR_LEN);
-  LOG_PRINT("spp_conn: str_conn_bd_addr: %s\r\n",
-            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_connect->dev_addr));
+  LOG_PRINT("spp_conn: str_conn_bd_addr: %s spp max tx: %d, spp max receive: %d\r\n",
+            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, spp_connect->dev_addr),
+            spp_connect->tx_mtu_size,
+            spp_connect->rx_mtu_size);
 }
 
 /*==============================================*/
@@ -409,12 +411,14 @@ void rsi_bt_app_on_spp_data_rx(uint16_t resp_status, rsi_bt_event_spp_receive_t 
   memset(data, 0, sizeof(data));
   spp_receive->data[spp_receive->data_len] = '\0';
   memcpy(data, spp_receive->data, spp_receive->data_len);
+
+#if BT_THROUGHPUT_ENABLE_LOGGING
+  /*RSC-9583 To achieve higher BT throughputs, while continuous Tx/Rx BT_THROUGHPUT_ENABLE_LOGGING needs to be disabled
+  * to ensure there is no delay in Rx packet receiving */
   LOG_PRINT("spp_rx: data_len: %d, data: ", spp_receive->data_len);
-  for (ix = 0; ix < spp_receive->data_len; ix++) {
-    LOG_PRINT(" 0x%02x,", spp_receive->data[ix]);
-  }
   LOG_PRINT("\r\n");
   LOG_PRINT("data: %s", spp_receive->data);
+#endif
 }
 
 void switch_proto_async(uint16_t mode, uint8_t *bt_disabled_status)
@@ -558,7 +562,7 @@ int32_t rsi_bt_app_task(void)
 #if (SPP_MODE == SPP_MASTER)
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, (uint8_t *)RSI_BT_REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
-    return status;
+    LOG_PRINT("rsi_bt_connect: status 0x%x\n", status);
   }
   LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif
@@ -596,7 +600,7 @@ int32_t rsi_bt_app_task(void)
         //! sending the pincode requet reply
         status = rsi_bt_pincode_request_reply(remote_dev_addr, pin_code, 1);
         if (status != RSI_SUCCESS) {
-          return status;
+          LOG_PRINT("rsi_bt_pincode_request_reply: status 0x%x\n", status);
         }
       } break;
       case RSI_APP_EVENT_LINKKEY_SAVE: {
@@ -614,7 +618,7 @@ int32_t rsi_bt_app_task(void)
         rsi_delay_ms(500);
         status = rsi_bt_spp_connect(remote_dev_addr);
         if (status != RSI_SUCCESS) {
-          //return status;
+          LOG_PRINT("rsi_bt_spp_connect: status 0x%x\n", status);
         }
 #endif
       } break;
@@ -626,7 +630,7 @@ int32_t rsi_bt_app_task(void)
 #if (SPP_MODE == SPP_MASTER)
         status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, (uint8_t *)RSI_BT_REMOTE_BD_ADDR));
         if (status != RSI_SUCCESS) {
-          return status;
+          LOG_PRINT("rsi_bt_connect: status 0x%x\n", status);
         }
         LOG_PRINT("bt_conn resp is 0x%x \n", status);
 #endif

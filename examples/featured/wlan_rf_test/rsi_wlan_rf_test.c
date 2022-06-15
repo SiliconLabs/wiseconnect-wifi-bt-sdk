@@ -76,6 +76,11 @@
 // Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 500
 
+#ifdef CHIP_9117
+// User mask shall be in the range 0-31
+#define RSI_USER_MASK 0
+#endif
+
 // Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
@@ -216,7 +221,7 @@ int main(void)
   rsi_task_handle_t application_handle = NULL;
 
   // Create application task
-  rsi_task_create((rsi_task_function_t)application,
+  rsi_task_create((rsi_task_function_t)(int32_t)application,
                   (uint8_t *)"application_task",
                   RSI_APPLICATION_TASK_STACK_SIZE,
                   NULL,

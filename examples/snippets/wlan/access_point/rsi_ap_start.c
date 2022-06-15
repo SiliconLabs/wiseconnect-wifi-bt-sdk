@@ -344,7 +344,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
 
@@ -355,7 +355,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_ap_start,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ap_start,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

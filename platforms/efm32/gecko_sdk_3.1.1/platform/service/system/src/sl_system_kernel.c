@@ -31,5 +31,7 @@
 
 void sl_system_kernel_start(void)
 {
-  sl_kernel_start();
+#if 0
+  sl_kernel_start();  // To avoid compilation warning, this is excluded because the definition for sl_kernel_start() is not found anywhere
+#endif
 }

@@ -424,10 +424,14 @@
 #endif
 
 // To enable CRYSTAL for TA
+#ifdef CHIP_9117
+#define EXT_FEAT_XTAL_CLK_ENABLE BIT(22)
+#else
 #if (RS9116_SILICON_CHIP_VER == CHIP_VER_1P4_AND_ABOVE)
 #define EXT_FEAT_XTAL_CLK_ENABLE BIT(23)
 #else
 #define EXT_FEAT_XTAL_CLK_ENABLE BIT(22)
+#endif
 #endif
 
 // To intimate FW not to modify MDNS text record
@@ -1431,28 +1435,174 @@ struct wpa_scan_results_arr {
 
 //wlan per stats structure
 typedef struct rsi_per_stats_rsp_s {
-  uint8_t tx_pkts[2];
+  uint16_t tx_pkts;
   uint8_t reserved_1[2];
-  uint8_t tx_retries[2];
+  uint16_t tx_retries;
   uint16_t crc_pass;
   uint16_t crc_fail;
-  uint8_t cca_stk[2];
-  uint8_t cca_not_stk[2];
-  uint8_t pkt_abort[2];
-  uint8_t fls_rx_start[2];
-  uint8_t cca_idle[2];
+  uint16_t cca_stk;
+  uint16_t cca_not_stk;
+  uint16_t pkt_abort;
+  uint16_t fls_rx_start;
+  uint16_t cca_idle;
   uint8_t reserved_2[26];
-  uint8_t rx_retries[2];
+  uint16_t rx_retries;
   uint8_t reserved_3[2];
   uint16_t cal_rssi;
   uint8_t reserved_4[4];
-  uint8_t xretries[2];
-  uint8_t max_cons_pkts_dropped[2];
+  uint16_t xretries;
+  uint16_t max_cons_pkts_dropped;
   uint8_t reserved_5[2];
-  uint8_t bss_broadcast_pkts[2];
-  uint8_t bss_multicast_pkts[2];
-  uint8_t bss_filter_matched_multicast_pkts[2];
+  uint16_t bss_broadcast_pkts;
+  uint16_t bss_multicast_pkts;
+  uint16_t bss_filter_matched_multicast_pkts;
+  uint8_t eof_pkt_drop_count[4];
+  uint8_t mask_pkt_drop_count[4];
+  uint8_t ack_sent[4];
+  //!No.of pkts rcvd with 48M
+  uint16_t pkt_rcvd_with_48M;
+  //!No.of pkts rcvd with 24M
+  uint16_t pkt_rcvd_with_24M;
+  //!No.of pkts rcvd with 12M
+  uint16_t pkt_rcvd_with_12M;
+  //!No.of pkts rcvd with 6M
+  uint16_t pkt_rcvd_with_6M;
+  //!No.of pkts rcvd with 54M
+  uint16_t pkt_rcvd_with_54M;
+  //!No.of pkts rcvd with 36M
+  uint16_t pkt_rcvd_with_36M;
+  //!No.of pkts rcvd with 18M
+  uint16_t pkt_rcvd_with_18M;
+  //!No.of pkts rcvd with 9M
+  uint16_t pkt_rcvd_with_9M;
+  //!No.of pkts rcvd with 11M
+  uint16_t pkt_rcvd_with_11M;
+  //!No.of pkts rcvd with 5.5M
+  uint16_t pkt_rcvd_with_5M;
+  //!No.of pkts rcvd with 2M
+  uint16_t pkt_rcvd_with_2M;
+  //!No.of pkts rcvd with 1M
+  uint16_t pkt_rcvd_with_1M;
+  //!No.of pkts rcvd with mcs0
+  uint16_t pkt_rcvd_with_mcs0;
+  //!No.of pkts rcvd with mcs1
+  uint16_t pkt_rcvd_with_mcs1;
+  //!No.of pkts rcvd with mcs2
+  uint16_t pkt_rcvd_with_mcs2;
+  //!No.of pkts rcvd with mcs3
+  uint16_t pkt_rcvd_with_mcs3;
+  //!No.of pkts rcvd with mcs4
+  uint16_t pkt_rcvd_with_mcs4;
+  //!No.of pkts rcvd with mcs5
+  uint16_t pkt_rcvd_with_mcs5;
+  //!No.of pkts rcvd with mcs6
+  uint16_t pkt_rcvd_with_mcs6;
+  //!No.of pkts rcvd with mcs7
+  uint16_t pkt_rcvd_with_mcs7;
+#ifdef CHIP_9117
+  //!No.of pkts rcvd with 11ax SU PPDU Type
+  uint16_t pkt_count_HE_SU_PPDU;
+  uint16_t pkt_count_HE_ER_SU_PPDU;
+  uint16_t pkt_count_HE_TRIG_PPDU;
+  uint16_t pkt_count_HE_MU_PPDU;
+  uint16_t pkt_count_11AC;
+  uint16_t tx_done;
+#endif
+  uint32_t reserved_8[9];
+  uint16_t noise_rssi;
+  int32_t stop_per;
 } rsi_per_stats_rsp_t;
+
+// TWT User configurable parameters.
+typedef struct twt_user_params_s {
+  // Nominal minimum wake duration. Range : 0 - 255
+  uint8_t wake_duration;
+  // Wake duration tolerance. Range : 0 - 255
+  uint8_t wake_duration_tol;
+  // Wake interval Exponent. Range : 0 - 31
+  uint8_t wake_int_exp;
+  // Wake interval exponent tolerance. Range : 0 - 31
+  uint8_t wake_int_exp_tol;
+  // Wake interval mantissa. Range : 0 - 65535
+  uint16_t wake_int_mantissa;
+  // Wake interval mantissa tolerance.  Range : 0 - 65535
+  uint16_t wake_int_mantissa_tol;
+  // Implicit TWT : 0 or 1
+  uint8_t implicit_twt;
+  // Un-announced TWT : 0 or 1
+  uint8_t un_announced_twt;
+  // Triggered TWT : 0 or 1
+  uint8_t triggered_twt;
+  // Wake duration unit. 0 : 1TU = 256uSec; 1 : 1TU 1024uSec
+  uint8_t wake_duration_unit;
+  // TWT Channel. Range : 0 - 7 valid channels. Ignored by firmware.
+  uint8_t twt_channel;
+  // TWT protection : 0 or 1. Ignored by firmware.
+  uint8_t twt_protection;
+  // Restrict TX outside TSP : 0 or 1
+  uint8_t restrict_tx_outside_tsp;
+  // TWT Retry limit. Range : 0 - 15
+  uint8_t twt_retry_limit;
+  // TWT retry interval in seconds. Range : 5 - 255.
+  uint8_t twt_retry_interval;
+  // TWT Request type. 0 - Request TWT; 1 - Suggest TWT; 2 - Demand TWT
+  uint8_t req_type;
+} twt_user_params_t;
+// TWT request structure to configure a session
+typedef struct rsi_twt_req_s {
+  // Nominal minimum wake duration. Range : 0 - 255
+  uint8_t wake_duration;
+  // Wake duration tolerance. Range : 0 - 255
+  uint8_t wake_duration_tol;
+  // Wake interval exponent tolerance. Range : 0 - 31
+  uint8_t wake_int_exp;
+  // Wake interval exponent tolerance. Range : 0 - 31
+  uint8_t wake_int_exp_tol;
+  // Wake interval mantissa. Range : 0 - 65535
+  uint8_t wake_int_mantissa[2];
+  // Wake interval mantissa tolerance.  Range : 0 - 65535
+  uint8_t wake_int_mantissa_tol[2];
+  // Implicit TWT : 0 or 1
+  uint8_t implicit_twt;
+  // Un-announced TWT : 0 or 1
+  uint8_t un_announced_twt;
+  // Triggered TWT : 0 or 1
+  uint8_t triggered_twt;
+  // Negotiation Type : 0 - Individual TWT; 1 - Broadcast TWT
+  uint8_t negotiation_type;
+  // TWT Channel. Range : 0 - 7
+  uint8_t twt_channel;
+  // TWT protection : 0 or 1
+  uint8_t twt_protection;
+  // TWT Session Flow ID. 0 - 7 valid. 0xFF to disable all active TWT sessions.
+  uint8_t twt_flow_id;
+  // Restrict TX outside TSP : 0 or 1
+  uint8_t restrict_tx_outside_tsp;
+  // TWT Retry limit. Range : 0 - 15
+  uint8_t twt_retry_limit;
+  // TWT retry interval. Range : 5 - 255
+  uint8_t twt_retry_interval;
+  // TWT Request type. 0 - Request TWT; 1 - Suggest TWT; 2 - Demand TWT
+  uint8_t req_type;
+  //TWT Enable. 0 - TWT session teardown; 1 - TWT session setup
+  uint8_t twt_enable;
+  // Wake duration unit. 0 - 256 TU; 1 - 1024 TU
+  uint8_t wake_duration_unit;
+} rsi_twt_req_t;
+// TWT Response structure. This structure contains response parameters from AP.
+typedef struct rsi_twt_rsp_s {
+  uint8_t wake_duration;
+  uint8_t wake_duration_unit;
+  uint8_t wake_int_exp;
+  uint8_t negotiation_type;
+  uint16_t wake_int_mantissa;
+  uint8_t implicit_twt;
+  uint8_t un_announced_twt;
+  uint8_t triggered_twt;
+  uint8_t twt_channel;
+  uint8_t twt_protection;
+  uint8_t twt_flow_id;
+} rsi_twt_rsp_t;
 
 /******************************************************
  * *                    Structures
@@ -1527,8 +1677,11 @@ extern int32_t rsi_wlan_delete_profile(uint32_t type);
 extern int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type);
 extern int32_t rsi_wlan_bgscan_profile(uint8_t cmd, rsi_rsp_scan_t *result, uint32_t length);
 
+extern int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_params_t *twt_req_params);
+
 extern int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *payload, uint16_t payload_len);
 extern int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
+extern int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_type, uint16_t listen_interval);
 extern int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_type);
 extern int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
                                                  uint8_t chno,

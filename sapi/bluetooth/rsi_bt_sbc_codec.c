@@ -26,11 +26,12 @@
  *  @section Description  This file contains BT A2DP API's called from application
  *
  */
+#include "rsi_driver.h"
 #if RSI_BT_ENABLE
 #include <stdint.h>
 #include <string.h>
 #include "sbc_encoder.h"
-#include "rsi_driver.h"
+
 #include "rsi_bt_sbc_codec.h"
 #include "rsi_bt_config.h"
 #ifdef FRDM_K28F
@@ -42,7 +43,7 @@
 #endif
 #define BT_EVT_A2DP_PCM_DATA 1
 #define BT_A2DP_MAX_DATA_PKT 32
-#define BT_A2DP_EX_DATA_PKT  15 //Need some space to store the extra packets temporarily due to reconstruction
+#define BT_A2DP_EX_DATA_PKT  18 //Need some space to store the extra packets temporarily due to reconstruction
 #define BT_ADDR_ARRAY_LEN    18
 #define DEFAULT_MTU_SIZE     310
 #define PKT_HEADER_AND_CRC   11 // 11 --> l2cap+controller header + crc
@@ -328,7 +329,7 @@ int16_t rsi_bt_a2dp_sbc_encode_task(uint8_t *pcm_data, uint16_t pcm_data_len, ui
     sbc_pkt->data_len += a2dp_info.rsi_encoder.u16PacketLength;
     sbc_frame_size_t = a2dp_info.rsi_encoder.u16PacketLength;
 
-    if (sbc_pkt->data_len >= (a2dp_info.mtu - SKIP_SIZE)) {
+    if (sbc_pkt->data_len > (a2dp_info.mtu - SKIP_SIZE)) {
       /* Reached MTU and add it to Queue */
       rsi_mutex_lock(&sbc_mutex);
       add_to_list(&rsi_sbc_queue, sbc_pkt);
@@ -707,4 +708,5 @@ void update_modified_mtu_size(uint16_t rem_mtu_size)
 #endif
   return;
 }
+
 #endif

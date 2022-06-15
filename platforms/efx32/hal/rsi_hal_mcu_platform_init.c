@@ -81,7 +81,7 @@ void initUsart2(void)
 
   init.msbf = true;           // MSB first transmission for SPI compatibility
   init.autoCsEnable = true;   // Allow the USART to assert CS
-  init.baudrate = 12500000;
+  init.baudrate = 8000000; // 12500000;
   /*
    * Route USART0 RX, TX, and CLK to the specified pins.  Note that CS is
    * not controlled by USART0 so there is no write to the corresponding
@@ -459,6 +459,10 @@ int _write(int file, const char *ptr, int len)
 
 WEAK void uart_rx_handler(uint8_t character)
 {
+#ifndef RSI_CALIB_MODE_EN
+  UNUSED_PARAMETER(character); //This statement is added only to resolve compilation warnings, value is unchanged
+#endif
+
 #ifdef RSI_CALIB_MODE_EN
   rsi_calib_uart_recv_isr(character);
 #endif

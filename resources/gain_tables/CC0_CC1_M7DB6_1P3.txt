@@ -4,7 +4,7 @@
 
 CC0_CC1_1P3_WLAN_2.4GHz_20MHz = {
 3,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  32,  28,  26,
         2,  32,  30,  28,
@@ -17,8 +17,6 @@ CC0_CC1_1P3_WLAN_2.4GHz_20MHz = {
         9,  32,  28,  28,
         10, 32,  24,  24,
         11, 32,  22,  20,
-        12, 32,  18,  18,
-        13, 32,  14,  14,
     ETSI,0x11,
        255, 32,  32, 32,
     TELEC,0x11,
@@ -136,7 +134,7 @@ WORLDWIDE,
 
 CC0_CC1_1P3_WLAN_2.4GHz_20MHz = {
 2,//NUM_OF_REGIONS
-    FCC, 0xD,//NUM_OF_CHANNELS
+    FCC, 0xB,//NUM_OF_CHANNELS
 //   rate,  11b, 11g, 11n
         1,  30,  24,  18,
         2,  30,  28,  22,
@@ -149,8 +147,6 @@ CC0_CC1_1P3_WLAN_2.4GHz_20MHz = {
         9,  30,  26,  26,
         10, 30,  22,  22,
         11, 30,  16,  14,
-        12, 32,  14,  14,
-        13, 32,  14,  14,
     TELEC,0x11,
        255, 30,  30, 30,
 };

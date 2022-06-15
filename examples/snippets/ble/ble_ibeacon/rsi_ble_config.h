@@ -23,6 +23,8 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
+//! Memory length for driver
+#define BT_GLOBAL_BUFF_LEN 15000
 
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 
@@ -183,7 +185,11 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
+#ifdef WISECONNECT
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#endif
 
 #define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE | ENABLE_BLE_PROTOCOL)
 

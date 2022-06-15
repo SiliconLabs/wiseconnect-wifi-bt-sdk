@@ -97,5 +97,13 @@ int16_t rsi_sdio_iface_init(void)
   SL_PRINTF(SL_SDIO_IFACE_INIT_EXIT_6, DRIVER, LOG_INFO, "retval: %d", retval);
   return retval;
 }
+
+void rsi_sdio_deinit(void)
+{
+#ifdef EFM32GG11B820F2048GL192
+  rsi_sdio_hal_efm_deinit();
+#endif
+  return;
+}
 #endif
 /** @} */

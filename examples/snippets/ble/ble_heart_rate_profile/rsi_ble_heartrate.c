@@ -45,12 +45,36 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
 //! Memory length for driver
 #define BT_GLOBAL_BUFF_LEN 15000
+#endif
 
 //! Memory to initialize driver
 uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
+
+#define RSI_DRIVER_TASK_STACK_SIZE 3000
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
 
 //! BLE attribute service types uuid values
 #define RSI_BLE_CHAR_SERV_UUID   0x2803
@@ -91,6 +115,7 @@ uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
 #define RSI_BLE_GATT_CHAR_SERVICES_RESP_EVENT 0x05
 #define RSI_BLE_GATT_CHAR_DESC_RESP_EVENT     0x06
 #define RSI_BLE_GATT_PROFILES_RESP_EVENT      0x07
+#define RSI_BLE_GATT_SEND_DATA                0x08
 
 #ifdef RSI_WITH_OS
 //! BLE task stack size
@@ -414,7 +439,6 @@ void rsi_ble_app_set_event(uint32_t event_num)
     ble_app_event_map1 |= BIT((event_num - 32));
   }
   rsi_semaphore_post(&ble_main_task_sem);
-
   return;
 }
 
@@ -565,8 +589,10 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
   if ((rsi_ble_measurement_hndl + 1) == *((uint16_t *)app_ble_write_event.handle)) {
     if (app_ble_write_event.att_value[0] == 1) {
       notify_start = 1;
+      rsi_ble_app_set_event(RSI_BLE_GATT_SEND_DATA);
     } else if (app_ble_write_event.att_value[0] == 0) {
       notify_start = 0;
+      rsi_ble_app_clear_event(RSI_BLE_GATT_SEND_DATA);
     }
   }
   rsi_ble_app_set_event(RSI_BLE_GATT_WRITE_EVENT);
@@ -705,7 +731,10 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
 #ifndef RSI_WITH_OS
   //! Driver initialization
   status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
@@ -744,7 +773,31 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
 
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
   //! adding simple BLE chat service
   rsi_ble_heart_rate_add_new_serv();
 
@@ -850,21 +903,7 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
     //! checking for events list
     event_id = rsi_ble_app_get_event();
     if (event_id == -1) {
-#if (GATT_ROLE == SERVER || GATT_ROLE == CLIENT)
-      if (connected == 1) {
-        if (notify_start == 1) {
-#ifdef __linux__
-          usleep(3000000);
-#endif
-#ifdef RSI_M4_INTERFACE
-          rsi_delay_ms(5000);
-#endif
-          len = heartratefun(rate, (uint8_t *)data);
-          rsi_ble_set_local_att_value(rsi_ble_measurement_hndl, len, (uint8_t *)data);
-        }
-      }
       rsi_semaphore_wait(&ble_main_task_sem, 0);
-#endif
       continue;
     }
 
@@ -908,6 +947,8 @@ retry:
         //! event invokes when disconnection was completed
 
         //! clear the served event
+        notify_start = 0;
+        rsi_ble_app_clear_event(RSI_BLE_GATT_SEND_DATA);
         rsi_ble_app_clear_event(RSI_BLE_DISCONN_EVENT);
         LOG_PRINT("\r\nModule got Disconnected\r\n");
 
@@ -970,14 +1011,15 @@ adv:
 
       case RSI_BLE_GATT_WRITE_EVENT: {
         //! event invokes when write/notification events received
-
         //! clear the served event
+
         rsi_ble_app_clear_event(RSI_BLE_GATT_WRITE_EVENT);
         LOG_PRINT("\r\nhandle: 0x%x, len: %d, data: %d \r\n",
                   *((uint16_t *)app_ble_write_event.handle),
                   app_ble_write_event.length,
                   app_ble_write_event.att_value[0]);
 #if (GATT_ROLE == CLIENT)
+
         if (rsi_ble_heartrate_hndl != 0) {
           if ((app_ble_write_event.att_value[0] & 1) == 0) {
             LOG_PRINT("\nbpm: 0x%02x\r\n", app_ble_write_event.att_value[1]);
@@ -1065,7 +1107,27 @@ adv:
 
         break;
 #endif
+      case RSI_BLE_GATT_SEND_DATA: {
+#if ((GATT_ROLE == CLIENT) || (GATT_ROLE == SERVER))
+        if (connected == 1) {
+          if (notify_start == 1) {
+#ifdef __linux__
+            usleep(3000000);
+#endif
+#if ((defined RSI_M4_INTERFACE) || (defined WISECONNECT))
+            rsi_delay_ms(2000);
+#endif
+            len    = heartratefun(rate, (uint8_t *)data);
+            status = rsi_ble_set_local_att_value(rsi_ble_measurement_hndl, len, (uint8_t *)data);
+            if (status != RSI_SUCCESS) {
+              LOG_PRINT("\n Set Local att value cmd failed = 0x%x \n", status);
+            }
+          }
+        }
+#endif
+      } break;
       default: {
+        break;
       }
     }
   }
@@ -1128,7 +1190,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_heart_rate_gatt_server,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_heart_rate_gatt_server,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

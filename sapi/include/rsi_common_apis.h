@@ -26,13 +26,20 @@
 #ifdef RSI_WITH_OS
 #include "rsi_os.h"
 #endif
-
+#ifdef RSI_DEBUG_PRINTS
+#include "rsi_common.h"
+#endif
 /******************************************************
  * *                      Macros
  * ******************************************************/
 #if !(defined(FRDM_K28F) || defined(MXRT_595s))
 #if defined(RSI_DEBUG_PRINTS)
-#define LOG_PRINT(...) printf(__VA_ARGS__)
+#define LOG_PRINT(...)                                            \
+  {                                                               \
+    rsi_mutex_lock(&rsi_driver_cb_non_rom->debug_prints_mutex);   \
+    printf(__VA_ARGS__);                                          \
+    rsi_mutex_unlock(&rsi_driver_cb_non_rom->debug_prints_mutex); \
+  }
 #elif (defined(RSI_M4_INTERFACE) && defined(DEBUG_UART))
 #define LOG_PRINT(...) DEBUGOUT(__VA_ARGS__)
 #elif defined(RSI_ENABLE_DEBUG_PRINT) && defined(LINUX_PLATFORM)

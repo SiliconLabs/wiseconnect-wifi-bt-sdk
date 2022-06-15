@@ -91,7 +91,7 @@ int rsi_app_task_update_gain_table(void)
                                                           sizeof(_RS9116_BLE_REGION_BASED_MAXPOWER_XX),
                                                           _RS9116_BLE_REGION_BASED_MAXPOWER_XX,
                                                           UPDATE_GAIN_TABLE_MAX_POWER);
-  LOG_PRINT("status : 0x%x\n", status);
+  LOG_PRINT("status : 0x%lx\n", status);
   if (status != 0) {
     return status;
   }
@@ -99,7 +99,7 @@ int rsi_app_task_update_gain_table(void)
                                                           sizeof(_RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX),
                                                           _RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
                                                           UPDATE_GAIN_TABLE_OFFSET);
-  LOG_PRINT("status : 0x%x\n", status);
+  LOG_PRINT("status : 0x%lx\n", status);
   if (status != 0) {
     return status;
   }
@@ -110,7 +110,7 @@ int rsi_app_task_update_gain_table(void)
                                                           _RS9116_BT_REGION_BASED_MAXPOWER_XX,
                                                           UPDATE_GAIN_TABLE_MAX_POWER);
 
-  LOG_PRINT("status : 0x%x\n", status);
+  LOG_PRINT("status : 0x%lx\n", status);
   if (status != 0) {
     return status;
   }
@@ -118,11 +118,12 @@ int rsi_app_task_update_gain_table(void)
                                                           sizeof(_RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX),
                                                           _RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
                                                           UPDATE_GAIN_TABLE_OFFSET);
-  LOG_PRINT("status : 0x%x\n", status);
+  LOG_PRINT("status : 0x%lx\n", status);
   if (status != 0) {
     return status;
   }
 #endif
+  return status;
 }
 //! Forever in wireless driver task
 void main_loop()

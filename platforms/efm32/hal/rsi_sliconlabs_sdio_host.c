@@ -172,7 +172,7 @@ sl_status_t sl_rsi_host_sdio_transfer_cmd53(sl_rsi_host_bus_transfer_type_t type
 {
   uint32_t dummy_data;
   uint16_t block_count;
-  uint8_t *buf_tmp = buffer;
+  uint8_t *buf_tmp = (uint8_t *)buffer;
 
   // Clear the processing flags
   sdio_error = false;
@@ -189,9 +189,9 @@ sl_status_t sl_rsi_host_sdio_transfer_cmd53(sl_rsi_host_bus_transfer_type_t type
     SDIO_ConfigureTransfer(sdiodrv_handle.init.instance, SL_RSI_SDIO_BLOCK_SIZE, block_count);
 
     if (type == SL_RSI_BUS_READ) {
-      SDIODRV_IOReadWriteExtendedBlocks(&sdiodrv_handle, SDIODRV_IO_OP_READ, function, address, block_count, buf_tmp);
+      SDIODRV_IOReadWriteExtendedBlocks(&sdiodrv_handle, SDIODRV_IO_OP_READ, function, address, block_count,(uint16_t *)buf_tmp);
     } else {
-      SDIODRV_IOReadWriteExtendedBlocks(&sdiodrv_handle, SDIODRV_IO_OP_WRITE, function, address, block_count, buf_tmp);
+      SDIODRV_IOReadWriteExtendedBlocks(&sdiodrv_handle, SDIODRV_IO_OP_WRITE, function, address, block_count, (uint16_t *)buf_tmp);
     }
   } else {
 

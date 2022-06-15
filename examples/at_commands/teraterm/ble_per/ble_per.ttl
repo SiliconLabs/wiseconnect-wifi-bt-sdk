@@ -10,7 +10,7 @@ sendln '1'
 wait 'Loading Done'
 message = 'Firmware Loading Done Successfully'
 messagebox message ''
-sendln 'at+rsi_opermode=851968,0,1,2147483648,2150629376,3221225472,0,376012800,2048'
+sendln 'at+rsi_opermode=851968,0,1,2147483648,2150629376,3221225472,0,275349504,2048'
 wait 'OK' ; 'bt_loaded' 'ERROR'
 if result == 2 then
 	goto error
@@ -133,7 +133,7 @@ if result=0 then
 	inputbox 'Enter rx_channel_no(0-39):' 'rx_no'
 	rx_no = inputstr
 	
-	inputbox 'Enter rx_channel_no(0-39):' 'tx_no'
+	inputbox 'Enter tx_channel_no(0-39):' 'tx_no'
 	tx_no = inputstr
 	
 	inputbox 'Enter the Scrambler_seed as 5 in Continuous Wave mode, Please enter 0 in Burst mode:' 'seed'

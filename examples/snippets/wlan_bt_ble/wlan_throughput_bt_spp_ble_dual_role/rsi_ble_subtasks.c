@@ -610,9 +610,9 @@ void rsi_ble_task_on_conn(void *parameters)
             break;
           }
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%x \n", status);
+            LOG_PRINT("MTU EXCHANGE RESP Failed status : 0x%lx \n", status);
           } else {
-            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%x \n", status);
+            LOG_PRINT("MTU EXCHANGE RESP SUCCESS status : 0x%lx \n", status);
           }
         }
       } break;

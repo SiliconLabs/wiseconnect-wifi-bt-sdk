@@ -33,6 +33,7 @@
 #include "rsi_wlan_non_rom.h"
 #include "rsi_os.h"
 #include "rsi_common_config.h"
+#include "rsi_driver.h"
 #include <rsi_sock_test.h>
 #if WINDOW_UPDATE_FEATURE
 #include "FreeRTOS.h"

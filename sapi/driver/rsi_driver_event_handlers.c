@@ -33,6 +33,7 @@
 #endif
 #include "rsi_wlan_non_rom.h"
 #include "rsi_sdio.h"
+#include "rsi_pkt_mgmt.h"
 
 // Sleep Ack frame
 const uint8_t rsi_sleep_ack[RSI_FRAME_DESC_LEN] = { 0x00, 0x40, 0xDE, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -49,6 +50,7 @@ rsi_driver_cb_non_rom_t *rsi_driver_cb_non_rom = NULL;
 #endif
 #define ZB_PKT   5
 #define WLAN_PKT 6
+uint8_t rsi_get_intr_status(void);
 /** @addtogroup DRIVER8
 * @{
 */
@@ -88,8 +90,8 @@ void rsi_tx_event_handler(void)
 #ifdef RSI_PROP_PROTOCOL_ENABLE
   uint8_t prop_protocol_pkt_pending = 0;
 #endif
-  uint8_t queueno = 0xff;
-  uint8_t frame_type;
+  uint8_t queueno      = 0xff;
+  uint8_t frame_type   = 0x00;
   uint8_t pkt_dequeued = 0xff;
 
 #if ((defined RSI_BT_ENABLE || defined RSI_BLE_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE) \
@@ -436,6 +438,9 @@ void rsi_tx_event_handler(void)
     // Writing to Module
     status = rsi_frame_write((rsi_frame_desc_t *)buf_ptr, &buf_ptr[RSI_HOST_DESC_LENGTH], length);
     if (status < 0x0) {
+#ifndef RSI_FREE_QUEUE_PKT
+      rsi_free_queue_pkt(pkt_dequeued, pkt);
+#endif
 #ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, TX_EVENT_CMD);
 
@@ -520,7 +525,36 @@ void rsi_tx_event_handler(void)
       bt_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->bt_single_tx_q);
 
       if (bt_pkt_pending) {
-        return;
+#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) \
+     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
+        // Read interrupt status register to check buffer full condition
+        ret_status = rsi_device_interrupt_status(&int_status);
+
+        // if buffer full then return without clearing Tx event
+        if ((ret_status != 0x0)
+#ifdef RSI_BT_ENABLE
+            || ((int_status & (BIT(1)))
+                && (rsi_bt_get_ACL_type(frame_type)
+                    == RSI_BT_HCI_ACL_PKT)) /* Check for ACL Packet Buffer full Condition */
+#endif
+#if ((defined RSI_BT_ENABLE) || (defined RSI_BLE_ENABLE))
+            || ((int_status & (BIT(4))) /* Check for Command Pool Buffer full Condition */
+#ifdef RSI_BT_ENABLE
+                // ACL Packets should not blocked by Command Buffer Full Condition
+                && (!(frame_type == RSI_BT_REQ_A2DP_SBC_AAC_DATA) || (frame_type == RSI_BT_REQ_SPP_TRANSFER))
+#endif
+                  )
+#endif
+#ifdef RSI_BLE_ENABLE
+            || (int_status & (BIT(2)))
+#endif
+        ) {
+          //do nothing
+        } else
+#endif
+        {
+          return;
+        }
       }
     }
 #ifdef RSI_PROP_PROTOCOL_ENABLE
@@ -764,7 +798,7 @@ void rsi_rx_event_handler(void)
   rx_pkt  = (rsi_pkt_t *)rsi_frame_read();
   buf_ptr = (uint8_t *)&rx_pkt->desc[0];
 #elif ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
-  status  = (uint16_t)rsi_frame_read(rsi_driver_cb_non_rom->sdio_read_buff);
+  status  = (uint16_t)rsi_frame_read(&rsi_driver_cb_non_rom->sdio_read_buff[SIZE_OF_HEADROOM]);
 #else
   // Read packet from module
   status = rsi_frame_read(buf_ptr);
@@ -818,10 +852,10 @@ void rsi_rx_event_handler(void)
   }
 
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
-  actual_offset = rsi_driver_cb_non_rom->sdio_read_buff[2];
-  actual_offset |= (rsi_driver_cb_non_rom->sdio_read_buff[3] << 8);
-  buf_ptr = (uint8_t *)&rsi_driver_cb_non_rom->sdio_read_buff[actual_offset];
-  rx_pkt  = (rsi_pkt_t *)(buf_ptr - 4);
+  actual_offset = rsi_driver_cb_non_rom->sdio_read_buff[2 + SIZE_OF_HEADROOM];
+  actual_offset |= (rsi_driver_cb_non_rom->sdio_read_buff[3 + SIZE_OF_HEADROOM] << 8);
+  buf_ptr = (uint8_t *)&rsi_driver_cb_non_rom->sdio_read_buff[actual_offset + SIZE_OF_HEADROOM];
+  rx_pkt  = (rsi_pkt_t *)(buf_ptr - 4 - SIZE_OF_HEADROOM);
 #endif
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
   rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
@@ -874,38 +908,45 @@ void rsi_rx_event_handler(void)
 #endif
   }
 #endif
-  if ((queue_no == RSI_WLAN_MGMT_Q)
-        && ((frame_type == RSI_COMMON_RSP_CARDREADY) || (frame_type == RSI_COMMON_RSP_OPERMODE)
-            || (frame_type == RSI_COMMON_RSP_PWRMODE) || (frame_type == RSI_COMMON_RSP_ANTENNA_SELECT)
-            || (frame_type == RSI_COMMON_RSP_FEATURE_FRAME) || (frame_type == RSI_COMMON_RSP_SOFT_RESET)
-            || (frame_type == RSI_COMMON_REQ_UART_FLOW_CTRL_ENABLE) || (frame_type == RSI_COMMON_RSP_FW_VERSION)
-            || (frame_type == RSI_COMMON_RSP_DEBUG_LOG) || (frame_type == RSI_COMMON_RSP_SWITCH_PROTO)
-            || (frame_type == RSI_COMMON_RSP_GET_RAM_DUMP) || (frame_type == RSI_COMMON_RSP_SET_RTC_TIMER)
-            || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER) || (frame_type == RSI_COMMON_REQ_SET_CONFIG)
+  if (((queue_no == RSI_WLAN_MGMT_Q)
+         && ((frame_type == RSI_COMMON_RSP_CARDREADY) || (frame_type == RSI_COMMON_RSP_OPERMODE)
+             || (frame_type == RSI_COMMON_RSP_PWRMODE) || (frame_type == RSI_COMMON_RSP_ANTENNA_SELECT)
+             || (frame_type == RSI_COMMON_RSP_FEATURE_FRAME) || (frame_type == RSI_COMMON_RSP_SOFT_RESET)
+             || (frame_type == RSI_COMMON_REQ_UART_FLOW_CTRL_ENABLE) || (frame_type == RSI_COMMON_RSP_FW_VERSION)
+             || (frame_type == RSI_COMMON_RSP_DEBUG_LOG) || (frame_type == RSI_COMMON_RSP_SWITCH_PROTO)
+             || (frame_type == RSI_COMMON_RSP_GET_RAM_DUMP) || (frame_type == RSI_COMMON_RSP_SET_RTC_TIMER)
+             || (frame_type == RSI_COMMON_RSP_GET_RTC_TIMER) || (frame_type == RSI_COMMON_REQ_SET_CONFIG)
+#ifdef FW_LOGGING_ENABLE
+             || (frame_type == RSI_COMMON_RSP_DEVICE_LOGGING_INIT)
+#endif
 #ifdef RSI_ASSERT_API
-            || (frame_type == RSI_COMMON_RSP_ASSERT)
+             || (frame_type == RSI_COMMON_RSP_ASSERT)
 #endif
 #ifdef RSI_M4_INTERFACE
-            || (frame_type == RSI_COMMON_RSP_TA_M4_COMMANDS)
+             || (frame_type == RSI_COMMON_RSP_TA_M4_COMMANDS)
 #endif
 #ifdef RSI_WAC_MFI_ENABLE
-            || (frame_type == RSI_COMMON_RSP_IAP_INIT) || (frame_type == RSI_COMMON_RSP_IAP_GET_CERTIFICATE)
-            || (frame_type == RSI_COMMON_RSP_IAP_GENERATE_SIGATURE)
+             || (frame_type == RSI_COMMON_RSP_IAP_INIT) || (frame_type == RSI_COMMON_RSP_IAP_GET_CERTIFICATE)
+             || (frame_type == RSI_COMMON_RSP_IAP_GENERATE_SIGATURE)
 #endif
 #ifdef RSI_PUF_ENABLE
-            || (frame_type == RSI_COMMON_RSP_PUF_DIS_ENROLL) || (frame_type == RSI_COMMON_RSP_PUF_DIS_GET_KEY)
-            || (frame_type == RSI_COMMON_RSP_PUF_DIS_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_ENROLL)
-            || (frame_type == RSI_COMMON_RSP_PUF_GET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_LOAD_KEY)
-            || (frame_type == RSI_COMMON_RSP_PUF_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_START)
-            || (frame_type == RSI_COMMON_RSP_AES_DECRYPT) || (frame_type == RSI_COMMON_RSP_AES_ENCRYPT)
-            || (frame_type == RSI_COMMON_RSP_AES_MAC) || (frame_type == RSI_COMMON_RSP_PUF_INTR_KEY)
+             || (frame_type == RSI_COMMON_RSP_PUF_DIS_ENROLL) || (frame_type == RSI_COMMON_RSP_PUF_DIS_GET_KEY)
+             || (frame_type == RSI_COMMON_RSP_PUF_DIS_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_ENROLL)
+             || (frame_type == RSI_COMMON_RSP_PUF_GET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_LOAD_KEY)
+             || (frame_type == RSI_COMMON_RSP_PUF_SET_KEY) || (frame_type == RSI_COMMON_RSP_PUF_START)
+             || (frame_type == RSI_COMMON_RSP_AES_DECRYPT) || (frame_type == RSI_COMMON_RSP_AES_ENCRYPT)
+             || (frame_type == RSI_COMMON_RSP_AES_MAC) || (frame_type == RSI_COMMON_RSP_PUF_INTR_KEY)
 #endif
 #ifdef RSI_CRYPTO_ENABLE
-            || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
+             || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
 #endif
-              )
+               )
 #ifdef CONFIGURE_GPIO_FROM_HOST
-      || (frame_type == RSI_COMMON_RSP_GPIO_CONFIG)
+       || (frame_type == RSI_COMMON_RSP_GPIO_CONFIG)
+#endif
+         )
+#ifdef FW_LOGGING_ENABLE
+      || ((queue_no == RSI_SL_LOG_DATA_Q) && (frame_type == RSI_COMMON_RSP_DEVICE_LOGGING_INIT))
 #endif
   ) {
     // Process common packet
@@ -969,11 +1010,12 @@ void rsi_rx_event_handler(void)
   if (!rsi_check_queue_status(&global_cb_p->rsi_driver_cb->m4_rx_q))
 #endif
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
-    if (!rsi_get_intr_status()) {
+    if (!rsi_get_intr_status())
+#endif
+    {
       // Clear RX event
       rsi_clear_event(RSI_RX_EVENT);
     }
-#endif
 #if !THROUGHPUT_EN
 #if RSI_SPI_DUP_INTR_HANDLE
   if (!rsi_common_cb->power_save.power_save_enable) {

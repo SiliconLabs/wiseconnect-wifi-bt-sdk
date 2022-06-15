@@ -82,7 +82,8 @@ typedef enum rsi_error_e {
   RSI_ERROR_TX_BUFFER_FULL                  = -47,
   RSI_ERROR_SDIO_TIMEOUT                    = -48,
   RSI_ERROR_SDIO_WRITE_FAIL                 = -49,
-  RSI_ERROR_INVALID_SET_CONFIG_FLAG         = -50
+  RSI_ERROR_INVALID_SET_CONFIG_FLAG         = -50,
+  RSI_ERROR_BLE_DEV_BUF_IS_IN_PROGRESS      = -51
 } rsi_error_t;
 
 /******************************************************

@@ -373,6 +373,14 @@ int32_t rsi_dns_update(uint8_t ip_version,
 // Max chunk length in a command
 #define RSI_FTP_MAX_CHUNK_LENGTH 1400
 
+// FTP client modes
+#define FTP_ENABLE_PASSIVE 1
+#define FTP_ENABLE_ACTIVE  0
+
+// FTP TRANSFER MODES
+#define FTP_BLOCK_TRANSFER_MODE  1
+#define FTP_STREAM_TRANSFER_MODE 0
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -421,10 +429,10 @@ typedef enum rsi_ftp_commands_e {
   RSI_FTP_DESTROY,
 
   // Command to enable FTP client passive mode
-  RSI_FTP_PASSIVE,
+  RSI_FTP_COMMAND_MODE_SET,
 
   // Command to enable FTP client active mode
-  RSI_FTP_ACTIVE
+  RSI_FTP_COMMAND_FILE_SIZE_SET
 } rsi_ftp_commands_t;
 
 /******************************************************
@@ -472,6 +480,20 @@ typedef struct rsi_ftp_file_rename_s {
 
 } rsi_ftp_file_rename_t;
 
+typedef struct rsi_ftp_mode_params_s {
+
+  // Command type
+  uint8_t command_type;
+  uint8_t mode_type;
+
+} rsi_ftp_mode_params_t;
+
+typedef struct rsi_ftp_file_size_set_params_s {
+
+  // Command type
+  uint8_t command_type;
+  uint8_t file_size[4];
+} rsi_ftp_file_size_set_params_t;
 // FTP file operations request structure
 typedef struct rsi_ftp_file_ops_s {
 
@@ -519,6 +541,7 @@ typedef struct rsi_ftp_file_rsp_s {
 int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int8_t *password, uint32_t server_port);
 int32_t rsi_ftp_disconnect(void);
 int32_t rsi_ftp_file_write(int8_t *file_name);
+int32_t rsi_ftp_file_size_set(uint32_t file_size);
 int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t content_length, uint8_t end_of_file);
 
 int32_t rsi_ftp_file_read_aysnc(

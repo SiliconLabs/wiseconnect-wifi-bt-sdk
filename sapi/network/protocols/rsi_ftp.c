@@ -574,10 +574,10 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
       content_length -= chunk_size;
     }
 
-    if (rsi_driver_cb->wlan_cb->expected_response == RSI_WLAN_RSP_ASYNCHRONOUS) {
-      // Change NWK state to allow
-      rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
-    }
+    // Change NWK state to allow
+    // When end_of_file is 0, we will need to change the state to allow, as there is no response expected from the firmware
+    // When end_of_file is 1, wait_on_nwk_semaphore is already done, so we can allow other nwk commands.
+    rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
   } else {
     // Return NWK command error
     SL_PRINTF(SL_FTP_FILE_WRITE_CONTENT_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
@@ -1289,11 +1289,20 @@ int32_t rsi_ftp_directory_list_async(
 /*==============================================*/
 /**
  * @note       This API is not supported
- * @brief      Set the FTP client mode - either in Passive mode or Active Mode. This is a blocking API.
+ * @brief      Set the FTP client mode - either in Passive mode or Active Mode.
+ *             In active FTP, client establishes the command channel and the server establishes the data channel.
+ *             In passive FTP, both the command channel and the data channel are established by the client.
+ *             Set the FTP Transfer mode - either in Block transfer mode or Stream transfer Mode.
+ *             In stream transfer mode, Data is sent as a continuous stream
+ *             In block transfer mode, FTP puts each record (or line) of data into several blocks and sent it on to TCP.
+ *             This is a blocking API.
  * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  mode - Used to select the mode of FTP client if FTP is enabled \n
- *		0 - Active Mode \n
- *		1 - Passive Mode.  
+ *        In mode variable, BIT(0) refers FTP client mode and BIT(1) refers FTP transfer mode \n
+ *		  BIT(0) is 0 then active mode is enabled \n
+ *        BIT(0) is 1 then passive mode is enabled \n
+ *        BIT(1) is 0 then stream transfer mode is enabled \n
+ *        BIT(1) is 1 then block transfer mode is enabled
  * @return     0              -  Success  \n
  *             Negative Value - Failure \n
  *                         -2 - Invalid parameter \n
@@ -1301,6 +1310,7 @@ int32_t rsi_ftp_directory_list_async(
  *                         -4 - Buffer not available to serve the command
  * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
  */
+
 int32_t rsi_ftp_mode_set(uint8_t mode)
 {
   int32_t status = RSI_SUCCESS;
@@ -1310,7 +1320,7 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
-  rsi_ftp_file_ops_t *ftp_ops = NULL;
+  rsi_ftp_mode_params_t *ftp_mode = NULL;
 
   if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE || wlan_cb->opermode == RSI_WLAN_ACCESS_POINT_MODE) {
     // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
@@ -1343,16 +1353,10 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    ftp_ops = (rsi_ftp_file_ops_t *)pkt->data;
+    ftp_mode = (rsi_ftp_mode_params_t *)pkt->data;
 
-    // Check for PASSIVE mode
-    if (mode) {
-      // Get command type as FTP PASSIVE
-      ftp_ops->command_type = RSI_FTP_PASSIVE;
-    } else {
-      // Get command type as FTP ACTIVE
-      ftp_ops->command_type = RSI_FTP_ACTIVE;
-    }
+    ftp_mode->command_type = RSI_FTP_COMMAND_MODE_SET;
+    ftp_mode->mode_type    = mode;
 
 #ifndef RSI_NWK_SEM_BITMAP
     rsi_driver_cb_non_rom->nwk_wait_bitmap |= BIT(0);
@@ -1378,4 +1382,96 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
   SL_PRINTF(SL_FTP_MODE_SET_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
+/** @} */
+
+/** @addtogroup NETWORK8
+* @{
+*/
+/*==============================================*/
+/**
+ * @note       This API is supported only in 9117
+ *             This API should called before every \ref rsi_ftp_file_write_content() when the Block transfer mode is in use
+ * @brief      Set the file size
+ * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @param[in]  file_size - represents the size of the file in bytes that is to be transferred. \n
+ * @return     0              -  Success  \n
+ *             Negative Value - Failure \n
+ *                         -2 - Invalid parameter \n
+ *                         -3 - Command given in wrong state \n 
+ *                         -4 - Buffer not available to serve the command
+ * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ */
+#ifdef CHIP_9117
+int32_t rsi_ftp_file_size_set(uint32_t file_size)
+{
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_FTP_FILE_SIZE_SET_ENTRY, NETWORK, LOG_INFO);
+  rsi_pkt_t *pkt;
+
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  rsi_ftp_file_size_set_params_t *ftp_size_set = NULL;
+
+  if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE || wlan_cb->opermode == RSI_WLAN_ACCESS_POINT_MODE) {
+    // In concurrent mode or AP mode, state should be in RSI_WLAN_STATE_CONNECTED to accept this command
+    if ((wlan_cb->state < RSI_WLAN_STATE_CONNECTED)) {
+      // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_SIZE_SET_COMMAND_GIVEN_IN_WRONG_STATE_1, NETWORK, LOG_ERROR);
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
+  } else {
+    // If state is not in ipconfig done state
+    if ((wlan_cb->state < RSI_WLAN_STATE_IP_CONFIG_DONE)) {
+      // Command given in wrong state
+      SL_PRINTF(SL_FTP_FILE_SIZE_SET_COMMAND_GIVEN_IN_WRONG_STATE_2, NETWORK, LOG_ERROR);
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
+  }
+
+  status = rsi_check_and_update_cmd_state(NWK_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change NWK state to allow
+      rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_FTP_FILE_SIZE_SET_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    ftp_size_set = (rsi_ftp_file_size_set_params_t *)pkt->data;
+
+    ftp_size_set->command_type = RSI_FTP_COMMAND_FILE_SIZE_SET;
+
+    rsi_uint32_to_4bytes(ftp_size_set->file_size, file_size);
+#ifndef RSI_NWK_SEM_BITMAP
+    rsi_driver_cb_non_rom->nwk_wait_bitmap |= BIT(0);
+#endif
+    // Send set FTP Create command
+    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_FTP, pkt);
+
+    // Wait on NWK semaphore
+    rsi_wait_on_nwk_semaphore(&rsi_driver_cb_non_rom->nwk_sem, RSI_FTP_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_nwk_status();
+    // Change NWK state to allow
+    rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+
+  } else {
+    // Return NWK command error
+    SL_PRINTF(SL_FTP_FILE_SIZE_SET_NWK_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_FTP_FILE_SIZE_SET_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
+  return status;
+}
+#endif
 /** @} */

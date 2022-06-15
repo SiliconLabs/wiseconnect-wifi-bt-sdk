@@ -37,6 +37,10 @@
 //! OS include file to refer OS specific functionality
 #include "rsi_os.h"
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Transmit test power
 #define RSI_TX_TEST_POWER 18
 
@@ -383,8 +387,8 @@ int32_t rsi_calib_app_task()
 
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
-  rsi_task_create(rsi_wireless_driver_task,
-                  "driver_task",
+  rsi_task_create((rsi_task_function_t)(uint32_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
                   RSI_DRIVER_TASK_STACK_SIZE,
                   NULL,
                   RSI_DRIVER_TASK_PRIORITY,
@@ -465,8 +469,8 @@ int main()
   rsi_semaphore_create(&event_sem, 0);
   //! OS case
   //! Task created for calib host cmd task
-  rsi_task_create(rsi_calib_app_task,
-                  "wlan_task",
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_calib_app_task,
+                  (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,
                   RSI_WLAN_TASK_PRIORITY,

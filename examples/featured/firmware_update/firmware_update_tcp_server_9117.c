@@ -50,12 +50,6 @@ int main(int argc, char **argv)
     exit(0);
   }
 
-  fp = fopen(argv[2], "r");
-  if (fp == NULL) {
-    printf("unabled to open rps file\n");
-    return;
-  }
-
   //! Creating of the TCP Socket
   if ((sock_id = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     printf("Socket create fail\n");
@@ -91,7 +85,11 @@ int main(int argc, char **argv)
     fd = accept(sock_id, (struct sockaddr *)&dst_sock, &dst_len);
 
     printf("accept success \n");
-
+    fp = fopen(argv[2], "r");
+    if (fp == NULL) {
+      printf("unabled to open rps file\n");
+      return;
+    }
     //strcpy(sendip,(const char *)inet_ntop(AF_INET,(void *)&dst_sock.sin_addr,sendip,sizeof(sendip)));
     //printf("Connect Req from %s accepted\n",sendip);
 

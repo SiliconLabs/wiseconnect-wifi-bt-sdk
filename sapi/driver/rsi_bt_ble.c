@@ -14,12 +14,12 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
+#include "rsi_driver.h"
 /*
   Include files
   */
 #if (defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE) || defined(RSI_PROP_PROTOCOL_ENABLE))
-#include "rsi_driver.h"
+
 #include "rsi_bt.h"
 #include "rsi_hid.h"
 #include "rsi_bt_common.h"
@@ -421,8 +421,8 @@ uint32_t rsi_bt_get_timeout(uint16_t cmd_type, uint16_t protocol_type)
                  || ((cmd_type >= RSI_BT_REQ_AVRCP_GET_CAPABILITES) && (cmd_type <= RSI_BT_REQ_AVRCP_CMD_REJECT))
                  || ((cmd_type >= RSI_BT_REQ_AVRCP_SET_ABS_VOL) && (cmd_type <= RSI_BT_REQ_AVRCP_SET_ABS_VOL_RESP))) {
         return_value = RSI_BT_AVRCP_CMD_RESP_WAIT_TIME;
-      } else if ((cmd_type >= RSI_BT_REQ_HFP_CONNECT) && (cmd_type <= RSI_BT_REQ_HFP_AUDIOTRANSFER)
-                 || (cmd_type == RSI_BT_REQ_HFP_AUDIODATA)) {
+      } else if (((cmd_type >= RSI_BT_REQ_HFP_CONNECT) && (cmd_type <= RSI_BT_REQ_HFP_AUDIOTRANSFER))
+                 || ((cmd_type == RSI_BT_REQ_HFP_AUDIODATA))) {
         return_value = RSI_BT_HFP_CMD_RESP_WAIT_TIME;
       } else if ((cmd_type >= RSI_BT_REQ_PBAP_CONNECT) && (cmd_type <= RSI_BT_REQ_PBAP_CONTACTS)) {
         return_value = RSI_BT_PBAP_CMD_RESP_WAIT_TIME;
@@ -620,12 +620,15 @@ void rsi_remove_remote_ble_dev_info(rsi_ble_event_disconnect_t *remote_dev_info)
 
   for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
     if (!memcmp(remote_dev_info->dev_addr, le_cb->remote_ble_info[inx].remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
-      le_cb->remote_ble_info[inx].used          = 0;
-      le_cb->remote_ble_info[inx].avail_buf_cnt = 0;
-      le_cb->remote_ble_info[inx].cmd_in_use    = 0;
-      le_cb->remote_ble_info[inx].max_buf_cnt   = 0;
-      le_cb->remote_ble_info[inx].expected_resp = 0;
-      le_cb->remote_ble_info[inx].mode          = 0;
+      memset(le_cb->remote_ble_info[inx].remote_dev_bd_addr, 0, RSI_DEV_ADDR_LEN);
+      le_cb->remote_ble_info[inx].used                 = 0;
+      le_cb->remote_ble_info[inx].avail_buf_cnt        = 0;
+      le_cb->remote_ble_info[inx].cmd_in_use           = 0;
+      le_cb->remote_ble_info[inx].max_buf_cnt          = 0;
+      le_cb->remote_ble_info[inx].expected_resp        = 0;
+      le_cb->remote_ble_info[inx].mode                 = 0;
+      le_cb->remote_ble_info[inx].remote_dev_addr_type = 0;
+      le_cb->remote_ble_info[inx].max_buf_len          = 0;
       rsi_mutex_destroy(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
       break;
     }
@@ -1908,7 +1911,7 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
 
     case RSI_BT_EVT_AVRCP_SET_ABS_VOL: {
       if (bt_specific_cb->bt_on_avrcp_set_abs_vol != NULL) {
-        bt_specific_cb->bt_on_avrcp_set_abs_vol((rsi_bt_event_avrcp_set_abs_vol_t *)payload);
+        bt_specific_cb->bt_on_avrcp_set_abs_vol(status, (rsi_bt_event_avrcp_set_abs_vol_t *)payload);
       }
     } break;
 
@@ -3629,6 +3632,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
   uint8_t le_buf_check        = 0;
   uint8_t le_cmd_inuse_check  = 0;
   uint8_t le_buf_in_use_check = 0;
+  uint8_t le_buf_config_check = 0;
   uint16_t expected_resp      = 0;
   rsi_bt_cb_t *le_cb          = rsi_driver_cb->ble_cb;
 
@@ -3783,6 +3787,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
       payload_size = sizeof(rsi_ble_set_wo_resp_notify_buf_info_t);
       memcpy(pkt->data, cmd_struct, payload_size);
       le_buf_in_use_check = 1;
+      le_buf_config_check = 1;
     } break;
     case RSI_BLE_CMD_NOTIFY: {
       payload_size = sizeof(rsi_ble_notify_att_value_t);
@@ -4045,6 +4050,10 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
       memcpy(pkt->data, cmd_struct, payload_size);
       le_cb->sync_rsp = 0;
     } break;
+    case RSI_BLE_CMD_SET_PROP_PROTOCOL_BLE_BANDEDGE_TXPOWER: {
+      payload_size = sizeof(rsi_ble_set_prop_protocol_ble_bandedge_tx_power_t);
+      memcpy(pkt->data, cmd_struct, payload_size);
+    } break;
     default:
       break;
   }
@@ -4055,7 +4064,17 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
     for (inx = 0; inx <= (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
       if (!memcmp(le_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
 
-        /* ERROR PRONE : Do not change; if else checks order */
+        /* ERROR PRONE : Do not changes if else checks order */
+        if (le_buf_config_check) {
+          rsi_mutex_lock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
+          if ((le_cb->remote_ble_info[inx].avail_buf_cnt) != (le_cb->remote_ble_info[inx].max_buf_cnt)) {
+            le_cb->buf_status = 2; //return error based on the status
+            rsi_mutex_unlock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
+            break;
+          }
+          rsi_mutex_unlock(&(le_cb->remote_ble_info[inx].ble_buff_mutex));
+        }
+
         if (le_buf_in_use_check) {
           le_cb->remote_ble_index = inx;
           le_buf_in_use_check     = RSI_FALSE;
@@ -4212,7 +4231,9 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
   if (bt_cb->buf_status || bt_cb->cmd_status) {
     rsi_pkt_free(&bt_cb->bt_tx_pool, pkt);
 
-    if (bt_cb->buf_status == SI_LE_BUFFER_FULL) {
+    if (bt_cb->buf_status == SI_LE_BUFFER_IN_PROGRESS) {
+      status = RSI_ERROR_BLE_DEV_BUF_IS_IN_PROGRESS;
+    } else if (bt_cb->buf_status == SI_LE_BUFFER_FULL) {
       status = RSI_ERROR_BLE_DEV_BUF_FULL;
     } else if (bt_cb->cmd_status) {
       status = RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS;
@@ -4306,6 +4327,7 @@ int32_t intialize_bt_stack(uint8_t mode)
 }
 /** @} */
 #endif
+
 #endif
 
 /*==============================================*/

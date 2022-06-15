@@ -131,6 +131,9 @@ static uint32_t port                        = AWS_IOT_MQTT_PORT;
 
 void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
+  UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   // Remote socket has been terminated
 }
 
@@ -481,7 +484,7 @@ int main()
 {
 #ifdef RSI_WITH_OS
   // Create application task
-  rsi_task_create((rsi_task_function_t)application,
+  rsi_task_create((rsi_task_function_t)(int32_t)application,
                   (uint8_t *)"application_task",
                   RSI_APPLICATION_TASK_STACK_SIZE,
                   NULL,

@@ -29,6 +29,10 @@
 //! Common include file
 #include <rsi_common_apis.h>
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 #define RSI_BLE_LOCAL_NAME "ibeacon"
 
 //! application events list
@@ -66,7 +70,6 @@ static rsi_bt_resp_get_local_name_t rsi_app_resp_get_local_name = { 0 };
 static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
 static uint8_t rsi_app_resp_device_state                        = 0;
 static int8_t rsi_app_resp_rssi                                 = 0;
-static uint8_t rsi_app_async_event_map                          = 0;
 static rsi_ble_event_conn_status_t rsi_app_connected_device     = { 0 };
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
 uint8_t str_remote_address[18]                                  = { '\0' };
@@ -446,7 +449,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)rsi_ble_ibeacon,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_ble_ibeacon,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

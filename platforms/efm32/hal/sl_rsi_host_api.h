@@ -39,7 +39,7 @@
 #define SL_RSI_SDIO_FBR1_BLOCK_SIZE_LSB (0x110)   /* Function 1 16-bit block size LSB */
 #define SL_RSI_SDIO_FBR1_BLOCK_SIZE_MSB (0x111)   /* Function 1 16-bit block size MSB */
 
-typedef uint32_t sl_status_t;
+//typedef uint32_t sl_status_t;
 
 //uint8_t sdio_init_done;
 

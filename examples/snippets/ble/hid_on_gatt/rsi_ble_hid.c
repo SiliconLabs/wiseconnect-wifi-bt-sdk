@@ -25,9 +25,22 @@
 #include <rsi_bt_common_apis.h>
 #include <rsi_ble_common_config.h>
 
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
+
 //! Common include file
 #include <rsi_common_apis.h>
 #include <string.h>
+
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
+//! Memory length for the driver
+#define BT_GLOBAL_BUFF_LEN 15000
+#endif
 
 //! [ble_gls] is a tag for every print
 #ifdef RSI_DEBUG_PRINTS
@@ -88,6 +101,7 @@
 #define RSI_BLE_EVENT_SMP_PASSKEY_DISPLAY     0x0e
 #define RSI_BLE_EVENT_LTK_REQ                 0x0f
 #define RSI_BLE_SC_PASSKEY_EVENT              0x10
+#define RSI_BLE_GATT_SEND_DATA                0x11
 
 #define GATT_READ_RESP      0x00
 #define GATT_READ_BLOB_RESP 0x01
@@ -112,6 +126,21 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 //! Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 3000
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
 
 void rsi_wireless_driver_task(void);
 
@@ -166,6 +195,7 @@ void rsi_wireless_driver_task(void);
 
 //! global parameters list
 static uint32_t ble_app_event_map;
+static uint32_t ble_app_event_map1;
 
 static rsi_ble_event_conn_status_t conn_event_to_app;
 static rsi_ble_event_disconnect_t disconn_event_to_app;
@@ -188,11 +218,12 @@ static uint8_t device_found     = 0;
 static uint32_t smp_passkey     = 0;
 uint16_t att_resp_status        = 0;
 
-uint8_t app_state              = 0;
-uint8_t str_remote_address[18] = { '\0' };
-uint16_t desc_range[10]        = { 0 };
-uint8_t desc_handle_index      = 0;
-uint8_t desc_handle_index_1    = 0;
+uint8_t app_state                         = 0;
+uint8_t str_remote_address[18]            = { '\0' };
+uint16_t desc_range[10]                   = { 0 };
+uint8_t desc_handle_index                 = 0;
+uint8_t desc_handle_index_1               = 0;
+uint8_t hid_data[HID_KDB_IN_RPT_DATA_LEN] = { 0 };
 typedef struct rsi_ble_att_list_s {
   uint32_t uuid;
   uint16_t handle;
@@ -289,8 +320,6 @@ static const uint8_t hid_report_map[] = {
 };
 
 rsi_semaphore_handle_t ble_main_task_sem;
-static uint32_t ble_app_event_map;
-static uint32_t ble_app_event_map1;
 
 /*==============================================*/
 /**
@@ -1212,9 +1241,11 @@ static void rsi_ble_hid_srv_gatt_wr_cb(void)
     if (app_ble_write_event.att_value[0] == 0x01) {
       //! set a bit
       app_state |= BIT(REPORT_IN_NOTIFY_ENABLE);
+      rsi_ble_app_set_event(RSI_BLE_GATT_SEND_DATA);
     } else if (app_ble_write_event.att_value[0] == 0) {
       //! clear a bit
       app_state &= ~BIT(REPORT_IN_NOTIFY_ENABLE);
+      rsi_ble_app_clear_event(RSI_BLE_GATT_SEND_DATA);
     }
     LOG_PRINT("Input report notify val: %lu\n", app_state & BIT(REPORT_IN_NOTIFY_ENABLE));
 
@@ -1253,7 +1284,6 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
   int32_t status = 0;
   int32_t event_id, i;
   uint8_t local_dev_addr[BD_ADDR_ARRAY_LEN]           = { 0 };
-  uint8_t hid_data[HID_KDB_IN_RPT_DATA_LEN]           = { 0 };
   uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
 #if (GATT_ROLE == SERVER)
   uint8_t scan_data_len = 0;
@@ -1278,6 +1308,10 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
 #endif
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
+#endif
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -1318,6 +1352,31 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef FW_LOGGING_ENABLE
+  //! Set log levels for firmware components
+  sl_set_fw_component_log_levels(&fw_component_log_level);
+
+  //! Configure firmware logging
+  status = sl_fw_log_configure(FW_LOG_ENABLE,
+                               FW_TSF_GRANULARITY_US,
+                               &fw_component_log_level,
+                               FW_LOG_BUFFER_SIZE,
+                               sl_fw_log_callback);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+  }
+#ifdef RSI_WITH_OS
+  //! Create firmware logging semaphore
+  rsi_semaphore_create(&fw_log_app_sem, 0);
+  //! Create firmware logging task
+  rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                  (uint8_t *)"fw_log_task",
+                  RSI_FW_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_FW_TASK_PRIORITY,
+                  &fw_log_task_handle);
+#endif
+#endif
 
 #if (GATT_ROLE == SERVER)
   //! adding ble hid service
@@ -1432,35 +1491,6 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
     event_id = rsi_ble_app_get_event();
 #if (GATT_ROLE == SERVER)
     if (event_id == -1) {
-      if (app_state & BIT(CONNECTED)) {
-        if (app_state & BIT(REPORT_IN_NOTIFY_ENABLE)) {
-#ifdef __linux__
-          usleep(3000000);
-#endif
-#if RSI_M4_INTERFACE
-          rsi_delay_ms(3000);
-#endif
-          hid_data[2] = 0xb; // key 'h' pressed
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-          hid_data[2] = 0x0; // key released
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-
-          hid_data[2] = 0x12; // key 'o' pressed
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-          hid_data[2] = 0x0; // key released
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-
-          hid_data[2] = 0xa; // key 'g' pressed
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-          hid_data[2] = 0x0; // key released
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-
-          hid_data[2] = 0x2d; // key '_' pressed
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-          hid_data[2] = 0x0; // key released
-          rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
-        }
-      }
       rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
@@ -1498,6 +1528,9 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_DISCONN);
+        if (app_state & BIT(REPORT_IN_NOTIFY_ENABLE)) {
+          rsi_ble_app_clear_event(RSI_BLE_GATT_SEND_DATA);
+        }
         LOG_PRINT("\r\nModule got Disconnected\r\n");
         app_state = 0;
         app_state |= BIT(ADVERTISE);
@@ -1513,7 +1546,7 @@ adv:
 scan:
         //! start scanning
         device_found = 0;
-        status = rsi_ble_start_scanning();
+        status       = rsi_ble_start_scanning();
         if (status != RSI_SUCCESS) {
           goto scan;
         }
@@ -1796,6 +1829,39 @@ scan:
           LOG_PRINT("\nnumeric value %lu\n", numeric_value);
         }
       } break;
+
+      case RSI_BLE_GATT_SEND_DATA:
+        //! clear the served event
+        if (app_state & BIT(CONNECTED)) {
+          if (app_state & BIT(REPORT_IN_NOTIFY_ENABLE)) {
+#ifdef __linux__
+            usleep(3000000);
+#endif
+#if RSI_M4_INTERFACE
+            rsi_delay_ms(3000);
+#endif
+            hid_data[2] = 0xb; // key 'h' pressed
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+            hid_data[2] = 0x0; // key released
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+
+            hid_data[2] = 0x12; // key 'o' pressed
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+            hid_data[2] = 0x0; // key released
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+
+            hid_data[2] = 0xa; // key 'g' pressed
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+            hid_data[2] = 0x0; // key released
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+
+            hid_data[2] = 0x2d; // key '_' pressed
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+            hid_data[2] = 0x0; // key released
+            rsi_ble_set_local_att_value(rsi_ble_hid_in_report_val_hndl, HID_KDB_IN_RPT_DATA_LEN, hid_data);
+          }
+        }
+        break;
       default: {
       }
     }
@@ -1862,7 +1928,7 @@ int main(void)
   rsi_task_create((rsi_task_function_t)rsi_ble_hids_gatt_application,
                   (uint8_t *)"ble_task",
                   RSI_BT_TASK_STACK_SIZE,
-                  NULL,
+                  &hid_info_g,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
 

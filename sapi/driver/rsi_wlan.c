@@ -248,9 +248,14 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       config->trigger_rsp_ind           = TRIGGER_RESP_IND;
       config->ipps_valid_value          = IPPS_VALID_VALUE;
       config->tx_only_on_ap_trig        = TX_ONLY_ON_AP_TRIG;
+      config->twt_support               = TWT_SUPPORT;
 
       // fill payload size
       payload_size = sizeof(wlan_11ax_config_params_t);
+    } break;
+    case RSI_WLAN_REQ_TWT_PARAMS: {
+      // fill payload size
+      payload_size = sizeof(rsi_twt_req_t);
     } break;
     case RSI_WLAN_REQ_EAP_CONFIG: {
       rsi_req_eap_config_t *rsi_eap_req = (rsi_req_eap_config_t *)pkt->data;
@@ -422,7 +427,7 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_uint16_to_2bytes(rsi_tx_test_info->reserved, 0);
 
       // Enable or Disable transmit test mode
-      rsi_uint16_to_2bytes(rsi_tx_test_info->no_of_pkts, 0);
+      rsi_uint16_to_2bytes(rsi_tx_test_info->no_of_pkts, RSI_TX_TEST_NUM_PKTS);
 
       // Enable or Disable transmit test mode
       rsi_uint16_to_2bytes(rsi_tx_test_info->delay, RSI_TX_TEST_DELAY);
@@ -550,11 +555,17 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
         case RSI_FTP_DIRECTORY_SET:
         case RSI_FTP_DIRECTORY_DELETE:
         case RSI_FTP_DIRECTORY_LIST:
-        case RSI_FTP_DIRECTORY_CREATE:
-        case RSI_FTP_PASSIVE:
-        case RSI_FTP_ACTIVE: {
+        case RSI_FTP_DIRECTORY_CREATE: {
           payload_size = sizeof(rsi_ftp_file_ops_t);
         } break;
+        case RSI_FTP_COMMAND_MODE_SET: {
+          payload_size = sizeof(rsi_ftp_mode_params_t);
+        } break;
+#ifdef CHIP_9117
+        case RSI_FTP_COMMAND_FILE_SIZE_SET: {
+          payload_size = sizeof(rsi_ftp_file_size_set_params_t);
+        } break;
+#endif
         case RSI_FTP_CONNECT: {
           payload_size = sizeof(rsi_ftp_connect_t);
         } break;
@@ -584,7 +595,8 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_uint32_to_4bytes(wmm_ps->wmm_ps_wakeup_interval, RSI_WMM_PS_WAKE_INTERVAL);
 
       // set wmm UAPSD bitmap
-      wmm_ps->wmm_ps_uapsd_bitmap = RSI_WMM_PS_UAPSD_BITMAP;
+      // Resetting this bit as it is affecting throughput in COEX scenarios
+      wmm_ps->wmm_ps_uapsd_bitmap = 0; //RSI_WMM_PS_UAPSD_BITMAP;
 
       //fill payload size wmm ps parameters
       payload_size = sizeof(rsi_wmm_ps_parms_t);
@@ -853,6 +865,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
     case RSI_WLAN_RSP_DNS_UPDATE: {
       if (rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler != NULL) {
         rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler(status);
+        rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(DNS_RESPONSE_PENDING);
       }
     } break;
     case RSI_WLAN_RSP_BAND: {
@@ -1167,7 +1180,12 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
       }
     } break;
     case RSI_WLAN_RSP_SCAN: {
-
+      if (rsi_wlan_cb_non_rom->scan_results_to_host) {
+        rsi_wlan_cb_non_rom->scan_results_to_host = 0;
+        if (scan_results_array->num == 0) {
+          status = RSI_AP_NOT_FOUND;
+        }
+      }
       // update state  wlan_cb state to scan done
       if (status == RSI_SUCCESS) {
         // Check for AP mode, and don't update scan done state
@@ -1259,27 +1277,29 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 
         if (status != RSI_WPS_NOT_SUPPORTED) {
           rsi_wlan_cb->state = RSI_WLAN_STATE_BAND_DONE;
-          if (rsi_wlan_cb_non_rom->callback_list.join_fail_handler != NULL) {
-            // Call asynchronous response handler to indicate to host
-            rsi_wlan_cb_non_rom->callback_list.join_fail_handler(status, payload, payload_length);
-            rsi_wlan_cb_non_rom->callback_list.join_fail_handler = NULL;
-          }
+          if (rsi_wlan_cb->expected_response != cmd_type) {
+            if (rsi_wlan_cb_non_rom->callback_list.join_fail_handler != NULL) {
+              // Call asynchronous response handler to indicate to host
+              rsi_wlan_cb_non_rom->callback_list.join_fail_handler(status, payload, payload_length);
+              rsi_wlan_cb_non_rom->callback_list.join_fail_handler = NULL;
+            }
 
-          if ((wlan_pkt_pending == 0) && rsi_wlan_check_waiting_wlan_cmd()) {
+            if ((wlan_pkt_pending == 0) && rsi_wlan_check_waiting_wlan_cmd()) {
 #ifndef RSI_WLAN_SEM_BITMAP
-            rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(1);
+              rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(1);
 #endif
-            rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_send_sem);
-          }
-          if (rsi_driver_cb_non_rom->wlan_wait_bitmap & BIT(0)) {
+              rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_send_sem);
+            }
+            if (rsi_driver_cb_non_rom->wlan_wait_bitmap & BIT(0)) {
 #ifndef RSI_WLAN_SEM_BITMAP
-            rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(0);
+              rsi_driver_cb_non_rom->wlan_wait_bitmap &= ~BIT(0);
 #endif
-            rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_sem);
+              rsi_semaphore_post(&rsi_driver_cb_non_rom->wlan_cmd_sem);
+            }
+            rsi_post_waiting_semaphore();
+            rsi_wlan_set_status(status);
+            return RSI_SUCCESS;
           }
-          rsi_post_waiting_semaphore();
-          rsi_wlan_set_status(status);
-          return RSI_SUCCESS;
         }
       }
       if (rsi_wlan_cb_non_rom->callback_list.wlan_join_response_handler != NULL) {
@@ -1371,7 +1391,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
         rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
         // Call asynchronous response handler to indicate to host
         rsi_wlan_cb_non_rom->callback_list.wlan_ping_response_handler(status, payload, payload_length);
-
+        rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(PING_RESPONSE_PENDING);
         return RSI_SUCCESS;
       }
     } break;
@@ -1474,6 +1494,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
       if (rsi_wlan_cb_non_rom->callback_list.socket_connect_response_handler != NULL) {
         // Changing the callback response f/w socket id to app socket id.
         rsi_uint16_to_2bytes(socket_rsp->socket_id, sockID);
+        rsi_wlan_cb_non_rom->socket_cmd_rsp_pending &= ~BIT(sockID);
         // Call asynchronous response handler to indicate to host
         rsi_wlan_cb_non_rom->callback_list.socket_connect_response_handler(status, payload, payload_length);
       }
@@ -1488,8 +1509,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
       }
       rsi_socket_pool_non_rom[sockID].window_size = tcp_window->window_size;
       rsi_wlan_socket_set_status(status, sockID);
-      if ((rsi_socket_pool_non_rom[sockID].socket_wait_bitmap & BIT(0))
-          && !(rsi_socket_pool_non_rom[sockID].socket_terminate_indication)) {
+      if (rsi_socket_pool_non_rom[sockID].socket_wait_bitmap & BIT(0)) {
 #ifndef RSI_SOCK_SEM_BITMAP
         rsi_socket_pool_non_rom[sockID].socket_wait_bitmap &= ~BIT(0);
 #endif
@@ -1548,6 +1568,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
                                                                    rsi_socket_pool[sockID].destination_port,
                                                                    rsi_socket_pool[sockID].destination_ip_addr.ipv4,
                                                                    ip_version);
+          rsi_wlan_cb_non_rom->socket_cmd_rsp_pending &= ~BIT(sockID);
         }
       }
     } break;
@@ -1781,29 +1802,38 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
       rsi_ftp_file_rsp_t *ftp_file_rsp = (rsi_ftp_file_rsp_t *)payload;
 
       if (ftp_file_rsp->command_type == RSI_FTP_FILE_READ) {
-        //Changing the nwk state to allow
-        rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
         if (status == RSI_SUCCESS) {
           // Call asynchronous response handler to indicate to host
           rsi_wlan_cb_non_rom->nwk_callbacks.ftp_file_read_call_back_handler(status,
                                                                              ftp_file_rsp->data_content,
                                                                              ftp_file_rsp->data_length,
                                                                              !(ftp_file_rsp->more));
+          if (!ftp_file_rsp->more) {
+            //Changing the nwk state to allow
+            rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+          }
         } else {
+          //Changing the nwk state to allow
+          rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
           // Call asynchronous response handler to indicate to host
           rsi_wlan_cb_non_rom->nwk_callbacks.ftp_file_read_call_back_handler(status, NULL, 0, 1);
         }
         return RSI_SUCCESS;
       } else if (ftp_file_rsp->command_type == RSI_FTP_DIRECTORY_LIST) {
-        //Changing the nwk state to allow
-        rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
         if (status == RSI_SUCCESS) {
           // Call asynchronous response handler to indicate to host
           rsi_wlan_cb_non_rom->nwk_callbacks.ftp_directory_list_call_back_handler(status,
                                                                                   ftp_file_rsp->data_content,
                                                                                   ftp_file_rsp->data_length,
                                                                                   !(ftp_file_rsp->more));
+          if (!ftp_file_rsp->more) {
+            //Changing the nwk state to allow
+            rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+          }
         } else {
+          //Changing the nwk state to allow
+          rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+          // Call asynchronous response handler to indicate to host
           rsi_wlan_cb_non_rom->nwk_callbacks.ftp_directory_list_call_back_handler(status, NULL, 0, 1);
         }
         return RSI_SUCCESS;
@@ -2056,6 +2086,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
           rsi_wlan_cb_non_rom->nwk_callbacks.rsi_sntp_client_create_response_handler(status,
                                                                                      (uint8_t)*payload,
                                                                                      payload);
+          rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(SNTP_RESPONSE_PENDING);
           rsi_wlan_set_nwk_status(status);
           return RSI_SUCCESS;
         }
@@ -2128,6 +2159,11 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
         if (rsi_wlan_cb_non_rom->callback_list.wlan_async_module_state != NULL) {
           rsi_wlan_cb_non_rom->callback_list.wlan_async_module_state(status, payload, payload_length);
         }
+      }
+    } break;
+    case RSI_WLAN_RSP_TWT_ASYNC: {
+      if (rsi_wlan_cb_non_rom->callback_list.twt_response_handler != NULL) {
+        rsi_wlan_cb_non_rom->callback_list.twt_response_handler(status, payload, payload_length);
       }
     } break;
 #endif
@@ -2230,6 +2266,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_DYNAMIC_POOL) || (cmd_type == RSI_WLAN_REQ_GAIN_TABLE)
              || (cmd_type == RSI_WLAN_REQ_RX_STATS) || (cmd_type == RSI_WLAN_REQ_RADIO)
              || (cmd_type == RSI_WLAN_REQ_GET_STATS) || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_TWT_PARAMS)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
 #endif
@@ -2314,7 +2351,7 @@ int32_t rsi_wlan_radio_init(void)
           status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_MAC_ADDRESS, pkt);
 
           // wait on wlan semaphore
-          rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_OPERMODE_RESPONSE_WAIT_TIME);
+          rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_MAC_RESPONSE_WAIT_TIME);
 
           // get wlan/network command response status
           status = rsi_wlan_get_status();
@@ -2358,7 +2395,7 @@ int32_t rsi_wlan_radio_init(void)
         status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_BAND, pkt);
 
         // wait on wlan semaphore
-        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_OPERMODE_RESPONSE_WAIT_TIME);
+        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_BAND_RESPONSE_WAIT_TIME);
 
         // get wlan/network command response status
         status = rsi_wlan_get_status();
@@ -2433,7 +2470,7 @@ int32_t rsi_wlan_radio_init(void)
         status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_INIT, pkt);
 
         // wait on wlan semaphore
-        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_BAND_RESPONSE_WAIT_TIME);
+        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_INIT_RESPONSE_WAIT_TIME);
 
         // get wlan/network command response status
         status = rsi_wlan_get_status();
@@ -2701,17 +2738,35 @@ void rsi_wlan_set_status(int32_t status)
 int32_t rsi_post_waiting_semaphore(void)
 {
   int i = 0;
-
+  rsi_rsp_socket_create_t socket_rsp;
   rsi_wlan_set_nwk_status(RSI_ERROR_IN_WLAN_CMD);
+  rsi_call_asynchronous_callback();
   rsi_post_waiting_nwk_semaphore();
   for (i = 0; i < NUMBER_OF_SOCKETS; i++) {
     // post socket semaphores
     if (rsi_socket_pool[i].sock_state > RSI_SOCKET_STATE_INIT) {
       // Set error
       rsi_wlan_socket_set_status(RSI_ERROR_IN_WLAN_CMD, i);
+
 #ifdef SOCKET_CLOSE_WAIT
       rsi_socket_pool_non_rom[i].close_pending = 1;
 #endif
+      if (rsi_wlan_cb_non_rom->socket_cmd_rsp_pending & BIT(i)) {
+        memset(&socket_rsp, 0, sizeof(rsi_rsp_socket_create_t));
+        if (rsi_wlan_cb_non_rom->callback_list.socket_connect_response_handler != NULL) {
+          // Changing the callback response f/w socket id to app socket id.
+          rsi_uint16_to_2bytes(socket_rsp.socket_id, i);
+          // Call asynchronous response handler to indicate to host
+          rsi_wlan_cb_non_rom->callback_list.socket_connect_response_handler((uint16_t)RSI_ERROR_IN_WLAN_CMD,
+                                                                             (uint8_t *)&socket_rsp,
+                                                                             sizeof(rsi_rsp_socket_create_t));
+          rsi_wlan_cb_non_rom->socket_cmd_rsp_pending &= ~BIT(i);
+        }
+        if (rsi_socket_pool_non_rom[i].accept_call_back_handler != NULL) {
+          rsi_socket_pool_non_rom[i].accept_call_back_handler(i, 0, 0, 0);
+          rsi_wlan_cb_non_rom->socket_cmd_rsp_pending &= ~BIT(i);
+        }
+      }
       // post on  semaphore
       rsi_post_waiting_socket_semaphore(i);
     }
@@ -2751,7 +2806,7 @@ int32_t rsi_post_waiting_semaphore(void)
       }
     }
   }
-
+  rsi_wlan_cb_non_rom->socket_cmd_rsp_pending = 0;
   return RSI_SUCCESS;
 }
 
@@ -2828,7 +2883,6 @@ void rsi_wlan_process_raw_data(rsi_pkt_t *pkt)
   uint8_t *host_desc;
   uint8_t *payload;
   uint16_t payload_length;
-  int32_t status = 0;
 
   // Get wlan cb struct pointer
   //  rsi_wlan_cb_t *rsi_wlan_cb = rsi_driver_cb->wlan_cb;
@@ -2841,12 +2895,6 @@ void rsi_wlan_process_raw_data(rsi_pkt_t *pkt)
 
   // Get payoad length
   payload_length = (rsi_bytes2R_to_uint16(host_desc) & 0xFFF);
-
-  // check status
-  status = rsi_bytes2R_to_uint16(host_desc + RSI_STATUS_OFFSET);
-
-  // update the status in wlan_cb
-  rsi_wlan_set_status(status);
 
   if (rsi_wlan_cb_non_rom->callback_list.wlan_data_receive_handler != NULL) {
     // Call asynchronous data receive handler to indicate to host
@@ -3063,6 +3111,29 @@ void rsi_post_waiting_wlan_semaphore(void)
   rsi_driver_cb_non_rom->wlan_wait_bitmap = 0;
 }
 #endif
+void rsi_call_asynchronous_callback()
+{
+  if ((rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending & (PING_RESPONSE_PENDING))
+      && rsi_wlan_cb_non_rom->callback_list.wlan_ping_response_handler != NULL) {
+    // Call asynchronous response handler to indicate to host
+    rsi_wlan_cb_non_rom->callback_list.wlan_ping_response_handler((uint16_t)RSI_ERROR_IN_WLAN_CMD, NULL, 0);
+    rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(PING_RESPONSE_PENDING);
+  }
+
+  if ((rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending & (DNS_RESPONSE_PENDING))
+      && rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler != NULL) {
+    rsi_wlan_cb_non_rom->nwk_callbacks.rsi_dns_update_rsp_handler((uint16_t)RSI_ERROR_IN_WLAN_CMD);
+    rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(DNS_RESPONSE_PENDING);
+  }
+  if ((rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending & (SNTP_RESPONSE_PENDING))
+      && rsi_wlan_cb_non_rom->nwk_callbacks.rsi_sntp_client_create_response_handler != NULL) {
+    rsi_wlan_cb_non_rom->nwk_callbacks.rsi_sntp_client_create_response_handler((uint16_t)RSI_ERROR_IN_WLAN_CMD,
+                                                                               0,
+                                                                               NULL);
+    rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending &= ~(SNTP_RESPONSE_PENDING);
+  }
+  rsi_wlan_cb_non_rom->nwk_cmd_rsp_pending = 0;
+}
 /** @} */
 #ifdef PROCESS_SCAN_RESULTS_AT_HOST
 

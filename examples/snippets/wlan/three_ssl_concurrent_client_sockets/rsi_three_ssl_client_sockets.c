@@ -47,6 +47,11 @@
 //! OS include file to refer OS specific functionality
 #include "rsi_os.h"
 #include "rsi_utils.h"
+
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Certificates to be loaded
 #include "cacert.pem"
 #include "aws_starfield_ca.pem.h"
@@ -139,7 +144,7 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
 #endif
-
+uint64_t ip_to_reverse_hex(char *ip);
 int32_t rsi_three_ssl_client_sockets_app()
 {
   uint8_t ip_buff[20];
@@ -533,7 +538,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t wlan_task_handle = NULL;
@@ -542,7 +547,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_three_ssl_client_sockets_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_three_ssl_client_sockets_app,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

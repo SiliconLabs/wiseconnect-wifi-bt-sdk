@@ -41,6 +41,11 @@
 #include "rsi_os.h"
 
 #include "rsi_driver.h"
+
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 #define ZERO 0
 
 //! Access point SSID to connect
@@ -219,6 +224,8 @@ int32_t rsi_socket_select()
         //! update wlan application state
         rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
       }
+      //no break
+      //fall through
       case RSI_WLAN_UNCONNECTED_STATE: {
         //! Connect to an Access point
         status = rsi_wlan_connect((int8_t *)SSID, SECURITY_TYPE, PSK);
@@ -230,6 +237,8 @@ int32_t rsi_socket_select()
           rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
         }
       }
+      //no break
+      //fall through
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
@@ -366,7 +375,7 @@ int32_t rsi_socket_select()
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 #ifdef RSI_WITH_OS
 
   rsi_task_handle_t wlan_task_handle = NULL;
@@ -376,7 +385,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_socket_select,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_socket_select,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

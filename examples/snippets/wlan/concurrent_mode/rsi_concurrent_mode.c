@@ -41,6 +41,10 @@
 
 #include "rsi_driver.h"
 
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
 
@@ -135,7 +139,7 @@ int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
 
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
-
+uint64_t ip_to_reverse_hex(char *ip);
 int32_t rsi_concurrent_mode()
 {
   int32_t client_socket;
@@ -230,6 +234,7 @@ int32_t rsi_concurrent_mode()
                              (uint8_t *)AP_PSK,
                              BEACON_INTERVAL,
                              DTIM_COUNT);
+
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nAP Start Failed, Error Code : 0x%lX\r\n", status);
     return status;
@@ -332,7 +337,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
 
@@ -342,7 +347,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_concurrent_mode,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_concurrent_mode,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

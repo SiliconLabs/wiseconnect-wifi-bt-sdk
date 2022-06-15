@@ -53,6 +53,11 @@ Configure the following parameters in [rsi_wlan_rf_test.c](https://github.com/Si
   #define RSI_ANTENNA          1               // 0 = RF_OUT2, 1 = RF_OUT1
   #define RSI_ANTENNA_GAIN_2G  0               // Gain in 2.4 GHz band in the range [0:10]
   #define RSI_ANTENNA_GAIN_5G  0               // Gain in 5 GHz band in the range [0:10]
+  #define RSI_TX_TEST_NUM_PKTS  0               // To configure number of packets to be sent.
+                                                // If the macro is set as n, then n number of packets will be 
+                                                // sent on-air, after that transmission will be stopped.
+                                                // If this macro is set as 0 then packets will be sent 
+                                                // continuously until user stops the transmission.
 ```
 
 # Run the Application

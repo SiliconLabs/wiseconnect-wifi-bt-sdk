@@ -72,11 +72,11 @@ To enable/disable individual protocols configure below macros in **rsi_common_ap
 ```
 
 ```c
-#define RSI_ENABLE_BT_TEST                          1 //Set this to 0 to disable BLE
+#define RSI_ENABLE_BT_TEST                          1 //Set this to 0 to disable BT
 ```
 
 ```c
-#define RSI_ENABLE_WIFI_TEST                          1 //Set this to 0 to disable BLE
+#define RSI_ENABLE_WIFI_TEST                          1 //Set this to 0 to disable WLAN
 ```
 
 > Note: 

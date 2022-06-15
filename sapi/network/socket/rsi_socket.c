@@ -700,7 +700,7 @@ int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t 
 */
 /*==============================================*/
 /**
- * @brief       Send data to specific remote peer on a given socket synchronously. This is a blocking API.
+ * @brief       This API sends data to the specified remote IP Address on the given socket. This is non-blocking API.
  * @pre         For tcp_client, \ref  rsi_connect() \n
  *              For tcp_server, \ref  rsi_listen() and  \ref  rsi_accept()/ API needs to be called before this API. \n
  *              For udp_server \ref rsi_bind()  API needs to be called before this API. \n
@@ -746,7 +746,7 @@ int32_t rsi_sendto(int32_t sockID,
 */
 /*==============================================*/
 /**
- * @brief       Send data to specific remote peer on a given socket asynchronously.
+ * @brief       This API sends the data to the specified remote IP Address on the given socket and receives the acknowledgement through the registered call back. This is non-blocking API.
  * @param[in]   sockID		               - Socket descriptor ID
  * @param[in]   msg 		               - Pointer to data buffer containing data to send to remote peer
  * @param[in]   msgLength	               - Length of data to send
@@ -754,7 +754,6 @@ int32_t rsi_sendto(int32_t sockID,
  * @param[in]   destAddr 		       - Address of the remote peer to send data
  * @param[in]   destAddrLen 		       - Length of the address in bytes
  * @param[in]   data_transfer_complete_handler - Pointer to callback function called after complete data transfer
- * @param[out]  sockID                         - Socket Descriptor ID
  * @param[out]  length                         - Number of bytes transfered
  *
  * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
@@ -791,7 +790,7 @@ int32_t rsi_sendto_async(int32_t sockID,
 */
 /*==============================================*/
 /**
- * @brief      Send data to remote peer on a given socket synchronously. This is a blocking API.
+ * @brief    This API sends the data to the remote peer on the given socket. This is a non-blocking API. 
  * @pre    \ref rsi_connect()/ \ref rsi_accept() API needs to be called before this API.
  * @param[in]  sockID         - Socket descriptor ID
  * @param[in]  msg            - Pointer to the buffer containing data to send to the remote peer
@@ -862,15 +861,6 @@ void rsi_reset_per_socket_info(int32_t sockID)
  * @param[in]  msgLength      - Length of data to send
  * @param[in]  flags          - Reserved
  * 
- *  @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
-
- | Protocol            | Maximum data chunk (bytes) |
- |---------------------|----------------------------|
- | TCP/LTCP socket     | 1460                       |
- | LUDP socket         | 1472                       |
- | Web socket          | 1450                       |
- | TCP-SSL/LTCP-SSL    | 1370                       |
- | Web socket over SSL | 1362                       |
  * 
  * @return     Zero           - Success \n
  *             Negative Value - Failure
@@ -1032,16 +1022,6 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
  * @param[out] status                   - Status of the data transfer
  * @param[out] total_data_sent          - Total length of data sent
  * 
- * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
-
- | Protocol            | Maximum data chunk (bytes) |
- |---------------------|----------------------------|
- | TCP/LTCP socket     | 1460                       |
- | LUDP socket         | 1472                       |
- | Web socket          | 1450                       |
- | TCP-SSL/LTCP-SSL    | 1370                       |
- | Web socket over SSL | 1362                       |
- *
  *@return     Zero                     - Success, number of bytes sent successfully \n
  *             Negative Value           - Failure
  *
@@ -1702,7 +1682,8 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
  * @brief       Select is a BSD API which allow a program to monitor multiple socket (file descriptors), waiting until one or more of 
  *              the sockets become ready to perform receive or send operation.If callback is NULL or not provided, it is a blocking API otherwise 
  *              it is a non-blocking API.
- * @pre   \ref rsi_recv()/ \ref rsi_recvfrom()/ \ref rsi_send() API needs to be called before this API.  
+ * @pre         \ref rsi_accept()/ \ref rsi_connect() API's needs to be called before this API.  
+ * @note        rsi_select() API needs to be called before \ref rsi_recv()/ \ref rsi_recvfrom()/ \ref rsi_send() API's.  
  * @param[in]    nfds           - The Highest-numbered file descriptor in any of the three sets, plus 1
  * @param[in]    readfds        - Socket descriptors to  watch to see if data become available for receive 
  * @param[in]    writefds       - Socket descriptors  to watch to see if space is available in socket to send data. 
@@ -2128,6 +2109,7 @@ int32_t rsi_accept_async(int32_t sockID,
   // Fill local port number
   rsi_uint16_to_2bytes(accept->source_port, rsi_socket_pool[sockID].source_port);
 
+  rsi_wlan_cb_non_rom->socket_cmd_rsp_pending |= BIT(accept_sock_id);
   // Send socket accept command
   status = RSI_DRIVER_WLAN_SEND_CMD(RSI_WLAN_REQ_SOCKET_ACCEPT, pkt);
 
@@ -2189,6 +2171,7 @@ int32_t rsi_get_app_socket_descriptor(uint8_t *src_port)
 /// @private
 int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
 {
+  UNUSED_PARAMETER(dst_port); //This statement is added only to resolve compilation warning, value is unchanged
   SL_PRINTF(SL_GET_SOCKET_ID_ENTRY, NETWORK, LOG_INFO);
   int i;
 
@@ -2196,8 +2179,6 @@ int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
 
   for (i = 0; i < NUMBER_OF_SOCKETS; i++) {
     if (rsi_socket_pool[i].source_port == src_port) {
-      break;
-    } else if (rsi_socket_pool[i].destination_port == dst_port) {
       break;
     }
   }
@@ -2494,6 +2475,8 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 #ifndef RSI_SOCK_SEM_BITMAP
     rsi_socket_pool_non_rom[sockID].socket_wait_bitmap |= BIT(0);
 #endif
+  } else {
+    rsi_wlan_cb_non_rom->socket_cmd_rsp_pending |= BIT(sockID);
   }
 
   if (rsi_socket_pool_non_rom[sockID].extension_offset) {

@@ -43,6 +43,11 @@
 #include "rsi_os.h"
 #include "rsi_utils.h"
 #include <string.h>
+
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#endif
+
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
 
@@ -110,6 +115,7 @@
 
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
+uint64_t ip_to_reverse_hex(char *ip);
 
 int32_t rsi_powersave_profile_app()
 {
@@ -298,7 +304,7 @@ void main_loop(void)
 
 int main()
 {
-  int32_t status;
+  int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
 
@@ -309,7 +315,7 @@ int main()
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task
-  rsi_task_create((rsi_task_function_t)rsi_powersave_profile_app,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_powersave_profile_app,
                   (uint8_t *)"wlan_task",
                   RSI_WLAN_TASK_STACK_SIZE,
                   NULL,

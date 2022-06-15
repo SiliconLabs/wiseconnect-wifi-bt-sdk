@@ -37,6 +37,11 @@
 #include "rsi_driver.h"
 #include "rsi_common_config.h"
 
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
+
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/
@@ -53,11 +58,38 @@
 #define PSP_MODE RSI_SLEEP_MODE_2
 #define PSP_TYPE RSI_MAX_PSP
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
+//! Memory length for the driver
+#define BT_GLOBAL_BUFF_LEN 15000
+#endif
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   2
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+#endif
+
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
 /*=======================================================================*/
 rsi_task_handle_t common_task_handle = NULL;
 rsi_task_handle_t driver_task_handle = NULL;
+#ifdef FW_LOGGING_ENABLE
+//Fw log component level
+sl_fw_log_level_t fw_component_log_level;
+#endif
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN] = { 0 };
 //! flag to check bt power save
@@ -271,14 +303,19 @@ void rsi_common_app_task(void)
   ble_main_app_task_handle = NULL;
 
   while (1) {
+#ifndef RSI_M4_INTERFACE
+
     //! SiLabs module initialization
     status = rsi_device_init(LOAD_NWP_FW);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\r\n device init failed \n");
+      LOG_PRINT("\r\n device init failed :%x \n", status);
       return;
+    } else {
+      LOG_PRINT("\r\n device init success \n");
     }
-// rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM platform
-#ifdef EFM32GG11B820F2048GL192
+#endif
+// rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM & M4 platforms
+#if ((defined EFM32GG11B820F2048GL192) || (defined RSI_M4_INTERFACE))
     //! Task created for Driver task
     rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                     (uint8_t *)"driver_task",
@@ -287,16 +324,53 @@ void rsi_common_app_task(void)
                     RSI_DRIVER_TASK_PRIORITY,
                     &driver_task_handle);
 #endif
+
+#ifdef RSI_M4_INTERFACE
+
+    RSI_WISEMCU_HardwareSetup();
+    LOG_PRINT("\r\n RSI_WISEMCU_HardwareSetup success \n");
+
+#endif
     //! WiSeConnect initialization
     status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_COEX_MODE);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\r\n wireless init failed \n");
+      LOG_PRINT("\r\n wireless init failed :%x \n", status);
       return;
+    } else {
+      LOG_PRINT("\r\n wireless init success \n");
     }
+#ifdef FW_LOGGING_ENABLE
+    //! Set log levels for firmware components
+    sl_set_fw_component_log_levels(&fw_component_log_level);
+
+    //! Configure firmware logging
+    status = sl_fw_log_configure(FW_LOG_ENABLE,
+                                 FW_TSF_GRANULARITY_US,
+                                 &fw_component_log_level,
+                                 FW_LOG_BUFFER_SIZE,
+                                 sl_fw_log_callback);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+    }
+#ifdef RSI_WITH_OS
+    //! Create firmware logging semaphore
+    rsi_semaphore_create(&fw_log_app_sem, 0);
+    //! Create firmware logging task
+    rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                    (uint8_t *)"fw_log_task",
+                    RSI_FW_TASK_STACK_SIZE,
+                    NULL,
+                    RSI_FW_TASK_PRIORITY,
+                    &fw_log_task_handle);
+#endif
+#endif
     //! Send Feature frame
     status = rsi_send_feature_frame();
     if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\n send feature frame failed :%x\n", status);
       return;
+    } else {
+      LOG_PRINT("\r\n send feature frame success :%x\n");
     }
     //! fill the configurations in local structure based on compilation macros
     status = rsi_fill_user_config();
@@ -358,6 +432,17 @@ int main(void)
     return status;
   }
 #ifdef RSI_WITH_OS
+
+#ifdef RSI_M4_INTERFACE
+  //! SiLabs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n device init failed : %x \n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\n device init success \n");
+  }
+#endif
   //! OS case
   rsi_task_create((rsi_task_function_t)rsi_common_app_task,
                   (uint8_t *)"common_task",
@@ -365,8 +450,8 @@ int main(void)
                   NULL,
                   RSI_COMMON_TASK_PRIORITY,
                   &common_task_handle);
-// rsi_wireless_driver_task is created in rsi_common_app_task for EFM platform
-#ifndef EFM32GG11B820F2048GL192
+// rsi_wireless_driver_task is created in rsi_common_app_task for EFM & M4 platforms
+#if (!((defined EFM32GG11B820F2048GL192) || (defined RSI_M4_INTERFACE)))
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",

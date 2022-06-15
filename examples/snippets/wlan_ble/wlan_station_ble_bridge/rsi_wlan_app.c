@@ -212,6 +212,8 @@ void rsi_wlan_app_task(void)
           rsi_wlan_app_cb.state = RSI_WLAN_CONNECTED_STATE;
         }
       }
+      //no break
+      //fall through
       case RSI_WLAN_CONNECTED_STATE: {
         //! Configure IP
 #if DHCP_MODE
@@ -236,6 +238,8 @@ void rsi_wlan_app_task(void)
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
         }
       }
+      //no break
+      //fall through
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
 
         //! Create socket

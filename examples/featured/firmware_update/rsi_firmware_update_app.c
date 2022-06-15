@@ -107,7 +107,7 @@
 #define RSI_DRIVER_TASK_PRIORITY 2
 
 // Wlan task stack size
-#define RSI_APPLICATION_TASK_STACK_SIZE 500
+#define RSI_APPLICATION_TASK_STACK_SIZE 1024
 
 // Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 500
@@ -340,9 +340,19 @@ int32_t application()
         LOG_PRINT("\r\nFirmware update complete\r\n");
 
 #ifdef RSI_WITH_OS
-        rsi_task_destroy(driver_task_handle);
+        status = rsi_destroy_driver_task_and_driver_deinit(driver_task_handle);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nDriver deinit failed, Error Code : 0x%lX\r\n", status);
+          return status;
+        } else {
+          LOG_PRINT("\r\nTask destroy and driver deinit success\r\n");
+        }
 #endif
-        rsi_wireless_deinit();
+        status = rsi_wireless_deinit();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%1X\r\n", status);
+          return status;
+        }
 
 #ifdef RSI_M4_INTERFACE
         RSI_CLK_M4ssRefClkConfig(M4CLK, ULP_32MHZ_RC_CLK);

@@ -40,7 +40,7 @@ uint8_t sdio_init_done;
  */
 int16_t rsi_sdio_write_multiple(uint8_t *tx_data, uint32_t Addr, uint16_t no_of_blocks)
 {
-  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_WRITE, 1, Addr, tx_data , no_of_blocks*256);
+  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_WRITE, 1, Addr, (uint16_t *)tx_data , no_of_blocks*256);
 }
 
 /*==============================================*/
@@ -61,7 +61,7 @@ int8_t rsi_sdio_read_multiple(uint8_t *read_buff, uint32_t no_of_blocks)
   uint32_t Addr = 0;
   uint16_t byte_blocksize = 256;
   Addr = byte_blocksize* no_of_blocks;
-  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_READ, 1, Addr, read_buff , no_of_blocks * 256); //no_of_blocks);
+  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_READ, 1, Addr, (uint16_t *)read_buff , no_of_blocks * 256); //no_of_blocks);
 }
 
 /*==============================================*/
@@ -109,7 +109,7 @@ int8_t sdio_reg_readb(uint32_t Addr, uint8_t *dBuf)
  */
 int16_t rsi_sdio_readb(uint32_t addr, uint16_t len, uint8_t *dBuf)
 {
-  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_READ, 1, addr, dBuf, len);
+  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_READ, 1, addr, (uint16_t *)dBuf, len);
 }
 
 /*==============================================*/
@@ -125,7 +125,7 @@ int16_t rsi_sdio_readb(uint32_t addr, uint16_t len, uint8_t *dBuf)
  */
 int16_t rsi_sdio_writeb(uint32_t addr, uint16_t len, uint8_t *dBuf)
 {
-  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_WRITE, 1, addr, dBuf, len);
+  return sl_rsi_host_sdio_transfer_cmd53(SL_RSI_BUS_WRITE, 1, addr, (uint16_t *)dBuf, len);
 }
 /*=============================================*/
 /**
@@ -140,7 +140,6 @@ int16_t rsi_sdio_writeb(uint32_t addr, uint16_t len, uint8_t *dBuf)
 int32_t rsi_mcu_sdio_init(void)
 {
   sl_status_t result;
-  uint32_t    value32;
   uint8_t     value_u8;
 
   

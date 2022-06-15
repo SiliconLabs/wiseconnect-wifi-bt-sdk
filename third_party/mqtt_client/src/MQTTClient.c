@@ -105,7 +105,7 @@ int readPacket(Client* c, Timer* timer)
     int rem_len = 0;
 
     /* 1. read the header byte.  This has the packet type in it */
-    if (c->ipstack->mqttread(c->ipstack, c->readbuf, 1, left_ms_mqtt(timer)) != 1)
+  if (c->ipstack->mqttread(c->ipstack, c->readbuf, 1, left_ms_mqtt(timer)) != 1)
         goto exit;
 
     len = 1;
@@ -114,7 +114,7 @@ int readPacket(Client* c, Timer* timer)
     len += MQTTPacket_encode(c->readbuf + 1, rem_len); /* put the original remaining length back into the buffer */
 
     /* 3. read the rest of the buffer using a callback to supply the rest of the data */
-    if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, left_ms_mqtt(timer)) != rem_len))
+  if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, left_ms_mqtt(timer)) != rem_len))
         goto exit;
 
     header.byte = c->readbuf[0];
@@ -285,19 +285,41 @@ exit:
 int MQTTYield(Client* c, int timeout_ms)
 {
     int rc = SUCCESS;
-    Timer timer;
+  Timer timer,timer1;
 
     InitTimer(&timer);    
     countdown_ms_mqtt(&timer, timeout_ms);
     while (!expired(&timer))
     {
-        if (cycle(c, &timer) == FAILURE)
+      if((timeout_ms/1000) > c->keepAliveInterval){
+          int left = left_ms_mqtt(&timer);
+          if( left > (c->keepAliveInterval * 1000))
+            {
+              //! configure timer1 same as ping end time
+          timer1.end_time = c->ping_timer.end_time;
+            }
+          else
+            {
+              //! configure timer1 same as remaining time left
+              timer1.end_time = timer.end_time - left;
+            }
+      }else{
+          if(timer.end_time > c->ping_timer.end_time)
+            {
+              //! configure timer1 same as ping end time
+              timer1.end_time = c->ping_timer.end_time;
+            }else{
+                //! configure timer1 same as timer end time
+                timer1.end_time = timer.end_time;
+            }
+      }
+      if (cycle(c, &timer1) == FAILURE)
         {
             rc = FAILURE;
-            break;
+              break;
+            }
         }
-    }
-        
+
     return rc;
 }
 
@@ -379,7 +401,7 @@ int MQTTSubscribe(Client* c, const char* topicFilter, enum QoS qos, messageHandl
     if (!c->isconnected)
         goto exit;
     
-    len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic, (int*)&qos);
+    len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic,(int*)qos);
     if (len <= 0)
         goto exit;
     if ((rc = sendPacket(c, len, &timer)) != SUCCESS) // send the subscribe packet

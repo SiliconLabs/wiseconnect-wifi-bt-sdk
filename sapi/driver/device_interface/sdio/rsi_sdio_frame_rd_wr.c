@@ -34,6 +34,7 @@
   Includes
  */
 #include "rsi_driver.h"
+#include "rsi_pkt_mgmt.h"
 #ifdef RSI_SDIO_INTERFACE
 /*
   Global Variables
@@ -44,7 +45,6 @@
 /*====================================================*/
 /**
  */
-
 int16_t rsi_frame_read(uint8_t *read_buff)
 {
   int16_t retval   = RSI_SUCCESS;
@@ -70,24 +70,33 @@ int16_t rsi_frame_read(uint8_t *read_buff)
  */
 int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam, uint16_t size_param)
 {
+  UNUSED_PARAMETER(payloadparam); //This statement is added only to resolve compilation warning, value is unchanged
   int16_t retval        = RSI_SUCCESS;
   uint16_t Addr         = 0x0000;
   uint16_t no_of_blocks = 0;
   uint16_t queue_type   = 0;
 
+  uint16_t size_of_headroom = 0;
+
+  queue_type = (uFrameDscFrame->frame_len_queue_no[1] >> 4);
+#ifdef CHIP_9117
+  if ((queue_type == RSI_WLAN_DATA_Q) || (queue_type == RSI_WLAN_MGMT_Q)) {
+    size_of_headroom = SIZE_OF_HEADROOM;
+  }
+#endif
+
   // Calculate number of blocks
-  no_of_blocks = ((size_param + 16) / 256);
-  if ((size_param + 16) % 256) {
+  no_of_blocks = ((size_param + 16 + size_of_headroom) / 256);
+  if ((size_param + 16 + size_of_headroom) % 256) {
     no_of_blocks = no_of_blocks + 1;
   }
 
   Addr = (no_of_blocks * 256);
 
-  queue_type = (uFrameDscFrame->frame_len_queue_no[1] >> 4);
-  Addr       = (Addr | (queue_type << 12));
+  Addr = (Addr | (queue_type << 12));
 
   // Transfer packet
-  retval = rsi_sdio_write_multiple((uint8_t *)uFrameDscFrame, Addr, no_of_blocks);
+  retval = rsi_sdio_write_multiple(((uint8_t *)uFrameDscFrame - size_of_headroom), Addr, no_of_blocks);
   if (retval == 0) {
     return retval;
   } else {

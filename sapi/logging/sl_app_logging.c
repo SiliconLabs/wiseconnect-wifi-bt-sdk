@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file  sl_hal_mcu_logging.c
+ * @file  sl_app_logging.c
  * @brief
  *******************************************************************************
  * # License
@@ -15,12 +15,12 @@
  *
  ******************************************************************************/
 
+#ifdef SAPI_LOGGING_ENABLE
 /**
  * Includes
  */
-#ifdef LOGGING_ENABLE
-
-#include "sl_logging.h"
+#include "rsi_driver.h"
+#include "sl_app_logging.h"
 
 uint8_t *logging_buffer;
 uint8_t signal_lost;
@@ -93,8 +93,13 @@ uint32_t sl_log_data_into_buf(uint8_t *buf, uint32_t arg_len, uint32_t arg)
     strncpy((char *)buf, (char *)arg, LOG_BUFFER_SIZE);
   } else {
     len = (arg_len + 1);
-    // updating dword for all arg lengths, next field in log data will overwrite the invalid bytes added by this stmt
-    *(uint32_t *)buf = arg;
+    if (arg_len == DWORD_LEN) {
+      *(uint32_t *)buf = (uint32_t)arg;
+    } else if (arg_len == WORD_LEN) {
+      *(uint16_t *)buf = (uint16_t)arg;
+    } else {
+      *(uint8_t *)buf = (uint8_t)arg;
+    }
   }
   return len;
 }

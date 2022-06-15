@@ -357,7 +357,7 @@
                     <state>$PROJ_DIR$\..\..\..\..\..\..\third_party\sbc_audio_codec\inc</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\..\third_party\mqtt_client\src</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\..\third_party\mqtt_client\src\MQTTPacket\src</state>
-                    <state>$PROJ_DIR$\..\..\..\..\..\utilities\certificates</state>
+                    <state>$PROJ_DIR$\..\..\..\..\..\..\resources\certificates</state>
                     <state>$PROJ_DIR$\..\..</state>
                     <state>$PROJ_DIR$\..\..\platforms\nxp\rt595\rtos</state>
                     <state>$PROJ_DIR$\..\..\platforms\nxp\rt595\CMSIS\Include</state>

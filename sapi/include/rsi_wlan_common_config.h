@@ -438,6 +438,7 @@
 #endif
 
 // TX TEST aggregation enable or disable
+//If defined in 'rsi_config.h' file, then this won't be used
 #ifndef RSI_TX_TEST_AGGR_ENABLE
 #define RSI_TX_TEST_AGGR_ENABLE RSI_DISABLE
 #endif
@@ -447,6 +448,122 @@
 #define RSI_TX_TEST_DELAY 0
 #endif
 
+// TX TEST Number of packets
+#ifndef RSI_TX_TEST_NUM_PKTS
+#define RSI_TX_TEST_NUM_PKTS 0
+#endif
+
+#ifdef CHIP_9117
+#ifndef RSI_11AX_ENABLE
+//11AX_ENABLE 0-disable, 1-enable
+#define RSI_11AX_ENABLE 0
+#endif
+
+#ifndef RSI_CODING_TYPE
+// coding_type 0-BCC 1-LDPC
+#define RSI_CODING_TYPE 0
+#endif
+
+#ifndef RSI_NOMINAL_PE
+// nominal_pe 0-0Us 1-8Us 2-16Us
+#define RSI_NOMINAL_PE 0
+#endif
+
+// he_ppdu_type 0-HE SU PPDU, 1-HE ER SU PPDU, 2-HE TB PPDU, 3-HE MU PPDU
+#ifndef RSI_HE_PPDU_TYPE
+#define RSI_HE_PPDU_TYPE 0
+#endif
+
+//beam_change 0-sameway, 1-differently
+#ifndef RSI_BEAM_CHANGE
+#define RSI_BEAM_CHANGE 0
+#endif
+
+//BW 0-242 tone RU, 1-Upper 106 tone RU
+#ifndef RSI_BW
+#define RSI_BW 0
+#endif
+
+//UL_DL 0-PPDU sent by AP, 1-PPDU sent by STA to AP
+#ifndef RSI_UL_DL
+#define RSI_UL_DL 0
+#endif
+
+//STBC 0-no STBC, 1-STBC if only DCM is set to 0
+#ifndef RSI_STBC
+#define RSI_STBC 0
+#endif
+
+//TX_BF 0-no beamforming matrix, 1- beamforming matrix
+#ifndef RSI_TX_BF
+#define RSI_TX_BF 0
+#endif
+
+//GT_LTF shall be in the range 0-3
+#ifndef RSI_GI_LTF
+#define RSI_GI_LTF 0
+#endif
+
+//DCM 0-No DCM, 1-DCM
+#ifndef RSI_DCM
+#define RSI_DCM 0
+#endif
+
+//NSTS_MIDAMBLE shall be in the range 0-7
+#ifndef RSI_NSTS_MIDAMBLE
+#define RSI_NSTS_MIDAMBLE 0
+#endif
+
+//spatial_reuse shall be in the range 0-15
+#ifndef RSI_SPATIAL_REUSE
+#define RSI_SPATIAL_REUSE 0
+#endif
+
+//BSS_COLOR shall be in the range 0-63
+#ifndef RSI_BSS_COLOR
+#define RSI_BSS_COLOR 0
+#endif
+
+//HE_SIGA2_RESERVED shall be in the range 0-511
+#ifndef RSI_HE_SIGA2_RESERVED
+#define RSI_HE_SIGA2_RESERVED 0
+#endif
+
+//RU_ALLOCATION shall be in the range 0-255
+#ifndef RSI_RU_ALLOCATION
+#define RSI_RU_ALLOCATION 0
+#endif
+
+//N_HELTF_TOT shall be in the range 0-7
+#ifndef RSI_N_HELTF_TOT
+#define RSI_N_HELTF_TOT 0
+#endif
+
+//SIGB_DCM 0-disable, 1-enable
+#ifndef RSI_SIGB_DCM
+#define RSI_SIGB_DCM 0
+#endif
+
+//SIGB_MCS shall be in the range 0-5
+#ifndef RSI_SIGB_MCS
+#define RSI_SIGB_MCS 0
+#endif
+
+//USER_STA_ID shall be in the range 0-2047
+#ifndef RSI_USER_STA_ID
+#define RSI_USER_STA_ID 0
+#endif
+
+//USER_IDX shall be in the range 0-8
+#ifndef RSI_USER_IDX
+#define RSI_USER_IDX 0
+#endif
+
+//SIGB_COMPRESSION_FIELD shall be 0/1
+#ifndef RSI_SIGB_COMPRESSION_FIELD
+#define RSI_SIGB_COMPRESSION_FIELD 0
+#endif
+#endif
 /*=======================================================================*/
 
 // ssl parameters
@@ -618,7 +735,7 @@
 
 //RSI_ENABLE or RSI_DISABLE Timeout support
 #ifndef RSI_TIMEOUT_SUPPORT
-#define RSI_TIMEOUT_SUPPORT RSI_DISABLE
+#define RSI_TIMEOUT_SUPPORT RSI_ENABLE
 #endif
 
 // roaming threshold value
@@ -628,7 +745,7 @@
 
 // roaming hysterisis value
 #ifndef RSI_TIMEOUT_VALUE
-#define RSI_TIMEOUT_VALUE 1500
+#define RSI_TIMEOUT_VALUE 3000
 #endif
 
 // Timeout for ping request
@@ -1157,5 +1274,6 @@
 #define TRIGGER_RESP_IND   0xF
 #define IPPS_VALID_VALUE   0
 #define TX_ONLY_ON_AP_TRIG 0
+#define TWT_SUPPORT        RSI_DISABLE
 /*========================================================================*/
 #endif

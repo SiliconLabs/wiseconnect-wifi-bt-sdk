@@ -151,8 +151,11 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   buffer += sizeof(struct wpa_scan_results_arr);
 #endif
 
-#ifdef LOGGING_ENABLE
+#ifdef SAPI_LOGGING_ENABLE
   buffer += sl_log_init(buffer);
+#endif
+#ifdef FW_LOGGING_ENABLE
+  buffer += sl_fw_log_init(buffer);
 #endif
 
   // Check for max no of sockets
@@ -200,7 +203,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   rsi_driver_cb->common_cb->ipmu_calib_data_cb = (efuse_ipmu_t *)buffer;
   // ipmu_calib_data_cb = (efuse_ipmu_t *)buffer;
   // efuse_size = sizeof(efuse_ipmu_t);
-  buffer += sizeof(efuse_ipmu_t);
+  buffer += RSI_M4_MEMORY_POOL_SIZE;
 #endif
 #ifdef RSI_WLAN_ENABLE
   // Initialize wlan cb
@@ -412,7 +415,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
  *			                        6 - Access point mode \n
  *			                        8 - Transmit test mode \n
  *			                        9 - Concurrent mode
- * @note 			  Opermode WiFi-Direct(1) mode is not supported.
+ * @note 			 Opermode WiFi-Direct(1) mode is not supported.
  * @param[in]  coex_mode       -    Coexistence mode
  *                                  0 - WLAN only mode \n
  *                                  1 - WLAN \n
@@ -700,6 +703,132 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
   return status;
 }
 
+#ifdef RSI_M4_INTERFACE
+#ifdef CHIP_9117
+/*==============================================*/
+/**
+ * @brief      to write content on TA flash from M4. This is a blocking API.
+ * @param[in]  wr_addr        - address at which data will be written on TA flash memory
+ * @param[in]  write_data     - Input data
+ * @param[in]  wr_data_len    - total length
+ * @return     0              - Success \n
+ *             Negative Value - Failure
+ *
+ *
+ */
+int32_t rsi_cmd_to_wr_comm_flash(uint32_t wr_addr, uint8_t *write_data, uint16_t wr_data_len)
+{
+  static uint32_t rem_len;
+  uint16_t chunk_size = 0;
+  static uint32_t offset;
+  rsi_pkt_t *pkt;
+  rsi_req_ta2m4_t *rsi_chunk_ptr;
+  int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_CMD_M4_TA_SECURE_HANDSHAKE_ENTRY, COMMON, LOG_INFO);
+
+  // Get common cb pointer
+  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
+
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+
+  if (status == RSI_SUCCESS) {
+
+    // Get the chunk size
+    chunk_size = RSI_MAX_CHUNK_SIZE - (sizeof(rsi_req_ta2m4_t) - RSI_MAX_CHUNK_SIZE);
+
+    // Get input length
+    rem_len = wr_data_len;
+
+    while (rem_len) {
+
+      // Allocate command buffer
+      pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+
+      // If allocation of packet fails
+      if (pkt == NULL) {
+
+        //Change common state to allow state
+        rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+        // Return packet allocation failure error
+        SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
+
+        return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+      }
+
+      rsi_chunk_ptr = (rsi_req_ta2m4_t *)pkt->data;
+
+      memset(&pkt->data, 0, RSI_MAX_CHUNK_SIZE);
+
+      // Take the sub_cmd_type for TA and M4 commands
+      rsi_chunk_ptr->sub_cmd = RSI_WRITE_TO_COMMON_FLASH;
+
+      // Writes on which TA Flash location
+      rsi_chunk_ptr->addr = wr_addr;
+
+      // Total remaining length
+      rsi_chunk_ptr->in_buf_len = rem_len;
+
+      if (rem_len >= chunk_size) {
+
+        //Total chunck length
+        rsi_chunk_ptr->chunk_len = chunk_size;
+
+        // More chunks to send
+        rsi_chunk_ptr->more_chunks = 1;
+
+        // Copy the chunk
+        memcpy(rsi_chunk_ptr->input_data, write_data + offset, chunk_size);
+
+        // Move the offset by chunk size
+        offset += chunk_size;
+
+        // Subtract the rem_len by the chunk size
+        rem_len -= chunk_size;
+      } else {
+
+        rsi_chunk_ptr->chunk_len = rem_len;
+
+        // last chunk to send
+        rsi_chunk_ptr->more_chunks = 0;
+
+        // Copy the chunk
+        memcpy(rsi_chunk_ptr->input_data, write_data + offset, rem_len);
+
+        // Reset rem_len and offset
+        rem_len = 0;
+        offset  = 0;
+      }
+#ifndef RSI_COMMON_SEM_BITMAP
+      rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+      // Send  antenna select command
+      status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_TA_M4_COMMANDS, pkt);
+
+      // Wait on common semaphore
+      rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_TA_M4_COMMAND_RESPONSE_WAIT_TIME);
+
+      // Get common command response status
+      status = rsi_common_get_status();
+    }
+
+    // Change common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    // Return common command error
+    SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Get common command response status
+  status = rsi_common_get_status();
+
+  // Return status
+  SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_EXIT, COMMON, LOG_INFO, "status: %4x", status);
+  return status;
+}
+#endif
 /*==============================================*/
 /**
  * @brief      Secure handshake. This is a blocking API.
@@ -714,7 +843,6 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
  *
  */
 
-#ifdef RSI_M4_INTERFACE
 int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
                                        uint8_t input_len,
                                        uint8_t *input_data,
@@ -891,6 +1019,11 @@ int32_t rsi_wireless_deinit(void)
 #ifdef RSI_WLAN_ENABLE
   rsi_driver_cb->wlan_cb->state   = RSI_WLAN_STATE_NONE;
 #endif
+
+  // Deinitializing SDIO Interface
+#if defined(RSI_SDIO_INTERFACE)
+  rsi_sdio_deinit();
+#endif
   // Initialize Device
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
@@ -911,8 +1044,7 @@ int32_t rsi_wireless_deinit(void)
  * 				    	              1 : RF_OUT_1/uFL connector is selected.
  * @param[in]    gain_2g           -  Currently not supported 
  * @param[in]    gain_5g           -  Currently not supported 
- * @note         1. Currently ignore the gain_2g, gain_5g, antenna_path, antenna_type values.\n
- * @note         2. Currently wireless_antenna selection is not supported.
+ * @note         Currently ignore the gain_2g, gain_5g values\n
  * @return       0                 -  Success \n
  *               Non-Zero Value    -  Failure \n
  *                                    If return value is less than 0 \n
@@ -1548,8 +1680,14 @@ int32_t rsi_driver_deinit(void)
   }
   rsi_mutex_destroy(&rsi_driver_cb->common_cb->common_mutex);
   rsi_mutex_destroy(&rsi_driver_cb_non_rom->tx_mutex);
-#ifdef LOGGING_ENABLE
+#ifdef SAPI_LOGGING_ENABLE
   sl_log_deinit();
+#endif
+#ifdef FW_LOGGING_ENABLE
+  sl_fw_log_deinit();
+#endif
+#if defined(RSI_DEBUG_PRINTS) || defined(FW_LOGGING_ENABLE)
+  rsi_mutex_destroy(&rsi_driver_cb_non_rom->debug_prints_mutex);
 #endif
 #ifdef RSI_ZB_ENABLE
   rsi_mutex_destroy(&rsi_driver_cb->zigb_tx_q.queue_mutex);
@@ -1576,10 +1714,12 @@ int32_t rsi_driver_deinit(void)
     return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
   }
 #endif
-  status = rsi_semaphore_destroy(&rsi_driver_cb->rx_pool.pkt_sem);
-  if (status != RSI_ERROR_NONE) {
-    SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_3, COMMON, LOG_ERROR, "status: %4x", status);
-    return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
+  if (rsi_driver_cb->rx_pool.pkt_sem != (uint32_t)NULL) {
+    status = rsi_semaphore_destroy(&rsi_driver_cb->rx_pool.pkt_sem);
+    if (status != RSI_ERROR_NONE) {
+      SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_3, COMMON, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_SEMAPHORE_DESTROY_FAILED;
+    }
   }
   status = rsi_semaphore_destroy(&rsi_driver_cb->common_cb->common_tx_pool.pkt_sem);
   if (status != RSI_ERROR_NONE) {
@@ -1723,6 +1863,11 @@ int32_t rsi_driver_deinit(void)
 #ifdef RSI_WLAN_ENABLE
   rsi_driver_cb->wlan_cb->state = RSI_WLAN_STATE_NONE;
 #endif
+#ifndef LINUX_PLATFORM
+#ifdef RSI_SPI_INTERFACE
+  rsi_timer_stop(RSI_TIMER_NODE_0);
+#endif
+#endif
   rsi_driver_cb_non_rom->device_state = RSI_DEVICE_STATE_NONE;
   SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_26, COMMON, LOG_INFO);
   return RSI_SUCCESS;
@@ -1740,6 +1885,9 @@ int32_t rsi_driver_deinit(void)
 
 int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle)
 {
+#ifndef RSI_WITH_OS
+  UNUSED_PARAMETER(task_handle); //This statement is added only to resolve compilation warning, value is unchanged
+#endif
   SL_PRINTF(SL_DRIVER_DEINIT_TASK_DESTROY_ENTRY, COMMON, LOG_INFO);
   int32_t status = RSI_SUCCESS;
 
@@ -1760,7 +1908,7 @@ int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "2.5.2.4"
+#define RSI_DRIVER_VERSION "2.6.0.34"
 int32_t rsi_driver_version(uint8_t *request)
 {
   SL_PRINTF(SL_DRIVER_VERSION_ENTRY, COMMON, LOG_INFO);
@@ -2452,10 +2600,12 @@ int32_t rsi_gpio_readpin(uint8_t gpio_type, uint8_t pin_num, uint8_t *gpio_value
 
 //*==============================================*/
 /**
- * @brief       Read status of TA GPIOs using Command from host. This is a non-blocking API.
- * @param[in]   gpio_num   -  GPIO Number : Valid values  0 - 15
- * @return 		0  - status of TA GPIO is LOW \n 
- *                      1  - status of TA GPIO is HIGH \n
+ * @brief       Read status of NWP GPIOs using Command from host. This is a non-blocking API.
+ * @param[in]   gpio_num   -  GPIO Number : Valid values  0 - 15 for ULP \n
+ *              GPIO Number : Valid values  0 - 63 for SOC \n
+ *				GPIO Number : Valid values  0 - 3 for UULP 
+ * @return 		0  - status of NWP GPIO is LOW \n 
+ *                      1  - status of NWP GPIO is HIGH \n
  *		        < 0  Non-Zero Value - Failure        
  */
 
@@ -2486,8 +2636,10 @@ int32_t rsi_gpio_read(uint8_t gpio_num)
 
 //*==============================================*/
 /**
- *@brief        Drive the TA GPIOs high or low using command from host. This is a non-blocking API.
- *@param[in]   	gpio_num       -  GPIO Number : Valid values  0 - 15
+ *@brief        Drive the NWP GPIOs high or low using command from host. This is a non-blocking API.
+ *@param[in]   	gpio_num       - GPIO Number : Valid values  0 - 15 for ULP \n
+ *              GPIO Number : Valid values  0 - 63 for SOC \n
+ *				GPIO Number : Valid values  0 - 3 for UULP
  *@param[in]    write          -  Value to be driven on GPIO \n
  *                                0x10 - Drive high \n
  *                                0 - Drive Low  \n

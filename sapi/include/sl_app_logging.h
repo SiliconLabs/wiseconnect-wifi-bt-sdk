@@ -14,12 +14,14 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-#ifndef __SL_LOGGING_H__
-#define __SL_LOGGING_H__
-
-#ifdef LOGGING_ENABLE
-
+#ifndef __SL_APP_LOGGING_H__
+#define __SL_APP_LOGGING_H__
+#ifdef SAPI_LOGGING_ENABLE
+//Includes
+#include "rsi_common.h"
 #include "rsi_driver.h"
+
+extern rsi_driver_cb_non_rom_t *rsi_driver_cb_non_rom;
 
 typedef enum { LOG_OFF, LOG_ERROR, LOG_WARNING, LOG_INFO } log_levels_t;
 typedef enum { BYTE_LEN, WORD_LEN, VARIABLE_LEN, DWORD_LEN } log_data_len_t;
@@ -48,7 +50,6 @@ typedef struct debug_info_s {
 } debug_info_t;
 
 extern uint8_t *logging_buffer;
-extern rsi_driver_cb_non_rom_t *rsi_driver_cb_non_rom;
 #define LOG_BUFFER_SIZE 128
 // LDID is 5 bits wide
 #define MAX_LDID 0x1F
@@ -68,4 +69,5 @@ void sl_log_3_args(uint32_t diagnostic_info, uint32_t arg1, uint32_t arg2, uint3
 // HAL function to send the logging buffer
 int32_t sl_hal_send_log(uint8_t *buffer, uint32_t buffer_length);
 #endif
+
 #endif

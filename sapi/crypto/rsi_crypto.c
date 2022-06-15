@@ -1008,6 +1008,8 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
 
     // Fill ecdh sub mode 1 - point Multiplication
     ecdh->ecdh_sub_mode = ECDH_PM;
+    // Fill Curve type
+    ecdh->ecdh_curve_type = ECDH_CURVE_P;
 
     // Memset before filling
     memset(&ecdh->sx[0], 0, ECDH_MAX_VECTOR_SIZE);
@@ -1047,6 +1049,8 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
 #endif
     // Send ecdh point multiplication request to module
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Copy Data
     memcpy(rx, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
@@ -1058,9 +1062,6 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
 
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
-
-    // Wait on common semaphore
-    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
@@ -1234,6 +1235,8 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 #endif
     // Send point addition calculation request to module
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Copy Data
     memcpy(rx, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
@@ -1245,9 +1248,6 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
-
-    // Wait on common semaphore
-    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
@@ -1422,6 +1422,9 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
     // Send point subtraction calculation request to module
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
 
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
     // Copy Data
     memcpy(rx, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
     offset += ECDH_MAX_VECTOR_SIZE;
@@ -1432,9 +1435,6 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
 
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
-
-    // Wait on common semaphore
-    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
@@ -1588,6 +1588,9 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
     // Send point double calculation request to module
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
 
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
     // Copy Data
     memcpy(rx, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
     offset += ECDH_MAX_VECTOR_SIZE;
@@ -1598,9 +1601,6 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
 
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
-
-    // Wait on common semaphore
-    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
@@ -1718,6 +1718,9 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
     // Fill ecdh mode
     ecdh->ecdh_mode = ecdh_mode;
 
+    // Fill Curve type
+    ecdh->ecdh_curve_type = ECDH_CURVE_P;
+
     // Fill ecdh sub mode 5 - point affine
     ecdh->ecdh_sub_mode = ECDH_PAF;
 
@@ -1754,6 +1757,8 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
     // Send point affine calculation request to module
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
 
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
     // Copy Data
     memcpy(rx, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
     offset += ECDH_MAX_VECTOR_SIZE;
@@ -1764,9 +1769,6 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
 
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
-
-    // Wait on common semaphore
-    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
@@ -2156,8 +2158,8 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
 
   while (total_len) {
     //! check total length
-    if (total_len > MAX_DATA_SIZE_BYTES) {
-      chunk_len = MAX_DATA_SIZE_BYTES;
+    if (total_len > MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY) {
+      chunk_len = MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY;
       if (offset == 0) {
         //! Make chachapoly_flags as first chunk
         chachapoly_flags |= FIRST_CHUNK;
@@ -2365,13 +2367,13 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
 
     //!Data
     //! Memset before filling
-    memset(&chachapoly->msg[0], 0, MAX_DATA_SIZE_BYTES);
+    memset(&chachapoly->msg[0], 0, MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY);
 
     //! Copy Data
     memcpy(&chachapoly->msg[0], msg, chunk_len);
 
     //! Using host descriptor to set payload length
-    send_size = sizeof(rsi_chachapoly_req_t) - MAX_DATA_SIZE_BYTES + chunk_len;
+    send_size = sizeof(rsi_chachapoly_req_t) - MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY + chunk_len;
 
     //! get the host descriptor
     host_desc = (pkt->desc);

@@ -111,6 +111,10 @@ int16_t rsi_bl_module_power_cycle(void)
   rsi_delay_ms(100);
   // Set/drive high value on the GPIO
   rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
+
+  // delay for 100 milli seconds
+  rsi_delay_ms(100);
+
   SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_EXIT, DRIVER, LOG_INFO);
   return RSI_SUCCESS;
 }

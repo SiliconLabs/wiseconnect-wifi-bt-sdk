@@ -39,6 +39,7 @@ extern uint8_t sdio_init_done;
 void rsi_hal_intr_config(void (* rsi_interrupt_handler)(void))
 {
 
+  UNUSED_PARAMETER(rsi_interrupt_handler); //This statement is added only to resolve compilation warning, value is unchanged
   //! Configure interrupt pin/register in input mode and register the interrupt handler
   
   return;
@@ -133,7 +134,7 @@ uint8_t rsi_hal_intr_pin_status(void)
 if(sdio_init_done){
   //! Return interrupt pin  status(high(1) /low (0))
    //status = rsi_hal_get_gpio(RSI_HAL_MODULE_INTERRUPT_PIN);
-    status =  GPIO_PinInGet(SL_GPIO_PORT_E, 10);
+    status =  GPIO_PinInGet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 10);
 }
   return status;
 }
@@ -141,7 +142,7 @@ if(sdio_init_done){
 /*===================================================*/
 /**
  * @fn           rsi_reg_flags_t rsi_hal_critical_section_entry(void)
- * @brief        hold interrupt status and disables the SPI interrupt
+ * @brief        hold interrupt status and disables the SDIO interrupt
  * @param[in]    none  
  * @param[out]   none
  * @return       stored interrupt status
@@ -160,7 +161,7 @@ uint32_t rsi_hal_critical_section_entry(void)
 /*===================================================*/
 /**
  * @fn           void rsi_hal_critical_section_exit(void)
- * @brief        Enables the SPI interrupt
+ * @brief        Enables the SDIO interrupt
  * @param[in]    none  
  * @param[out]   none
  * @return       none

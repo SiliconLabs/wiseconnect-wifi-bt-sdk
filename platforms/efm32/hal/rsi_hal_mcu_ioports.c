@@ -44,7 +44,9 @@
  */
 void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
 {
-  
+  UNUSED_PARAMETER(gpio_number); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warning, value is unchanged
+  UNUSED_PARAMETER(value); //This statement is added only to resolve compilation warning, value is unchanged
   //! Initialise the gpio pins in input/output mode
   CMU_ClockEnable(cmuClock_GPIO, true);
    //! Initialise the gpio pins in input/output mode
@@ -55,7 +57,7 @@ void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
    GPIO_PinModeSet(gpioPortA,13,gpioModeInput,0);
 
 
-   GPIO_PinModeSet(SL_GPIO_PORT_B,11,gpioModePushPull,1);//Reset PB 11
+   GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11,gpioModePushPull,1);//Reset PB 11
    return;
 
 
@@ -91,7 +93,7 @@ void rsi_hal_set_gpio(uint8_t gpio_number)
 
   if(gpio_number ==  RSI_HAL_RESET_PIN)
     {
-      GPIO_PinModeSet(SL_GPIO_PORT_B,11,gpioModePushPull,1);
+      GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11,gpioModePushPull,1);
     }
   return;
 }
@@ -124,7 +126,7 @@ uint8_t rsi_hal_get_gpio(uint8_t gpio_number)
     }
   if(gpio_number ==  RSI_HAL_MODULE_INTERRUPT_PIN)
       {
-        gpio_value =  GPIO_PinInGet(SL_GPIO_PORT_E, 10);
+        gpio_value =  GPIO_PinInGet((GPIO_Port_TypeDef)SL_GPIO_PORT_E, 10);
     //  gpio_value = GPIO_PinModeGet(SL_GPIO_PORT_E, 10);
       }
 
@@ -164,7 +166,7 @@ void rsi_hal_clear_gpio(uint8_t gpio_number)
      }
   if(gpio_number ==  RSI_HAL_RESET_PIN)
       {
-        GPIO_PinOutClear(SL_GPIO_PORT_B,11);
+        GPIO_PinOutClear((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11);
       }
 
   
