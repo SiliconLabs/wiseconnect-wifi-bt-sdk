@@ -37,8 +37,8 @@ Before running the application, the user will need the following things to setup
 ### 3.1 Platform
 
 The Application can be built and executed on below Host platforms
-*	[STM32F411 Nucleo](https://st.com/)
-*	[WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
+*  [STM32F411 Nucleo](https://st.com/)
+*  [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit) 
 *   [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
 
 ### 3.2 Host Interface
@@ -50,15 +50,15 @@ The Application can be built and executed on below Host platforms
 
 The Application is provided with the project folder containing Keil and Simplicity Studio project files.
 
-*	Keil Project
-	- The Keil project is used to evaluate the application on STM32.
-	- Project path: `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-nucleo-f411re.uvprojx`
+*  Keil Project
+  - The Keil project is used to evaluate the application on STM32.
+  - Project path: `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-nucleo-f411re.uvprojx`
 
-*	Simplicity Studio
-	- The Simplicity Studio project is used to evaluate the application on EFR32MG21.
-	- Project path: 
-		- If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-brd4180a-mg21.slsproj`
-		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-brd4180b-mg21.slsproj` 
+*  Simplicity Studio
+  - The Simplicity Studio project is used to evaluate the application on EFR32MG21.
+  - Project path: 
+    - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-brd4180a-mg21.slsproj`
+    - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-brd4180b-mg21.slsproj` 
         - User can find the Radio Board version as given below 
 
 ![EFR Radio Boards](resources/readme/image31a.png)
@@ -81,27 +81,34 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_LOCAL_NAME` refers the name of the WiSeConnect device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_LOCAL_NAME			"SILABS_DEVICE"
+```c
+#define RSI_BLE_LOCAL_NAME      "SILABS_DEVICE"
+```
 
    Address of the device to connect
      
-	 #define RSI_BLE_DEV_ADDR "11:11:11:11:11:11"
+```c
+#define RSI_BLE_DEV_ADDR "11:11:11:11:11:11"
+```
 
    Remote Device Name to connect
      
-	 #define RSI_REMOTE_DEVICE_NAME "SLAVE"
+```c
+#define RSI_REMOTE_DEVICE_NAME "SLAVE"
+#define SLAVE_MODE  0
+#define MASTER_MODE 1
+#define DUAL_MODE   2
+```
 
-     #define SLAVE_MODE  0
-     #define MASTER_MODE 1
-     #define DUAL_MODE   2
-	 
    Configure the required mode using the above three macros 
-   
-     #define BLE_ROLE    SLAVE_MODE
-   
+
+```c
+#define BLE_ROLE    SLAVE_MODE
+```
+
    **To Enable Power Save**
    
-   **PSP\_MODE** refers power save profile mode. The WiseConnect device supports following power modes in BTLE,
+   **PSP_MODE** refers power save profile mode. The WiseConnect device supports following power modes in BTLE,
    
    **RSI_ACTIVE (0):** In this mode, the module is active and power save is disabled.
    
@@ -109,45 +116,54 @@ The application can be configured to suit your requirements and development envi
    
    **RSI_SLEEP_MODE_8 (8):** In this power mode, the module goes to power save when it is in the unassociated state with the remote device. In this sleep mode, SoC will go to sleep based on GPIO handshake or Message exchange, therefore handshake is required before sending the command to the module.
 
-	 #define PSP_MODE					RSI_SLEEP_MODE_2
-	
-   **Note:**
-    For `RSI_SLEEP_MODE_2` and `RSI_SLEEP_MODE_8` modes, GPIO or Message based handshake can be selected using `RSI_HAND_SHAKE_TYPE` macro 
-	which is defined in `rsi_wlan_config.h`                                                                                                   
-		
-   **Note:**                                                                                                                               
-	In this example,user can verify `RSI_SLEEP_MODE_2` with Message based handshake. If the user wants to verify other power modes,   
-	the user has to change the application as well as GPIO handshake signals                                                              
-		
-   **PSP\_TYPE** refers power save profile type. The WiseConnect device supports following power save profile types in BTLE mode,
-   **RSI\_MAX\_PSP (0):** In this mode, the WiSeConnect device will be in Maximum power save mode. i.e Device will wake up for every DTIM beacon and do data Tx and Rx.
-   
-	 #define PSP_TYPE                                      RSI_MAX_PSP                    `
-  
+```c
+#define PSP_MODE          RSI_SLEEP_MODE_2
+```
+
+---
+**Note!**
+For `RSI_SLEEP_MODE_2` and `RSI_SLEEP_MODE_8` modes, GPIO or Message based handshake can be selected using `RSI_HAND_SHAKE_TYPE` macro which is defined in `rsi_wlan_config.h`                                                                                                   
+
+In this example,user can verify `RSI_SLEEP_MODE_2` with Message based handshake. If the user wants to verify other power modes,   
+the user has to change the application as well as GPIO handshake signals                                                            **PSP_TYPE** refers power save profile type. The WiseConnect device supports following power save profile types in BTLE mode, **RSI_MAX_PSP (0):** In this mode, the WiSeConnect device will be in Maximum power save mode. i.e Device will wake up for every DTIM beacon and do data Tx and Rx.
+
+---
+
+```c
+#define PSP_TYPE                                      RSI_MAX_PSP                    `
+```
+
    **Following are the non-configurable macros in the application.**
   
    Following are the event numbers for advertising, connection and Disconnection events:
      
-	 #define RSI_APP_EVENT_ADV_REPORT         			   0
-	 #define RSI_APP_EVENT_CONNECTED                       1
-	 #define RSI_APP_EVENT_DISCONNECTED                    2
+```c
+#define RSI_APP_EVENT_ADV_REPORT                  0
+#define RSI_APP_EVENT_CONNECTED                       1
+#define RSI_APP_EVENT_DISCONNECTED                    2
+```
 
    `BT_GLOBAL_BUFF_LEN` refers Number of bytes required by the application and the driver
-		
-	 #define BT_GLOBAL_BUFF_LEN                            15000 `
+    
+```c
+#define BT_GLOBAL_BUFF_LEN                            15000 `
+```
 
    **Opermode command parameters**
 
-	 #define RSI_FEATURE_BIT_MAP                           FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                             RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                    TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                    FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (EXT_FEAT_384K_MODE|EXT_FEAT_XTAL_CLK_ENABLE | 					EXT_FEAT_LOW_POWER_MODE)
-
+```c
+#define RSI_FEATURE_BIT_MAP                           FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                             RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                    TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                    FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (EXT_FEAT_384K_MODE|EXT_FEAT_XTAL_CLK_ENABLE |           EXT_FEAT_LOW_POWER_MODE)
+```
 
    `RSI_HAND_SHAKE_TYPE` is used to select GPIO or Message based handshake in RSI_SLEEP_MODE_2 and RSI_SLEEP_MODE_8 modes.
    
-	 #define RSI_HAND_SHAKE_TYPE                           GPIO_BASED
+```c
+#define RSI_HAND_SHAKE_TYPE                           GPIO_BASED
+```
 
    `RSI_SELECT_LP_OR_ULP_MODE` is used to select low power mode or ultra low power mode. Valid configurations are, RSI_LP_MODE or RSI_ULP_WITH_RAM_RET or RSI_ULP_WITHOUT_RAM_RET
    
@@ -163,7 +179,9 @@ The application can be configured to suit your requirements and development envi
 
    In this, the module will be in Ultra low power mode and it will not remember the previous state after issuing power save mode command. After wakeup, the module will give CARD READY indication and the user has to issue commands from wireless initialization.
   
-	 #define RSI_SELECT_LP_OR_ULP_MODE                     RSI_ULP_WITH_RAM_RET
+```c
+#define RSI_SELECT_LP_OR_ULP_MODE                     RSI_ULP_WITH_RAM_RET
+```
 
 ## 5. Testing the Application
 
@@ -182,8 +200,8 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Open the project `<SDK>/examples/snippets/ble/ble_power_save/projects/ble_power_save-nucleo-f411re.uvprojx` in Keil IDE.
 - Build and Debug the project
 - Check for the RESET pin:
-	- If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
-	- If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run.
+  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run.
+  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run.
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
@@ -198,8 +216,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-	- If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-	- If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
@@ -213,8 +231,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    
 3. Open an LE App in the Smartphone and do Scan
    
-4. In the App, WiSeConnect module device will appear with the name configured in the macro **RSI\_BLE\_LOCAL\_NAME (Ex: "WLAN\_BLE\_SIMPLE")** or sometimes observed as the 
-   WiSeConenct device as the internal name **"SILABS_DEVICE".**
+4. In the App, WiSeConnect module device will appear with the name configured in the macro **RSI_BLE_LOCAL_NAME (Ex: "WLAN_BLE_SIMPLE")** or sometimes observed as the WiSeConnect device as the internal name **"SILABS_DEVICE".**
    
 ![WiSeConenct device in App](resources/readme/image33.png)
    
@@ -233,7 +250,12 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 ![Prints in Teraterm](resources/readme/image_pw_log.png)    
    
    
-	  Default configuration of connection interval of Central device (smartphone) is 18 ms. So, the WiSeConnect device will wake up for every 18ms sec and goes     
-	  back to sleep after advertise.                                                                                                                              
-	  Above power save profile image capture when it is in the idle state after successful connection. So, the user may not get same profile as shown above image.
-	  It will vary based on the traffic.                                                                                                                              
+Default configuration of connection interval of Central device (smartphone) is 18 ms. So, the WiSeConnect device will wake up for every 18ms sec and goes back to sleep after advertise.    
+
+Above power save profile image capture when it is in the idle state after successful connection. 
+
+So, the user may not get the same profile as shown in the above image. It will vary based on the traffic.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

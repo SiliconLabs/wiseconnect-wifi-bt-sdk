@@ -85,51 +85,68 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_DEVICE_NAME` refers the name of the WiSeConnect device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_DEVICE_NAME                              "BLE_SMP_SC"
-   
+```c
+#define RSI_BLE_DEVICE_NAME                              "BLE_SMP_SC"
+```
+
    RSI_BLE_SMP_IO_CAPABILITY refers IO capability.
 
-	 #define RSI_BLE_SMP_IO_CAPABILITY                        0x00
+```c
+#define RSI_BLE_SMP_IO_CAPABILITY                        0x00
+```
+
    RSI_BLE_SMP_PASSKEY refers SMP Passkey
 
-	 #define RSI_BLE_SMP_PASSKEY                              0
+```c
+#define RSI_BLE_SMP_PASSKEY                              0
+```
+
    Following are the non-configurable macros in the application.
 
-	 #define RSI_BLE_CONN_EVENT                               0x01
-	 #define RSI_BLE_DISCONN_EVENT                            0x02
-	 #define RSI_BLE_SMP_REQ_EVENT                            0x03
-	 #define RSI_BLE_SMP_RESP_EVENT                           0x04
-	 #define RSI_BLE_SMP_PASSKEY_EVENT                        0x05
-	 #define RSI_BLE_SMP_FAILED_EVENT                         0x06
-	 #define RSI_BLE_ENCRYPT_STARTED_EVENT                    0x07
-	 #define RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT                0x08
-	 #define RSI_BLE_SC_PASSKEY_EVENT                         0X09
-	 #define RSI_BLE_LTK_REQ_EVENT                            0x0A
+```c
+#define RSI_BLE_CONN_EVENT                               0x01
+#define RSI_BLE_DISCONN_EVENT                            0x02
+#define RSI_BLE_SMP_REQ_EVENT                            0x03
+#define RSI_BLE_SMP_RESP_EVENT                           0x04
+#define RSI_BLE_SMP_PASSKEY_EVENT                        0x05
+#define RSI_BLE_SMP_FAILED_EVENT                         0x06
+#define RSI_BLE_ENCRYPT_STARTED_EVENT                    0x07
+#define RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT                0x08
+#define RSI_BLE_SC_PASSKEY_EVENT                         0X09
+#define RSI_BLE_LTK_REQ_EVENT                            0x0A
+```
 
    BT_GLOBAL_BUFF_LEN refers Number of bytes required by the application and the driver
 
-	 #define BT_GLOBAL_BUFF_LEN                               15000
-	 
+```c
+#define BT_GLOBAL_BUFF_LEN                               15000
+```
+
    **Power save configuration**
 
    By default, The Application is configured without power save.
 	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1 
-	 
+```c
+#define ENABLE_POWER_SAVE 1 
+```
+
 **4.2**  Open `rsi_ble_config.h` file and update/modify following macros,
 		
    **Opermode command parameters**
 
-	 #define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                              RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                  0
-
+```c
+#define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                              RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                  0
+```
 
 ## 5. Testing the Application
 
@@ -188,3 +205,7 @@ then click on the three dots beside the name and select delete bond information.
 7. After successful program execution, the prints in teraterm looks as shown below.   
     
 ![Prints in Teraterm](resources/readme/image1b.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

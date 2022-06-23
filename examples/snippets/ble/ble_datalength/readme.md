@@ -85,7 +85,10 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_DEV_ADDR_TYPE` refers address type of the remote device to connect.
 
-	 #define RSI_BLE_DEV_ADDR_TYPE                           LE_PUBLIC_ADDRESS
+```c
+#define RSI_BLE_DEV_ADDR_TYPE                           LE_PUBLIC_ADDRESS
+```
+
    Based on the address of the advertising device, Valid configurations are
 
    LE_RANDOM_ADDRESS
@@ -97,69 +100,87 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_DEV_ADDR` refers address of the remote device to connect.
 
-	 #define RSI_BLE_DEV_ADDR                                "00:23:A7:80:70:B9"
+```c
+#define RSI_BLE_DEV_ADDR                                "00:23:A7:80:70:B9"
+```
 
    `RSI_REMOTE_DEVICE_NAME` refers the name of remote device to which Silicon Labs device has to connect
 
-	 #define RSI_REMOTE_DEVICE_NAME                         "SILABS_DEV"
+```c
+#define RSI_REMOTE_DEVICE_NAME                         "SILABS_DEV"
+```
 
-   ```
-   Note
-   Silicon Labs module can connect to remote device by referring either RSI_BLE_DEV_ADDR or RSI_REMOTE_DEVICE_NAME of the remote device.
-   ```
+---
+**Note!**
+Silicon Labs module can connect to remote device by referring either RSI_BLE_DEV_ADDR or RSI_REMOTE_DEVICE_NAME of the remote device.
+
+---
    
    **Power save configuration**
 
    By default, The Application is configured without power save.
 	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1 
+```c
+#define ENABLE_POWER_SAVE 1 
+```
 
 **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
    Following are the non-configurable macros in the file.
    `BT_GLOBAL_BUFF_LEN` refers Number of bytes required by the application and the driver
 
-	 #define BT_GLOBAL_BUFF_LEN                              15000 
-   
+```c
+#define BT_GLOBAL_BUFF_LEN                              15000 
+```
+
    Following are the event numbers for advertising, connection and Disconnection events,
 
-	 #define RSI_APP_EVENT_ADV_REPORT                         0
-	 #define RSI_APP_EVENT_CONNECTED                          1
-	 #define RSI_APP_EVENT_DISCONNECTED                       2 
-	 #define RSI_APP_EVENT_DATA_LENGTH_CHANGE                 3
-	 #define RSI_BLE_MTU_EVENT                                4
-	
+```c
+#define RSI_APP_EVENT_ADV_REPORT                         0
+#define RSI_APP_EVENT_CONNECTED                          1
+#define RSI_APP_EVENT_DISCONNECTED                       2 
+#define RSI_APP_EVENT_DATA_LENGTH_CHANGE                 3
+#define RSI_BLE_MTU_EVENT                                4
+```
+
    Following are the macros for setting data length(TX length and TX time)
 
-	 #define TX_LEN                                          0x001e
-	 #define TX_TIME                                         0x01f4
+```c
+#define TX_LEN                                          0x001e
+#define TX_TIME                                         0x01f4
+```
 
 **4.2** Open `rsi_ble_config.h` file. User can also modify the below parameters as per their needs and requirements.
 	 
    
-   ```    
-     #define RSI_BLE_PWR_INX                                30
-	 #define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
-   ```
+```c
+#define RSI_BLE_PWR_INX                                30
+#define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
+```
 
    **Opermode command parameters**
 
-	 #define RSI_FEATURE_BIT_MAP                             FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                               RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                      TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                      FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                  EXT_FEAT_384K_MODE
+```c
+#define RSI_FEATURE_BIT_MAP                             FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                               RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                      TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                      FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                  EXT_FEAT_384K_MODE
+```
 
 
+---
+**Note!**
+`rsi_ble_config.h` files are already set with desired configuration in respective example folders user need not change for each example.
 
-   ```
-   Note
-   rsi_ble_config.h files are already set with desired configuration in respective example folders user need not change for each example.
-   ```
+---
+
 ## 5. Testing the Application
 
 User has to follow the below steps for the successful execution of the application.
@@ -211,3 +232,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
      
 ![Prints in Teraterm](resources/readme/images_bdl_log.png)    
 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

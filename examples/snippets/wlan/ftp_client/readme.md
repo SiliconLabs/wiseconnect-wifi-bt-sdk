@@ -2,7 +2,8 @@
 
 ## 1. Purpose / Scope 
 
-This application demonstrates how to update new firmware to RS9116W EVK using remote FTP server.
+This application demonstrates how to connect to a FTP server opened on remote peer using FTP client, read a file from FTP server and write the file on to the FTP server.
+In this application, the Silicon Labs device connects to Access Point and establishes FTP client connection with FTP server opened on remote peer. After successful connection, the application reads the data from a file present in FTP server and writes back same data read from the file by replacing first few bytes with the string "SILABS FTP CLIENT DEMO" to the FTP server by creating a new file
 
 File Transfer Protocol (FTP) is a protocol through which internet users can upload files from their computers to a website or download files from a website to their PCs.
 FTP is a client-server protocol that relies on two TCP communications channels between client and server and a command channel for controlling the conversation (command port) and a data channel for transmitting file content(data port). 
@@ -20,7 +21,7 @@ Before running the application, set up the following.
 	- Silicon Labs [WSTK + EFM32GG11](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg11-starter-kit)
     - [STM32F411 Nucleo](https://st.com/) 
 - Wireless Access point
-
+- Windows PC2 with FTP server installed in it
 ![Setup Diagram for FTP CLIENT Example](resources/readme/image384.png)
 
 
@@ -33,11 +34,9 @@ Before running the application, set up the following.
 
    - For Silicon Labs EFx32, use the latest version of [Simplicity Studio](https://www.silabs.com/developers/simplicity-studio)
 
-- Install and configure Wamp-Apache HTTP server, refer to Appendix section 6.3 **Configuring and uploading firmware on Apache HTTP**.
-- Install and configure Wamp-Apache HTTPs server, refer to Appendix section 6.4 **Configuring and uploading firmware on Apache HTTPs**.
-- Configure AWS S3 bucket, refer to Appendix setion 6.1 **Configuring AWS S3 Bucket**.
-- Configure Azure Blob storage, refer to Appendix section 6.2 **Configuring Azure Blob Storage**.
-
+- Install and configure FTP Server demo application.
+- FTP Server demo application can be downloaded from [Filezilla](https://filezilla-project.org/download.php?type=server)
+> Note: FTP client functionality verified with FileZilla server version 0.9.51.
 
 ## 3. Application Build Environment 
 
@@ -89,7 +88,9 @@ The application can be configured to suit user requirements and development envi
 
    **SSID** refers to the name of the Access point.
    
-	 #define SSID                                 "<REDPINE_AP>"
+```c
+	 #define SSID                                 "<SILABS_AP>"
+```
 
    **SECURITY_TYPE** refers to the type of security. In this application STA supports Open, WPA-PSK, WPA2-PSK securities.
    Valid configuration is:
@@ -97,127 +98,171 @@ The application can be configured to suit user requirements and development envi
    **RSI_WPA** - For WPA security mode
    **RSI_WPA2** - For WPA2 security mode  
    
-	 #define SECURITY_TYPE                         RSI_OPEN
-	 
+```c
+#define SECURITY_TYPE                         RSI_OPEN
+```
+
    **PSK** refers to the secret key if the Access point configured in WPA-PSK/WPA2-PSK security modes.
    
-	 #define PSK                                  "<psk>"
-	 
+```c
+#define PSK                                  "<psk>"
+```
+
    **FTP_SERVER_PORT** port refers remote FTP server port number.
    By default FileZilla Server runs on port number 21.
 	 
-	 #define FTP_SERVER_PORT                      21
-	 
+```c
+#define FTP_SERVER_PORT                      21
+```
+
    **SERVER_IP_ADDRESS** refers remote peer IP address to connect with TCP server socket.
    IP address should be in long format and in little endian byte order.
    Example: To configure "192.168.0.100" as remote IP address, update the macro **SERVER_IP_ADDRESS** as **0x6400A8C0**.
 	 
-	 #define SERVER_IP_ADDRESS                    0x6400A8C0
-	 
+```c
+#define SERVER_IP_ADDRESS                    0x6400A8C0
+```
+
    FTP Server login username
 	 
-	 #define FTP_SERVER_LOGIN_USERNAME            "username"
-	 
+```c
+#define FTP_SERVER_LOGIN_USERNAME            "username"
+```
+
    FTP Server login password
 	 
-	 #define FTP_SERVER_LOGIN_PASSWORD            "password"
-	 
+```c
+#define FTP_SERVER_LOGIN_PASSWORD            "password"
+```
 	 
    File to read which is on FTP server
    Create a file on FTP server with the file name along with the path with data given below
 	 
-	 #define FTP_FILE_TO_READ                     "read.txt"
-	 (Or)
-	 #define FTP_FILE_TO_READ                     "D:\FTP Test\read.txt"
-	 
+```c
+#define FTP_FILE_TO_READ                     "read.txt"
+	 (or)
+#define FTP_FILE_TO_READ                     "D:\FTP Test\read.txt"
+```
+
    **FILE_CONTENT_LENGTH** refers content length of the read file from FTP server (Ex: configure **FILE_CONTENT_LENGTH** >= Sizeof ("read.txt"))
 	 
-	 #define FILE_CONTENT_LENGTH                   10000
-	 
+```c
+#define FILE_CONTENT_LENGTH                   10000
+``` 
 	 
    File name to create on FTP server and write the same content which is read from "read.txt"
 	 
-	 #define FTP_FILE_TO_WRITE                   "write.txt"
-	 (Or)
-	 #define FTP_FILE_TO_WRITE                   "D:\FTP Test\write.txt"
-	 
+```c
+#define FTP_FILE_TO_WRITE                   "write.txt"
+	 (or)
+#define FTP_FILE_TO_WRITE                   "D:\FTP Test\write.txt"
+```
+
    To rename a file on FTP server
 	 
-	 #define FTP_FILE_TO_RENAME                  "example.txt"
-	 
+```c
+#define FTP_FILE_TO_RENAME                  "example.txt"
+```
+
    To set the directory on FTP server
 	 
-	 #define FTP_DIRECTORY_SET                   "/work/FTP_EXAMPLE/FTP"
-	 
+```c
+#define FTP_DIRECTORY_SET                   "/work/FTP_EXAMPLE/FTP"
+```
+
    To create directory on FTP server
 	 
-	 #define FTP_DIRECTORY_CREATE                "FTP"
-	 
+```c
+#define FTP_DIRECTORY_CREATE                "FTP"
+```
 	 
    To list the directories on FTP server
 	 
-	 #define FTP_DIRECTORY_LIST                  "/work/FTP_EXAMPLE"
-	 
+```c
+#define FTP_DIRECTORY_LIST                  "/work/FTP_EXAMPLE"
+```
+
    **To configure IP address**
     
    **DHCP_MODE** refers whether IP address configured through DHCP or STATIC
    
-	 #define DHCP_MODE                            1
-	
-   ```	
-   Note:
+```c
+#define DHCP_MODE                            1
+```
+
+---
+**Note!**
     If user wants to configure STA IP address through DHCP then set DHCP_MODE to 1 and skip configuring the following DEVICE_IP,GATEWAY and NETMASK macros.
     (Or)
    If user wants to configure STA IP address through STATIC then set DHCP_MODE macro to "0" and configure following DEVICE_IP, GATEWAY and NETMASK macros.
-   ```
    IP address to be configured to the device in STA mode, it should be in long format and in little endian byte order.
    Example: To configure "192.168.10.10" as IP address, update the macro DEVICE_IP as 0x0A0AA8C0.
-	 
-	 #define DEVICE_IP                           0X0A0AA8C0
-	 
+
+---
+
+```c
+#define DEVICE_IP                           0X0A0AA8C0
+```
+
    IP address of the gateway should also be in long format and in little endian byte order
    Example: To configure "192.168.10.1" as Gateway, update the macro GATEWAY as 0x010AA8C0
 	 
-	 #define GATEWAY                             0x010AA8C0
-	 
+```c
+#define GATEWAY                             0x010AA8C0
+```
+
    IP address of the network mask should also be in long format and in little endian byte order
    Example: To configure "255.255.255.0" as network mask, update the macro NETMASK as 0x00FFFFFF
 	 
-	 #define NETMASK                             0x00FFFFFF
-	 
+```c
+#define NETMASK                             0x00FFFFFF
+```
+
    The following parameters need to be configure if OS is used.
    WLAN task priority is given and this should be of low priority
 	 
-	 #define RSI_WLAN_TASK_PRIORITY             1
-	 
+```c
+#define RSI_WLAN_TASK_PRIORITY             1
+```
+
    Driver task priority is given and this should be of highest priority
 	 
-	 #define RSI_DRIVER_TASK_PRIORITY           1
-	 
+```c
+#define RSI_DRIVER_TASK_PRIORITY           1
+```
+
    WLAN Task stack size is configured by this macro
 	 
-	 #define RSI_WLAN_TASK_STACK_SIZE           500
-	 
+```c
+#define RSI_WLAN_TASK_STACK_SIZE           500
+```
+
    Driver Task stack size is configured by this macro
 	 
-	 #define RSI_DRIVER_TASK_STACK_SIZE         500
-   
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         500
+```  
    
 #### 4.1.2 User must update the below server configuration parameters
 	
   Open **rsi_wlan_config.h** file and update/modify following macros 	
 	 
-	 #define CONCURRENT_MODE                   RSI_DISABLE
-	 #define RSI_FEATURE_BIT_MAP               FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                 RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP        TCP_IP_FEAT_DHCPV4_CLIENT| TCP_IP_FEAT_FTP_CLIENT)
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP        FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEAT_BIT_MAP       EXT_FEAT_256k_MODE
-	 #define RSI_BAND                          RSI_BAND_2P4GHZ
+```c
+#define CONCURRENT_MODE                   RSI_DISABLE
+#define RSI_FEATURE_BIT_MAP               FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                 RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP        TCP_IP_FEAT_DHCPV4_CLIENT| TCP_IP_FEAT_FTP_CLIENT)
+#define RSI_CUSTOM_FEATURE_BIT_MAP        FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEAT_BIT_MAP       EXT_FEAT_256k_MODE
+#define RSI_BAND                          RSI_BAND_2P4GHZ
+```
 
-  **Note:**
-    rsi_wlan_config.h file is already set with desired configuration in respective example folders user need not change for each example.
+---
+**Note!**
+`rsi_wlan_config.h` file is already set with desired configuration in respective example folders user need not change for each example.
 	
+---
+
 **Installation of FTP server**
 
   1. Download the FileZilla FTP server from below link - https://filezilla-project.org/download.php?type=server
@@ -225,18 +270,18 @@ The application can be configured to suit user requirements and development envi
   3. Configure and run FTP server. Please refer the below images for configuring and running FileZilla FTP server.
   4. After installation, open FileZilla Server interface.
  
-   ![Using AWS S3 Bucket](resources/readme/image_1.png) 
+   ![Filezilla Windows Home](resources/readme/image_1.png) 
   
   5. After opening FileZilla server interface, connect to server admin interface.
    
-   ![Using AWS S3 Bucket](resources/readme/image_2.png)
+   ![Filezilla Connect to Server](resources/readme/image_2.png)
   
    6. After connection with server, configure the user settings.
     
-   ![Using AWS S3 Bucket](resources/readme/image_3.png)
-   ![Using AWS S3 Bucket](resources/readme/image_4.png)
-   ![Using AWS S3 Bucket](resources/readme/image_5.png)
-   ![Using AWS S3 Bucket](resources/readme/image_6.png)
+   ![Configure User Settings](resources/readme/image_3.png)
+   ![Configure User Settings](resources/readme/image_4.png)
+   ![Configure User Settings](resources/readme/image_5.png)
+   ![Configure User Settings](resources/readme/image_6.png)
   
   7. Place "read.txt" file in FTP directory (Ex: "D:\FTP Test\read.txt")
 
@@ -285,7 +330,11 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
   4. After successful connection with the Access Point, the device connects to FTP server and reads the file content of given file ("read.txt") and creates a file name "write.txt" in FTP directory and writes the same content which is read from "read.txt" by replacing first few bytes with "FTP CLIENT DEMO". After successful file write WiSeConnect device disconnects from FTP server.
   5. Refer below images for message exchanges with FTP server and for read and write files,
 
-![Using ](resources/readme/image_7.png)
+![Output on Filezilla Interface](resources/readme/image_7.png)
 
-![Using AZURE Blob Storage](resources/readme/image_8.png)
+![Read Write Files in Explorer](resources/readme/image_8.png)
 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

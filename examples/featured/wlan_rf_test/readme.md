@@ -53,13 +53,17 @@ Configure the following parameters in [rsi_wlan_rf_test.c](https://github.com/Si
   #define RSI_ANTENNA          1               // 0 = RF_OUT2, 1 = RF_OUT1
   #define RSI_ANTENNA_GAIN_2G  0               // Gain in 2.4 GHz band in the range [0:10]
   #define RSI_ANTENNA_GAIN_5G  0               // Gain in 5 GHz band in the range [0:10]
-  #define RSI_TX_TEST_NUM_PKTS  0               // To configure number of packets to be sent.
+```
+Configure the following parameters in [rsi_wlan_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/wlan_rf_test/rsi_wlan_config.h).
+  
+```c  
+   #define RSI_TX_TEST_NUM_PKTS  0               // To configure number of packets to be sent.
                                                 // If the macro is set as n, then n number of packets will be 
                                                 // sent on-air, after that transmission will be stopped.
                                                 // If this macro is set as 0 then packets will be sent 
                                                 // continuously until user stops the transmission.
 ```
-
+											
 # Run the Application
 After making any custom configuration changes required, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 
 
@@ -108,3 +112,7 @@ The application has been designed to work with FreeRTOS and Bare Metal configura
 > - Select 'OK' to save the settings
       
 ![Figure: project settings in Keil IDE](resources/readme/image217a.png) 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

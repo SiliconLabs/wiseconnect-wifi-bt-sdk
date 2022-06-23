@@ -199,3 +199,7 @@ The application has been designed to work with FreeRTOS and Bare Metal configura
 > - Select 'OK' to save the settings
       
 ![Figure: project settings in Keil IDE](resources/readme/image184a.png) 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

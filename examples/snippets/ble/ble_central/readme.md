@@ -81,7 +81,9 @@ The application can be configured to suit your requirements and development envi
 
 `RSI_BLE_DEV_ADDR_TYPE` refers address type of the remote device to connect.
 
-	 #define RSI_BLE_DEV_ADDR_TYPE                          LE_PUBLIC_ADDRESS 
+```c
+#define RSI_BLE_DEV_ADDR_TYPE                          LE_PUBLIC_ADDRESS 
+```
 
 Based on address type of remote device, valid configurations are
 
@@ -91,11 +93,15 @@ LE_PUBLIC_ADDRESS
 
 `RSI_BLE_DEV_ADDR` refers address of the remote device to connect.
 
-	 #define RSI_BLE_DEV_ADDR                               "00:1E:7C:25:E9:4D"  
+```c
+#define RSI_BLE_DEV_ADDR                               "00:1E:7C:25:E9:4D"  
+```
 
 `RSI_REMOTE_DEVICE_NAME` refers the name of remote device to which Silicon Labs device has to connect.
 
-	 #define RSI_REMOTE_DEVICE_NAME                         "SILABS_DEV" 
+```c
+#define RSI_REMOTE_DEVICE_NAME                         "SILABS_DEV" 
+```
 
 **Note:** user can configure either RSI_BLE_DEV_ADDR or RSI_REMOTE_DEVICE_NAME of the remote device.
 
@@ -107,36 +113,45 @@ LE_PUBLIC_ADDRESS
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1 
+```c
+#define ENABLE_POWER_SAVE 1 
+```
 
 **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
 Following are the event numbers for advertising, connection and disconnection events
 
-	 #define RSI_APP_EVENT_ADV_REPORT                       0
-	 #define RSI_APP_EVENT_CONNECTED                        1
-	 #define RSI_APP_EVENT_DISCONNECTED                     2
+```c
+#define RSI_APP_EVENT_ADV_REPORT                       0
+#define RSI_APP_EVENT_CONNECTED                        1
+#define RSI_APP_EVENT_DISCONNECTED                     2
+```
 
 Following are the non-configurable macros in the application.
 
 `BT_GLOBAL_BUFF_LEN` refers Number of bytes required by the application and the driver
 
-	 #define BT_GLOBAL_BUFF_LEN                             15000
-
+```c
+#define BT_GLOBAL_BUFF_LEN                             15000
+```
    
 
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros,
 
-	 #define RSI_BLE_PWR_INX                                30
-	 #define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
-	 
+```c
+#define RSI_BLE_PWR_INX                                30
+#define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
+```
+
    **Opermode command parameters**
 
-	 #define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                              RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                 0
+```c
+#define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                              RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                 0
+```
 
 **Note:** `rsi_ble_config.h` files are already set with desired configuration in respective example folders user need not change for each example. 
    
@@ -191,3 +206,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. After successful program execution the prints in teraterm looks as shown below.   
      
 ![Prints in Teraterm window](resources/readme/images23_log.png) 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

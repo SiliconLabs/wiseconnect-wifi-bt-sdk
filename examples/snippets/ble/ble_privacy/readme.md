@@ -84,45 +84,56 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_DEVICE_NAME` refers the name of the Silicon Labs device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_DEVICE_NAME                              "SIMPLE_PRIVACY"
-
+```c
+#define RSI_BLE_DEVICE_NAME                              "SIMPLE_PRIVACY"
+```
 
    RSI_DEVICE_ROLE refers the role of the Silicon Labs device.
 
-	 #define RSI_DEVICE_ROLE                                  RSI_SLAVE
-
+```c
+#define RSI_DEVICE_ROLE                                  RSI_SLAVE
+```
 
    `Note: RSI_DEVICE_ROLE should be RSI_MASTER`
    
    RSI_BLE_DEV_ADDR_TYPE` refers the address type of the remote device.
 
-	 #define RSI_BLE_REMOTE_ADDR_TYPE                         LE_PUBLIC_ADDRESS
-
+```c
+#define RSI_BLE_REMOTE_ADDR_TYPE                         LE_PUBLIC_ADDRESS
+```
 
    `RSI_BLE_DEV_ADDR_1` refers remote device address which has to connect.
 
-	 #define RSI_BLE_REMOTE_ADDR                              "00:23:A7:56:77:77"
-
+```c
+#define RSI_BLE_REMOTE_ADDR                              "00:23:A7:56:77:77"
+```
 
    `RSI_REMOTE_DEVICE_NAME` refers the name of the Remote device to which Silicon Labs module initiate connection.
 
-	 #define RSI_REMOTE_DEVICE_NAME                           "BLE_SIMPLE_PRIVACY"
-
+```c
+#define RSI_REMOTE_DEVICE_NAME                           "BLE_SIMPLE_PRIVACY"
+```
   
    RSI_BLE_SMP_IO_CAPABILITY refers the IO capability of Silicon Labs device for SMP, RSI_BLE_SMP_PASSKEY is smp passkey key from Silicon Labs device
 
-	 #define RSI_BLE_SMP_IO_CAPABILITY                        0x00
-	 #define RSI_BLE_SMP_PASSKEY                              0
+```c
+#define RSI_BLE_SMP_IO_CAPABILITY                        0x00
+#define RSI_BLE_SMP_PASSKEY                              0
+```
 
    **Power save configuration**
 
    By default, The Application is configured without power save.
 	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1 
+```c
+#define ENABLE_POWER_SAVE 1 
+```
 
 **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
@@ -130,82 +141,92 @@ The application can be configured to suit your requirements and development envi
 
    Following are the event numbers for connection, Disconnection, and enhanced connection events.
 
-	 #define RSI_APP_EVENT_ADV_REPORT                         0x00
-	 #define  RSI_BLE_CONN_EVENT                              0x01
-	 #define  RSI_BLE_DISCONN_EVENT                           0x02
-	 #define  RSI_BLE_SMP_REQ_EVENT                           0x03
-	 #define  RSI_BLE_SMP_RESP_EVENT                          0x04
-	 #define  RSI_BLE_SMP_PASSKEY_EVENT                       0x05
-	 #define  RSI_BLE_SMP_FAILED_EVENT                        0x06
-	 #define  RSI_BLE_ENCRYPT_STARTED_EVENT                   0x07
-	 #define  RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT               0x08
-	 #define  RSI_BLE_SC_PASSKEY_EVENT                        0x09
-	 #define  RSI_BLE_LTK_REQ_EVENT                           0x0A
-	 #define  RSI_BLE_SECURITY_KEYS_EVENT                     0x0B
-	 #define  RSI_BLE_ENHANCE_CONNECTED_EVENT                 0x0C
-
+```c
+#define RSI_APP_EVENT_ADV_REPORT                         0x00
+#define  RSI_BLE_CONN_EVENT                              0x01
+#define  RSI_BLE_DISCONN_EVENT                           0x02
+#define  RSI_BLE_SMP_REQ_EVENT                           0x03
+#define  RSI_BLE_SMP_RESP_EVENT                          0x04
+#define  RSI_BLE_SMP_PASSKEY_EVENT                       0x05
+#define  RSI_BLE_SMP_FAILED_EVENT                        0x06
+#define  RSI_BLE_ENCRYPT_STARTED_EVENT                   0x07
+#define  RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT               0x08
+#define  RSI_BLE_SC_PASSKEY_EVENT                        0x09
+#define  RSI_BLE_LTK_REQ_EVENT                           0x0A
+#define  RSI_BLE_SECURITY_KEYS_EVENT                     0x0B
+#define  RSI_BLE_ENHANCE_CONNECTED_EVENT                 0x0C
+```
 
    `BT_GLOBAL_BUFF_LEN` refers Number of bytes required by the application and the driver.
 
-	 #define BT_GLOBAL_BUFF_LEN                               15000
-
+```c
+#define BT_GLOBAL_BUFF_LEN                               15000
+```
 
    `RSI_BLE_SET_RESOLVABLE_PRIV_ADDR_TOUT` refers resolution timeout , that is the length of time the Controller uses a Resolvable Private Address before a new resolvable private address is generated and starts being used.
 
-	 #define RSI_BLE_SET_RESOLVABLE_PRIV_ADDR_TOUT           120
-
+```c
+#define RSI_BLE_SET_RESOLVABLE_PRIV_ADDR_TOUT           120
+```
 
    Process type refers the operation to be performed on the resolving list. valid configurations for the process type are
 
-	 #define RSI_BLE_ADD_TO_RESOLVE_LIST                      1
-	 #define RSI_BLE_REMOVE_FROM_RESOLVE_LIST                 2
-	 #define RSI_BLE_CLEAR_RESOLVE_LIST                       3
-
+```c
+#define RSI_BLE_ADD_TO_RESOLVE_LIST                      1
+#define RSI_BLE_REMOVE_FROM_RESOLVE_LIST                 2
+#define RSI_BLE_CLEAR_RESOLVE_LIST                       3
+```
 
    `RSI_BLE_PRIVACY_MODE` refers the privacy mode of local device
 
-	 #define RSI_BLE_PRIVACY_MODE                             RSI_BLE_DEVICE_PRIVACY_MODE
-
+```c
+#define RSI_BLE_PRIVACY_MODE                             RSI_BLE_DEVICE_PRIVACY_MODE
+```
 
    `RSI_BLE_RESOLVING_LIST_SIZE` refers the resolving list size of Silicon Labs device.
 
-	 #define RSI_BLE_RESOLVING_LIST_SIZE                      5
-
+```c
+#define RSI_BLE_RESOLVING_LIST_SIZE                      5
+```
 
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros
 
    `RSI_BLE_DEV_ADDR_RESOLUTION_ENABLE` refers address resolution is enable or not. It should be 1 to enable privacy feature.
 
-	 #define RSI_BLE_DEV_ADDR_RESOLUTION_ENABLE               1
-
+```c
+#define RSI_BLE_DEV_ADDR_RESOLUTION_ENABLE               1
+```
 
    `RSI_BLE_ADV_DIR_ADDR_TYPE` refers the address type of remote device which use while advertising.
 
-	 #define RSI_BLE_ADV_DIR_ADDR_TYPE                        LE_PUBLIC_ADDRESS
-
+```c
+#define RSI_BLE_ADV_DIR_ADDR_TYPE                        LE_PUBLIC_ADDRESS
+```
 
    `RSI_BLE_ADV_DIR_ADDR` refers to which device the local device will advertise with private address, it should be one of the device in resolve list.
 
-	 #define RSI_BLE_ADV_DIR_ADDR                             "00:15:83:6A:64:17"
+```c
+#define RSI_BLE_ADV_DIR_ADDR                             "00:15:83:6A:64:17"
+#define RSI_BLE_PWR_INX                                  30
+#define RSI_BLE_PWR_SAVE_OPTIONS                         BLE_DISABLE_DUTY_CYCLING 
+```
 
-   ```
-    #define RSI_BLE_PWR_INX                                  30
-	#define RSI_BLE_PWR_SAVE_OPTIONS                         BLE_DISABLE_DUTY_CYCLING 
-   ``` 
    **Opermode command parameters**
 
 
-	 #define RSI_FEATURE_BIT_MAP                              FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                                RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                       TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                       FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                   0
+```c
+#define RSI_FEATURE_BIT_MAP                              FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                                RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                       TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                       FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                   0
+```
 
+---
+**Note!**
+`rsi_ble_config.h` files are already set with desired configuration in respective example folders user need not change for each example.
 
-
-   **Note:**
-   `rsi_ble_config.h` files are already set with desired configuration in respective example folders user 
-   need not change for each example.
+---
 
 ## 5. Testing the Application
 
@@ -294,3 +315,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. Passkey confirmation
       
 ![Passkey confirmation](resources/readme/image44.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

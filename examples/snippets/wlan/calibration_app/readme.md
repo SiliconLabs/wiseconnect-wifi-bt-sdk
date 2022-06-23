@@ -308,3 +308,7 @@ The frequency error section shows the amount of error that needs to be adjusted.
 |Ctune| Captune |
 |Q7 | Single band RS9116 EVK |
 |A7 | Dual band RS9116 EVK |
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

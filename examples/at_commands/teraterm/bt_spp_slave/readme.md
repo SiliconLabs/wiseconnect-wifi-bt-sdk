@@ -1,135 +1,82 @@
 ## BT SPP Slave Tera Term Script
+This example demonstrates how to configure the RS9116W in Bluetooth SPP Slave mode to establish a SPP profile connection with a remote mobile device. Once connected, data can be exchanged between the two BT devices over SPP. This example uses an Android mobile device running a Bluetooth SPP Manager app. An example [Bluetooth SPP Manager App](https://play.google.com/store/apps/details?id=at.rtcmanager) is avalable from the Google Play store.
 
-This example demonstrates how to configure the RS9116W EVK in Slave mode and establish a SPP profile connection with remote Master device and data is exchanged between the two connected devices.
-
-Before continuing, ensure that the RS9116W EVK is plugged into your computer and TeraTerm is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/). 
+Before continuing, ensure the RS9116W is plugged into your computer and Tera Term is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-pc/). 
 
 **STEP 1.** Reset the RS9116W EVK.
 
 **STEP 2.** In the Tera Term menu, select `Control->Macro`.
-
 ![Tera Term Macro](./resources/tera-term-macro.png)
 
 **STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm/bt_spp_slave` and select the file `spp_slave.ttl`.
-
 ![Tera Term Script to be selected](./resources/tera-term-scripts-spp-slave.png)
 
-**STEP 4.**  After the "spp_slave.ttl" script is selected,  The initial dialogue window will appear as below and as a response the user needs to click on the "OK" button.
-
-![Introduction of spp-slave](./resources/introduction-spp-slave.png)
-
-**STEP 5.** Initally, the RS9116W EVK bootup options are executed, the firmware is loaded and the coresponding dialogue window will appear as below.  
-
-![Bootup options execution](./resources/bootup-options.png)
-
-**STEP 6.**  Command sequence in this script:
-
+At startup, the RS9116W is configured using the following commands:
 1. Opermode
-
 2. Set connectable mode
-
 3. Set discoverable mode
-
 4. Set profile mode
-
 5. Set local name
 
-**STEP 7.** After these commands are executed, the RS9116W EVK becomes discoverable in the vicinity and the below dialogue window will appear and the user needs to click on the "OK" button.
-
+**STEP 4.** When complete, the RS9116W is discoverable by nearby bluetooth devices. Select OK to continue.
 ![RS9116W device in discoverable and connectable mode](./resources/device-discoverablity.png)
 
-![RS9116W device in discoverable and connectable mode](./resources/rs9116w-evk-discoverable-mode-1.png)
+## Connecting RS9116W with an Android mobile via Bluetooth
+There are two steps required to connect the RS9116W to a mobile device via Bluetooth using the SPP profile. Firstly, a Bluetooth connection is established, then a SPP connection over Bluetooth is established. These steps are explained in turn in the following sections.
 
-**STEP 8.** To verify the spp functionality, the user requires "Bluetooth SPP Manager" application installed on an Android phone.
+## Establishing a Bluetooth Connection
+**STEP 1.** On the mobile, find the settings page and enable Bluetooth. 
 
-### Note:
-		The "Bluetooth SPP Manager" Application detects paired devices only. Initally, the user needs to establish the PHY level connection with the mobile phone's default bluetooth settings. 
-		Refer `PHY level connection procedure with Android mobile`.	
-
-
-## PHY level connection procedure with Android mobile:
-
-1. On the android phone, navigate to settings → Bluetooth 
-
-2. Turn on the Bluetooth and scan for the RS9116W EVK.
-
-3. The mobile phone displays the nearby discoverable Bluetooth devices as shown in image as below. The module will be  discoverable as the "RS9116W_BT_SLAVE". 
-
+**STEP 2.** Scan for nearby Bluetooth devices, the RS9116W appears as `RS9116W_BT_SLAVE`. Select the `RS9116W_BT_SLAVE` to establish a Bluetooth connection with the RS9116W.
  ![Mobile device bluetooth scan results](./resources/mobile-bluetooth-scan-result.png)
- 
  ![RS9116W device in discoverable and connectable mode](./resources/rs9116w-evk-discoverable-mode-1.png)
 
-4. Search for the "RS9116W_BT_SLAVE" device and establish the connection with the "RS9116W_BT_SLAVE" device. 
-
-5. During the connection the mobile phone needs to enter the pin code as "1234" as shown in the image below.
-
- ![Mobile device bluetooth connection](./resources/connection-process.png)
+**STEP 3.** When prompted, enter the PIN `1234` as shown in the following example.
+![Mobile device bluetooth connection](./resources/connection-process.png)
  
-6. Once the user clicks on the "OK" button, the RS9116W EVK receives a "AT+RSIBT_USRPINCODEREQ" event as below.
+After entering the PIN, the RS9116W receives a `AT+RSIBT_USRPINCODEREQ` event as shown on the Tera Term console in the following example.
+![Bluetooth connection](./resources/usr-pin-code-req.png)
  
- ![Bluetooth connection](./resources/usr-pin-code-req.png)
- 
-7. Once, the RS9116W EVK receives  the "AT+RSIBT_USRPINCODEREQ" event. As a response, the user needs to sends the "Send Usrpincode Response" from the script to establish the physical level connection between the mobile phone and the RS9116W EVK.
-
+**STEP 4.** When the RS9116W receives the `AT+RSIBT_USRPINCODEREQ` event, a Tera Term pop-up appears. Choose the 'Send User Pincode' response and select OK to establish a Bluetooth link between the RS9116W and the mobile.
  ![Bluetooth connection](./resources/physical-level-connection-process.png)
- 
  ![connection establishment between the mobilephone and the module](./resources/physical-level-connection-established.png)
- 
-### Note:
-	To esablish the profile level connection refer to `SPP-profile level connection procedure with Android mobile`
 
-
-## SPP-profile level connection procedure with Android mobile
-
-1. The user can open the "Bluetooth SPP Manager" application on the mobile phone and can scan the devices around the vicinity. Select the device named as "RS9116W_BT_SLAVE" and click on the "pair" button.
-
+## Establishing a SPP Connection
+**STEP 1.** Open the Bluetooth SPP Manager mobile app and scan for nearby devices. Choose the `RS9116W_BT_SLAVE` and select 'Pair'.
 ![Device Pairing](./resources/device-pairing.png)
 
+**STEP 2.** On the pop-up, choose the appropriate response according to the notification received in the Tera Term console as follows.
 
-2. After this, the host will get a bond response as well as a linkkey request event on the terminal screen. As per the received requested event, the user needs to send the response accordingly from the script. (i.e. If the linkkey request event is received, the user needs to respond with the link key response as "Send Userlinkkey Response" simillar to the "Send Usrpincode Response" for the pincode request event).
-
-![Device Pairing](./resources/link-key-req.png)
+| Tera Term console event received | Pop-up Response |
+| ------------------------ | --------------- |
+| `RSIBT_USRLINKKEYREQ`    | Send User Link Key |
+| `RSIBT_USRPINCODEREQ`    | Send User PIN Code |
 
 ![Device Pairing](./resources/link-key-rsp.png)
+![Device Pairing](./resources/pin-code-rsp.png)
 
-3. Once the RS9116W EVK receives the pin code request as  "AT+RSIBT_USRPINCODEREQ" and the user needs to respond with the "Send Usrpincode Response".
-
- ![Device Pairing](./resources/pin-code-req.png)
- 
- ![Device Pairing](./resources/pin-code-rsp.png)
-
-4. Once the pairing process is successful, the RS9116W EVK receives the link key save event and the SPP connection is automatically initiated from the mobile phone with the "Bluetooth SPP Manager" application. 
-
+After the pairing process completes, the RS9116W receives a link key save event and the SPP connection is automatically initiated from the mobile with the 'Bluetooth SPP Manager' app. 
 ![Device Pairing](./resources/link-key-save.png)
 
-
-5. Once the SPP level connection is completed, the host will get a "AT+RSI_SPPCONNECTED" event. After this, the host can send data to the mobile phone and receive data from the mobile phone.
+The RS9116W sends a `AT+RSI_SPPCONNECTED` event to Tera Term to indicate the connection is established and data can be sent across the link.
 
 ![SPP Connection](./resources/script-send-message.png)
-
 ![Send Message](./resources/send-message.png)
-
 ![Receive Message](./resources/receive-message.png)
 
-6. If the user initates the disconnection from the mobile phone, the RS9116W EVK receives the disconnect event as "AT+RSIBT_CLASSIC_DISCONNECTED".
-	
+When the mobile disconnects the Bluetooth link, the RS9116W receives a disconnect event as `AT+RSIBT_CLASSIC_DISCONNECTED`.
 ![Disconnection](./resources/disconnection.png)
 
-This completes the RS9116W BT SPP Slave demo.
+## Transmit and Receive Event Sequence
 
-
-
-### TX RX Events
-
-| TX Events                                    |   | RX Events                                |
-| -------------------------------------------- | - | ---------------------------------------- |
-|                                              | ← |  AT+RSIBT_USRLINKKEYREQ 34-1C-F0-70-D2-F8|
-| at+rsibt_usrlinkkey=34-1C-F0-70-D2-F8,0,1234 | → |                                          |
-|                                              | ← | AT+RSIBT_USRPINCODEREQ 34-1C-F0-70-D2-F8 |
-| at+rsibt_usrpincode=34-1C-F0-70-D2-F8,1,1234 | → |                                          |
-|                                              | ← | AT+RSIBT_USRLINKKEYSAVE 34-1C-F0-70-D2-F8,52,25,EC,DB,9E,82,8A,89,5F,CA,FB,91,E3,B0,CE,A7 |
-|                                              | ← | AT+RSIBT_AUTHENTICATION_STATUS 34-1C-F0-70-D2-F8,1 |
-|                                              | ← | AT+RSIBT_SPPCONNECTED 34-1C-F0-70-D2-F8  |
-| at+rsibt_spptx=5,Hello                       | → |                                          |
-|                                              | ← | AT+RSIBT_SPPRX 18,Welcome to silabs      |
-
+| TX Events                                      |   | RX Events                                  |
+| ---------------------------------------------- | - | ------------------------------------------ |
+|                                                | ← |  `AT+RSIBT_USRLINKKEYREQ 34-1C-F0-70-D2-F8`|
+| `at+rsibt_usrlinkkey=34-1C-F0-70-D2-F8,0,1234` | → |                                            |
+|                                                | ← | `AT+RSIBT_USRPINCODEREQ 34-1C-F0-70-D2-F8` |
+| `at+rsibt_usrpincode=34-1C-F0-70-D2-F8,1,1234` | → |                                            |
+|                                                | ← | `AT+RSIBT_USRLINKKEYSAVE 34-1C-F0-70-D2-F8,52,25,EC,DB,9E,82,8A,89,5F,CA,FB,91,E3,B0,CE,A7` |
+|                                                | ← | `AT+RSIBT_AUTHENTICATION_STATUS 34-1C-F0-70-D2-F8,1` |
+|                                                | ← | `AT+RSIBT_SPPCONNECTED 34-1C-F0-70-D2-F8`  |
+| `at+rsibt_spptx=5,Hello`                       | → |                                            |
+|                                                | ← | `AT+RSIBT_SPPRX 18,Welcome to silabs`      |

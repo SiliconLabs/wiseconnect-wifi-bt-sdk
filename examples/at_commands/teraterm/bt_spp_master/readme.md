@@ -1,144 +1,87 @@
 ## BT SPP Master Tera Term Script
+This example demonstrates how to configure the RS9116W in BT SPP Master mode to establish a SPP profile connection with a remote mobile device. Once connected, data can be exchanged between the two BT devices over SPP. This example uses an Android mobile device running a Bluetooth SPP Manager app. An example [Bluetooth SPP Manager App](https://play.google.com/store/apps/details?id=at.rtcmanager) is available from the Google Play store. To learn how to use the app, see [Using the Bluetooth SPP Manager App](#using-the-bluetooth-spp-manager-app). 
 
-This example demonstrates how to configure the RS9116W Module in BT SPP Master mode and establish an SPP profile connection with a remote device. Once connected data can be exchanged between two BT devices over SPP.
-
-Note: To run this script user required "Bluetooth SPP Manager" application with Android phone for data transfer.
-Before continuing, ensure the RS9116 EVK is plugged into the PC and TeraTerm is connected as described in 
-
-[Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/). 
+Before continuing, ensure the RS9116 EVK is plugged into your computer and Tera Term is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-pc/). 
 
 **STEP 1.** Reset the RS9116 EVK.
 
-**STEP 2.** In the Tera Term menu select `Control->Macro`.
-
+**STEP 2.** In the Tera Term menu, select `Control->Macro`.
 ![Tera Term Macro](./resources/tera-term-macro.png)
 	
-**STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm/bt_spp_master`  and select the file `spp_master.ttl`.
-
-
-
+**STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm/bt_spp_master` and select the file `spp_master.ttl`.
 ![Tera Term script to be selected](./resources/tera-term-scripts-spp-master.png)
 
-**STEP 4.** At startup the module gets configured with below Command sequence:
-
-1. Opermode
-
-2. Set connectable mode
-
-3. Set discoverable mode
-
-4. Set profile mode
-
-5. Set local name
-
-
-
-Configuration of the mobile device as spp_slave please refer the "Bluetooth SPP Manager" setting procedure.
+At startup, the RS9116W is configured using the following commands:
+  1. Opermode
+  2. Set connectable mode
+  3. Set discoverable mode
+  4. Set profile mode
+  5. Set local name
 
 ![Starting ](./resources/first-one.png)
- 
-  
- 	
-**STEP 5.** After these commands are successful, the remote slave device needs to be in connectable mode. And once it will be in connectable mode, the user needs to give bond command. For this BD address of the remote device needs to be entered here.
 
-Note :- Address should be in following format "AA-BB-CC-DD-EE-FF".
+**STEP 4.** Configure the mobile device as a Bluetooth SPP slave, refer to the [Bluetooth SPP Manager App](https://play.google.com/store/apps/details?id=at.rtcmanager) documentation.
 
+**STEP 5.** Ensure the mobile device is in connectable mode, then enter the BD address of the mobile device in the format `AA-BB-CC-DD-EE-FF`.
 ![remote BD Address input](./resources/address-entering-2.png)
 
+Note that the mobile BD address is available from the device settings page which is typically at:
+  - `Settings -> About phone -> All spec -> Status -> Bluetooth Address`
+  - `Settings -> About phone -> Status -> Bluetooth Address`
+  ![remote BD Address](./resources/bluetooth-mac.png)
 
-Note: 
-The Mobile BD address can be checked 
-
-`Settings ->About phone ->All spec ->Status -> Bluetooth address`
-
-Other mobiles this may vary
-`Settings ->About phone ->status -> Bluetooth address`
-
-![remote BD Address](./resources/bluetooth-mac.png)
-
-
-**STEP 6.** Now host will get a bond response as well as the "link key" req event in the terminal screen. User needs to give a response to the module immediately (i.e. if on terminal bond response)
+**STEP 6.** After the 'bond response' and 'link key' request event appears in Tera Term, a popup appears. Choose the 'User link key response' then select OK.
 ![Send User pin code response](./resources/linkkey-3.png)
-
-and for the "userlinkkey" request "userlinkkey response" need to give immediately).
-
 ![Send User Link Key response](./resources/linkkey-pop-up-4.png)
 
-after that "user pincode" request event come user needs to click send "user pincode" response immediately
-
-![RS9116 pin code response](./resources/pincode-5.png)
-
-
-![RS9116 pin code response](./resources/pincode-pop-up-6.png)
-
-Same to be entered on Mobile App side
-
+**STEP 7.** On the mobile app, enter the pin code `1234`
 ![Mobile phone pin code response](./resources/pincode-in-mobile.png)
 
+**STEP 8** After the 'pin code request' event appears in Tera Term, a popup appears. Choose the 'User pin code response' then select OK.
+![RS9116 pin code response](./resources/pincode-5.png)
+![RS9116 pin code response popup](./resources/pincode-pop-up-6.png)
 
+The mobile app is now paired with the RS9116W.
 
-
-
- After this event remote slave device is paired. Again give the "spp connect" command and the host will get the 
-`AT+RSIBT_SPPCONNECTED` event.
-
+**STEP 9** In the Tera Term popup, choose the 'SPP Connect' command' The `AT+RSIBT_SPPCONNECTED` event appears in the Term Term window to indicate that the SPP connection was successful. Data can now be sent between the RS9116W and the mobile app.
 ![SPP Connected](./resources/spp-connect-7.png)
-
 ![SPP Connect](./resources/spp-connected-8.png)
 
-
-
-
-**STEP 7.** `AT+RSIBT_SPPCONNECTED` event means SPP level connection is successful. Now both devices can communicate using selecting option 3 "Send Data".
-
+**STEP 10.** In the Tera Term popup, choose the 'Send Data' option to send characters from the RS9116W to the mobile app, then select OK. 
 ![Send Data](./resources/send-data-9.png)
+![Communication between module and remote device](././spp-master/resources/send-receive-data-9.png)
 
-![Communication between module and remote device](./resources/send-receive-data-9.png)
-
-   Observe the data in the terminal of the App.
-
+The characters sent by the RS9116W are displayed on the mobile app. 
 ![Remote device data transfer](./resources/data-tx.png)
-
 ![Remote device data transfer](./resources/data-tx-rx.png)
 
+### Transmit and Receive Event Sequence
 
-Note: The command sequence for the SPP profile connection is as below.
+| Transmit Events                                |   | Receive Events                                |
+| ---------------------------------------------- | - | ---------------------------------------- |
+|                                                | ← | `AT+RSIBT_USRLINKKEYREQ C0-EE-FB-DA-49-7C` |
+| `at+rsibt_usrlinkkey=C0-EE-FB-DA-49-7C,0,1234` | → |                                          |
+|                                                | ← | `AT+RSIBT_USRPINCODEREQ C0-EE-FB-DA-49-7C` |
+| `at+rsibt_usrpincode=C0-EE-FB-DA-49-7C,1,1234` | → |                                          |
+|                                                | ← | `AT+RSIBT_USRLINKKEYSAVE C0-EE-FB-DA-49-7C,B2,6C,91,49,D7,27,60,82,68,2,78,2,60,78,F8,AE` |
+|                                                | ← | `AT+RSIBT_AUTHENTICATION_STATUS C0-EE-FB-DA-49-7C,1` |
+| `at+rsibt_sppconn=C0-EE-FB-DA-49-7C`           | → |                                          |
+|                                                | ← | `AT+RSIBT_SPPCONNECTED C0-EE-FB-DA-49-7C`  |
+| `at+rsibt_spptx=5,HELLO`                       | → |                                          |
+|                                                | ← | `AT+RSIBT_SPPRX 1,1`                       |
 
+## Using the Bluetooth SPP Manager App
 
-
-**TX RX Events** 
-
-| TX Events                                    |   | RX Events                                |
-| -------------------------------------------- | - | ---------------------------------------- |
-|                                              | ← |  AT+RSIBT_USRLINKKEYREQ C0-EE-FB-DA-49-7C|
-| at+rsibt_usrlinkkey=C0-EE-FB-DA-49-7C,0,1234 | → |                                          |
-|                                              | ← | AT+RSIBT_USRPINCODEREQ C0-EE-FB-DA-49-7C |
-| at+rsibt_usrpincode=C0-EE-FB-DA-49-7C,1,1234 | → |                                          |
-|                                              | ← | AT+RSIBT_USRLINKKEYSAVE C0-EE-FB-DA-49-7C,B2,6C,91,49,D7,27,60,82,68,2,78,2,60,78,F8,AE |
-|                                              | ← | AT+RSIBT_AUTHENTICATION_STATUS C0-EE-FB-DA-49-7C,1 |
-| at+rsibt_sppconn=C0-EE-FB-DA-49-7C           | → |                                          |
-|                                              | ← | AT+RSIBT_SPPCONNECTED C0-EE-FB-DA-49-7C  |
-| at+rsibt_spptx=5,HELLO                       | → |                                          |
-|                                              | ← | AT+RSIBT_SPPRX 1,1                       |
-
-
-## Bluetooth SPP Manager Bluetooth Terminal App setting procedure
-
-**STEP 1.** Turn on the bluetooth and Open the `Bluetooth SPP Manager` app in your Android phone.
+**STEP 1.** Using your Android phone, turn on Bluetooth then open the `Bluetooth SPP Manager` app.
  
-**STEP 2.** Click on the table option which is shown at the right hand side top corner of the app as shown in below image
+**STEP 2.** Select the menu option in the top-right corner of the app (three vertical dots) to open the menu.
+ ![send BT term app settings](./resources/mobile-app.png)
 
- ![sena BT term app settings](./resources/mobile-app.png)
-
-**STEP 3.** Click on the "Set Device Discoverable" option shown in the menu, when "bond response" event received on the module side ASAP. Now, the mobile in discoverable mode for that particular time. In the below image timeout is mentioned as 60s. The mobile is in discoverable mode upto 60S.
-
- ![sena BT term app scan settings](./resources/discover-enable.png)
+**STEP 3.** Select the 'Set Device Discoverable' option.
+ ![send BT term app scan settings](./resources/discover-enable.png)
+ ![send BT term app scan settings](./resources/discover-enable-allow.png)
  
- ![sena BT term app scan settings](./resources/discover-enable-allow.png)
- 
-**STEP 4.** After successful connection with the RS9116 BT_SPP_Master and Remote mobile device, we can able see the data transfer.
-
- ![sena BT term app scan settings](./resources/data-tx.png)
- 
- ![sena BT term app scan settings](./resources/data-tx-rx.png)
+**STEP 4.** After the mobile app connects successfully with the RS9116W, data transfer occurs.
+ ![send BT term app scan settings](./resources/data-tx.png)
+ ![send BT term app scan settings](./resources/data-tx-rx.png)
  

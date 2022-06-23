@@ -529,3 +529,7 @@ az iot device c2d-message send -d RS9116_Device_SelfSign -n 9116Hub --data "sdvj
 ![C2D messages](resources/readme/image383.png)
 
 - The device upon receiving the messages will display on the terminal.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

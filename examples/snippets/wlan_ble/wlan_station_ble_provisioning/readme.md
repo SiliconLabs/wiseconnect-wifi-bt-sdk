@@ -361,3 +361,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
    **Note:**   For more information refer **Silabs_Connect_Windows_Application_User_Guide.pdf** in the path 
    `<SDK>/utilities/windows_ble_provisioning_app/`
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

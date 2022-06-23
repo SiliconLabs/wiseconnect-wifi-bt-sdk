@@ -51,8 +51,11 @@ The Application can be built and executed on below Host platforms
 
 * By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
 
-	 **Note:** This application is under development in EFM32 host platform.
+---
+**Note!** 
+This application is under development in EFM32 host platform.
 
+---
 
 ### 3.3 Project Configuration 
 
@@ -704,3 +707,7 @@ HTTPs Sever configuration for Apache requires Wamp server, if you have not insta
 
 
 > **Note:** Make sure to check your HTTPS server from other local machines present in the same network. It should be accessible.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

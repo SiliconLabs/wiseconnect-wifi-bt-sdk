@@ -1,106 +1,61 @@
-## ble_proximity_profile Tera Term Script
+## BLE Proximity Profile Tera Term Script
+This application demonstrates how to use the RS9116W BLE proximity profile with AT commands over UART. A mobile device running the [Silabs EFR Connect app](https://www.silabs.com/developers/efr-connect-mobile-app) is required for the demonstration.
 
-This application demonstrates how to prepare BLE Profiles with AT Commands and see the functionality of "Proximity Reporter" using the RS9116W(NCP) EVK with UART and USB-CDC ports. RS9116W module will work as a Proximity Reporter, whenever the remote device moves away from the "Proximity Reporter (RS9116W)" it will indicate the alarm with selected  "Alert Level".
-
-Before continuing, ensure the RS9116 EVK is plugged into your computer and TeraTerm is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/). 
+Before continuing, ensure the RS9116 EVK is plugged into your computer and Tera Term is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-pc/). 
 
 **STEP 1.** Reset the RS9116 EVK.
 
-**STEP 2.** In the Tera Term menu select `Control->Macro`.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Tera Term Macro}](./resources/tera-term-macro.png)
+**STEP 2.** In the Tera Term menu, select `Control->Macro`.
+![Tera Term Macro](./resources/tera-term-macro.png)
 	
-**STEP 3.** Navigate to the folder `./RS9116W.x.x.x.xx/examples/at_commands/teraterm` which contains the example scripts and select the file `ble_proximity_profile.ttl`.
+**STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm` containing example scripts and select the file `ble_proximity_profile.ttl`.
+![Tera Term script to be selected](./resources/tera-term-scripts.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{Tera Term script to be selected}](./resources/tera-term-scripts.png)
+**STEP 4.** After running the `ble_proximity_profile.ttl` script, a pop-up appears. Select OK to continue.
+![Application Start pop up](./resources/starting-popup-message-1.png)
 
-**STEP 4.** After running the “Proximity_Profile.ttl” script, it will pop up as shown.
+**STEP 5.** The autobaud process runs and shows a pop-up with the text "Firmware Loading Done". Select OK to continue.
+![Opermode command success](./resources/firmware-update-done-2.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{Application Start pop up}](./resources/starting-popup-message-1.png)
+**STEP 6.** The command sequence executes in turn, eventually putting the RS9116W into an advertising state.
+![Band input prompt](./resources/advertising-state-3.png)
 
-**STEP 5.** Initially, the ABRD process will run, and you will see a pop-up as “Firmware Loading Done“.
+**STEP 7.** Using the [Silabs EFR Connect](#using-the-efr-connect-app) app, scan for and connect to the RS9116W
+![Init command success](./resources/remote-device-connected-4.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{Opermode command success}](./resources/firmware-update-done-2.png)
+**STEP 8.** After a successful connection, the script waits for the 'Alert Level' to be set by the EFR Connect app. The alert level is used for proximity alert indication.
+![IPConfig Success](./resources/alert-level-selection-5.png)
 
- 	
-**STEP 6.** Command sequence will execute one by one, now the device is in advertising state.
+**STEP 9.** Using the EFR Connect app, the alert level can be set to: no alert, mild alert, or high alert. See [Using the EFR Connect App](#using-the-efr-connect-app).
+![IPConfig Success](./resources/selected-alert-level-6.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{Band input prompt}](./resources/advertising-state-3.png)
+**STEP 10.** After the alert level is set, the script runs in a loop. If the RS9116W moves too far from the mobile device running the EFR Connect app, an alert shows. The RSSI threshold configured in the script is `-60 dBm`. In the following example, the RSSI is `-52` which is higher than the threshold. In this case, the alert shows as `0x00` which means no alert.
+![Security mode input prompt](./resources/no-alert-7.png)
 
+**STEP 11.** In the following example, the RSSI is `-62` which is lower than the threshold. In this case, the alert shows as `0x01` causing a mild alert to be generated.
+![Security mode input prompt](./resources/mild-alert-8.png)
 
-**STEP 7.**  When you scan through the Remote BT device, it will show the scan results. Once you initiate the connection, it will connect.
+## Using the EFR Connect App
+The [Silabs EFR Connect](https://www.silabs.com/developers/efr-connect-mobile-app) mobile app can be used to connect to the RS9116W.
 
-![{"style":"max-width:700px", "class":"material-lifted"}{Init command success}](./resources/remote-device-connected-4.png)
+**STEP 1.**  Open the 'EFR Connect' app, select 'Browser' and scan for the RS9116W device.
+![waiting for station to connect](./resources/opening-connect-app-1.png)
 
+**STEP 2.** Select 'Connect' to connect with the RS9116W.
+![waiting for firmware upgrade](./resources/scanning-devices-2.png)
 
-**STEP 8.** After successful connection script will ask for selection of “Alert Level” for Indication.
+**STEP 3.**  Select the 'Link Loss' service. 
+![waiting for firmware upgrade](./resources/link-loss-service-3.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{IPConfig Success}](./resources/alert-level-selection-5.png)
+**STEP 4.** The 'Alert Level' characteristic shows.
+![waiting for firmware upgrade](./resources/alert-char-service-4.png)
 
+**STEP 5.** Select the desired alert level.
+![webpage](./resources/remote-device-alert-selection-5.png)
+![webpage](./resources/remote-device-mild-alert-selection-6.png)
 
-**STEP 9.**  Once select the “Alert Level” in the Remote device, the write event comes here. In Remote Device when you click the “Write_without_Response” property it will show 3 Alert Levels. 1. No Alert 2. Mild Alert 3. High Alert.
+**STEP 6.**  In this example, a mild alert is selected.
+![Upgrade in progress](./resources/remote-device-read-mild-alert-7.png)
 
-![{"style":"max-width:700px", "class":"material-lifted"}{IPConfig Success}](./resources/selected-alert-level-6.png)
-
-
-**STEP 10.** After selecting the “Alert Level”, the script will continuously run in a loop. Based on the RSSI of the Remote Device, Proximity Reporter (RS9116) will indicate the mentioned Alert level to the Remote device. This can check in the remote devices using the “Read” property.
-
-Note: - Threshold mentioned in the application script is -85dbm
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Security mode input prompt}](./resources/no-alert-7.png)
-
-**STEP 11.** Here RSSI is “-52”, which is less than “threshold” So when you read in the Remote device on the “Alert Level” characteristic it will show the value as “0x00” means “No Alert”.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Security mode input prompt}](./resources/mild-alert-8.png)
-
-
-**STEP 12.** Here RSSI is “-62”, which is more than “threshold” So when you read in the Remote device on the “Alert Level” characteristic it will show the value as “0x01” means “Mild Alert”.
-
-
-
-## Connection Using the Remote Device
-
-We can connect using the “EFR Connect” app on the mobile.
-
-**STEP 13.**  Open the “EFR Connect” app on the mobile (Remote Device) and scan for the devices. Below you can see the advertisers list.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{waiting for station to connect}](./resources/opening-connect-app-1.png)
-
-
-**STEP 14.**  All the advertising devices list we can be able to see in the scanning list. Once we get the required Advertiser, we can directly give the connection initiation to the RS9116 and make sure the connection should be successful. 
-
-![{"style":"max-width:700px", "class":"material-lifted"}{waiting for firmware upgrade}](./resources/scanning-devices-2.png)
-
-![{"style":"max-width:700px", "class":"material-lifted"}{waiting for firmware upgrade}](./resources/link-loss-service-3.png)
-
-![{"style":"max-width:700px", "class":"material-lifted"}{waiting for firmware upgrade}](./resources/alert-char-service-4.png)
-
-
-**STEP 15.**  After successful connection script will ask to select the “Alert Level” for the indication purpose. By selecting the Alert Level, it will pop up on the tera term.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{webpage}](./resources/remote-device-alert-selection-5.png)
-
-![{"style":"max-width:700px", "class":"material-lifted"}{webpage}](./resources/remote-device-mild-alert-selection-6.png)
-
-Note: - Threshold mentioned in the application script is -85dbm
-
-
-**STEP 16.**  Here we selected the “Mild Alert”, So it is updated on the script and updated value on the same characteristic.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Upgrade in progress}](./resources/remote-device-read-mild-alert-7.png)
-
-
-**STEP 17.**  After selection of the “Alert Level” from the “Remote device (Mobile)” script will run continuously, then whenever the RSSI does not cross the threshold level it will have “Alert Level” as “No Alert” we can see using the “Read” Property.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Upgrade in progress}](./resources/remote-device-read-no-alert-8.png)
-
-
-**STEP 18.**  Wherever the RSSI crosses the threshold level it will have “Alert Level” as “Mild  Alert” we can see using the “Read” Property.
-
-![{"style":"max-width:700px", "class":"material-lifted"}{Upgrade in progress}](./resources/remote-device-read-mild-alert-9.png)
-
-
-
-
-
-
+**STEP 7.**  As the RSSI increases and decreases, the alert level changes to indicate whether the distance between the RS9116W and mobile device running the EFR Connect app is exceeded.
+![Upgrade in progress](./resources/remote-device-read-no-alert-8.png)

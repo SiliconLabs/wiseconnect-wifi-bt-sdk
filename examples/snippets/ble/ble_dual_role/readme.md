@@ -81,13 +81,15 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_LOCAL_NAME` refers the name of the Silicon Labs device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_LOCAL_NAME                            "BLE_PERIPHERAL"       
-
+```c
+#define RSI_BLE_LOCAL_NAME                            "BLE_PERIPHERAL"       
+```
 
    `RSI_BLE_DEV_ADDR_TYPE` refers address type of the remote device to connect.
 
-	 #define RSI_BLE_DEV_ADDR_TYPE                          LE_PUBLIC_ADDRESS
-
+```c
+#define RSI_BLE_DEV_ADDR_TYPE                          LE_PUBLIC_ADDRESS
+```
 
    Based on address type of remote device, valid configurations are
 
@@ -97,66 +99,85 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_DEV_ADDR` refers address of the remote device to connect.
      
-	 #define RSI_BLE_DEV_1_ADDR "00:1A:7D:DA:71:22"
-	 #define RSI_BLE_DEV_2_ADDR "00:1A:7D:DA:71:73"
-     #define RSI_BLE_DEV_3_ADDR "00:1A:7D:DA:71:63"
-     #define RSI_BLE_DEV_4_ADDR "00:1A:7D:34:54:66"
-     #define RSI_BLE_DEV_5_ADDR "00:1A:7D:DA:71:48"
-     #define RSI_BLE_DEV_6_ADDR "00:1A:7D:DA:71:22"
-     #define RSI_BLE_DEV_7_ADDR "00:1A:7D:DB:71:21"
-     #define RSI_BLE_DEV_8_ADDR "00:1A:7D:DA:71:0C"
-	 
+```c
+#define RSI_BLE_DEV_1_ADDR "00:1A:7D:DA:71:22"
+#define RSI_BLE_DEV_2_ADDR "00:1A:7D:DA:71:73"
+#define RSI_BLE_DEV_3_ADDR "00:1A:7D:DA:71:63"
+#define RSI_BLE_DEV_4_ADDR "00:1A:7D:34:54:66"
+#define RSI_BLE_DEV_5_ADDR "00:1A:7D:DA:71:48"
+#define RSI_BLE_DEV_6_ADDR "00:1A:7D:DA:71:22"
+#define RSI_BLE_DEV_7_ADDR "00:1A:7D:DB:71:21"
+#define RSI_BLE_DEV_8_ADDR "00:1A:7D:DA:71:0C"
+```
+
    **Power save configuration**
 
    By default, The Application is configured without power save.
 	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1
+```c
+#define ENABLE_POWER_SAVE 1
+```
 
  **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
  `RSI_BLE_LOCAL_NAME` refers the name of the Silicon Labs device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_LOCAL_NAME                            "BLE_PERIPHERAL"   
+```c
+#define RSI_BLE_LOCAL_NAME                            "BLE_PERIPHERAL"   
+```
 
    Following are the event numbers for advertising,connection, Disconnection events and scan restart events.
 
-	 #define RSI_APP_EVENT_ADV_REPORT                       0x01
-	 #define RSI_APP_EVENT_CONNECTED                        0x02
-	 #define RSI_APP_EVENT_DISCONNECTED                     0x03
-	 #define RSI_BLE_SCAN_RESTART_EVENT                     0x04
+```c
+#define RSI_APP_EVENT_ADV_REPORT                       0x01
+#define RSI_APP_EVENT_CONNECTED                        0x02
+#define RSI_APP_EVENT_DISCONNECTED                     0x03
+#define RSI_BLE_SCAN_RESTART_EVENT                     0x04
+```
 
    Following are the non-configurable macros in the application.
 
    `BT_GLOBAL_BUFF_LEN` refers Number of bytes required by the application and the driver
 
-	 #define GLOBAL_BUFF_LEN                             15000
-
+```c
+#define GLOBAL_BUFF_LEN                             15000
+```
    
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros,
 
-	 #define RSI_BLE_PWR_INX                                30
-	 #define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
-
+```c
+#define RSI_BLE_PWR_INX                                30
+#define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
+```
 
    To configure the Nbr of master and No of slaves to be connected
 		
-	 #define RSI_BLE_MAX_NBR_SLAVES                         8
-	 #define RSI_BLE_MAX_NBR_MASTERS                        2
+```c
+#define RSI_BLE_MAX_NBR_SLAVES                         8
+#define RSI_BLE_MAX_NBR_MASTERS                        2
+```
 
    **Opermode command parameters**
 
-	 #define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                              RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                 0
-   
-   **Note:**
-   rsi_ble_config.h files are already set with desired configuration in respective example folders user need not change for each example.
+```c
+#define RSI_FEATURE_BIT_MAP                            FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                              RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                     TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_CUSTOM_FEATURE_BIT_MAP                     FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                 0
+```
+
+---
+**Note!**
+`rsi_ble_config.h` files are already set with desired configuration in respective example folders user need not change for each example.
+
+---
 
 ## 5. Testing the Application
 
@@ -204,7 +225,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 2. After the program gets executed, Silicon Labs device tries to connect with the remote device address specified in the Macros
 
-   **example: RSI\_BLE\_DEV\_1\_ADDR**
+   **example: RSI_BLE_DEV_1_ADDR**
 
 3. Silicon Labs device also in advertising mode,open an LE app scan and connect from another remote BLE Central device.
 
@@ -218,4 +239,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    
 
    **Note:** Examples for ble peripherals: Blue tooth Dongle, mobile application, TA sensor tag
-   
+
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

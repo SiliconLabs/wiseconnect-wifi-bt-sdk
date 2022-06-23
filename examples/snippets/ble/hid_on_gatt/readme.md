@@ -90,7 +90,9 @@ The application can be configured to suit your requirements and development envi
 
    If user configure **CLIENT**, Silicon Labs module will act as GATT CLIENT, means will connect to remote GATT server and get services.
 
-	 #define GATT_ROLE                                        SERVER 
+```c
+#define GATT_ROLE                                        SERVER 
+```
 
    Valid configurations are SERVER and CLIENT.
 
@@ -98,17 +100,23 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_REMOTE_BD_ADDRESS_TYPE` refers address type of the remote device to connect.
 
-	 #define RSI_BLE_REMOTE_BD_ADDRESS_TYPE                   RANDOM_ADDRESS 
+```c
+#define RSI_BLE_REMOTE_BD_ADDRESS_TYPE                   RANDOM_ADDRESS 
+```
 
    Valid configurations are RANDOM_ADDRESS and PUBLIC_ADDRESS.
 
    `RSI_BLE_REMOTE_BD_ADDRESS` refers address of the remote device to connect. Replace this with valid BD address.
 
-	 #define RSI_BLE_REMOTE_BD_ADDRESS                        "F5:64:91:A2:F6:6F"
+```c
+#define RSI_BLE_REMOTE_BD_ADDRESS                        "F5:64:91:A2:F6:6F"
+```
 
    `RSI_REMOTE_DEVICE_NAME` refers the name of remote device to which Silicon Labs device has to connect
 
-	 #define RSI_REMOTE_DEVICE_NAME                           "Designer Keyboard"
+```c
+#define RSI_REMOTE_DEVICE_NAME                           "Designer Keyboard"
+```
 
    **Note:** User can configure either RSI_BLE_DEV_ADDR or RSI_REMOTE_DEVICE_NAME of the remote device.
    
@@ -116,17 +124,23 @@ The application can be configured to suit your requirements and development envi
 
    By default, The Application is configured without power save.
 	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
-	 #define ENABLE_POWER_SAVE 1 
+```c
+#define ENABLE_POWER_SAVE 1 
+```
 
 **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
    `RSI_BLE_HID_SERVICE_UUID` refers to the attribute value of the newly created service.
 
-	 #define RSI_BLE_HID_SERVICE_UUID                         0x1812 
+```c
+#define RSI_BLE_HID_SERVICE_UUID                         0x1812 
+```
 
    `RSI_BLE_HID_PROTOCOL_MODE_UUID` refers to the attribute type of the first attribute under this above primary service.
 
@@ -138,24 +152,29 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_HID_CONTROL_POINT_UUID` refers to the attribute type of the fifth attribute under this above primary service.
 
-	 #define RSI_BLE_HID_PROTOCOL_MODE_UUID                   0x2A4E
-	 #define RSI_BLE_HID_REPORT_UUID                          0x2A4D
-	 #define RSI_BLE_HID_REPORT_MAP_UUID                      0x2A4B
-	 #define RSI_BLE_HID_INFO_UUID                            0x2A4A
-	 #define RSI_BLE_HID_CONTROL_POINT_UUID                   0x2A4C 
-
+```c
+#define RSI_BLE_HID_PROTOCOL_MODE_UUID                   0x2A4E
+#define RSI_BLE_HID_REPORT_UUID                          0x2A4D
+#define RSI_BLE_HID_REPORT_MAP_UUID                      0x2A4B
+#define RSI_BLE_HID_INFO_UUID                            0x2A4A
+#define RSI_BLE_HID_CONTROL_POINT_UUID                   0x2A4C 
+```
 
    `RSI_BLE_APP_HIDS` refers name of the Silicon Labs device to appear during scanning by remote devices.
 
-	 #define RSI_BLE_APP_HIDS                                 "HID_OVER_GATT" 
+```c
+#define RSI_BLE_APP_HIDS                                 "HID_OVER_GATT" 
+```
 
    Following are the non configurable macros related to attribute properties.
 
-	 #define RSI_BLE_ATT_PROP_RD                              0x02
-	 #define RSI_BLE_ATT_PROP_WR_NO_RESP                      0x04
-	 #define RSI_BLE_ATT_PROP_WR                              0x08
-	 #define RSI_BLE_ATT_PROP_NOTIFY                          0x10
-	 #define RSI_BLE_ATT_PROP_INDICATE                        0x20 
+```c
+#define RSI_BLE_ATT_PROP_RD                              0x02
+#define RSI_BLE_ATT_PROP_WR_NO_RESP                      0x04
+#define RSI_BLE_ATT_PROP_WR                              0x08
+#define RSI_BLE_ATT_PROP_NOTIFY                          0x10
+#define RSI_BLE_ATT_PROP_INDICATE                        0x20 
+```
 
    Following are the **non-configurable** macros in the application.
 
@@ -165,33 +184,40 @@ The application can be configured to suit your requirements and development envi
 
    `RSI_BLE_REPORT_REFERENCE_UUID` refers to the attribute type of the report reference descriptor to be added in a service.
 
-	 #define RSI_BLE_CHAR_SERV_UUID                           0x2803
-	 #define RSI_BLE_CLIENT_CHAR_UUID                         0x2902
-	 #define RSI_BLE_REPORT_REFERENCE_UUID                    0x2908 
+```c
+#define RSI_BLE_CHAR_SERV_UUID                           0x2803
+#define RSI_BLE_CLIENT_CHAR_UUID                         0x2902
+#define RSI_BLE_REPORT_REFERENCE_UUID                    0x2908 
+```
 
    **GLOBAL_BUFF_LEN** refers Number of bytes required by the application and the driver
 
-	 #define GLOBAL_BUFF_LEN                               15000 
-
+```c
+#define GLOBAL_BUFF_LEN                               15000 
+```
    
 
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros, #define RSI_BLE_PWR_INX 8
     
-   ```
-	#define RSI_BLE_PWR_INX                                  30
-	#define RSI_BLE_PWR_SAVE_OPTIONS                         BLE_DISABLE_DUTY_CYCLING 
-   ```
+```c
+#define RSI_BLE_PWR_INX                                  30
+#define RSI_BLE_PWR_SAVE_OPTIONS                         BLE_DISABLE_DUTY_CYCLING 
+```
 
-   **Opermode command parameters**  
+**Opermode command parameters**  
 
-	 #define RSI_FEATURE_BIT_MAP                              FEAT_SECURITY_OPEN
-	 #define RSI_TCP_IP_BYPASS                                RSI_DISABLE
-	 #define RSI_TCP_IP_FEATURE_BIT_MAP                       TCP_IP_FEAT_DHCPV4_CLIENT 
-	 #define RSI_CUSTOM_FEATURE_BIT_MAP                       FEAT_CUSTOM_FEAT_EXTENTION_VALID
-	 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                   EXT_FEAT_384K_MODE
+```c
+#define RSI_FEATURE_BIT_MAP                              FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS                                RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP                       TCP_IP_FEAT_DHCPV4_CLIENT 
+#define RSI_CUSTOM_FEATURE_BIT_MAP                       FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                   EXT_FEAT_384K_MODE
+```
 
-   **Note:** rsi_ble_config.h files are already set with desired configuration in respective example folders user need not change for each example.
+---
+**Note!** rsi_ble_config.h files are already set with desired configuration in respective example folders user need not change for each example.
 
+---
 
 ## 5. Testing the Application
 
@@ -276,3 +302,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. If remote device support notify property Silicon Labs module will enable notify, and ready to receive notifications from remote device.
 
 5. Whenever GATT server changes value and notifies that Silicon Labs module will receive that value.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

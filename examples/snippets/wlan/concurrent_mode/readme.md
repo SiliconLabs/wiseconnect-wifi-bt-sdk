@@ -328,3 +328,7 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 9. The RS9116W EVK access point gives Ping reply for the received Ping Request. The below image depicts the ping success.
 
 ![Ping Success](resources/readme/image108.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

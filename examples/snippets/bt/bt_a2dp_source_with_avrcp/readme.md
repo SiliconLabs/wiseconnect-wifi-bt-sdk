@@ -150,3 +150,7 @@ Refer getting started with IAR IDE, `<SDK>/examples/snippets/bt/bt_a2dp_source_w
    5. After Successful A2DP and AVRCP connections, Silicon Labs device will transfer the Audio data to remote device .
    
    6. Silicon Labs device will also acts as AVRCP target to support the pause and play options from the A2DP sink device(Remote device)
+
+## 6. Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

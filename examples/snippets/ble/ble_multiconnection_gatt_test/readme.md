@@ -85,43 +85,50 @@ The application can be configured to suit your requirements and development envi
 
    Set below macro to required peripheral connections.
 
-	 #define RSI_BLE_MAX_NBR_SLAVES   1
-
+```c
+#define RSI_BLE_MAX_NBR_SLAVES   1
+```
 
    Set below macro to required master connections.
 
-	 #define RSI_BLE_MAX_NBR_MASTERS   1
- 
+```c
+#define RSI_BLE_MAX_NBR_MASTERS   1
+ ```
 
    ` Note: Maximum no. of  RSI_BLE_MAX_NBR_MASTERS and RSI_BLE_MAX_NBR_SLAVES can be configured to max '3'.`
 
 
    If CONNECT_OPTION is set to CONN_BY_NAME, configure below macros.
 
-	 #define CONNECT_OPTION CONN_BY_NAME //CONN_BY_NAME or CONN_BY_ADDR
-
+```c
+#define CONNECT_OPTION CONN_BY_NAME //CONN_BY_NAME or CONN_BY_ADDR
+```
 
    To identify remote device with BD Address/device name.
 
    Add the remote BLE device name to connect
 
-	 #define RSI_REMOTE_DEVICE_NAME1                       "SILABS_DEV"
-	 #define RSI_REMOTE_DEVICE_NAME2                       "slave22"
-	 #define RSI_REMOTE_DEVICE_NAME3                       "slave3"
-
+```c
+#define RSI_REMOTE_DEVICE_NAME1                       "SILABS_DEV"
+#define RSI_REMOTE_DEVICE_NAME2                       "slave22"
+#define RSI_REMOTE_DEVICE_NAME3                       "slave3"
+```
 
    If CONNECT_OPTION is set to CONN_BY_ADDR, configure the below macros.
 
    Configure the address type of remote device as either Public Address or Random Address
 
-	 #define RSI_BLE_DEV_ADDR_TYPE LE_PUBLIC_ADDRESS //!LE_PUBLIC_ADDRESS or LE_RANDOM_ADDRESS
-
+```c
+#define RSI_BLE_DEV_ADDR_TYPE LE_PUBLIC_ADDRESS //!LE_PUBLIC_ADDRESS or LE_RANDOM_ADDRESS
+```
 
    Add the BD Address of remote BLE device to connect
 
-	 #define RSI_BLE_DEV_1_ADDR "00:1A:7D:DA:71:16"
-	 #define RSI_BLE_DEV_2_ADDR "00:1A:7D:DA:71:74"
-     #define RSI_BLE_DEV_3_ADDR "00:1A:7D:DA:73:13"
+```c
+#define RSI_BLE_DEV_1_ADDR "00:1A:7D:DA:71:16"
+#define RSI_BLE_DEV_2_ADDR "00:1A:7D:DA:71:74"
+#define RSI_BLE_DEV_3_ADDR "00:1A:7D:DA:73:13"
+```
 
 **4.1.2** The desired parameters are provided below. User can also modify the parameters as per their needs and requirements.
 
@@ -131,28 +138,32 @@ The application can be configured to suit your requirements and development envi
 
    Set below macro to enable secure connection between Silicon Labs device(peripheral) and remote ble device(central)
 
-	 #define SMP_ENABLE_XX         0
-
+```c
+#define SMP_ENABLE_XX         0
+```
 
    //By default this macro is set to '0'
 
    Set below macro to add remote device to whitelist
 
-	 #define ADD_TO_WHITELIST_XX     0
-
+```c
+#define ADD_TO_WHITELIST_XX     0
+```
 
    //By default this macro is set to '0'
 
    Set below macro to discover remote profiles.
 
-	 #define PROFILE_QUERY_XX     1
-
+```c
+#define PROFILE_QUERY_XX     1
+```
    //By default this macro is set to '1'
 
    Set below macro to enable data transfer between devices
 
- 	 #define DATA_TRANSFER_XX     1
-
+```c
+#define DATA_TRANSFER_XX     1
+```
 
    //By default this macro is set to '1'
 
@@ -160,54 +171,61 @@ The application can be configured to suit your requirements and development envi
 
    Set below macro to receive 'gatt notifications' from remote device.
 
-	 #define RX_NOTIFICATIONS_FROM_XX     0
-
+```c
+#define RX_NOTIFICATIONS_FROM_XX     0
+```
 
    //By default this macro is set to '1'
 
-     Note: Make sure to set below macros to 0 #define  RX_INDICATIONS_FROM_XX  0 //Set this to 0 |
+Note: Make sure to set below macros to 0 #define  RX_INDICATIONS_FROM_XX  0 //Set this to 0 |
   
 
    Set below macro to receive 'gatt indications' from remote device.
 
-	 #define RX_INDICATIONS_FROM_XX     0
-
+```c
+#define RX_INDICATIONS_FROM_XX     0
+```
 
    //By default this macro is set to '0'
 
    Set below macro to Transmit 'gatt notifications' to remote device.
 
-	 #define TX_NOTIFICATIONS_TO_XX     1
-
+```c
+#define TX_NOTIFICATIONS_TO_XX     1
+```
 
    //By default this macro is set to '1'
 
    **Note:**
    Make sure to set below macros to 0
    
-	 #define  TX_WRITES_TO_XX        0 //Set this to 0
-	 #define  TX_WRITES_NO_RESP_TO_XX    0 //Set this to 0
-	 #define  TX_INDICATIONS_TO_XX    0 //Set this to 0 
-
+```c
+#define  TX_WRITES_TO_XX        0 //Set this to 0
+#define  TX_WRITES_NO_RESP_TO_XX    0 //Set this to 0
+#define  TX_INDICATIONS_TO_XX    0 //Set this to 0 
+```
 
    Set below macro to Transmit 'gatt write with response' to remote device.
 
-	 #define TX_WRITES_TO_XX     0
-
+```c
+#define TX_WRITES_TO_XX     0
+```
 
    //By default this macro is set to '0'
 
    Set below macro to Transmit 'gatt write without response' to remote device.
 
-	 #define TX_WRITES_NO_RESP_TO_XX     0
-
+```c
+#define TX_WRITES_NO_RESP_TO_XX     0
+```
 
    //By default this macro is set to '0'
 
    Set below macro to Transmit 'gatt indications to remote device.
 
-	 #define TX_INDICATIONS_TO_XX       0
-
+```c
+#define TX_INDICATIONS_TO_XX       0
+```
 
    //By default this macro is set to '0'
 
@@ -215,7 +233,9 @@ The application can be configured to suit your requirements and development envi
 
    Set below macro to enable data length extension
 
-	 #define DLE_ON_XX             0
+```c
+#define DLE_ON_XX             0
+```
 
    //By default this macro is set to '0'
 
@@ -292,3 +312,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 11. If enabled, module continuously transmits notifications which can be seen on remote device
 	 
 ![Prints in Teraterm for Peripheral Configuration-2](resources/readme/multi_gatt_slave2.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)
