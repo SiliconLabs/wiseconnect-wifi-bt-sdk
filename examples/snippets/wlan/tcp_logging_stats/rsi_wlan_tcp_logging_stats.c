@@ -72,9 +72,8 @@
 //! Server port number
 #define SERVER_PORT 5001
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x0401A8C0
+//! Server IP address.
+#define SERVER_IP_ADDRESS "192.168.10.100"
 
 //! Number of packet to send or receive
 #define NUMBER_OF_PACKETS 5000
@@ -513,7 +512,7 @@ int32_t rsi_wlan_tcp_logging_stats()
         server_addr.sin_port = htons(SERVER_PORT);
 
         //! Set IP address to localhost
-        server_addr.sin_addr.s_addr = SERVER_IP_ADDRESS;
+        server_addr.sin_addr.s_addr = ip_to_reverse_hex(SERVER_IP_ADDRESS);
         LOG_PRINT("\r\nSocket Connecting\r\n");
         //! Connect to server socket
         status = rsi_connect(client_socket, (struct rsi_sockaddr *)&server_addr, sizeof(server_addr));

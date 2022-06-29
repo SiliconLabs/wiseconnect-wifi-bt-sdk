@@ -11,6 +11,8 @@ WiSeConnect documentation is [available online](http://docs.silabs.com/rs9116-wi
 - [Release Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-release-notes/)
 
 # SDK Outline
+This release consists of firmware enhancements over the previous release 2.5.0.26 for the purpose of the Matter certification.
+Please consider this release is only for the Matter certification.
 The WiSeConnect SDK contains the following files and folders.
 
 ```
@@ -20,8 +22,8 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--at_commands      > Scripts to demonstrate usage of AT Commands  
   |-   
   +--firmware                         > RS9116 firmware image(s)
-  |  +--RS916.2.5.0.26.rps            > This firmware image is valid for RS9116 1.5 revision chip/module
-  |  +--RS9116.2.5.0.26.rps           > This firmware image is valid for RS9116 1.4/1.3 revision chip/module
+  |  +--RS916.2.5.0.27.rps            > This firmware image is valid for RS9116 1.5 revision chip/module
+  |  +--RS9116.2.5.0.27.rps           > This firmware image is valid for RS9116 1.4/1.3 revision chip/module
   |-   
   +--platforms            
   |  +--efx32            > Board Support for EFR32 Hosts

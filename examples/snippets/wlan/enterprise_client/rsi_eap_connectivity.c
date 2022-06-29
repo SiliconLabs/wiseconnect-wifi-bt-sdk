@@ -79,9 +79,8 @@
 //! Server port number
 #define SERVER_PORT 5001
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define REMOTE_IP 0x6B01A8C0
+//! Server IP address.
+#define REMOTE_IP "192.168.10.100"
 
 //! Number of packet to send or receive
 #define NUMBER_OF_PING_PKTS 1000
@@ -119,7 +118,7 @@ int32_t rsi_eap_connectivity()
 
   int32_t status = RSI_SUCCESS;
 
-  uint32_t remote_ip_addr = REMOTE_IP;
+  uint32_t remote_ip_addr = ip_to_reverse_hex(REMOTE_IP);
   uint16_t size           = PING_SIZE;
 
 #if !(DHCP_MODE)

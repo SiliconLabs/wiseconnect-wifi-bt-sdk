@@ -77,8 +77,7 @@
   }
 
 //! IP address of the remote device
-//! E.g: 0x650AA8C0 == 192.168.10.101
-#define REMOTE_IP 0x9200A8C0
+#define REMOTE_IP "192.168.10.101"
 
 //! ping size
 #define PING_SIZE 100
@@ -144,7 +143,7 @@ int32_t rsi_station_ping_app()
 {
   int32_t status          = RSI_SUCCESS;
   uint8_t join_bssid[6]   = AP_BSSID;
-  uint32_t remote_ip_addr = REMOTE_IP;
+  uint32_t remote_ip_addr = ip_to_reverse_hex(REMOTE_IP);
   uint16_t size           = PING_SIZE;
   int32_t packet_count    = 0;
 #if !(DHCP_MODE)

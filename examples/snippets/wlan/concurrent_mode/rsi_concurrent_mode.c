@@ -97,9 +97,8 @@
 //! Server port number
 #define SERVER_PORT 5001
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x7800A8C0 == 192.168.0.120
-#define SERVER_IP_ADDRESS 0x6B01A8C0
+//! Server IP address.
+#define SERVER_IP_ADDRESS "192.168.1.4"
 
 //! Number of packet to send or receive
 #define NUMBER_OF_PACKETS 1000
@@ -164,7 +163,10 @@ int32_t rsi_concurrent_mode()
   //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
@@ -178,7 +180,10 @@ int32_t rsi_concurrent_mode()
   //! WC initialization
   status = rsi_wireless_init(9, 0);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nWireless Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
 
   status = rsi_send_feature_frame();
@@ -186,11 +191,13 @@ int32_t rsi_concurrent_mode()
     return status;
   }
 
-  //! Connect to an Acces point
+  //! Connect to an Access point
   status = rsi_wlan_connect((int8_t *)SSID, STA_SECURITY_TYPE, STA_PSK);
   if (status != RSI_SUCCESS) {
-
+    LOG_PRINT("\r\nConnect to Access point Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nConnect to Access point Success\r\n");
   }
 
   //! Configure IP for station mode
@@ -208,7 +215,10 @@ int32_t rsi_concurrent_mode()
 #endif
 
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nIP Config Success\r\n");
   }
 
   //! Start Access point
@@ -219,9 +229,12 @@ int32_t rsi_concurrent_mode()
                              (uint8_t *)AP_PSK,
                              BEACON_INTERVAL,
                              DTIM_COUNT);
-  if (status != RSI_SUCCESS) {
 
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nAP Start Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nAP Start Success\r\n");
   }
 
 #if ENABLE_POWER_SAVE
@@ -235,8 +248,11 @@ int32_t rsi_concurrent_mode()
   //! Create socket
   client_socket = rsi_socket(AF_INET, SOCK_STREAM, 0);
   if (client_socket < 0) {
+    LOG_PRINT("\r\nSocket Create Failed\r\n");
     status = rsi_wlan_get_status();
     return status;
+  } else {
+    LOG_PRINT("\r\nSocket Create Success\r\n");
   }
 
   //! Memset client structrue
@@ -251,9 +267,12 @@ int32_t rsi_concurrent_mode()
   //! Bind socket
   status = rsi_bind(client_socket, (struct rsi_sockaddr *)&client_addr, sizeof(client_addr));
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nBind Failed, Error Code : 0x%lX\r\n", status);
     status = rsi_wlan_get_status();
     rsi_shutdown(client_socket, 0);
     return status;
+  } else {
+    LOG_PRINT("\r\nBind Success\r\n");
   }
 
   //! Set server structure
@@ -266,7 +285,7 @@ int32_t rsi_concurrent_mode()
   server_addr.sin_port = htons(SERVER_PORT);
 
   //! Set IP address to localhost
-  server_addr.sin_addr.s_addr = SERVER_IP_ADDRESS;
+  server_addr.sin_addr.s_addr = ip_to_reverse_hex(SERVER_IP_ADDRESS);
 
   status = rsi_setsockopt(client_socket, SOL_SOCKET, SO_SOCK_VAP_ID, &vap_id, sizeof(vap_id));
   if (status != RSI_SUCCESS) {
@@ -276,11 +295,13 @@ int32_t rsi_concurrent_mode()
   //! Connect to server socket
   status = rsi_connect(client_socket, (struct rsi_sockaddr *)&server_addr, sizeof(server_addr));
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nConnect to Server Socket Failed, Error Code : 0x%lX\r\n", status);
     status = rsi_wlan_get_status();
     rsi_shutdown(client_socket, 0);
     return status;
+  } else {
+    LOG_PRINT("\r\nConnect to Server Socket Success \r\n");
   }
-
   while (packet_count < NUMBER_OF_PACKETS) {
     //! Send data on socket
     status = rsi_send(client_socket, (int8_t *)"Hello from TCP client!!!", (sizeof("Hello from TCP client!!!") - 1), 0);

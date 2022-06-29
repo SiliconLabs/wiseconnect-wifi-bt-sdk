@@ -3667,6 +3667,35 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, rsi_response_wait_time);
 
       } break;
+      case RSI_WLAN_EXT_STATS: {
+
+        if (length < sizeof(rsi_wlan_ext_stats_t)) {
+          // Change the WLAN CMD state to allow
+          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          //   SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_5, WLAN, LOG_ERROR, "status: %4x", status);
+          return RSI_ERROR_INSUFFICIENT_BUFFER;
+        }
+        // Allocate command buffer from WLAN pool
+        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+        // If allocation of packet fails
+        if (pkt == NULL) {
+          // Change the WLAN CMD state to allow
+          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          // Return packet allocation failure error
+          //  SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_9, WLAN, LOG_ERROR, "status: %4x", status);
+          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+        }
+#ifndef RSI_WLAN_SEM_BITMAP
+        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+        // Send Wi-fi STATS query request
+        status                 = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_EXT_STATS, pkt);
+        rsi_response_wait_time = RSI_WLAN_REQ_EXT_STATS_WAIT_TIME;
+        // Wait on WLAN semaphore
+        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, rsi_response_wait_time);
+
+      } break;
       case RSI_FW_VERSION:
         break;
       default:

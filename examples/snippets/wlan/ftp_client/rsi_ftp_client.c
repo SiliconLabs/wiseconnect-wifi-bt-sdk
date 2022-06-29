@@ -81,9 +81,8 @@
 //! FTP Server port number
 #define FTP_SERVER_PORT 21
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x640AA8C0
+//! Server IP address.
+#define SERVER_IP_ADDRESS "192.168.10.100"
 
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
@@ -217,7 +216,7 @@ int32_t rsi_ftp_client()
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
 
-  uint32_t server_ip = SERVER_IP_ADDRESS;
+  uint32_t server_ip = ip_to_reverse_hex(SERVER_IP_ADDRESS);
   int32_t retval     = 0;
 
 #ifdef RSI_WITH_OS

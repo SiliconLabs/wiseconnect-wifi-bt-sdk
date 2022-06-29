@@ -74,9 +74,8 @@
 
 #endif
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x6900A8C0
+//! Server IP address.
+#define SERVER_IP_ADDRESS "192.168.10.100"
 
 //! Server port number
 #define SERVER_PORT 1234
@@ -166,7 +165,7 @@ int32_t rsi_mqtt_client_app()
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
-  uint32_t server_address = SERVER_IP_ADDRESS;
+  uint32_t server_address = ip_to_reverse_hex(SERVER_IP_ADDRESS);
 
   rsi_mqtt_pubmsg_t publish_msg;
 

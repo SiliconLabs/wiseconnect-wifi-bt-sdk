@@ -74,8 +74,8 @@ The Application is provided with the project folder containing Keil project file
     - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-brd4180a-mg21.slsproj`
     - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_bt_ble/wlan_https_bt_spp_ble_dual_role/projects/wlan_https_bt_spp_ble_dual_role-brd4180b-mg21.slsproj`
         - User can find the Radio Board version as given below 
-
-![EFR Radio Boards](resources/readme/image7a.png)
+		
+   ![EFR Radio Boards](resources/readme/image7a.png)
 
  - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.

@@ -91,9 +91,8 @@
 // Server port number
 #define SERVER_PORT 5001
 
-// Server IP address. Should be in reverse long format
-// E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_IP_ADDRESS 0x640AA8C0
+// Server IP address.
+#define SERVER_IP_ADDRESS "192.168.10.100"
 
 // Receive data length
 #define RECV_BUFFER_SIZE 1027
@@ -246,7 +245,7 @@ int32_t application()
   server_addr.sin_port = htons(SERVER_PORT);
 
   // Set IP address to localhost
-  server_addr.sin_addr.s_addr = SERVER_IP_ADDRESS;
+  server_addr.sin_addr.s_addr = ip_to_reverse_hex(SERVER_IP_ADDRESS);
 
   // Connect to server socket
   status = rsi_connect(client_socket, (struct rsi_sockaddr *)&server_addr, sizeof(server_addr));

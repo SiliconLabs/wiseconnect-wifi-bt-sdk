@@ -83,9 +83,8 @@
 #define NETMASK 0x00FFFFFF
 #endif
 
-//! Server IP address. Should be in reverse long format
-//! E.g: 0x640AA8C0 == 192.168.10.100
-#define SERVER_ADDR 0x650AA8C0
+//! Server IP address.
+#define SERVER_ADDR "192.168.10.100"
 
 //! AWS Domain name
 #define AWS_DOMAIN_NAME "a25jwtlmds8eip-ats.iot.us-east-2.amazonaws.com"
@@ -349,7 +348,7 @@ int32_t rsi_three_ssl_client_sockets_app()
   server_addr1.sin_port = htons(SERVER_PORT1);
 
   //! Set IP address to localhost
-  server_addr1.sin_addr.s_addr = SERVER_ADDR;
+  server_addr1.sin_addr.s_addr = ip_to_reverse_hex(SERVER_ADDR);
 
   //! Connect to server socket
   status = rsi_connect(client_socket1, (struct rsi_sockaddr *)&server_addr1, sizeof(server_addr1));
@@ -403,7 +402,7 @@ int32_t rsi_three_ssl_client_sockets_app()
   server_addr2.sin_port = htons(SERVER_PORT2);
 
   //! Set IP address to localhost
-  server_addr2.sin_addr.s_addr = SERVER_ADDR;
+  server_addr2.sin_addr.s_addr = ip_to_reverse_hex(SERVER_ADDR);
 
   //! Connect to server socket
   status = rsi_connect(client_socket2, (struct rsi_sockaddr *)&server_addr2, sizeof(server_addr2));
