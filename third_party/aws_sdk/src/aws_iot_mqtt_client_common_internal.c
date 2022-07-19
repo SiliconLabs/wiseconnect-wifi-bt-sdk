@@ -440,7 +440,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	 * And, since we've cleared out the buffer prior to calling this function, we
 	 * can detect that situation by checking for a null byte.  We flush the buffer
 	 * before returning since we *think* we actually read a single byte. */
-	if(NETWORK_SSL_NOTHING_TO_READ == rc || pClient->clientData.readBuf[0] == '\0') {
+	if(NETWORK_SSL_NOTHING_TO_READ == rc || (SUCCESS == rc && pClient->clientData.readBuf[0] == '\0')) {
 		aws_iot_mqtt_internal_flushBuffers(pClient);
 		return MQTT_NOTHING_TO_READ;
 	} else if(SUCCESS != rc) {
