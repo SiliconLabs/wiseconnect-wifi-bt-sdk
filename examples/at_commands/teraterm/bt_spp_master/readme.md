@@ -49,7 +49,7 @@ The mobile app is now paired with the RS9116W.
 
 **STEP 10.** In the Tera Term popup, choose the 'Send Data' option to send characters from the RS9116W to the mobile app, then select OK. 
 ![Send Data](./resources/send-data-9.png)
-![Communication between module and remote device](././spp-master/resources/send-receive-data-9.png)
+![Communication between module and remote device](./resources/send-receive-data-9.png)
 
 The characters sent by the RS9116W are displayed on the mobile app. 
 ![Remote device data transfer](./resources/data-tx.png)
