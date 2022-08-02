@@ -883,7 +883,8 @@ typedef enum rsi_wlan_query_cmd_e {
   RSI_STATIONS_INFO     = 6,
   RSI_SOCKETS_INFO      = 7,
   RSI_CFG_GET           = 8,
-  RSI_GET_WLAN_STATS    = 9
+  RSI_GET_WLAN_STATS    = 9,
+  RSI_WLAN_EXT_STATS    = 10
 } rsi_wlan_query_cmd_t;
 
 /******************************************************
@@ -1376,6 +1377,17 @@ typedef struct rsi_rsp_wlan_stats_s {
   uint8_t busy_beacon_info[2];
   uint8_t beacon_interval[2];
 } rsi_rsp_wlan_stats_t;
+
+/*Structure for module stats notification*/
+typedef struct rsi_wlan_ext_stats_s {
+  uint32_t beacon_lost_count;
+  uint32_t beacon_rx_count;
+  uint32_t mcast_rx_count;
+  uint32_t mcast_tx_count;
+  uint32_t ucast_rx_count;
+  uint32_t ucast_tx_count;
+  uint32_t overrun_count;
+} rsi_wlan_ext_stats_t;
 
 #define RSI_PARSE_1_BYTES 1
 #define RSI_PARSE_2_BYTES 2

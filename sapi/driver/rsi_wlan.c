@@ -739,6 +739,7 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
     case RSI_WLAN_REQ_FTP_FILE_WRITE:
     case RSI_WLAN_REQ_GET_RANDOM:
     case RSI_WLAN_REQ_GET_STATS:
+    case RSI_WLAN_REQ_EXT_STATS:
       break;
 
     default: {
@@ -1075,6 +1076,23 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
             // copy wlan related information in to output buffer
             if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
               copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? sizeof(rsi_rsp_wireless_info_t)
+                                                                              : (rsi_wlan_cb->app_buffer_length);
+
+              memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
+            }
+          }
+        }
+        rsi_wlan_cb->app_buffer = NULL;
+      }
+    } break;
+    case RSI_WLAN_RSP_EXT_STATS: {
+      if (status == RSI_SUCCESS) {
+        if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
+
+          if (rsi_wlan_cb->query_cmd == RSI_WLAN_EXT_STATS) {
+            // copy wlan related information in to output buffer
+            if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
+              copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? sizeof(rsi_wlan_ext_stats_t)
                                                                               : (rsi_wlan_cb->app_buffer_length);
 
               memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
@@ -2266,7 +2284,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_DYNAMIC_POOL) || (cmd_type == RSI_WLAN_REQ_GAIN_TABLE)
              || (cmd_type == RSI_WLAN_REQ_RX_STATS) || (cmd_type == RSI_WLAN_REQ_RADIO)
              || (cmd_type == RSI_WLAN_REQ_GET_STATS) || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS)
-             || (cmd_type == RSI_WLAN_REQ_TWT_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_TWT_PARAMS) || (cmd_type == RSI_WLAN_REQ_EXT_STATS)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
 #endif

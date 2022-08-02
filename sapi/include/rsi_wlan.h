@@ -228,7 +228,8 @@ typedef enum rsi_wlan_cmd_response_e {
   RSI_WLAN_RSP_RADIO                 = 0x81,
   RSI_WLAN_RSP_GET_STATS             = 0xF1,
   RSI_WLAN_RSP_HTTP_OTAF             = 0xF4,
-  RSI_WLAN_RSP_UPDATE_TCP_WINDOW     = 0xF5
+  RSI_WLAN_RSP_UPDATE_TCP_WINDOW     = 0xF5,
+  RSI_WLAN_RSP_EXT_STATS             = 0x68
 } rsi_wlan_cmd_response_t;
 
 // enumeration for WLAN command request codes
@@ -325,8 +326,8 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_GET_STATS            = 0xF1,
   RSI_WLAN_REQ_HTTP_OTAF            = 0xF4,
   RSI_WLAN_REQ_UPDATE_TCP_WINDOW    = 0xF5,
-  RSI_WLAN_REQ_11AX_PARAMS          = 0xFF
-
+  RSI_WLAN_REQ_11AX_PARAMS          = 0xFF,
+  RSI_WLAN_REQ_EXT_STATS            = 0x68
 } rsi_wlan_cmd_request_t;
 
 typedef enum rsi_wlan_opermode_e {

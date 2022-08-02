@@ -2,7 +2,7 @@
 //! do not modifiy this file directly
 #ifndef DEBUGS_AUTOGEN_H
 #define DEBUGS_AUTOGEN_H
-#define SL_LOG_VERSION  "2022/07/19-10:50:28"
+#define SL_LOG_VERSION  "2022/08/01-07:41:25"
 
 enum {
 SL_SORT_SCAN_RESULTS_ENTRY,
