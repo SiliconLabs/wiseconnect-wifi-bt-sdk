@@ -203,7 +203,3 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 ![Send some data from the remote device to Silicon Labs device](resources/readme/image18d.png)
 
 8. Note down power measurement by connecting the module to Agilent Power Meter.
-
-## 6. Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

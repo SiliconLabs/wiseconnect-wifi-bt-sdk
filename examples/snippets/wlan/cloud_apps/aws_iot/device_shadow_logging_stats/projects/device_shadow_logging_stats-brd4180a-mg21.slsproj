@@ -89,7 +89,10 @@
   
   
   
-  <folder name="third_party/aws_sdk" uri="third_party/aws_sdk" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/src" uri="third_party/aws_sdk/src" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/include" uri="third_party/aws_sdk/include" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/platform/silabs/inc" uri="third_party/aws_sdk/platform/silabs/inc" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/platform/silabs/src" uri="third_party/aws_sdk/platform/silabs/src" includeAllFiles="true" includeAllFolders="true"/>
   <file name="third_party/aws_sdk/platform/silabs/src/timer.c" uri="third_party/aws_sdk/platform/silabs/src/timer.c" />
   <file name="third_party/aws_sdk/platform/silabs/src/network_sapi_wrapper.c" uri="third_party/aws_sdk/platform/silabs/src/network_sapi_wrapper.c" />
   <file name="third_party/aws_sdk/src/aws_iot_jobs_topics.c" uri="third_party/aws_sdk/src/aws_iot_jobs_topics.c" />
@@ -132,4 +135,5 @@
   <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.floatingpoint.type" value="floatingpoint.type.softfp"/>
   <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.clibs" value="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.baseclibs"/>
   
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.compiler.base" optionId="com.silabs.gnu.c.compiler.option.misc.otherlist" value="-mcmse -c -fmessage-length=0"/>
 </project>

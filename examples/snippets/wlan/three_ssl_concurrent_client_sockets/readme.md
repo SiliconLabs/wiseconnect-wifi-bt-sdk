@@ -311,7 +311,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 5. After the program gets executed, RS9116W EVK would be connected to Access point having the configuration same that of in the application and get IP.
 
 6. The Device which is configured as SSL client will connect to three different remote SSL servers.
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

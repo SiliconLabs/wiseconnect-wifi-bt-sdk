@@ -315,7 +315,3 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. Passkey confirmation
       
 ![Passkey confirmation](resources/readme/image44.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

@@ -312,7 +312,3 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 11. If enabled, module continuously transmits notifications which can be seen on remote device
 	 
 ![Prints in Teraterm for Peripheral Configuration-2](resources/readme/multi_gatt_slave2.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

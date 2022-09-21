@@ -387,7 +387,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 ![The Packet_count is continuously incremented-1](resources/readme/image145.png)
    
 ![The Packet_count is continuously incremented-2](resources/readme/image146.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

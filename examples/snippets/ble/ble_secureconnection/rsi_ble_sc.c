@@ -632,13 +632,13 @@ int32_t rsi_ble_smp_test_app(void)
         //! get ping time out
         rsi_ble_get_le_ping_timeout(remote_dev_address, &timeout_resp);
 #endif
-
-        //! initiating the SMP pairing process
-        status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n smp pair req failed with reason = %lx \n", status);
+        if (!pairing_info_available) {
+          //! initiating the SMP pairing process
+          status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\n smp pair req failed with reason = %lx \n", status);
+          }
         }
-
       } break;
 
       case RSI_BLE_DISCONN_EVENT: {

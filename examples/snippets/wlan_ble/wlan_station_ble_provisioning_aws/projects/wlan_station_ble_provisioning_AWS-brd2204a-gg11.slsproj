@@ -117,7 +117,10 @@
   
   
   
-  <folder name="third_party/aws_sdk" uri="third_party/aws_sdk" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/src" uri="third_party/aws_sdk/src" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/include" uri="third_party/aws_sdk/include" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/platform/silabs/inc" uri="third_party/aws_sdk/platform/silabs/inc" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="third_party/aws_sdk/platform/silabs/src" uri="third_party/aws_sdk/platform/silabs/src" includeAllFiles="true" includeAllFolders="true"/>
   <file name="third_party/aws_sdk/platform/silabs/src/timer.c" uri="third_party/aws_sdk/platform/silabs/src/timer.c" />
   <file name="third_party/aws_sdk/platform/silabs/src/network_sapi_wrapper.c" uri="third_party/aws_sdk/platform/silabs/src/network_sapi_wrapper.c" />
   <file name="third_party/aws_sdk/src/aws_iot_jobs_topics.c" uri="third_party/aws_sdk/src/aws_iot_jobs_topics.c" />

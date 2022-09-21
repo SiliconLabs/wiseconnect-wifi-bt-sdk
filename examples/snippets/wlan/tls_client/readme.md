@@ -294,7 +294,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 ![EVK connects to remote SSL server-1](resources/readme/image357.png)
   
 ![EVK connects to remote SSL server-1](resources/readme/image358.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

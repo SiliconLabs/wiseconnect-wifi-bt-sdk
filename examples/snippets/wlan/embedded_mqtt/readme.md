@@ -366,7 +366,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 6. If you see any error - Unsupported tls_version "tlsv1", just comment the "tls_version tlsv1" in mosquitto.conf file.
 
 7. From here, repeat the steps from step 4 to step 9 of **5.3** to complete the execution.  
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

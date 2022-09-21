@@ -126,7 +126,3 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    1. Build and launch the application.
 
    2. After the program gets executed RAM content is saved in ram_content buffer. In case of USB interface RAM content is saved in file dump.txt.
-
-## 6. Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

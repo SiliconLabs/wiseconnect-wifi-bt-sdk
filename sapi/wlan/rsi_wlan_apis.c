@@ -595,7 +595,6 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         132(DFS)                |       132
  * 		         136(DFS)	          	   |       136
  * 		         140(DFS)         		   |       140
- * 		         144(DFS)         		   |       144
  *             #### Channels supported in 4.9 GHz Band ####
  * 		         Channel numbers         |	Ch no
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -627,7 +626,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *	           ^        	            |    	3 . WEP
  *	           ^        	            |    	4 . WPA Enterprise
  *	           ^        	            |    	5 . WPA2 Enterprise
- *	           ^                        |       7 . WPA3
+ *	           ^        	            |    	7 . WPA3 Personal
+ *	           ^        	            |    	8 . WPA3 Personal Transition
  * 	 	         rssi_val	              |       RSSI value of the Access Point
  * 	 	         network_type	          |       rsi_wlan_setThis is the type of the network
  * 	 	         ^            	        |       1 . Infrastructure mode	
@@ -785,7 +785,8 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *	           ^        	             |    	3 . WEP
  *	           ^        	             |    	4 . WPA Enterprise
  *	           ^        	             |    	5 . WPA2 Enterprise
- *	           ^        	             |    	7 . WPA3
+ *	           ^        	             |    	7 . WPA3 Personal
+ *	           ^        	             |    	8 . WPA3 Personal Transition
  * 	 	         rssi_val	               |       RSSI value of the Access Point
  * 	 	         network_type	           |       Type of network
  * 	 	         ^            	         |       1 . Infrastructure mode	
@@ -1181,7 +1182,8 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 				10: RSI_USE_GENERATED_WPSPIN, \n
  * 				11: RSI_WPS_PUSH_BUTTON, \n
  * 				12: RSI_WPA_WPA2_MIXED_PMK, \n
- * 				13: RSI_WPA3
+ * 				13: RSI_WPA3, \n
+ * 				14: RSI_WPA3_TRANSITION
  * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
  * 		Security type(sec_type)	|	Secret key structure format (secret_key)
  * 		:-----------------------|:--------------------------------------------------------------------------------------------------
@@ -1219,6 +1221,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
  * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ * 		RSI_WPA3_TRANSITION |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			   #define RSI_TIMEOUT_BIT_MAP 4 \n
@@ -1276,6 +1279,11 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *				  **0x0025,0x0026,0x0028,0x0039,0x003C,0x0044,0x0045,0x0046,** \n
  *
  *				  **0x0047,0x0048,0x0049,0xFFF8**
+ * @note    WPA3 security not supported in AP mode. \n
+ *          WPA3 STA supports both H2E and Hunting-and-pecking for WPA3 authentication. It picks authentication algorithm based on AP's capability. \n
+ *          WPA3 STA supports PMKSA caching. If STA has valid PMKID (generated after first connection) with an AP it will trigger OPEN authentication for successive connection attempts. By default the lifetime for PMKSA entry is 12 hours. \n
+ *          In WPA3 Personal Transition Mode if both WPA2 and WPA3 APs are available in scan results, STA will pick the AP which has strongest RSSI (it could be either WPA2 or WPA3). \n
+ *          If connected WPA3 AP enables Transition Disable Indication, from that moment onwards STA in transistion mode will not try connections to WPA2 APs. This behavior will persist until reset of the STA. \n
  * @note		Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -1341,7 +1349,8 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *                               10: RSI_USE_GENERATED_WPSPIN, \n
  *                               11: RSI_WPS_PUSH_BUTTON, \n
  *                               12: RSI_WPA_WPA2_MIXED_PMK, \n
- *                               13: RSI_WPA3
+ *                               13: RSI_WPA3, \n
+ *                               14: RSI_WPA3_TRANSITION
  * @param[in]   secret_key			  - Pointer to a buffer that contains security information based on sec_type.
  *              Security type(sec_type) |       Secret key structure format (secret_key)
  *              :-----------------------|:-----------------------------------------------------------------------------------------------------------------
@@ -1379,6 +1388,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *              RSI_USE_GENERATED_WPSPIN|       NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  *              RSI_WPS_PUSH_BUTTON     |       NULL string indicate to generate push button event
  *              RSI_WPA3                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ *              RSI_WPA3_TRANSITION     |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @param[in]   join_response_handler - Called when the response for join has been received from the module \n
  *                                        Parameters involved are status, buffer, & length \n
  * @param[out]  Status                - Response status. If status is zero, then the join response is stated as Success  \n
@@ -4126,7 +4136,6 @@ int32_t rsi_wlan_buffer_config(void)
  *		40		      |5200 
  *		44		      |5220 
  *		48		      |5240 
- *		144		      |5700 
  *		149		      |5745 
  *		153		      |5765 
  *		157		      |5785 
@@ -7228,6 +7237,12 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 
 #endif
 
+/** @} */
+
+/** @addtogroup WLAN
+* @{
+*/
+
 /*==============================================*/
 /**
  * @brief      Assign the user configurable channel gain values in different regions to the module from user.This method is used for overwriting default gain tables that are present in firmware. \n
@@ -7309,8 +7324,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                a. 5G is divided into 4 sub bands: 
  *                                      band 1: channel number <= 48 
  *                                      band 2: channel number > 48 and channel number <= 64 
- *                                      band 3: channel number > 64 and channel number <= 144 
- *                                      band 4: channel number > 144 
+ *                                      band 3: channel number > 64 and channel number <= 140
+ *                                      band 4: channel number > 140
  *                                b. If any channel in a band has different set of power values, specify the channel number followed by power values. 
  *                                c. If all the channels in a band 1 has same power values, specify the band number as 1 followed by power value. 
  *                                d. If all the channels in a band 2 has same power values, specify the band number as 2 followed by power value. 
@@ -7522,5 +7537,4 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
   SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
-/** @} */
 /** @} */

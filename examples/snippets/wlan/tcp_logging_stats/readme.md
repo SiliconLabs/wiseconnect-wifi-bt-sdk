@@ -277,7 +277,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
     - S indicates sleep time
 
 ![Powersave statistics of Wakeup and Sleep times](resources/readme/image208.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

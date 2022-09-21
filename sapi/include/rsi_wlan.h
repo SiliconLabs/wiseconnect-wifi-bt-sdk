@@ -1580,10 +1580,10 @@ typedef struct rsi_cfgGetFrameRcv {
   uint8_t join_ssid[RSI_SSID_LEN];
   uint8_t uRate;
   uint8_t uTxPower;
-  uint8_t join_feature_bitmap;
   uint8_t reserved_1;
-  uint8_t scan_ssid_len;
   uint8_t reserved_2;
+  uint8_t scan_ssid_len;
+  uint8_t reserved_3;
   uint8_t csec_mode;
   uint8_t psk[RSI_PSK_LEN];
   uint8_t scan_ssid[RSI_SSID_LEN];
@@ -1605,7 +1605,7 @@ typedef struct rsi_cfgGetFrameRcv {
   rsi_apconfig apconfig;
   uint8_t module_mac[6];
   uint8_t antenna_select[2];
-  uint8_t reserved_3[2];
+  uint8_t reserved_4[2];
   rsi_wepkey wep_key;
   uint8_t dhcp6_enable[2];
   uint8_t prefix_length[2];
@@ -1630,7 +1630,7 @@ typedef struct rsi_cfgGetFrameRcv {
   uint8_t region_request_from_host;
   uint8_t rsi_region_code_from_host;
   uint8_t region_code;
-  uint8_t reserved_4[43];
+  uint8_t reserved_5[43];
   uint8_t multicast_magic_code[2];
   uint8_t multicast_bitmap[2];
   uint8_t powermode_magic_code[2];
@@ -1646,13 +1646,14 @@ typedef struct rsi_cfgGetFrameRcv {
   uint8_t ext_custom_feature_bit_map[4];
   uint8_t private_key_password[82];
   uint8_t join_bssid[6];
-  uint8_t fast_psp_enable;
-  uint8_t monitor_interval[2];
-  uint8_t timeout_value[2];
-  uint8_t timeout_bitmap[4];
-  uint8_t request_timeout_magic_word[2];
+  uint8_t join_feature_bitmap;
   rsi_uHtCaps ht_caps;
   uint8_t ht_caps_magic_word[2];
+  uint8_t fast_psp_enable;
+  uint8_t monitor_interval[2];
+  uint8_t request_timeout_magic_word[2];
+  uint8_t timeout_value[2];
+  uint8_t timeout_bitmap[4];
   // AP IP parameters in Concurrent mode
   uint8_t dhcp_ap_enable;
   uint8_t ap_ip[4];

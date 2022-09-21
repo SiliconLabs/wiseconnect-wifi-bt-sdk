@@ -401,7 +401,7 @@ int MQTTSubscribe(Client* c, const char* topicFilter, enum QoS qos, messageHandl
     if (!c->isconnected)
         goto exit;
     
-    len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic,(int*)qos);
+    len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic,(int*)&qos);
     if (len <= 0)
         goto exit;
     if ((rc = sendPacket(c, len, &timer)) != SUCCESS) // send the subscribe packet

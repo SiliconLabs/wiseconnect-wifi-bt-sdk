@@ -173,4 +173,5 @@
   
   <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.base" optionId="gnu.c.link.option.libs" value="m "/>
   
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.compiler.base" optionId="com.silabs.gnu.c.compiler.option.misc.otherlist" value="-mcmse -c -fmessage-length=0"/>
 </project>

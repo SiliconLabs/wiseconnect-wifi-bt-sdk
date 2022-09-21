@@ -250,7 +250,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 4. The RS9116W EVK accepts connection request and receives data on the TCP server port and exit after receiving configured NUMBER_OF_PACKETS
 
 ![Receiving data on the TCP server port](resources/readme/image107.png)
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

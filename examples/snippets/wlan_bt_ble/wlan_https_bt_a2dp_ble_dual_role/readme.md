@@ -431,6 +431,3 @@ Refer getting started with IAR IDE, `<SDK>/examples/snippets/wlan_bt_ble/wlan_ht
 
 18. Verify that all connections are stable, no glitches in audio and also simultaneous data transfer is happening from all the radios of Module
 
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

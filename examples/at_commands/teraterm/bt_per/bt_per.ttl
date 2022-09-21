@@ -72,7 +72,7 @@ if result=0 then
 	inputbox 'Enter payload_type: '#10#13' 0x00 - PRBS9 sequence 11111111100000111101... '#10#13' 0x01 - Repeated 11110000 '#10#13' 0x02 - Repeated 10101010 '#10#13' 0x03 - PRBS15 '#10#13' 0x04 - Repeated 11111111 '#10#13' 0x05 - Repeated 00000000 '#10#13' 0x06 - Repeated 00001111 '#10#13' 0x07 - Repeated 01010101 ' 'pt'
     pt = inputstr
 
-	inputbox 'Enter tx_power_index: '#10#13' Transmit power value should be between 0 and 18 ' 'ti'
+	inputbox 'Enter tx_power_index: '#10#13' Transmit power value should be between 0 and 10 ' 'ti'
 	ti = inputstr
 
 	inputbox 'Enter tx_mode: '#10#13' 0 - BURST MODE '#10#13' 1 - CONTINUOUS MODE '#10#13' 2 - CONTINUOUS_WAVE_MODE :' 'tm'
@@ -88,41 +88,18 @@ if result=0 then
 	else
 		strcompare tm '2'
 		if result = 0 then
-			sendln 'at+rsibt_percwmode=1'
-			if result == 2 then
-				goto error
-			else
-				messagebox 'BT CW mode Executed Successful' ''
-			endif
+			messagebox 'BT CW mode Executed Successfully' ''
 		endif
 		
 		strcompare tm '0'
 		if result = 0 then
-			messagebox 'BT Transmit Executed Successful' ''
+			messagebox 'BT Transmit Executed Successfully' ''
 		endif
 		
 		strcompare tm '1'
 		if result = 0 then
-			messagebox 'BT Transmit Executed Successful' ''
+			messagebox 'BT Transmit Executed Successfully' ''
 		endif
-		;messagebox 'BT Transmit Executed Successful' ''
-		;inputbox 'Enter CW_mode 1.Enable 2.Disable :' 'Choice'
-		;Choice = inputstr
-		;strcompare Choice '1'
-		;if result=0 then
-		;	sendln 'at+rsibt_percwmode=1'
-		;	wait 'OK' 'ERROR'
-		;	if result == 2 then
-		;		goto error
-		;	else
-		;		messagebox 'BT CW mode Executed Successful' ''
-		;	endif
-		;endif
-		
-		;strcompare Choice '2'
-		;if result=0 then
-		;	messagebox 'CW mode not enabled ' ''
-		;endif
 	endif
 endif
 
@@ -180,16 +157,21 @@ if result=0 then
 	if result == 2 then
 		goto error
 	else
-		messagebox 'BT Receive Executed Successful' ''
+		messagebox 'BT Receive Executed Successfully' ''
 	endif
 	
-	sendln 'at+rsibt_perstats'
-	wait 'OK' 'ERROR'
-	if result == 2 then
-		goto error
-	else
-		messagebox 'PER Stats command executed successfully' ''
-	endif
+	while 1
+		sendln 'at+rsibt_perstats'
+		setdebug 2     ; output is in binary, so best to display in hex format
+		wait '4F 4B' '45 52'; 'OK' or 'ER'
+		setdebug 0
+		if result == 2 then
+			goto error
+		else
+			mpause 1000
+			dispstr #13#10'PER Stats:'#13#10
+		endif
+	endwhile
 endif
 
 goto endscript

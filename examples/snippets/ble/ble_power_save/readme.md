@@ -255,7 +255,3 @@ Default configuration of connection interval of Central device (smartphone) is 1
 Above power save profile image capture when it is in the idle state after successful connection. 
 
 So, the user may not get the same profile as shown in the above image. It will vary based on the traffic.
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

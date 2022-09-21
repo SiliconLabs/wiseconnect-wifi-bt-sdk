@@ -249,7 +249,3 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 5. Select provides the response about the socket whether the data is to be read on the socket or not.
 
 6. If data is to be received on the socket, then the receive function is called on the socket.
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

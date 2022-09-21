@@ -239,8 +239,4 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    
 
    **Note:** Examples for ble peripherals: Blue tooth Dongle, mobile application, TA sensor tag
-
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)
+   

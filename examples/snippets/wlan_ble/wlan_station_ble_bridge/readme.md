@@ -373,6 +373,3 @@ Example: openssl.exe s_server –accept 5001 –cert server-cert.pem -key server
 > Note:
 > rsi_bt_app_send_to_wlan() function is defined in rsi_wlan_app.c to send message from BTLE task to WLAN task. 
  
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

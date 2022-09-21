@@ -299,8 +299,4 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 7. After successful SPP Connection in mobile side, go to BT_MESSENGER tab which is next to DEVICES tab. Write some data (Ex: "Silicon Labs signals") and call "Send Message" option in that app. we can see that the same message has been exchanged  between two modules which is kind of loopback test.
    
 ![Write some data in BT_MESSENGER tab](resources/readme/image18d.png)
-
-## 6. Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)
   

@@ -707,7 +707,3 @@ HTTPs Sever configuration for Apache requires Wamp server, if you have not insta
 
 
 > **Note:** Make sure to check your HTTPS server from other local machines present in the same network. It should be accessible.
-
-## Compressed Debug Logging
-
-To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)
