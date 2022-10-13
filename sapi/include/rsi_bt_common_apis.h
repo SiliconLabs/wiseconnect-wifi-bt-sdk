@@ -58,6 +58,9 @@
  * @fn          int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr)
  *              
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr);
 
 /*==============================================*/
@@ -156,5 +159,7 @@ int32_t rsi_bt_set_antenna_tx_power_level(uint8_t protocol_mode, int8_t tx_power
 int32_t rsi_bt_get_bt_stack_version(rsi_bt_resp_get_bt_stack_version_t *bt_resp_get_bt_stack_version);
 
 int32_t rsi_bt_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
-
+#ifdef __cplusplus
+}
+#endif
 #endif
