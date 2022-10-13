@@ -302,3 +302,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. If remote device support notify property Silicon Labs module will enable notify, and ready to receive notifications from remote device.
 
 5. Whenever GATT server changes value and notifies that Silicon Labs module will receive that value.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

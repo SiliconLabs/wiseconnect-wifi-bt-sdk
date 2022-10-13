@@ -210,3 +210,7 @@ See [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wi
   - If the RS9116W reset pin is **NOT** connected to the STM32, press the RS9116W EVK reset button
   - Run the project on the STM32
   - Review gain table updates on the serial terminal
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

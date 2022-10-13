@@ -205,3 +205,7 @@ then click on the three dots beside the name and select delete bond information.
 7. After successful program execution, the prints in teraterm looks as shown below.   
     
 ![Prints in Teraterm](resources/readme/image1b.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

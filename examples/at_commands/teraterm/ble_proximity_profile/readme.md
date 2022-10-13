@@ -59,3 +59,8 @@ The [Silabs EFR Connect](https://www.silabs.com/developers/efr-connect-mobile-ap
 
 **STEP 7.**  As the RSSI increases and decreases, the alert level changes to indicate whether the distance between the RS9116W and mobile device running the EFR Connect app is exceeded.
 ![Upgrade in progress](./resources/remote-device-read-no-alert-8.png)
+
+
+
+
+

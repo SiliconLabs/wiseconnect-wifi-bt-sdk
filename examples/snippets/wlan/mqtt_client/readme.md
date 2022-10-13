@@ -385,3 +385,7 @@ mosquitto.exe –p 1883 –v
   where config is the sub folder and mosquitto.conf is the different config file than default.
 > Limitations: 
 > MQTT client application keeps on polling for the data to receive on the subscribed topic irrespective of receive timeout mentioned in the rsi_mqtt_poll_for_recv_data API.
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

@@ -224,3 +224,7 @@ A terminal output shows the following text during transmit testing.
 
 When transmitting, a spectrum analyser may be used to see transmitted packets (and the transmit spectrum) as shown in the following image.  
 ![Figure: Spectrum Analyzer BR Mode](resources/readme/image23_spectrum.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

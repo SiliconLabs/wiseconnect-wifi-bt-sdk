@@ -394,3 +394,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 2. You can use any MQTT client and connect to the AWS cloud, for subscribe and publishing messages.
 
 ![Module connected log ](resources/readme/image_aws23.png)
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

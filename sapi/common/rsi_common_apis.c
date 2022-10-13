@@ -415,7 +415,6 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
  *			                        6 - Access point mode \n
  *			                        8 - Transmit test mode \n
  *			                        9 - Concurrent mode
- * @note 			 Opermode WiFi-Direct(1) mode is not supported.
  * @param[in]  coex_mode       -    Coexistence mode
  *                                  0 - WLAN only mode \n
  *                                  1 - WLAN \n
@@ -426,10 +425,11 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
  *                                  12- BLE mode \n
  *                                  13- WLAN + BLE \n
  *                                   
- * @note 			1. Coex modes are supported only in 384K memory configuration.
- * @note			2. Coex mode 4(Bluetooth classic), 8 (Dual mode), and 12(BLE mode) are not supported.
- * @note			3. To achieve the same functionality, use coexmode 5, 9, and 13 respectively instead of coexmode 4, 8, and 12.
- * @note			4. To achieve power save functionality, trigger 'rsi_wlan_radio_init()' API after rsi_wireless_init() API and also issue
+ * @note 			1. Opermode WiFi-Direct(1) mode is not supported.
+ * @note 			2. Coex modes are supported only in 384K memory configuration.
+ * @note			3. Coex mode 4(Bluetooth classic), 8 (Dual mode), and 12(BLE mode) are not supported.
+ * @note			4. To achieve the same functionality, use coexmode 5, 9, and 13 respectively instead of coexmode 4, 8, and 12.
+ * @note			5. To achieve power save functionality, trigger 'rsi_wlan_radio_init()' API after rsi_wireless_init() API and also issue
  * both WLAN and BT power save commands. \n
  *
  * @return      **Success** - RSI_SUCCESS  \n
@@ -1908,7 +1908,7 @@ int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle
  * 				Non-Zero Value - Failure
  */
 
-#define RSI_DRIVER_VERSION "2.6.1.6"
+#define RSI_DRIVER_VERSION "2.6.1.7"
 int32_t rsi_driver_version(uint8_t *request)
 {
   SL_PRINTF(SL_DRIVER_VERSION_ENTRY, COMMON, LOG_INFO);

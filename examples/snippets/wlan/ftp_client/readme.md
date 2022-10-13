@@ -251,7 +251,7 @@ The application can be configured to suit user requirements and development envi
 #define CONCURRENT_MODE                   RSI_DISABLE
 #define RSI_FEATURE_BIT_MAP               FEAT_SECURITY_OPEN
 #define RSI_TCP_IP_BYPASS                 RSI_DISABLE
-#define RSI_TCP_IP_FEATURE_BIT_MAP        TCP_IP_FEAT_DHCPV4_CLIENT| TCP_IP_FEAT_FTP_CLIENT)
+#define RSI_TCP_IP_FEATURE_BIT_MAP        (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_FTP_CLIENT)
 #define RSI_CUSTOM_FEATURE_BIT_MAP        FEAT_CUSTOM_FEAT_EXTENTION_VALID
 #define RSI_EXT_CUSTOM_FEAT_BIT_MAP       EXT_FEAT_256k_MODE
 #define RSI_BAND                          RSI_BAND_2P4GHZ
@@ -334,3 +334,7 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 ![Read Write Files in Explorer](resources/readme/image_8.png)
 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

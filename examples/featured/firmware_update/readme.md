@@ -9,7 +9,7 @@ This application demonstrates how to update the RS9116W firmware via Wi-Fi by do
   - The OTA application programs the firmware into the RS9116 flash memory and reboots
 
 ## Setting Up 
-To use this application, the following hardware, software and project setup is required.
+To test the application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements	
   - Windows PC with Host interface (UART / SPI/ SDIO).
@@ -106,3 +106,7 @@ The application has been designed to work with FreeRTOS and Bare Metal configura
 > - Select 'OK' to save the settings
       
 ![Figure: project settings in Keil IDE](resources/readme/image156a.png) 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

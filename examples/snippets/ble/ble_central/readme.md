@@ -206,3 +206,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 4. After successful program execution the prints in teraterm looks as shown below.   
      
 ![Prints in Teraterm window](resources/readme/images23_log.png) 
+
+## Compressed Debug Logging
+
+To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)
