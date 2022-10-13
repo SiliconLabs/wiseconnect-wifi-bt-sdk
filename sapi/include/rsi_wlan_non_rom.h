@@ -383,24 +383,24 @@ struct rsi_bit_2_string {
   char *string;
 };
 static const struct rsi_bit_2_string STATE[WLAN_MODULE_STATES] = {
-  { 0x10, "Beacon Loss (Failover Roam)" },
-  { 0x20, "De-authentication (AP induced Roam / Disconnect from supplicant" },
-  { 0x50, "Current AP is best" },
-  { 0x60, "Better AP found" },
-  { 0x70, "No AP found" },
-  { 0x80, "Associated" },
-  { 0x90, "Unassociated" },
-  { 0x01, "Authentication denial" },
-  { 0x02, "Association denial" },
-  { 0x03, "AP not present" },
-  { 0x05, "WPA2 key exchange failed" }
+  { 0x10, (char *)"Beacon Loss (Failover Roam)" },
+  { 0x20, (char *)"De-authentication (AP induced Roam / Disconnect from supplicant" },
+  { 0x50, (char *)"Current AP is best" },
+  { 0x60, (char *)"Better AP found" },
+  { 0x70, (char *)"No AP found" },
+  { 0x80, (char *)"Associated" },
+  { 0x90, (char *)"Unassociated" },
+  { 0x01, (char *)"Authentication denial" },
+  { 0x02, (char *)"Association denial" },
+  { 0x03, (char *)"AP not present" },
+  { 0x05, (char *)"WPA2 key exchange failed" }
 
 };
 
 static const struct rsi_bit_2_string REASONCODE[WLAN_REASON_CODES] = {
-  { 0x01, "Authentication denial" },       { 0x02, "Association denial" },
-  { 0x10, "Beacon Loss (Failover Roam)" }, { 0x20, "De-authentication (AP induced Roam/Deauth from supplicant)" },
-  { 0x07, "PSK not configured" },          { 0x05, "Roaming not enabled" },
+  { 0x01, (char *)"Authentication denial" },       { 0x02, (char *)"Association denial" },
+  { 0x10, (char *)"Beacon Loss (Failover Roam)" }, { 0x20, (char *)"De-authentication (AP induced Roam/Deauth from supplicant)" },
+  { 0x07, (char *)"PSK not configured" },          { 0x05, (char *)"Roaming not enabled" },
 
 };
 

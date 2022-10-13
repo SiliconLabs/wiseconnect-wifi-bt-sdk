@@ -65,7 +65,7 @@ int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr);
  * @fn          int32_t rsi_bt_ber_enable(struct rsi_bt_ber_cmd_s *rsi_bt_ber_cmd)
  *
  */
-int32_t rsi_bt_ber_enable_or_disable(struct rsi_bt_ber_cmd_s *ber_cmd);
+int32_t rsi_bt_ber_enable_or_disable(rsi_bt_ber_cmd_t *ber_cmd);
 
 /*==============================================*/
 /**

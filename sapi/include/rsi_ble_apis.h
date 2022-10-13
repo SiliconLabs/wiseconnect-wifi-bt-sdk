@@ -1076,11 +1076,21 @@ int32_t rsi_ble_encrypt(uint8_t *, uint8_t *, uint8_t *);
  * */
 int32_t rsi_ble_stop_advertising(void);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_set_advertise_data
  * */
 int32_t rsi_ble_set_advertise_data(uint8_t *data, uint16_t data_len);
+#ifdef __cplusplus
+}
+#endif
+
+
+
 
 /*========================================================*/
 /**
