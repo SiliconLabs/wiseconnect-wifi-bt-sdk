@@ -828,7 +828,7 @@ typedef struct rsi_req_cert_valid_s {
 
 } rsi_req_cert_valid_t;
 #endif
-//#define RSI_CERT_MAX_DATA_SIZE (RSI_MAX_CERT_SEND_SIZE – sizeof(struct rsi_cert_info_s))
+#define RSI_CERT_MAX_DATA_SIZE (RSI_MAX_CERT_SEND_SIZE - (sizeof(struct rsi_cert_info_s)))
 // Set certificate command request structure
 typedef struct rsi_req_set_certificate_s {
   // certificate information structure
