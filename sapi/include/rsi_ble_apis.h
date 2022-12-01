@@ -1035,7 +1035,9 @@ typedef struct chip_ble_buffers_stats_s {
 /******************************************************
  * *              GAP API's Declarations
  * ******************************************************/
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 //*==============================================*/
 /**
  * @fn         rsi_convert_db_to_powindex
@@ -1076,11 +1078,21 @@ int32_t rsi_ble_encrypt(uint8_t *, uint8_t *, uint8_t *);
  * */
 int32_t rsi_ble_stop_advertising(void);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_set_advertise_data
  * */
 int32_t rsi_ble_set_advertise_data(uint8_t *data, uint16_t data_len);
+#ifdef __cplusplus
+}
+#endif
+
+
+
 
 /*========================================================*/
 /**
@@ -2394,4 +2406,7 @@ int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size);
 void rsi_ble_gap_extended_register_callbacks(rsi_ble_on_remote_features_t ble_on_remote_features_event,
                                              rsi_ble_on_le_more_data_req_t ble_on_le_more_data_req_event);
 int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt);
+#ifdef __cplusplus
+}
+#endif
 #endif
