@@ -26,9 +26,7 @@
 #ifdef RSI_WITH_OS
 #include "rsi_os.h"
 #endif
-#ifdef RSI_DEBUG_PRINTS
 #include "rsi_common.h"
-#endif
 /******************************************************
  * *                      Macros
  * ******************************************************/
@@ -167,6 +165,7 @@ extern int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode);
 extern int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g);
 extern int32_t rsi_send_feature_frame(void);
 extern int32_t rsi_get_fw_version(uint8_t *response, uint16_t length);
+extern int32_t rsi_get_module_type(uint8_t *response);
 extern int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level);
 extern int32_t rsi_socket_config(void);
 extern int32_t rsi_wireless_deinit(void);
@@ -175,6 +174,9 @@ extern void rsi_wireless_driver_task(void);
 extern int16_t rsi_check_assertion(void);
 extern int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
 extern int32_t rsi_driver_version(uint8_t *request);
+extern int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
+
+#define RSI_DRIVER_VERSION "2.7.0.39"
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
 #endif

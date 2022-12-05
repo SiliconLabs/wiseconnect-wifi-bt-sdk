@@ -177,8 +177,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **5.3**
 
@@ -277,7 +277,7 @@ To update gain offset as -2 dBm and xo ctune as per the value in hardware regist
    |            |             |                  | 0 -Use XO Ctune value as read from hardware register. |
    |            | 7 -3      |                |   Reserved |
    |gain_offset | gain offset as observed in dBm |    |     |  
-   | xo_ctune   | This field allows user to directly update xo_ctune \n value to calibration data bypassing the freq \n offset loop, valid only when \n BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID \n of flags is set. |   |   |
+   | xo_ctune   | This field allows user to directly update xo_ctune value to calibration data bypassing the freq offset loop, valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. |   | The range of xo_ctune is [0, 255], and the typical value is 80 |
 
 **Precondition:**
 rsi_freq_offset command needs to be called before this command when xo ctune value from hardware register is to be used.

@@ -54,7 +54,11 @@
 #define configUSE_16_BIT_TICKS                   0
 #define configUSE_MUTEXES                        1
 #define configQUEUE_REGISTRY_SIZE                8
+#ifndef ENABLE_RECURSIVE_MUTEXES
 #define configUSE_RECURSIVE_MUTEXES              0
+#else
+#define configUSE_RECURSIVE_MUTEXES              1
+#endif
 #define configUSE_COUNTING_SEMAPHORES            0
 
 /* Co-routine definitions. */

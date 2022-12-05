@@ -208,6 +208,13 @@
 //! Private Key Password is required for encrypted private key, format is like "\"12345678\""
 #define RSI_PRIVATE_KEY_PASSWORD ""
 
+/* OKC value of EAP command
+BIT[0] - OKC (Opportunistic Key Caching)
+BIT[1] - CA certificate for PEAP connection.
+BIT[2-12] - EAP Ciphers list
+BIT[13-31] - Reserved
+*/
+#define OKC_VALUE 0
 /*=======================================================================*/
 
 //! AP configuration command parameters

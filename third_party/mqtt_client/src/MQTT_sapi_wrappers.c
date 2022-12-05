@@ -153,7 +153,7 @@ int ConnectNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src_p
 	memset(&address, 0, sizeof(address));
 	memset(&address_v6, 0, sizeof(address_v6));
 
-	if(flags == RSI_IPV6)
+	if(flags & RSI_IPV6)
 	{
 
 		address_v6.sin6_family = AF_INET6;
@@ -218,7 +218,7 @@ int ConnectNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src_p
 		return status;
 	}
 
-	if(flags == RSI_IPV6)
+	if(flags & RSI_IPV6)
 	{
 		//! Bind socket
 		status = rsi_bind(n->my_socket, (struct rsi_sockaddr *) &clientAddr_v6, sizeof(clientAddr_v6));
@@ -238,7 +238,7 @@ int ConnectNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src_p
         mqtt_disconnect(n);
 		return status;
 	}
-	if(flags == RSI_IPV6)
+	if(flags & RSI_IPV6)
 	{
 		rc = rsi_connect(n->my_socket, (struct rsi_sockaddr*)&address_v6, sizeof(address_v6));
 	}

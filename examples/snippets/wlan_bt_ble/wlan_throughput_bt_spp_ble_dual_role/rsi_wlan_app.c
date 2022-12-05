@@ -205,7 +205,7 @@ void measure_throughput(uint32_t total_bytes, uint32_t start_time, uint32_t end_
   LOG_PRINT("Time taken in sec: %lu \r\n", (uint32_t)((end_time - start_time) / 1000));
 }
 
-#if SSL
+#if (SSL && LOAD_CERTIFICATE)
 /*====================================================*/
 /**
  * @fn         int32_t rsi_app_load_ssl_cert()
@@ -231,7 +231,6 @@ int32_t rsi_app_load_ssl_cert()
   return status;
 }
 #endif
-
 /*====================================================*/
 /**
  * @fn         int32_t  rsi_wlan_app_task(void)
@@ -284,6 +283,14 @@ int32_t rsi_wlan_app_task(void)
         //no break
         //fall through
       case RSI_WLAN_UNCONNECTED_STATE: {
+#if (SSL && LOAD_CERTIFICATE)
+        status = rsi_app_load_ssl_cert();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("CA cert load failed \r\n");
+          return status;
+        }
+        LOG_PRINT("CA cert load success \r\n");
+#endif
         LOG_PRINT("WLAN scan started \r\n");
         status = rsi_wlan_scan((int8_t *)SSID, (uint8_t)CHANNEL_NO, NULL, 0);
         if (status != RSI_SUCCESS) {

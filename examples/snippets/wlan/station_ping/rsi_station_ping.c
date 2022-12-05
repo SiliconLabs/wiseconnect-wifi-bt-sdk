@@ -202,7 +202,7 @@ int32_t rsi_station_ping_app()
     LOG_PRINT("\r\nEnable debug log prints Failed, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("\r\nEnable debug log prints Failed Success\r\n");
+    LOG_PRINT("\r\nEnable debug log prints Success\r\n");
   }
 
   //! Scan for Access points
@@ -272,7 +272,14 @@ int32_t rsi_station_ping_app()
 
   while (packet_count < NUMBER_OF_PACKETS) {
 
-    status            = rsi_wlan_ping_async(0, (uint8_t *)&remote_ip_addr, size, rsi_ping_response_handler);
+    status = rsi_wlan_ping_async(0, (uint8_t *)&remote_ip_addr, size, rsi_ping_response_handler);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nPing Async Failed, Error Code : 0x%lX\r\n", status);
+      return status;
+    } else {
+      LOG_PRINT("\r\nPing Async Success\r\n");
+    }
+
     ping_rsp_received = 0;
     packet_count++;
 

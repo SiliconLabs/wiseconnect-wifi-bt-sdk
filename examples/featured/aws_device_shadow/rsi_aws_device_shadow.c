@@ -142,8 +142,11 @@ void rsi_wlan_app_callbacks_init(void)
   // Initialize remote terminate call back
   rsi_wlan_register_callbacks(RSI_REMOTE_SOCKET_TERMINATE_CB, rsi_remote_socket_terminate_handler);
 }
-
+#if defined(FLOAT_PRINT_BYPASS)
+static void simulate_room_temperature(char *temperature1, float *p_room_temperature, bool *p_window_open)
+#else
 static void simulate_room_temperature(float *p_room_temperature, bool *p_window_open)
+#endif
 {
   static float delta_change;
 
@@ -154,6 +157,9 @@ static void simulate_room_temperature(float *p_room_temperature, bool *p_window_
   }
 
   *p_room_temperature += delta_change;
+#if defined(FLOAT_PRINT_BYPASS)
+  rsi_ftoa(temperature1, *p_room_temperature, 6);
+#endif
 
   *p_window_open = false;
   if (*p_room_temperature >= (ROOM_TEMPERATURE_UPPER_LIMIT + ROOM_TEMPERATURE_LOWER_LIMIT) / 2) {
@@ -205,7 +211,12 @@ int32_t application(void)
   bool window_open = false;
   jsonStruct_t temperature_handler;
   jsonStruct_t window_actuator;
-
+#if defined(FLOAT_PRINT_BYPASS)
+  char *temperature1[9] = { 0 };
+#endif
+#ifdef RSI_M4_INTERFACE
+  uint32_t xtal_enable = 1;
+#endif
   // Initialize the MQTT client
   AWS_IoT_Client mqtt_client = { 0 };
 
@@ -217,10 +228,14 @@ int32_t application(void)
 
   temperature_handler.cb         = NULL;
   temperature_handler.dataLength = sizeof(float);
-  temperature_handler.pData      = &temperature;
   temperature_handler.pKey       = "Temperature";
-  temperature_handler.type       = SHADOW_JSON_FLOAT;
-
+#if defined(FLOAT_PRINT_BYPASS)
+  temperature_handler.pData = &temperature1;
+  temperature_handler.type  = SHADOW_JSON_OBJECT;
+#else
+  temperature_handler.pData = &temperature;
+  temperature_handler.type  = SHADOW_JSON_FLOAT;
+#endif
   sp.pHost               = host_address;
   sp.port                = port;
   sp.pClientCRT          = (char *)aws_client_certificate;
@@ -229,6 +244,7 @@ int32_t application(void)
   sp.enableAutoReconnect = NULL;
   sp.disconnectHandler   = NULL;
 
+#ifndef RSI_M4_INTERFACE
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
@@ -240,6 +256,7 @@ int32_t application(void)
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+#endif
 
 #ifdef RSI_WITH_OS
   // Create Semaphore rsi_shadow_sem
@@ -260,6 +277,12 @@ int32_t application(void)
     return status;
   }
 
+#ifdef RSI_M4_INTERFACE
+  status = rsi_cmd_m4_ta_secure_handshake(RSI_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+#endif
   status = rsi_send_feature_frame();
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nSend Feature Frame Failed, Error Code : 0x%lX\r\n", status);
@@ -439,8 +462,12 @@ int32_t application(void)
           if (NETWORK_ATTEMPTING_RECONNECT == aws_result) {
             continue;
           }
-
+#if defined(FLOAT_PRINT_BYPASS)
+          rsi_ftoa(temperature1, temperature, 6);
+          simulate_room_temperature(temperature1, &temperature, &window_open);
+#else
           simulate_room_temperature(&temperature, &window_open);
+#endif
           aws_result = aws_iot_shadow_init_json_document(json_document_buffer, size_of_json_document_buffer);
           if (aws_result == SUCCESS) {
             aws_result = aws_iot_shadow_add_reported(json_document_buffer,
@@ -482,7 +509,25 @@ int32_t application(void)
 
 int main()
 {
+#ifdef RSI_M4_INTERFACE
+  int32_t status = RSI_SUCCESS;
+  // Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
+
 #ifdef RSI_WITH_OS
+  rsi_task_handle_t application_handle = NULL;
   // Create application task
   rsi_task_create((rsi_task_function_t)(int32_t)application,
                   (uint8_t *)"application_task",

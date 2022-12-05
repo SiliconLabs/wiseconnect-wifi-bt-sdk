@@ -344,6 +344,10 @@ int16_t rsi_spi_pkt_len(uint16_t *length)
  * @return     0 - SUCCESS \n
  *             -1 - SPI busy / Timeout \n
  *             -2 - SPI Failure
+ * @note       This API should be called only if the SPI clock frequency is more than 25 MHz and shouldn't be called otherwise.
+ * @note       SPI initialization has to be done in low-speed mode. After device SPI is configured to high-speed mode using this API, \n
+ *             rsi_switch_to_high_clk_freq() will be executed to configure the host SPI to a frequency that is more than 25 MHz. \n
+ *             The latter API has to be ported by the user to implement the host clock switch. 
  */
 
 int16_t rsi_spi_high_speed_enable(void)

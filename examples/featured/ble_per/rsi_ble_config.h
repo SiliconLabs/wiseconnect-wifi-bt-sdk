@@ -36,8 +36,16 @@
 
 #define RSI_OPERMODE_WLAN_BLE 13
 
+#ifdef RSI_M4_INTERFACE
+#define RSI_BLE_MAX_NBR_ATT_REC 20
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS 4
+#else
 #define RSI_BLE_MAX_NBR_ATT_REC  80
 #define RSI_BLE_MAX_NBR_ATT_SERV 10
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS  20
+#endif
 
 #define RSI_BLE_MAX_NBR_SLAVES    3
 #define RSI_BLE_MAX_NBR_MASTERS   1
@@ -176,14 +184,19 @@
 
 #define RSI_FEATURE_BIT_MAP \
   (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1) //! To set wlan feature select bit map
-#define RSI_TCP_IP_BYPASS RSI_DISABLE                           //! TCP IP BYPASS feature check
-#define RSI_TCP_IP_FEATURE_BIT_MAP \
-  (TCP_IP_FEAT_DHCPV4_CLIENT) //! TCP/IP feature select bitmap for selecting TCP/IP features
+#define RSI_TCP_IP_BYPASS            RSI_DISABLE                //! TCP IP BYPASS feature check
+#define RSI_TCP_IP_FEATURE_BIT_MAP   0 //! TCP/IP feature select bitmap for selecting TCP/IP features
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#ifdef CHIP_9117
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
+#else
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#endif
 
 #define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE | ENABLE_BLE_PROTOCOL)
 

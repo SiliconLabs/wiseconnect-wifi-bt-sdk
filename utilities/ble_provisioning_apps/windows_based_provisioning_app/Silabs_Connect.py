@@ -43,7 +43,8 @@ def fscan():
     frameble=Frame(main,width=50,height=60,bd=1)
 
     for d in bledevices:
-        if str(d).startswith(("00:23:a7","00:23:A7","88:DA:1A","80:C9:55","88:da:1a","80:c9:55")):
+        if str(d).endswith("BLE_CONFIGURATOR"):
+        #if str(d).startswith(("00:23:a7","00:23:A7","88:DA:1A","80:C9:55","88:da:1a","80:c9:55")):
             count+=1
     if count==0:
         fscan()
@@ -51,7 +52,8 @@ def fscan():
         r=0
         for d in bledevices:
             d=str(d)
-            if d.startswith(("00:23:a7","00:23:A7","88:DA:1A","80:C9:55","88:da:1a","80:c9:55")):
+            if d.endswith("BLE_CONFIGURATOR"):
+            #if d.startswith(("00:23:a7","00:23:A7","88:DA:1A","80:C9:55","88:da:1a","80:c9:55")):
                 bledev=d[18:]+"\n"+d[:17]
                 btn_bledev=Button(frameble,text=bledev,bd=1,height=2,width=50,command=lambda addr=d:connble(addr),bg="#0597AA",fg="white",font=("Verdana 10 bold",10))
                 #print(address)
@@ -68,7 +70,7 @@ def connble(addr):
     async def run():
         global client
         global conn
-        print("came here")
+        print("BLE Connectable function")
         client=BleakClient(address)
         try:
             await client.connect()
@@ -227,7 +229,12 @@ def getwlandevices():
             elif x[d-1]==0:
                 ap_sec="OPEN"
             else:
-                ap_sec=""
+                if x[d-1]==1:
+                    ap_sec="WPA"
+                elif x[d-1]==6:
+                    ap_sec="WPA_WPA2_MIXED"
+                else:
+                    print("This is a statement")
             btn_wlandev=Button(framewlan,text=ssid+"\n"+ap_sec,bd=1,height=2,width=30,command=lambda ssid=x[d]:connwlan(ssid),bg="#0597AA",fg="white",font=("Verdana 10 bold",10))
             btn_wlandev.grid(row=r,column=0,columnspan=2,pady=5)
             r+=1
@@ -240,7 +247,7 @@ def getwlandevices():
        
 
 def connwlan(ssid):
-    print("Came to wlan conn: ",ssid)
+    print("Connecting to Access point: ",ssid)
     global ipaddr
     global macaddr
     if client.is_connected:
@@ -278,7 +285,7 @@ def connwlan(ssid):
                     await client.write_gatt_char(uuid1, sec_type, response=True)
                     await asyncio.sleep(2.0)
 
-                    if security==2:
+                    if security==2 or security==1 or security==6:
                         #sending WLAN PSK, cmd id is 6/ASCII 0x36
                         #print("Enter PSK: ")
                         #main2.destroy()
@@ -286,7 +293,8 @@ def connwlan(ssid):
                         if not psk is None:
                             password=b'\x36'+b'\x00'+b'\x00'+bytes(psk,'ascii')
                             await client.write_gatt_char(uuid1, password, response=True)
-                    else:
+                    
+                    else:        
                         if security!=0:
                             print("No AP Found")
                             statusmsg.set('AP Not Found, Select Desired AP To Connect')

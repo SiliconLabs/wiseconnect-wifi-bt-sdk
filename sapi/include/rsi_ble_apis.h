@@ -908,7 +908,7 @@ typedef struct rsi_ble_per_transmit_s {
        1  Fixed Hopping \n
        2  Random Hopping (rx_chnl_num, tx_chnl_num parameters are unused in this mode) */
   uint8_t freq_hop_en;
-  /** Antenna selection (onboard/external) to be used for reception \n 
+  /** Select the antenna to be used. Refer to the datasheet for your hardware to check whether or not it contains an onboard antenna. \n 
        2  ONBOARD_ANT_SEL \n
        3  EXT_ANT_SEL */
   uint8_t ant_sel;
@@ -992,7 +992,7 @@ typedef struct rsi_ble_per_receive_s {
        1  Fixed Hopping \n
        2  Random Hopping (rx_chnl_num, tx_chnl_num parameters are unused in this mode) */
   uint8_t freq_hop_en;
-  /** Antenna selection (onboard/external) to be used for reception \n 
+  /** Select the antenna to be used. Refer to the datasheet for your hardware to check whether or not it contains an onboard antenna. \n 
        2  ONBOARD_ANT_SEL \n
        3  EXT_ANT_SEL */
   uint8_t ant_sel;

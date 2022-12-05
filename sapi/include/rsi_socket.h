@@ -307,6 +307,7 @@
 #ifdef CHIP_9117
 #define SO_MAX_RETRANSMISSION_TIMEOUT_VAL 48 /* to configure max retransmission timeout value*/
 #define SO_SSL_V_1_3_ENABLE               49 /* To enable ssl 1.3*/
+#define SO_SSL_RECV_BUFF_SIZE             50 /* To configure SSL Data path enhancement*/
 #endif
 #define MAX_RETRANSMISSION_TIME_VALUE 32
 

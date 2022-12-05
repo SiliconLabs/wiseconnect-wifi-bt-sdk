@@ -595,7 +595,7 @@ typedef struct rsi_sntp_client {
   } server_ip_address;
   // SNTP server method
   uint8_t sntp_method;
-  uint8_t sntp_timeout[2];
+  uint8_t sntp_retry_count[2];
 } rsi_sntp_client_t;
 
 typedef struct rsi_sntp_server_info_rsp_t {
@@ -1206,7 +1206,13 @@ typedef struct rsi_http_client_post_data_req_s {
 #define RSI_EMB_MQTT_CLEAN_SESSION BIT(0)
 #define RSI_EMB_MQTT_SSL_ENABLE    BIT(1)
 #define RSI_EMB_MQTT_IPV6_ENABLE   BIT(2)
-
+#ifdef CHIP_9117
+//! Here BIT(4,5,6,7) all four bit related to RSI_EMB_MQTT_TCP_MAX_RETRANSMISSION_CAP
+//! for example if BIT(4) set will treat it as 1 sec
+//! if BIT(5) set will treat as 2 sec
+//! if (BIT(4) | BIT(5)) set will treat as 3sec like so on....
+#define RSI_EMB_MQTT_TCP_MAX_RETRANSMISSION_CAP BIT(4)
+#endif
 // Emb MQTT Connect flags
 #define RSI_EMB_MQTT_USER_FLAG   BIT(7)
 #define RSI_EMB_MQTT_PWD_FLAG    BIT(6)
@@ -1353,6 +1359,10 @@ typedef struct rsi_emb_mqtt_client_init_s {
   uint8_t encrypt;
   // MQTT  Client port
   uint8_t client_port[4];
+#ifdef CHIP_9117
+  //! Capping tcp retransmission timeout
+  uint8_t tcp_max_retransmission_cap_for_emb_mqtt;
+#endif
 } rsi_emb_mqtt_client_init_t;
 
 typedef struct rsi_req_emb_mqtt_command_s {

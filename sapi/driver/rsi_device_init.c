@@ -20,12 +20,13 @@
  */
 #include "rsi_driver.h"
 #include "rsi_spi_cmd.h"
-#define RSI_SAFE_UPGRADE_ADDR 0x1d408
-#define RSI_SECURE_ZONE_ADDR  0x1d418
-#define RSI_SAFE_UPGRADE      BIT(12)
-#define RSI_SECURE_ZONE       BIT(20)
-#define PING_BUFF             0
-#define PONG_BUFF             1
+#define RSI_SAFE_UPGRADE_ADDR      0x1d408
+#define RSI_SECURE_ZONE_ADDR       0x1d418
+#define RSI_SAFE_UPGRADE           BIT(12)
+#define RSI_INTEGRITY_CHECK_BYPASS BIT(13)
+#define RSI_SECURE_ZONE            BIT(20)
+#define PING_BUFF                  0
+#define PONG_BUFF                  1
 #ifndef RSI_M4_INTERFACE
 #ifndef RSI_UART_INTERFACE
 #ifndef RSI_USB_INTERFACE
@@ -421,9 +422,35 @@ int32_t rsi_set_fast_fw_up(void)
   return retval;
 }
 /** @} */
-/** @addtogroup DRIVER6
+/** @addtogroup INTERNAL
 * @{
 */
+/**
+ * @fn          int32_t rsi_integrity_check_bypass(void)
+ * @brief       This API bypasses the fw image integrity check during initialization sequence. It will be called after board 
+ * ready. This is meant to be used only during error recovery cases that require a reset to restore the firmware health.
+ * @param[in]   void
+ * @return      0              - Success \n
+ *              Non-Zero Value - Failure
+ */
+int32_t rsi_integrity_check_bypass(void)
+{
+  uint32_t read_data = 0;
+  int32_t retval     = 0;
+  retval             = rsi_mem_rd(RSI_SAFE_UPGRADE_ADDR, 4, (uint8_t *)&read_data);
+  if (retval < 0) {
+    return retval;
+  }
+  //enabling integrity check bypass
+  if (!(read_data & (RSI_INTEGRITY_CHECK_BYPASS))) {
+    read_data |= RSI_INTEGRITY_CHECK_BYPASS;
+    retval = rsi_mem_wr(RSI_SAFE_UPGRADE_ADDR, 4, (uint8_t *)&read_data);
+    if (retval < 0) {
+      return retval;
+    }
+  }
+  return retval;
+}
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_rom_version(void)
@@ -431,6 +458,10 @@ int32_t rsi_set_fast_fw_up(void)
  * @param[in]   void 
  * @return      1 - RSI_ROM_VERSION_1P0 \n 
  *              2 - RSI_ROM_VERSION_1P1 
+ * 
+ * @note        The return value of this API can be used to infer chip version of the module. \n
+ *                     1 - 1.4EVK \n
+ *                     2 - 1.5EVK
  */
 
 int32_t rsi_get_rom_version(void)

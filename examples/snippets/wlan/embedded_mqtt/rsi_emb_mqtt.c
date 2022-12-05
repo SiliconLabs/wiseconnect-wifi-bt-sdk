@@ -275,18 +275,26 @@ int32_t rsi_mqtt_client_app()
                                     (int8_t *)password);
 
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nMQTT Client Init Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Client Init Success\r\n");
+
   //! Connect to the MQTT brohker/server
   status = rsi_emb_mqtt_connect((RSI_EMB_MQTT_USER_FLAG | RSI_EMB_MQTT_PWD_FLAG), NULL, 0, NULL);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nMQTT Connect Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Connect Success\r\n");
+
   //! Subscribe to the topic given
   status = rsi_emb_mqtt_subscribe(QOS, (int8_t *)RSI_MQTT_TOPIC);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nMQTT Subscribe Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Subscribe Success\r\n");
 
   //!The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver a PUBLISH Packet
   //!The DUP flag MUST be set to 0 for all QoS 0 messages
@@ -312,26 +320,34 @@ int32_t rsi_mqtt_client_app()
   //! Publish message on the topic
   status = rsi_emb_mqtt_publish((int8_t *)RSI_MQTT_TOPIC, &publish_msg);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nMQTT Publish Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Publish Success\r\n");
 
   //! UnSubscribe to the topic given
   status = rsi_emb_mqtt_unsubscribe((int8_t *)RSI_MQTT_TOPIC);
   if (status != RSI_SUCCESS) {
-    //! Error in receiving
+    LOG_PRINT("\r\nMQTT Unsubscribe Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Unsubscribe Success\r\n");
+
   //! Disconnect to the MQTT broker
   status = rsi_emb_mqtt_disconnect();
   if (status != RSI_SUCCESS) {
-    //! Error in receiving
+    LOG_PRINT("\r\nMQTT Disconnect Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Disconnect Success\r\n");
+
   status = rsi_emb_mqtt_destroy();
   if (status != RSI_SUCCESS) {
-    //! Error in receiving
+    LOG_PRINT("\r\nMQTT Destroy Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nMQTT Destroy Success\r\n");
+
   return 0;
 }
 

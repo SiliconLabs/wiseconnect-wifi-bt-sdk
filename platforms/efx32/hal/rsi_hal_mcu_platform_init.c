@@ -286,8 +286,11 @@ void rsi_hal_board_init(void)
   
   // Configure interrupt pin
   GPIO_PinModeSet(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, gpioModeInput, 0);
+#ifdef RSI_ACTIVE_LOW  
+  GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, INTERRUPT_PIN.pin,false, true, true);
+#else
   GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, INTERRUPT_PIN.pin, true, false, true);
-
+#endif
 #ifdef LOGGING_STATS
   // Configure logging stats gpio pin
   GPIO_PinModeSet(LOGGING_WAKE_INDICATOR_PIN.port, LOGGING_WAKE_INDICATOR_PIN.pin, gpioModeInput, 1);

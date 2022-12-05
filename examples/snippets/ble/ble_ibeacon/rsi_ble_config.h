@@ -38,8 +38,16 @@
 
 #define RSI_OPERMODE_WLAN_BLE 13
 
+#ifdef RSI_M4_INTERFACE
+#define RSI_BLE_MAX_NBR_ATT_REC 20
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS 4
+#else
 #define RSI_BLE_MAX_NBR_ATT_REC  80
 #define RSI_BLE_MAX_NBR_ATT_SERV 10
+/* Number of BLE notifications */
+#define RSI_BLE_NUM_CONN_EVENTS  20
+#endif
 
 #define RSI_BLE_MAX_NBR_SLAVES    3
 #define RSI_BLE_MAX_NBR_MASTERS   1
@@ -185,8 +193,8 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef WISECONNECT
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#ifdef CHIP_9117
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
 #else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #endif
@@ -197,6 +205,10 @@
 //! Power save command parameters
 /*=======================================================================*/
 //! set handshake type of power mode
+#ifdef RSI_M4_INTERFACE
+#define RSI_HAND_SHAKE_TYPE M4_BASED
+#else
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
+#endif
 
 #endif

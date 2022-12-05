@@ -9,32 +9,39 @@ Before continuing, ensure that the RS9116W EVK is plugged into your computer and
   - [Receive PER instructions](#receive-per-instructions)
 
 ## Setting Up
-
+  
 **STEP 1.** Reset the RS9116W EVK.
 
 **STEP 2.** In the Tera Term menu select `Control->Macro`.
 
 ![Tera Term Macro](./resources/tera-term-macro-1.png)
+	
+**STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm/bt_per` containing the example script and select the file `bt_per.ttl`
 
-**STEP 3.** Navigate to the folder `<SDK>/examples/at_commands/teraterm/bt_per` containing the example script and select the file `bt_per.ttl`.
 ![Tera Term Script to be selected](./resources/tera-term-bt-per.png)
+
 
 **STEP 4.** After selecting the `bt_per.ttl` script, a popup shows to indicate the BLE PER script is running. Two additional popups then show to indicate auto baud and the `opermode` command is successul. 
 ![Script execution start](./resources/script-starting-pop-up.png)
+
 ![ABRD State](./resources/firmware-loading-done.png)
-![opermode success](./resources/opermode-successful.png)
+
+![opermode success](./resources/bt-per-opermode.png)
 
 ## Transmit PER Instructions
 The following steps describe how to configure the RS9116W for BT Transmit PER measurement.
 
 **Step 1.** Enter `1` to run the script in transmit PER mode.
-![select the tarnsmit/receive](./resources/per-transmit-4.png)
+
+![select the tarnsmit/receive](./resources/bt-per-transmit-4.png)
 
 **STEP 2.** Enter `1` to enable PER mode.
-![Enable PER mode](./resources/per-enable-5.png)
+
+![Enable PER mode](./resources/bt-per-enable-5.png)
 
 **Step 3.** Enter a 48-bit address in hex format e.g. `0023A7010203`. There is no need to enter the device address, however the same address must be used for transmit and receive.
-![Enter the device address](./resources/bt-address-6.png)
+
+![Enter the device address](./resources/bt-per-address-6.png)
 
 **Step 4.** Enter the desired `packet_length` number from the following list:
   - `BT_DM1_PAYLOAD_MAX_LEN    : 17  `
@@ -59,6 +66,7 @@ The following steps describe how to configure the RS9116W for BT Transmit PER me
   - `BT_EV5_VOICE_PAYLOAD_LEN  : 180 `
   - `BT_2EV5_VOICE_PAYLOAD_LEN : 360 `
   - `BT_3EV5_VOICE_PAYLOAD_LEN : 540 `
+
 ![Phy rate election](./resources/enter-pkt-length-7.png)
 
 **Step 5.** Enter the `packet_type` number from the following list:
@@ -85,58 +93,77 @@ The following steps describe how to configure the RS9116W for BT Transmit PER me
   - `BT_2EV5_PKT_TYPE : 12`
   - `BT_EV5_PKT_TYPE  : 13`
   - `BT_3EV5_PKT_TYPE : 13`
+  
 ![Packet type](./resources/enter-pkt-type-8.png)
 
 **Step 6.** Enter the desired `BR/EDR` mode.
+
 ![BR/EDR mode](./resources/enter-br-edr-mode-9.png)
 
 **Step 7.** Enter the desired `rx` channel number.
+
 ![rx_channel](./resources/enter-rx-channel-10.png)
 
 **Step 8.** Enter the desired `tx` channel number.
+
 ![tx_channel](./resources/enter-tx-channel-11.png)
 
 **Step 9.** Enter the desired `link type`.
+
 ![Hopping type](./resources/link-type-12.png)
 
 **Step 10.** Enter the scrambler seed according to the PER mode.
+
 ![scrambler-seed](./resources/scrambler-seed-13.png)
 
 **Step 11.** Enter the desired `hopping type`.
+
 ![Hopping-type](./resources/hopping-type-14.png)
 
 **Step 12.** Enter the desired `antenna type`.
+
 ![Antenna Selection](./resources/antenna-sel-15.png)
 
 **Step 13.** Enter the desired `rf chain`.
+
 ![tx_power_index](./resources/rf-chain-17.png)
 
 **Step 14.** Enter the desired `payload type`.
+
 ![Payload_type](./resources/payload-type-17.png)
 
 **Step 15.** Enter the `tx_power` index which is listed in the below image.
+
 ![tx_power](./resources/power-index-18.png)
 
 **Step 16.** Enter the desired PER transmission mode.
+
 ![tx_mode](./resources/tx-mode-19.png)
 
 **Step 17.** Enter the `number of packets` based on the selected `tx_mode` parameter.
+
 ![number of packets](./resources/number-of-packets-20.png)
 
-With all inputs successfully entered, PER packet(s) are transmitted. 
-![Final screen-shot](./resources/per-executed-tx-21.png)
+**Step 19.** With all inputs successfully entered, PER packet(s) are transmitted. 
+
+![Final screen-shot](./resources/bt-per-transmit-done.png)
+
+![Final screen-shot done](./resources/bt-per-transmit-final.png)
 
 ## Receive PER Instructions
 The following steps describe how to configure the RS9116W for BLE Receive PER measurement.
 
 **Step 1.** Enter `2` to run the script in PER receive mode.
-![PER Receive](./resources/bt-per-receive.png)
+
+![PER Receive](./resources/per-rx-selection.png)
 
 **STEP 2.** Enter `1` to enable PER mode.
-![Enable PER mode](./resources/per-enable-5.png)
+
+![Enable PER mode](./resources/per-rx-enable.png)
 
 **Step 3.** Enter a 48-bit address in hex format e.g. `0023A7010203`. There is no need to enter the device address, however the same address must be used for transmit and receive.
-![Enter the device address](./resources/bt-address-6.png)
+
+![Enter the device address](./resources/per-rx-address.png)
 
 **Step 4.** Enter the desired `packet_length` number from the following list:
   - `BT_DM1_PAYLOAD_MAX_LEN    : 17  `
@@ -161,7 +188,8 @@ The following steps describe how to configure the RS9116W for BLE Receive PER me
   - `BT_EV5_VOICE_PAYLOAD_LEN  : 180 `
   - `BT_2EV5_VOICE_PAYLOAD_LEN : 360 `
   - `BT_3EV5_VOICE_PAYLOAD_LEN : 540 `
-![Phy rate election](./resources/enter-pkt-length-7.png)
+  
+![Phy rate election](./resources/per-rx-packet-length.png)
 
 **Step 5.** Enter the `packet_type` number from the following list:
   - `BT_DM1_PKT_TYPE  : 3 `
@@ -187,41 +215,51 @@ The following steps describe how to configure the RS9116W for BLE Receive PER me
   - `BT_2EV5_PKT_TYPE : 12`
   - `BT_EV5_PKT_TYPE  : 13`
   - `BT_3EV5_PKT_TYPE : 13`
-![Packet type](./resources/enter-pkt-type-8.png)
+
+![Packet type](./resources/per-rx-pkt-type.png)
 
 **Step 6.** Enter the desired `BR/EDR` mode.
+
 ![BR/EDR mode](./resources/enter-br-edr-mode-9.png)
 
 **Step 7.** Enter the desired `rx channel` number.
-![rx_channel](./resources/enter-rx-channel-10.png)
+
+![rx_channel](./resources/per-rx-channel.png)
 
 **Step 8.** Enter the desired `tx channel` number.
-![tx_channel](./resources/enter-tx-channel-11.png)
+
+![tx_channel](./resources/per-rx-tx-channel.png)
 
 **Step 9.** Enter the desired `link type`.
-![Hopping type](./resources/link-type-12.png)
+
+![Hopping type](./resources/per-rx-linktype.png)
 
 **Step 10.** Enter the desired `scrambler seed`.
+
 ![scrambler-seed](./resources/scrambler-seed-13.png)
 
 **Step 11.** Enter the desired `hopping type`.
+
 ![Hopping-type](./resources/hopping-type-14.png)
 
 **Step 12.** Enter the desired `antenna selection`.
-![Antenna Selection](./resources/antenna-sel-15.png)
+
+![Antenna Selection](./resources/per-rx-antenna-selection.png)
 
 **Step 13.** Enter the desired `rf chain`.
-![tx_power_index](./resources/rf-chain-17.png)
+
+![tx_power_index](./resources/per-rx-chain-selection.png)
 
 **Step 14.** Enter the desired `loop back` mode.
-![Loop-back-mode](./resources/loop-back-mode.png)
+
+![Loop-back-mode](./resources/per-rx-loop-back-mode.png)
 
 **Step 15.** With all inputs successfully entered, the RS9116W waits to receive packets. 
-![Receive command](./resources/bt-receive-success.png)
 
-**Step 16.** After successful reception, receive PER statistics are displayed
-![PER Stats command](./resources/bt-receive-stats.png)
+![Receive command](./resources/per-rx-pop-up.png)
 
-![Final per receive and stats command](./resources/bt-complete-rx-screen-shot.png)
+**Step 16.** After successful reception, receive PER statistics are displayed.
 
-Refer to the [BLE Programming Reference Manual](https://docs.silabs.com/rs9116/wiseconnect/rs9116w-bt-classic-at-command-prm/latest/08-bt-classic-commands) for further details on how to change the parameters.
+![PER Stats command](./resources/per-rx-stats.png)
+
+Refer to the [BLUTOOTH Programming Reference Manual](https://docs.silabs.com/rs9116/wiseconnect/rs9116w-bt-classic-at-command-prm/latest/08-bt-classic-commands) for further details on how to change the parameters.

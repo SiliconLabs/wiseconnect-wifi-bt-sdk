@@ -189,8 +189,8 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef WISECONNECT
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
+#ifdef CHIP_9117
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
 #else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #endif
@@ -201,7 +201,11 @@
 //! Power save command parameters
 /*=======================================================================*/
 //! set handshake type of power mode
+#ifdef RSI_M4_INTERFACE
+#define RSI_HAND_SHAKE_TYPE M4_BASED
+#else
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
+#endif
 
 int32_t rsi_ble_app_send_to_wlan(uint8_t msg_type, uint8_t *buffer, uint32_t length);
 void rsi_wlan_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t data_len);

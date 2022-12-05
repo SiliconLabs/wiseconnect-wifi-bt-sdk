@@ -22,7 +22,7 @@
  *
  *  @section Licenseremote_name
  *  This program should be used on your own responsibility.
- *  SiLabs Signals assumes no responsibility for any losses
+ *  Silicon Labs assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contains code to create multiple task instances and handling of ble events

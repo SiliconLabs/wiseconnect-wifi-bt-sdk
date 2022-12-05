@@ -338,7 +338,9 @@ int32_t rsi_bt_set_antenna_tx_power_level(uint8_t protocol_mode, int8_t tx_power
  *              1 - Fast PSP \n 
  *              2 - UAPSD  
  * @return      0		-	Success \n
- *              Non-Zero Value	-	Failure 
+ *              Non-Zero Value	-	Failure \n
+ * @note        If the user wants to enable power save in CoEx mode (WLAN + BT LE) mode - It is mandatory to enable WLAN power save along with BT LE power save. \n
+ * @note        The device will enter into power save if and only if both protocol (WLAN, BLE) power save modes are enabled. \n
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  * @note        psp_type is only valid in psp_mode 2. \n
  *              BT/BLE doesnot support in RSI_SLEEP_MODE_1. \n
@@ -502,6 +504,30 @@ int32_t rsi_bt_vendor_dynamic_pwr(uint16_t enable,
 
   SL_PRINTF(SL_RSI_BT_VENDOR_DYNAMIC_POWER, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_dynamic_pwr_cmd, NULL);
+}
+
+/**
+ * @fn         int32_t rsi_bt_vendor_set_afh_classification_intervals(uint16_t afh_min,
+ *                                  uint16_t afh_max)
+ * @brief      Issue vendor specific command for setting afh min and max in controller on given inputs.
+ * @param[in]  afh_min - afh minimum interval 
+ * @param[in]  afh_max - afh maximum interval 
+ * @return     0  		-  Success \n
+ *             Non-Zero Value -  Failure
+ *             
+ */
+int32_t rsi_bt_vendor_set_afh_classification_intervals(uint16_t afh_min, uint16_t afh_max)
+{
+  if ((afh_min > afh_max) || (afh_min < 0x640) || (afh_max > 0xBB80)) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+  rsi_bt_vendor_afh_classification_cmd_t rsi_bt_vendor_afh_classification_cmd = { 0 };
+  rsi_bt_vendor_afh_classification_cmd.opcode[0] = (BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE & 0xFF);
+  rsi_bt_vendor_afh_classification_cmd.opcode[1] = ((BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE >> 8) & 0xFF);
+  rsi_bt_vendor_afh_classification_cmd.afh_min   = afh_min;
+  rsi_bt_vendor_afh_classification_cmd.afh_max   = afh_max;
+
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_afh_classification_cmd, NULL);
 }
 
 /** @} */

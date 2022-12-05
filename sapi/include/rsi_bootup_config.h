@@ -102,6 +102,7 @@ int32_t rsi_bl_module_power_off(void);
 int32_t rsi_bl_module_power_on(void);
 int16_t rsi_bl_module_power_cycle(void);
 int32_t rsi_set_fast_fw_up(void);
+int32_t rsi_integrity_check_bypass(void);
 int16_t rsi_waitfor_boardready(void);
 int16_t rsi_select_option(uint8_t cmd);
 int32_t rsi_get_rom_version(void);

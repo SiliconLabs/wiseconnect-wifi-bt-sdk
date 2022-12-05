@@ -1489,12 +1489,10 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
 #endif
     //! checking for events list
     event_id = rsi_ble_app_get_event();
-#if (GATT_ROLE == SERVER)
     if (event_id == -1) {
       rsi_semaphore_wait(&ble_main_task_sem, 0);
       continue;
     }
-#endif
     switch (event_id) {
 #if (GATT_ROLE == CLIENT)
       case RSI_APP_EVENT_ADV_REPORT: {

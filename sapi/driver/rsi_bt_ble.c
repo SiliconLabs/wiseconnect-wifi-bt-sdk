@@ -315,6 +315,7 @@ uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb)
            || (rsp_type == RSI_BT_EVENT_HID_CONN) || (rsp_type == RSI_BT_EVENT_HID_RXDATA)
            || (rsp_type == RSI_BT_EVENT_PKT_CHANGE) || (rsp_type == RSI_BT_DISABLED_EVENT)
            || (rsp_type == BT_VENDOR_DYNAMIC_PWR_OPCODE) || (rsp_type == RSI_BT_EVT_AR_STATS)
+           || (rsp_type == BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE)
            || ((rsp_type >= RSI_BT_REQ_A2DP_PCM_MP3_DATA_PREFILL_1)
                && (rsp_type <= RSI_BT_REQ_AVRCP_GET_TOT_NUM_ITEMS_RESP))
            || (rsp_type == RSI_BT_EVENT_L2CAP_CONN) || (rsp_type == RSI_BT_EVENT_L2CAP_RXDATA)
@@ -676,15 +677,18 @@ int32_t rsi_driver_process_bt_resp(
   // Get Status
   status = rsi_bytes2R_to_uint16(host_desc + RSI_BT_STATUS_OFFSET);
 
-  // Update the status in bt_cb
-  rsi_bt_set_status(bt_cb, status);
-
   // Check bt_cb for any task is waiting for response
   if (bt_cb->expected_response_type == rsp_type) {
+    // Update the status in bt_cb
+    rsi_bt_set_status(bt_cb, status);
     if (bt_cb->expected_response_type == RSI_BT_EVENT_CARD_READY) {
       bt_cb->state = RSI_BT_STATE_OPERMODE_DONE;
-    } else {
-      bt_cb->state = RSI_BT_STATE_NONE;
+    }
+    if (status == RSI_SUCCESS) { //To not allow BT SetAddress after these states are triggered
+      if (bt_cb->expected_response_type == RSI_BLE_REQ_ADV || bt_cb->expected_response_type == RSI_BLE_REQ_SCAN
+          || bt_cb->expected_response_type == RSI_BLE_REQ_CONN) {
+        bt_cb->state = RSI_BT_STATE_NONE;
+      }
     }
     expected_resp = bt_cb->expected_response_type;
     // Clear expected response type
@@ -729,12 +733,15 @@ int32_t rsi_driver_process_bt_resp(
       rsi_semaphore_post(&bt_cb->bt_sem);
     } else {
       if (rsi_bt_async_callback_handler != NULL) {
+
+        bt_cb->async_status = status;
         // Call callbacks handler
         rsi_bt_async_callback_handler(bt_cb, rsp_type, payload, payload_length);
       }
     }
   } else {
     if (rsi_bt_async_callback_handler != NULL) {
+      bt_cb->async_status = status;
       // Call callbacks handler
       rsi_bt_async_callback_handler(bt_cb, rsp_type, payload, payload_length);
     }
@@ -1534,10 +1541,13 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
   UNUSED_PARAMETER(payload_length);
   rsi_bt_classic_cb_t *bt_specific_cb = bt_classic_cb->bt_global_cb->bt_specific_cb;
 
-  uint16_t status = 0;
+  uint16_t status      = 0;
+  uint16_t sync_status = 0;
 
-  // Update the response status;
-  status = rsi_bt_get_status(bt_classic_cb);
+  // updating the response status;
+  status = bt_classic_cb->async_status;
+
+  sync_status = rsi_bt_get_status(bt_classic_cb);
 
   SL_PRINTF(SL_RSI_BT_CALLBACKS_HANDLER_STATUS, BLUETOOTH, LOG_INFO, "STATUS: %2x", status);
 
@@ -1545,12 +1555,12 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
   switch (rsp_type) {
     case RSI_BT_RSP_QUERY_SERVICES: {
       if (bt_specific_cb->bt_on_get_services_event != NULL) {
-        bt_specific_cb->bt_on_get_services_event(status, (void *)payload);
+        bt_specific_cb->bt_on_get_services_event(sync_status, (void *)payload);
       }
     } break;
     case RSI_BT_RSP_SEARCH_SERVICE: {
       if (bt_specific_cb->bt_on_search_service_event != NULL) {
-        bt_specific_cb->bt_on_search_service_event(status, (uint8_t *)payload);
+        bt_specific_cb->bt_on_search_service_event(sync_status, (uint8_t *)payload);
       }
     } break;
 
@@ -2490,10 +2500,13 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
   // Get ble cb struct pointer
   rsi_ble_cb_t *ble_specific_cb = ble_cb->bt_global_cb->ble_specific_cb;
   uint16_t status               = 0;
+  uint16_t sync_status          = 0;
   uint8_t le_cmd_inuse_check    = 0;
 
-  // Update the response status;
-  status = rsi_bt_get_status(ble_cb);
+  // updating the response status;
+  status = ble_cb->async_status;
+
+  sync_status = rsi_bt_get_status(ble_cb);
 
   SL_PRINTF(SL_RSI_BLE_CALLBACKS_HANDLER_STATUS, BLE, LOG_INFO, "STATUS: %2x", status);
 
@@ -2522,7 +2535,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
 
     case RSI_BLE_EVENT_DISCONNECT: {
       if (ble_specific_cb->ble_on_disconnect_event != NULL) {
-        ble_specific_cb->ble_on_disconnect_event((rsi_ble_event_disconnect_t *)payload, ble_cb->status);
+        ble_specific_cb->ble_on_disconnect_event((rsi_ble_event_disconnect_t *)payload, status);
       }
       // rsi_bt_set_status(ble_cb, RSI_BLE_STATE_DSICONNECT);
       rsi_remove_remote_ble_dev_info((rsi_ble_event_disconnect_t *)payload);
@@ -2650,27 +2663,27 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
     } break;
     case RSI_BLE_RSP_PROFILES: {
       if (ble_specific_cb->ble_on_profiles_list_resp != NULL) {
-        ble_specific_cb->ble_on_profiles_list_resp(status, (rsi_ble_resp_profiles_list_t *)payload);
+        ble_specific_cb->ble_on_profiles_list_resp(sync_status, (rsi_ble_resp_profiles_list_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_PROFILE: {
       if (ble_specific_cb->ble_on_profile_resp != NULL) {
-        ble_specific_cb->ble_on_profile_resp(status, (profile_descriptors_t *)payload);
+        ble_specific_cb->ble_on_profile_resp(sync_status, (profile_descriptors_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_CHAR_SERVICES: {
       if (ble_specific_cb->ble_on_char_services_resp != NULL) {
-        ble_specific_cb->ble_on_char_services_resp(status, (rsi_ble_resp_char_services_t *)payload);
+        ble_specific_cb->ble_on_char_services_resp(sync_status, (rsi_ble_resp_char_services_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_INC_SERVICES: {
       if (ble_specific_cb->ble_on_inc_services_resp != NULL) {
-        ble_specific_cb->ble_on_inc_services_resp(status, (rsi_ble_resp_inc_services_t *)payload);
+        ble_specific_cb->ble_on_inc_services_resp(sync_status, (rsi_ble_resp_inc_services_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_DESC: {
       if (ble_specific_cb->ble_on_att_desc_resp != NULL) {
-        ble_specific_cb->ble_on_att_desc_resp(status, (rsi_ble_resp_att_descs_t *)payload);
+        ble_specific_cb->ble_on_att_desc_resp(sync_status, (rsi_ble_resp_att_descs_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_READ_BY_UUID:
@@ -2678,7 +2691,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
     case RSI_BLE_RSP_MULTIPLE_READ:
     case RSI_BLE_RSP_LONG_READ: {
       if (ble_specific_cb->ble_on_read_resp != NULL) {
-        ble_specific_cb->ble_on_read_resp(status, rsp_type, (rsi_ble_resp_att_value_t *)payload);
+        ble_specific_cb->ble_on_read_resp(sync_status, rsp_type, (rsi_ble_resp_att_value_t *)payload);
       }
     } break;
     case RSI_BLE_RSP_WRITE:
@@ -2687,7 +2700,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
     case RSI_BLE_RSP_PREPARE_WRITE:
     case RSI_BLE_RSP_EXECUTE_WRITE: {
       if (ble_specific_cb->ble_on_write_resp != NULL) {
-        ble_specific_cb->ble_on_write_resp(status, rsp_type);
+        ble_specific_cb->ble_on_write_resp(sync_status, rsp_type);
       }
     } break;
     case RSI_BLE_EVENT_GATT_NOTIFICATION:
@@ -2822,7 +2835,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
   if (le_cmd_inuse_check) {
     uint8_t inx                 = 0;
     uint8_t *remote_dev_bd_addr = (uint8_t *)payload;
-    for (inx = 0; inx <= (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+    for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
       if (!memcmp(ble_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
         if (ble_cb->remote_ble_info[inx].cmd_in_use) {
           if ((rsp_type == RSI_BLE_EVENT_GATT_ERROR_RESPONSE)
@@ -2831,6 +2844,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
             ble_cb->remote_ble_info[inx].expected_resp = 0;
           }
         }
+        break;
       }
     }
   }
@@ -2986,6 +3000,10 @@ uint16_t rsi_bt_prepare_common_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_
           break;
         case BT_VENDOR_DYNAMIC_PWR_OPCODE:
           payload_size = sizeof(rsi_bt_vendor_dynamic_pwr_cmd_t);
+          memcpy(pkt->data, cmd_struct, payload_size);
+          break;
+        case BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE:
+          payload_size = sizeof(rsi_bt_vendor_afh_classification_cmd_t);
           memcpy(pkt->data, cmd_struct, payload_size);
           break;
         default:
@@ -4061,7 +4079,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
   if (le_buf_check || le_cmd_inuse_check || le_buf_in_use_check) {
     uint8_t inx                 = 0;
     uint8_t *remote_dev_bd_addr = (uint8_t *)cmd_struct;
-    for (inx = 0; inx <= (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+    for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
       if (!memcmp(le_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
 
         /* ERROR PRONE : Do not changes if else checks order */
@@ -4100,6 +4118,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
             le_cb->remote_ble_info[inx].expected_resp = expected_resp;
           }
         }
+        break;
       }
     }
   }

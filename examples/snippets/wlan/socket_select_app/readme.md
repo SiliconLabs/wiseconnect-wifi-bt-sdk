@@ -79,7 +79,7 @@ This application supports bare metal and RTOS environment. By default, the appli
 
 The application can be configured to suit user requirements and development environment. Read through the following sections and make any changes needed. 
 
-### 4.1 Open rsi_mqtt.c file 
+### 4.1 Open rsi_socket_select.c file 
 
 #### 4.1.1 User must update the below parameters 
 
@@ -231,8 +231,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **5.3**
 
@@ -244,7 +244,13 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 3. After successful connection with the access point, the socket select is issued for the desired socket.
 
-4. Open TCP client from WindowsPC2 and connect to TCP server opened on the device on port number DEVICE_PORT.
+4. Open TCP client from WindowsPC2 and connect to TCP server opened on the device on port number DEVICE_PORT. The Iperf command to start the TCP client is: 
+
+> `C:\> iperf.exe -c <Module_IP> -p <DEVICE_PORT> -i 1 -t <time interval in sec>`
+>
+> For example ...
+>
+> `C:\> iperf.exe -c 192.168.0.100 -p 5001 -i 1 -t 30` 
 
 5. Select provides the response about the socket whether the data is to be read on the socket or not.
 

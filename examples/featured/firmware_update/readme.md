@@ -12,7 +12,7 @@ This application demonstrates how to update the RS9116W firmware via Wi-Fi by do
 To test the application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements	
-  - Windows PC with Host interface (UART / SPI/ SDIO).
+  - PC or Mac (used to program the Host MCU).
   - Linux PC or Cygwin on Windows (to build and run the TCP server source provided)
   - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
   - Host MCU Eval Kit. This example has been tested with:

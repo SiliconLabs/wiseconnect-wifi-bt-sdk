@@ -53,6 +53,7 @@
  *				                           -32    - Network command in progress \n
  *				                           -44    - Parameter length exceeds maximum value
  * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @note        MQTT is not supported when the module is operating in concurrent mode.
  *
  */
 
@@ -171,6 +172,11 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
 
       mqtt_ops->encrypt = 1;
     }
+#ifdef CHIP_9117
+    if (flags & RSI_EMB_MQTT_TCP_MAX_RETRANSMISSION_CAP) {
+      mqtt_ops->tcp_max_retransmission_cap_for_emb_mqtt = RSI_EMB_MQTT_TCP_MAX_RETRANSMISSION_CAP >> 4;
+    }
+#endif /* CHIP_9117 */
 
 #ifndef RSI_NWK_SEM_BITMAP
     rsi_driver_cb_non_rom->nwk_wait_bitmap |= BIT(0);

@@ -26,7 +26,7 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 */
 /*==============================================*/
 /**
- * @brief        Create a web socket client. This is a non-blocking API.
+ * @brief        Create a web socket client. This is a blocking API.
  *               
  * @pre		\ref   rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]    flags                                   - Select IP version and security \n

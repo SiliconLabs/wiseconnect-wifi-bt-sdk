@@ -28,10 +28,11 @@
 #define RSI_MAX_PINCODE_REPLY_SIZE 17
 #define CHANNEL_MAP_LEN            10
 
-#define BT_VENDOR_AVDTP_STATS_CMD_OPCODE  0xFC18
-#define BT_VENDOR_MEMORY_STATS_CMD_OPCODE 0xFC19
-#define BT_VENDOR_DYNAMIC_PWR_OPCODE      0xFC1C
-#define BT_VENDOR_AR_CMD_OPCODE           0xFC1E
+#define BT_VENDOR_AVDTP_STATS_CMD_OPCODE        0xFC18
+#define BT_VENDOR_MEMORY_STATS_CMD_OPCODE       0xFC19
+#define BT_VENDOR_DYNAMIC_PWR_OPCODE            0xFC1C
+#define BT_VENDOR_AR_CMD_OPCODE                 0xFC1E
+#define BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE 0xFC21
 
 /* Packet Type/s */
 #define PTYPE_2DH1_MAY_NOT_BE_USED 0x0002
@@ -968,11 +969,11 @@ typedef struct rsi_bt_vendor_memory_stats_s {
   uint32_t memory_stats_interval_ms;
 } rsi_bt_vendor_memory_stats_t;
 
-#define STATE_2M_CONTINUOUS_PASS_THRESHOLD 10
+#define STATE_2M_CONTINUOUS_PASS_THRESHOLD 20
 #define STATE_2M_PASS_THRESHOLD            70
-#define STATE_3M_ABSOLUTE_FAIL_THRESHOLD   40
+#define STATE_3M_ABSOLUTE_FAIL_THRESHOLD   25
 #define STATE_3M_CONTINUOUS_FAIL_THRESHOLD 5
-#define STATE_3M_RELATIVE_FAIL_THRESHOLD   25
+#define STATE_3M_RELATIVE_FAIL_THRESHOLD   20
 //! AR command structure
 typedef struct rsi_bt_vendor_ar_cmd_s {
   uint8_t opcode[2];
@@ -990,6 +991,12 @@ typedef struct dynamic_pwr_index_s {
   uint8_t pwr_index_2m;
   uint8_t pwr_index_3m;
 } dynamic_pwr_index_t;
+
+typedef struct rsi_bt_vendor_afh_classification_cmd_s {
+  uint8_t opcode[2];
+  uint16_t afh_min;
+  uint16_t afh_max;
+} rsi_bt_vendor_afh_classification_cmd_t;
 
 typedef struct set_dynamic_pwr_index_s {
   uint8_t remote_dev[RSI_DEV_ADDR_LEN];

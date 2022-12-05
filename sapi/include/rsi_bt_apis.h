@@ -3696,6 +3696,7 @@ int32_t rsi_bt_vendor_dynamic_pwr(uint16_t enable,
                                   uint8_t power_index_br,
                                   uint8_t power_index_2m,
                                   uint8_t power_index_3m);
+int32_t rsi_bt_vendor_set_afh_classification_intervals(uint16_t afh_min, uint16_t afh_max);
 
 int32_t rsi_bt_iap_send_control_session_data(rsi_bt_iap_payload_t *payload);
 int32_t rsi_bt_iap2_update_send_cmds_info(rsi_bt_iap_cmds_info_t *cmd_list);

@@ -86,7 +86,8 @@ The Application is provided with the project folder consists of Keil and Simplic
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
-      - Project path:`<SDK>/examples/snippets/wlan/cloud_apps\aws_iot\mqtt/projects/aws_iot_mqtt-brd2204a-gg11.slsproj`
+    - Project path:`<SDK>/examples/snippets/wlan/cloud_apps\aws_iot\mqtt/projects/aws_iot_mqtt-brd2204a-gg11.slsproj`
+
 ### 3.4 Bare Metal/RTOS Support
 
 This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 

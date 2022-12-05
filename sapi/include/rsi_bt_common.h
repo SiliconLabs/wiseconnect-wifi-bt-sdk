@@ -238,7 +238,7 @@ typedef struct rsi_bt_cb_s {
   uint8_t directed_addr[RSI_DEV_ADDR_LEN];
 
 // Structure Holding Remote LE Dev info (BD address & Controller Buffer availability)
-#define MAX_REMOTE_BLE_DEVICES 8
+#define MAX_REMOTE_BLE_DEVICES 10 //  2(RSI_BLE_MAX_NBR_MASTERS) +  8 (RSI_BLE_MAX_NBR_SLAVES)
   rsi_remote_ble_info_t remote_ble_info[MAX_REMOTE_BLE_DEVICES];
 
   // Variable indicating buffer full/empty status --> 0 -> Empty, 1 -> Full
@@ -249,6 +249,10 @@ typedef struct rsi_bt_cb_s {
 
   // Variable to save Remote info index
   uint8_t remote_ble_index;
+
+  // driver BT control block asynchronous status
+  volatile int32_t async_status;
+
 } rsi_bt_cb_t;
 
 // Set local name command structure

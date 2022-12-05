@@ -249,8 +249,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
@@ -272,7 +272,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 4. After a successful physical level connection, in smartphone, "connection established" notification message will be displayed which means profile level connection is completed.
    
-5. After successful SPP Connection in mobile side, go to BT_MESSENGER tab which is next to DEVICES tab. Write some data (Ex: "Silicon Labs signals") and call "Send Message" option in that app. we can see that the same message has been exchanged between two modules which is kind of loopback test.
+5. After successful SPP Connection in mobile side, go to BT_MESSENGER tab which is next to DEVICES tab. Write some data (Ex: "Silicon Labs") and call "Send Message" option in that app. we can see that the same message has been exchanged between two modules which is kind of loopback test.
    
 ![Write some data in BT_MESSENGER tab](resources/readme/image17c.png)
    
@@ -296,7 +296,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
   
 6. After tapping on the SPP_SLAVE in that scan list, it will initiate profile level connection as it already paired through physical level process.
 
-7. After successful SPP Connection in mobile side, go to BT_MESSENGER tab which is next to DEVICES tab. Write some data (Ex: "Silicon Labs signals") and call "Send Message" option in that app. we can see that the same message has been exchanged  between two modules which is kind of loopback test.
+7. After successful SPP Connection in mobile side, go to BT_MESSENGER tab which is next to DEVICES tab. Write some data (Ex: "Silicon Labs") and call "Send Message" option in that app. we can see that the same message has been exchanged  between two modules which is kind of loopback test.
    
 ![Write some data in BT_MESSENGER tab](resources/readme/image18d.png)
 

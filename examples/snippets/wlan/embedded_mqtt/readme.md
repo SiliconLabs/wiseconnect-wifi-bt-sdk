@@ -33,7 +33,10 @@ Before running the application, the user will need the following things to setup
 
    - For Silicon Labs EFx32, use the latest version of [Simplicity Studio](https://www.silabs.com/developers/simplicity-studio)
 
-- [MQTT Broker](http://mosquitto.org/download/) in Windows PC1
+- [MQTT Broker](https://mosquitto.org/files/binary/win64/mosquitto-1.6.12-install-windows-x64.exe) in Windows PC1
+
+> __Note:__ This example has been tested with Mosquitto _v1.5.3_, _v1.6.9_, and _v1.6.12_.
+
 - [MQTT Utility](https://www.eclipse.org/downloads/download.php?file=/paho/1.0/org.eclipse.paho.mqtt.utility-1.0.0.jar) in Windows PC2
 
 ## 3. Application Build Environment
@@ -303,8 +306,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **5.3**
 

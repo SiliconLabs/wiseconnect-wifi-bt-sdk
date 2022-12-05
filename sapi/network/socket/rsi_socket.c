@@ -569,7 +569,11 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
   } else {
     rem_len = requested_length;
   }
-  if (requested_length > MAX_RX_DATA_LENGTH) {
+  if ((requested_length > MAX_RX_DATA_LENGTH)
+#ifdef CHIP_9117B0
+      && (!(rsi_socket_pool_non_rom[sockID].ssl_bitmap))
+#endif
+  ) {
     maximum_length = MAX_RX_DATA_LENGTH;
   } else {
     maximum_length = requested_length;
@@ -1552,7 +1556,17 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
     SL_PRINTF(SL_SETSOCKOPT_EXIT_19, NETWORK, LOG_INFO);
     return RSI_SUCCESS;
   }
-
+#ifdef CHIP_9117B0
+  if (option_name == SO_SSL_RECV_BUFF_SIZE) {
+    if ((*(uint16_t *)option_value) > RSI_SSL_RECV_BUFFER_LENGTH) {
+      SL_PRINTF(SL_SETSOCKOPT_SOCK_ERROR_6, NETWORK, LOG_ERROR);
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    rsi_socket_pool_non_rom[sockID].ssl_buff_len = *(uint16_t *)option_value;
+    SL_PRINTF(SL_SETSOCKOPT_EXIT_20, NETWORK, LOG_INFO);
+    return RSI_SUCCESS;
+  }
+#endif
   if ((option_name != SO_RCVTIMEO) || (level != SOL_SOCKET)) {
     rsi_wlan_socket_set_status(RSI_ERROR_EINVAL, sockID);
 #ifdef RSI_WITH_OS
@@ -1593,7 +1607,8 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
       return RSI_SOCK_ERROR;
     }
   }
-  SL_PRINTF(SL_SETSOCKOPT_EXIT20, NETWORK, LOG_INFO);
+
+  SL_PRINTF(SL_SETSOCKOPT_EXIT21, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
 /** @} */
@@ -2456,6 +2471,11 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 
   // Configure SSL ciphers bitmap
   socket_create->ssl_ciphers_bitmap = RSI_SSL_CIPHERS;
+#ifdef CHIP_9117
+  if (rsi_socket_pool_non_rom[sockID].ssl_bitmap) {
+    socket_create->recv_buff_len = rsi_socket_pool_non_rom[sockID].ssl_buff_len;
+  }
+#endif
 
   if (rsi_socket_pool_non_rom[sockID].tcp_mss) {
     socket_create->tcp_mss = rsi_socket_pool_non_rom[sockID].tcp_mss;
@@ -3188,9 +3208,15 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
     }
 #else
     if (rsi_socket_pool[sockID].sock_type & SOCK_STREAM) {
+#ifdef CHIP_9117B0
+      if (buffersize > RX_DATA_LENGTH) {
+        buffersize = RX_DATA_LENGTH;
+      }
+#else
       if (buffersize > 1460) {
         buffersize = 1460;
       }
+#endif
     } else {
       if (buffersize > 1472) {
         buffersize = 1472;

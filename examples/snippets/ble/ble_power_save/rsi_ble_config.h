@@ -141,7 +141,7 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef RSI_M4_INTERFACE
+#ifdef CHIP_9117
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
 #else

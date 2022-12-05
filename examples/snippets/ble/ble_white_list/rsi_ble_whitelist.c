@@ -275,6 +275,9 @@ void rsi_ble_whitelist_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disc
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
 
   rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+  LOG_PRINT("Dis-connected - str_remote_address : %s , reason : %x \r\n",
+            rsi_6byte_dev_address_to_ascii(str_remote_address, resp_disconnect->dev_addr),
+            reason);
 }
 
 /*==============================================*/
@@ -380,6 +383,7 @@ int32_t rsi_ble_whitelist(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
+  LOG_PRINT("\n ble start scanning \n");
 
   while (1) {
     //! Application main loop

@@ -129,13 +129,13 @@
 #define FTP_FILE_TO_RENAME "read.txt"
 
 //!Set the directory on FTP server
-#define FTP_DIRECTORY_SET "/work/FTP"
+#define FTP_DIRECTORY_SET "../FTP"
 
 //!Set the directory on FTP server
 #define FTP_DIRECTORY_CREATE "FTP"
 
 //!list the directories on FTP server
-#define FTP_DIRECTORY_LIST "/work/FTP"
+#define FTP_DIRECTORY_LIST "/"
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 

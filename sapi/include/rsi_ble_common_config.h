@@ -38,6 +38,9 @@
 #ifndef NO_OF_ADV_REPORTS
 #define NO_OF_ADV_REPORTS 10 // Maximum number of advertise reports to hold
 #endif
+#ifndef BLE_CP_BUFF_SIZE_512
+#define BLE_CP_BUFF_SIZE_512 0 // Enabled for BLE PER Test
+#endif
 /*=======================================================================*/
 // attribute properties
 /*=======================================================================*/

@@ -337,6 +337,12 @@ int32_t rsi_socket_select()
         } else {
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_DATA_RECEIVE_STATE;
+#ifndef RSI_WITH_OS
+          do {
+            //! wireless driver tasks
+            rsi_wireless_driver_task();
+          } while (!socket_select_response);
+#endif
           break;
         }
       }

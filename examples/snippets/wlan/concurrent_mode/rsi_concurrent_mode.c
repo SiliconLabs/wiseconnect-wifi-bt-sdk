@@ -57,9 +57,6 @@
 //! SSID of Access point to be created
 #define AP_SSID "SILABS_AP"
 
-//! channel number of created Access point. Configure same channel number of AP which STA is connecting.
-#define AP_CHANNEL_NO 6
-
 //! Security type of created Access point
 #define AP_SECURITY_TYPE RSI_WPA2
 
@@ -196,6 +193,19 @@ int32_t rsi_concurrent_mode()
     return status;
   }
 
+  // Scanning for channel no of Access point so as to start Module AP in same channel
+  rsi_rsp_scan_t result;
+  int32_t length = sizeof(result);
+  memset(&result, 0, length);
+  status = rsi_wlan_scan((int8_t *)SSID, 0, &result, length);
+
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nWLAN Scan Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  uint8_t channel_no = result.scan_info->rf_channel;
+  LOG_PRINT("\r\nScan successful channel: 0x%lX\r\n", channel_no);
+
   //! Connect to an Access point
   status = rsi_wlan_connect((int8_t *)SSID, STA_SECURITY_TYPE, STA_PSK);
   if (status != RSI_SUCCESS) {
@@ -228,7 +238,7 @@ int32_t rsi_concurrent_mode()
 
   //! Start Access point
   status = rsi_wlan_ap_start((int8_t *)AP_SSID,
-                             AP_CHANNEL_NO,
+                             channel_no,
                              AP_SECURITY_TYPE,
                              AP_ENCRYPTION_TYPE,
                              (uint8_t *)AP_PSK,

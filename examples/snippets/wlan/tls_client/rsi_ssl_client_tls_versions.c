@@ -52,7 +52,7 @@
 #define SSID "SILABS_AP"
 
 //!Scan Channel number , 0 - to scan all channels
-#define CHANNEL_NO 11
+#define CHANNEL_NO 0
 
 //! Security type
 #define SECURITY_TYPE RSI_WPA2

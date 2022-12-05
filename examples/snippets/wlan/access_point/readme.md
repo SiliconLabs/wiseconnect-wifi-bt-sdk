@@ -231,8 +231,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to Rs9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to Rs9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **5.3**
 

@@ -40,7 +40,11 @@
  * @param[in]  server_ip                           - Server IP address
  * @param[in]  sntp_method                         - SNTP methods to use \n
  *                                                   1-For Broadcast Method, 2-For Unicast Method 
- * @param[in]  sntp_timeout                        - SNTP timeout value
+ * @param[in]  sntp_retry_count                    - Configures SNTP max retry count \n
+ *                                                   The number of times the client request is retried when the server response is failed to receive. \n
+ *                                                   For each retry, the client waits for 5 secs to receive server response before initiating next attempt. \n 
+ *                                                   Need to set the value based on the network quality. \n
+ *                                                   For ex: The value should be <= 5 for good network quality and > 10 for bad network quality.
  * @param[in]  sntp_client_create_response_handler - Callback function when asynchronous response comes for the request. \n
  *                                                   status: Expected error codes are : 0xBB0A, 0xFF5F, 0xBB0B, 0xBB15, 0xBB10\n
  *                                                   cmd_type: Command type \n
@@ -58,7 +62,7 @@
 int32_t rsi_sntp_client_create_async(uint8_t flags,
                                      uint8_t *server_ip,
                                      uint8_t sntp_method,
-                                     uint16_t sntp_timeout,
+                                     uint16_t sntp_retry_count,
                                      void (*rsi_sntp_client_create_response_handler)(uint16_t status,
                                                                                      const uint8_t cmd_type,
                                                                                      const uint8_t *buffer))
@@ -132,8 +136,8 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
     // Fill SNTP method
     sntp_client->sntp_method = sntp_method;
 
-    // SNTP time out
-    rsi_uint16_to_2bytes(sntp_client->sntp_timeout, sntp_timeout);
+    // SNTP retry count
+    rsi_uint16_to_2bytes(sntp_client->sntp_retry_count, sntp_retry_count);
 
     // Check for IP version
     if (!(flags & RSI_IPV6)) {

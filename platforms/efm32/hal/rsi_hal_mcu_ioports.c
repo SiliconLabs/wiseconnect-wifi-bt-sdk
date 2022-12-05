@@ -49,17 +49,27 @@ void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
   UNUSED_PARAMETER(value); //This statement is added only to resolve compilation warning, value is unchanged
   //! Initialise the gpio pins in input/output mode
   CMU_ClockEnable(cmuClock_GPIO, true);
-   //! Initialise the gpio pins in input/output mode
-   //!
-  GPIO_PinModeSet(gpioPortA,12,gpioModePushPull,0);
 
+  //! Initialise the gpio pins in input/output mode
+#ifdef EXP_BOARD
+
+ //!Drive this GPIO high to work sdio with 9117 Expansion board 
+  GPIO_PinModeSet(gpioPortA,12,gpioModePushPull,1); 
+
+  //! This is map to UULP2 pin on Si917
+  GPIO_PinModeSet(gpioPortC,5,gpioModePushPull,0);
+
+  //! This is map to UULP0 pin on Si917
+  GPIO_PinModeSet(gpioPortC,4,gpioModeInput,0);
+
+#else 
+   GPIO_PinModeSet(gpioPortA,12,gpioModePushPull,0);
 
    GPIO_PinModeSet(gpioPortA,13,gpioModeInput,0);
-
+#endif
 
    GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11,gpioModePushPull,1);//Reset PB 11
    return;
-
 
 }
 
@@ -78,17 +88,24 @@ void rsi_hal_set_gpio(uint8_t gpio_number)
 {
   //! drives a high value on GPIO
 
-   if(gpio_number ==  RSI_HAL_SLEEP_CONFIRM_PIN)
-     {
+  if(gpio_number ==  RSI_HAL_SLEEP_CONFIRM_PIN)
+    {
 
+    #ifdef EXP_BOARD
+       GPIO_PinModeSet(gpioPortC,5,gpioModePushPull,1);  // mapped to UULP_2 on Expansion Board
+      #else
        GPIO_PinModeSet(gpioPortA,12,gpioModePushPull,1);  // mapped to UULP_2
+      #endif
 
      }
 
    if(gpio_number ==  RSI_HAL_WAKEUP_INDICATION_PIN)
      {
-
-       GPIO_PinModeSet(gpioPortA,13,gpioModeInput,1); // mapped to UULP_3
+      #ifdef EXP_BOARD
+       GPIO_PinModeSet(gpioPortC,4,gpioModeInput,1); // mapped to UULP_0 on Expansion Board
+      #else
+       GPIO_PinModeSet(gpioPortA,13,gpioModeInput,1); // mapped to UULP_0
+      #endif
      }
 
   if(gpio_number ==  RSI_HAL_RESET_PIN)
@@ -117,12 +134,20 @@ uint8_t rsi_hal_get_gpio(uint8_t gpio_number)
 
   if(gpio_number == RSI_HAL_SLEEP_CONFIRM_PIN)
     {
+      #ifdef EXP_BOARD
+      gpio_value = GPIO_PinInGet(gpioPortC,5);
+      #else
       gpio_value = GPIO_PinInGet(gpioPortA,12);
+      #endif
     }
 
   if(gpio_number == RSI_HAL_WAKEUP_INDICATION_PIN)
     {
+      #ifdef EXP_BOARD
+      gpio_value =  GPIO_PinInGet(gpioPortC,4);
+      #else
       gpio_value =  GPIO_PinInGet(gpioPortA,13);
+      #endif
     }
   if(gpio_number ==  RSI_HAL_MODULE_INTERRUPT_PIN)
       {
@@ -152,17 +177,29 @@ void rsi_hal_clear_gpio(uint8_t gpio_number)
   //! drives a low value on GPIO 
   if(gpio_number ==  RSI_HAL_SLEEP_CONFIRM_PIN)
      {
+      #ifdef EXP_BOARD
+       GPIO_PinOutClear(gpioPortC,5);
+      #else
        GPIO_PinOutClear(gpioPortA,12);
+      #endif
      }
 
    if(gpio_number ==  RSI_HAL_WAKEUP_INDICATION_PIN)
      {
+      #ifdef EXP_BOARD
+       GPIO_PinOutClear(gpioPortC,4);
+      #else
        GPIO_PinOutClear(gpioPortA,13);
+      #endif
      }
 
    if(gpio_number ==  RSI_HAL_LP_SLEEP_CONFIRM_PIN)
      {
+      #ifdef EXP_BOARD
+       GPIO_PinOutClear(gpioPortC,5);
+      #else
        GPIO_PinOutClear(gpioPortA,12);
+      #endif
      }
   if(gpio_number ==  RSI_HAL_RESET_PIN)
       {
@@ -172,5 +209,3 @@ void rsi_hal_clear_gpio(uint8_t gpio_number)
   
   return;
 }
-
-

@@ -3,7 +3,7 @@
 ## 1. Purpose / Scope 
 
 This application demonstrates how to connect to a FTP server opened on remote peer using FTP client, read a file from FTP server and write the file on to the FTP server.
-In this application, the Silicon Labs device connects to Access Point and establishes FTP client connection with FTP server opened on remote peer. After successful connection, the application reads the data from a file present in FTP server and writes back same data read from the file by replacing first few bytes with the string "SILABS FTP CLIENT DEMO" to the FTP server by creating a new file
+In this application, the Silicon Labs device connects to Access Point and establishes FTP client connection with FTP server opened on remote peer. After successful connection, the application writes the data to a file created on the FTP server. Then demonstrates renaming of the file and then reads the contents of the renamed file.
 
 File Transfer Protocol (FTP) is a protocol through which internet users can upload files from their computers to a website or download files from a website to their PCs.
 FTP is a client-server protocol that relies on two TCP communications channels between client and server and a command channel for controlling the conversation (command port) and a data channel for transmitting file content(data port). 
@@ -161,13 +161,13 @@ The application can be configured to suit user requirements and development envi
    To rename a file on FTP server
 	 
 ```c
-#define FTP_FILE_TO_RENAME                  "example.txt"
+#define FTP_FILE_TO_RENAME                  "read.txt"
 ```
 
    To set the directory on FTP server
 	 
 ```c
-#define FTP_DIRECTORY_SET                   "/work/FTP_EXAMPLE/FTP"
+#define FTP_DIRECTORY_SET                   "../FTP"
 ```
 
    To create directory on FTP server
@@ -179,7 +179,7 @@ The application can be configured to suit user requirements and development envi
    To list the directories on FTP server
 	 
 ```c
-#define FTP_DIRECTORY_LIST                  "/work/FTP_EXAMPLE"
+#define FTP_DIRECTORY_LIST                  "/"
 ```
 
    **To configure IP address**
@@ -316,8 +316,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

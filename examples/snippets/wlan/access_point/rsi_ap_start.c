@@ -120,6 +120,10 @@ uint8_t global_buf[GLOBAL_BUFF_LEN];
 
 uint8_t station_mac[6];
 
+#ifdef RSI_WITH_OS
+rsi_semaphore_handle_t ap_start_app;
+#endif
+
 //! This callback function is called when Station is connected.
 //! Buffer has the MAC address of the station connected
 void stations_connect_notify_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
@@ -153,6 +157,17 @@ void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
   packet_count++;
 }
 
+void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
+{
+  UNUSED_PARAMETER(status);
+  UNUSED_PARAMETER(buffer);
+  UNUSED_CONST_PARAMETER(length);
+  LOG_PRINT("\r\n remote socket terminated\r\n");
+#ifdef RSI_WITH_OS
+  rsi_semaphore_post(&ap_start_app);
+#endif
+}
+
 int32_t rsi_ap_start()
 {
   int32_t server_socket, new_socket;
@@ -175,6 +190,7 @@ int32_t rsi_ap_start()
   //! Register callbacks for Station conencted and disconnected events
   rsi_wlan_register_callbacks(RSI_STATIONS_CONNECT_NOTIFY_CB, stations_connect_notify_handler);
   rsi_wlan_register_callbacks(RSI_STATIONS_DISCONNECT_NOTIFY_CB, stations_disconnect_notify_handler);
+  rsi_wlan_register_callbacks(RSI_REMOTE_SOCKET_TERMINATE_CB, rsi_remote_socket_terminate_handler);
 
   //! SiLabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
@@ -185,6 +201,8 @@ int32_t rsi_ap_start()
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 #ifdef RSI_WITH_OS
+  rsi_semaphore_create(&ap_start_app, 0);
+
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -291,6 +309,10 @@ int32_t rsi_ap_start()
   } else {
     LOG_PRINT("\r\nSocket Accept Success\r\n");
   }
+
+#ifdef RSI_WITH_OS
+  rsi_semaphore_wait(&ap_start_app, 0);
+#endif
 
 #if !SOCKET_ASYNC_FEATURE
   while (packet_count < NUMBER_OF_PACKETS) {

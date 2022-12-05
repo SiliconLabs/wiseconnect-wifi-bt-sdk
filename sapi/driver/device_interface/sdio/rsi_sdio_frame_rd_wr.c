@@ -56,8 +56,11 @@ int16_t rsi_frame_read(uint8_t *read_buff)
   if (retval != RSI_SUCCESS) {
     return retval;
   }
-
+#ifdef CHIP_9117B0
+  no_of_blocks = (response & 0xFF);
+#else
   no_of_blocks = (response & 0x1F);
+#endif
 
   // Frame read
   retval = rsi_sdio_read_multiple(read_buff, no_of_blocks);

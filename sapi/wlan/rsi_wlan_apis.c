@@ -54,7 +54,129 @@ void rsi_sort_scan_results_array_based_on_rssi(struct wpa_scan_results_arr *scan
   SL_PRINTF(SL_SORT_SCAN_RESULTS_EXIT, WLAN, LOG_INFO);
 }
 #endif
+/** @addtogroup WLAN
+* @{
+*/
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_config_timeout(uint32_t timeout_bitmap,uint16_t timeout_value)
+ * @brief      This API is used to set timeouts. \n This is a blocking API.
+ * @pre        \ref rsi_wireless_init() API needs to be called before this API.
+ * @param[in]  timeout_type        - It is used to identify which timeout to be set.\n 
+ *																		 if timeout_type is
+ *																		 1 - set for association and authentication timeout request in ms.
+ *																		 2 - set for the each channel active scan time in ms
+ *																		 3 - is set for  the WLAN keep alive time in seconds
+ * @param[in]  timeout_value         - timeout value to be set.
+ * @note			 Packet is sent as Wlan Keep alive before \ref rsi_config_ipaddress() \n
+ *						 After \ref rsi_config_ipaddress() it is sent as gratuitous ARP.
+ * @return     0              -    Success \n
+ *             Non-Zero Value -    Failure
+ *
+ */
 
+int32_t rsi_config_timeout(uint32_t timeout_type, uint16_t timeout_value)
+{
+  int32_t status = RSI_SUCCESS;
+
+  // Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb  = rsi_driver_cb->wlan_cb;
+  uint32_t timeout_bitmap = 0;
+
+  // check whether valid timeout_type is given or not
+  if (timeout_type != AUTH_ASSOC_TIMEOUT && timeout_type != CHANNEL_ACTIVE_SCAN_TIMEOUT
+      && timeout_type != KEEP_ALIVE_TIMEOUT) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  // check whether module is in valid state range or not
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE || wlan_cb->state >= RSI_WLAN_STATE_INIT_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+
+  if (status == RSI_SUCCESS) {
+
+    timeout_bitmap = BIT(timeout_type - 1);
+
+    status = send_timeout(timeout_bitmap, timeout_value);
+
+    //Changing the wlan cmd state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // return wlan command error
+    return status;
+  }
+
+  // Return the status
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t send_timeout(uint32_t timeout_bitmap,uint16_t timeout_value)
+ * @brief      This API is used to set timeouts. \n This is a blocking API.
+ * @pre        \ref rsi_wireless_init() API needs to be called before this API.
+ * @param[in]  timeout_type        - It is used to identify which timeout to be set.\n 
+ *																		 if timeout_type is
+ *																		 1 - set for association and authentication timeout request in ms.
+ *																		 2 - set for the each channel active scan time in ms
+ *																		 3 - is set for  the WLAN keep alive time in seconds
+ * @param[in]  timeout_value         - timeout value to be set.
+ * @note			 Packet is sent as Wlan Keep alive before \ref rsi_config_ipaddress() \n
+ *						 After \ref rsi_config_ipaddress() it is sent as gratuitous ARP.
+ * @return     0              -    Success \n
+ *             Non-Zero Value -    Failure
+ *
+ */
+int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
+{
+  int32_t status = RSI_SUCCESS;
+
+  // Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  rsi_pkt_t *pkt = NULL;
+
+  rsi_req_timeout_t *rsi_timeout = NULL;
+
+  // allocate command buffer  from wlan pool
+  pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+  // If allocation of packet fails
+  if (pkt == NULL) {
+    // return packet allocation failure error
+    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  }
+
+  // Memset data
+  memset(&pkt->data, 0, sizeof(rsi_req_timeout_t));
+
+  rsi_timeout = (rsi_req_timeout_t *)pkt->data;
+
+  // Timeout Bitmap
+  rsi_uint32_to_4bytes(rsi_timeout->timeout_bitmap, timeout_bitmap);
+
+  // Timeout value
+  rsi_uint16_to_2bytes(rsi_timeout->timeout_value, timeout_value);
+
+#ifndef RSI_WLAN_SEM_BITMAP
+  rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+
+  // send configure timeout command
+  status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_TIMEOUT, pkt);
+  // wait on wlan semaphore
+  rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_TIMEOUT_RESPONSE_WAIT_TIME);
+  // get wlan/network command response status
+  status = rsi_wlan_get_status();
+  // Return the status
+
+  return status;
+}
 /*==============================================*/
 /**
  * @brief       Scan available access points and post scan response to application.
@@ -230,7 +352,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
           }
         }
 #if HE_PARAMS_SUPPORT
-        status = rsi_wlan_11ax_config();
+        status = rsi_wlan_11ax_config(GUARD_INTERVAL);
         if (status != RSI_SUCCESS) {
           return status;
         }
@@ -277,34 +399,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
       case RSI_WLAN_STATE_BAND_DONE: {
 
 #if RSI_TIMEOUT_SUPPORT
-        // Allocate command buffer from WLAN pool
-        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
 
-        // If allocation of packet fails
-        if (pkt == NULL) {
-          // Change WLAN CMD state to allow
-          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-          // Return packet allocation failure error
-          SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR);
-          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-        }
-
-        // Memset data
-        memset(&pkt->data, 0, sizeof(rsi_req_timeout_t));
-
-#ifndef RSI_WLAN_SEM_BITMAP
-        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-
-        // Send set region command
-        status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_TIMEOUT, pkt);
-
-        // Wait on WLAN semaphore
-        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_TIMEOUT_RESPONSE_WAIT_TIME);
-
-        // Get WLAN/network command response status
-        status = rsi_wlan_get_status();
-
+        status = send_timeout(RSI_TIMEOUT_BIT_MAP, RSI_TIMEOUT_VALUE);
         if (status != RSI_SUCCESS) {
           // Change WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
@@ -517,10 +613,6 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
         }
       } break;
     }
-    if (scan_response_handler != NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-    }
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_SCAN_ASYNC_BITMAP_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR);
@@ -595,6 +687,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         132(DFS)                |       132
  * 		         136(DFS)	          	   |       136
  * 		         140(DFS)         		   |       140
+ * 		         144(DFS)         		   |       144
  *             #### Channels supported in 4.9 GHz Band ####
  * 		         Channel numbers         |	Ch no
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -607,9 +700,9 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         12	                     |       12
  * 		         16	                     |       16
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
- *			       #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
- *			       #define RSI_TIMEOUT_BIT_MAP 4 \n
- *			       #define RSI_TIMEOUT_VALUE 300
+ *      		   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
+ *      		   #define RSI_TIMEOUT_BIT_MAP 2 \n
+ *      		   #define RSI_TIMEOUT_VALUE 150  (This macro can be configured based on user requirement) \n
  *        		timeout_bitmap        	|       Description	
  * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		        timeout_bitmap[0]     	|	      Set timeout for association and authentication request.timeout_value : timeout value in ms(default 300ms).
@@ -620,21 +713,21 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		        Structure Fields        |	Description	
  * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	 	         rf_channel	            |      Access point channel number
- * 	 	         security_mode	        |      Security mode0 : Open
- *	           ^        	            |    	1 . WPA
- *	           ^        	            |    	2 . WPA2
- *	           ^        	            |    	3 . WEP
- *	           ^        	            |    	4 . WPA Enterprise
- *	           ^        	            |    	5 . WPA2 Enterprise
- *	           ^        	            |    	7 . WPA3 Personal
- *	           ^        	            |    	8 . WPA3 Personal Transition
+ * 	 	         security_mode	        |      Security modes
+ *             ^                      |     0 : Open
+ *	           ^        	            |    	1 : WPA
+ *	           ^        	            |    	2 : WPA2
+ *	           ^        	            |    	3 : WEP
+ *	           ^        	            |    	4 : WPA Enterprise
+ *	           ^        	            |    	5 : WPA2 Enterprise
+ *	           ^                      |     6 : WPA3
  * 	 	         rssi_val	              |       RSSI value of the Access Point
- * 	 	         network_type	          |       rsi_wlan_setThis is the type of the network
- * 	 	         ^            	        |       1 . Infrastructure mode	
+ * 	 	         network_type	          |       This is the type of the network
+ * 	 	         ^            	        |       1 : Infrastructure mode	
  * 	 	         ssid		                |       SSID of the access point
  * 	 	         bssid		              |       MAC address of the access point
- * @return     **Success**  - RSI_SUCCESS\n
- *             **Failure**  - Non-Zero values\n
+ * @return     **Success**  - RSI_SUCCESS \n
+ * @return     **Failure**  - Non-Zero values \n
  *
  *			 `If return value is less than 0` \n
  *
@@ -785,8 +878,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *	           ^        	             |    	3 . WEP
  *	           ^        	             |    	4 . WPA Enterprise
  *	           ^        	             |    	5 . WPA2 Enterprise
- *	           ^        	             |    	7 . WPA3 Personal
- *	           ^        	             |    	8 . WPA3 Personal Transition
+ *	           ^        	             |    	7 . WPA3
  * 	 	         rssi_val	               |       RSSI value of the Access Point
  * 	 	         network_type	           |       Type of network
  * 	 	         ^            	         |       1 . Infrastructure mode	
@@ -873,7 +965,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
           }
         }
 #if HE_PARAMS_SUPPORT
-        status = rsi_wlan_11ax_config();
+        status = rsi_wlan_11ax_config(GUARD_INTERVAL);
         if (status != RSI_SUCCESS) {
           return status;
         }
@@ -917,34 +1009,8 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
         // No break
       // Fall through
       case RSI_WLAN_STATE_BAND_DONE: {
-
 #if RSI_TIMEOUT_SUPPORT
-        // Allocate command buffer from WLAN pool
-        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-        // If allocation of packet fails
-        if (pkt == NULL) {
-          // Change the WLAN CMD state to allow
-          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-          // Return packet allocation failure error
-          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-        }
-
-        // Memset data
-        memset(&pkt->data, 0, sizeof(rsi_req_timeout_t));
-
-#ifndef RSI_WLAN_SEM_BITMAP
-        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-        // Send set region command
-        status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_TIMEOUT, pkt);
-
-        // Wait on WLAN semaphore
-        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_TIMEOUT_RESPONSE_WAIT_TIME);
-
-        // Get WLAN/network command response status
-        status = rsi_wlan_get_status();
-
+        status = send_timeout(RSI_TIMEOUT_BIT_MAP, RSI_TIMEOUT_VALUE);
         if (status != RSI_SUCCESS) {
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
@@ -1149,10 +1215,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
         }
       } break;
     }
-    if (scan_response_handler != NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-    }
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_SCAN_ASYNC_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
@@ -1182,8 +1244,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 				10: RSI_USE_GENERATED_WPSPIN, \n
  * 				11: RSI_WPS_PUSH_BUTTON, \n
  * 				12: RSI_WPA_WPA2_MIXED_PMK, \n
- * 				13: RSI_WPA3, \n
- * 				14: RSI_WPA3_TRANSITION
+ * 				13: RSI_WPA3
  * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
  * 		Security type(sec_type)	|	Secret key structure format (secret_key)
  * 		:-----------------------|:--------------------------------------------------------------------------------------------------
@@ -1221,7 +1282,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
  * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- * 		RSI_WPA3_TRANSITION |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			   #define RSI_TIMEOUT_BIT_MAP 4 \n
@@ -1258,7 +1318,41 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *              For example, \n
  *              After calling rsi_wireless_init(), wlan_cb state is updated to opermode done state. So when we call this API, it will execute band, init, scan and join commands. \n
  *              After calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to band done state. So when we call this API, it will execute init, scan and join commands. \n
- *              After calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to scan done state. So when we call this API, it will execute join command directly. \n
+ *              After calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to scan done state. So when we call this API, it will execute join command directly.
+ * #### EAP configuration #### 
+ *              For EAP configuration below arguments are required and are congifured in rsi_wlan_config.h in enterprise_client applicaiton. \n
+ *               • eap_method, inner_method, user_identity, password, okc, private_key_password \n
+ *               • eap_method is 32 bytes and it can be any one of the following methods: TLS, TTLS, FAST, PEAP or LEAP, should be given as string in RSI_EAP_METHOD. \n
+ *               • inner_method is 32 bytes, this field is valid only in TTLS/PEAP. In case of TTLS/PEAP supported inner methods are MSCHAP/MSCHAPV2. In case of TLS/FAST/LEAP this field is not valid and it should be fixed to MSCHAPV2. Here MSCHAP/MSCHAPV2 are given in RSI_EAP_INNER_METHOD. \n
+ *               • user_identity is 64 bytes, this can be configured in USER_IDENTITY of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
+ *               • password is 128 bytes, this can be configured in PASSWORD of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
+ *               • okc is 4 bytes, This argument is used to enable or disable or select multiple features from user this value can be modified by OKC_VALUE macro.  \n
+ *                          - BIT[0] of OKC is used to enable or disable opportunistic key caching (OKC), \n
+ *                            -- `0` – disable \n
+ *                            -- `1` – enable \n
+ *                            -- When this is enabled, module will use cached PMKID to get MSK(Master Session Key) which is need for generating PMK which is needed for 4-way handshake. \n
+ *                          - BIT[1] of OKC is used to enable or disable CA certification for PEAP connection. \n
+ *                            -- `0` – CA certificate is not required.  \n
+ *                            -- `1` – CA certificate is required. \n
+ *                          - BIT[2-12] of OKC argument are used for Cipher list selection for EAP connection. All possible ciphers are listed below \n 
+ * 	                                 BIT position  |   Cipher selected
+ * 	                                 :--           |:-------
+ *                                   2             |   DHE-RSA-AES256-SHA256                              
+ *                                   3             |   DHE-RSA-AES128-SHA256                              
+ *                                   4             |   DHE-RSA-AES256-SHA                                 
+ *                                   5             |   DHE-RSA-AES128-SHA                                 
+ *                                   6             |   AES256-SHA256                                      
+ *                                   7             |   AES128-SHA256                                      
+ *                                   8             |   AES256-SHA                                                                      
+ *                                   9             |   AES128-SHA                                                                      
+ *                                   10            |   RC4-SHA                                                                        
+ *                                   11            |   DES-CBC3-SHA	                                                               
+ *                                   12            |   RC4-MD5                                                                  
+ *                          - BIT[13-31] of OKC argument is reserved. \n
+ *                          - When user sets BIT[1] and does not provide the CA certificate for PEAP connection then error is thrown. If user provides invalid CA certificate then also error is thrown. User can set either one or multiple bits from BIT[2-12] to provide the cipher's list. When user does not provide any value in OKC's BIT[2-12] then by default all the ciphers are selected. \n
+ *               • private_key_password is 82 bytes,This is password for encrypted private key given to the module. Module will use this password during decryption of encrypted private key. password length must be 80 bytes or less. Should be configured in RSI_PRIVATE_KEY_PASSWORD. \n
+ *              
+ * 
  * @return 	**Success**     - RSI_SUCCESS \n
  *              **Failure**     - Non-Zero Value \n
  *
@@ -1279,11 +1373,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *				  **0x0025,0x0026,0x0028,0x0039,0x003C,0x0044,0x0045,0x0046,** \n
  *
  *				  **0x0047,0x0048,0x0049,0xFFF8**
- * @note    WPA3 security not supported in AP mode. \n
- *          WPA3 STA supports both H2E and Hunting-and-pecking for WPA3 authentication. It picks authentication algorithm based on AP's capability. \n
- *          WPA3 STA supports PMKSA caching. If STA has valid PMKID (generated after first connection) with an AP it will trigger OPEN authentication for successive connection attempts. By default the lifetime for PMKSA entry is 12 hours. \n
- *          In WPA3 Personal Transition Mode if both WPA2 and WPA3 APs are available in scan results, STA will pick the AP which has strongest RSSI (it could be either WPA2 or WPA3). \n
- *          If connected WPA3 AP enables Transition Disable Indication, from that moment onwards STA in transistion mode will not try connections to WPA2 APs. This behavior will persist until reset of the STA. \n
  * @note		Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -1349,8 +1438,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *                               10: RSI_USE_GENERATED_WPSPIN, \n
  *                               11: RSI_WPS_PUSH_BUTTON, \n
  *                               12: RSI_WPA_WPA2_MIXED_PMK, \n
- *                               13: RSI_WPA3, \n
- *                               14: RSI_WPA3_TRANSITION
+ *                               13: RSI_WPA3
  * @param[in]   secret_key			  - Pointer to a buffer that contains security information based on sec_type.
  *              Security type(sec_type) |       Secret key structure format (secret_key)
  *              :-----------------------|:-----------------------------------------------------------------------------------------------------------------
@@ -1388,7 +1476,6 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *              RSI_USE_GENERATED_WPSPIN|       NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  *              RSI_WPS_PUSH_BUTTON     |       NULL string indicate to generate push button event
  *              RSI_WPA3                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- *              RSI_WPA3_TRANSITION     |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @param[in]   join_response_handler - Called when the response for join has been received from the module \n
  *                                        Parameters involved are status, buffer, & length \n
  * @param[out]  Status                - Response status. If status is zero, then the join response is stated as Success  \n
@@ -1469,7 +1556,9 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
     }
 
     // Check whether module is in valid state range or not
-    if (wlan_cb->state >= RSI_WLAN_STATE_CONNECTED) {
+    if ((wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE && wlan_cb->state >= RSI_WLAN_STATE_CONNECTED)
+        || (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE && wlan_cb->state >= RSI_WLAN_STATE_CONNECTED
+            && wlan_cb->sta_state >= RSI_WLAN_STATE_CONNECTED)) {
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Command given in wrong state
@@ -1520,7 +1609,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
           }
         }
 #if HE_PARAMS_SUPPORT
-        status = rsi_wlan_11ax_config();
+        status = rsi_wlan_11ax_config(GUARD_INTERVAL);
         if (status != RSI_SUCCESS) {
           SL_PRINTF(SL_WLAN_CONNECT_ASYNC_HE_PARAMS_SUPPORT, WLAN, LOG_INFO);
           return status;
@@ -1557,31 +1646,7 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
       // Fall through
       case RSI_WLAN_STATE_BAND_DONE: {
 #if RSI_TIMEOUT_SUPPORT
-        // Allocate command buffer from WLAN pool
-        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
-
-        // If allocation of packet fails
-        if (pkt == NULL) {
-          // Change the WLAN CMD state to allow
-          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-          // Return packet allocation failure error
-          SL_PRINTF(SL_WLAN_CONNECT_ASYNC_PKT_ALLOCATION_FAILURE_3, WLAN, LOG_ERROR);
-          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-        }
-
-        // Memset data
-        memset(&pkt->data, 0, sizeof(rsi_req_timeout_t));
-
-#ifndef RSI_WLAN_SEM_BITMAP
-        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
-#endif
-
-        // Send set region command
-        status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_TIMEOUT, pkt);
-        // Wait on WLAN semaphore
-        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_TIMEOUT_RESPONSE_WAIT_TIME);
-        // Get WLAN/network command response status
-        status = rsi_wlan_get_status();
+        status = send_timeout(RSI_TIMEOUT_BIT_MAP, RSI_TIMEOUT_VALUE);
         if (status != RSI_SUCCESS) {
           // Change the WLAN CMD state to allow
           rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
@@ -2121,10 +2186,6 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
         }
       } break;
     }
-    if (join_response_handler != NULL) {
-      // Change the WLAN CMD state to allow
-      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-    }
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_CONNECT_ASYNC_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR);
@@ -2508,7 +2569,7 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
  *                     7-4 |                       |	Reserved
  * @param[in]         gain_offset - gain_offset as observed in dBm
  * @param[in]         xo_ctune - Allow user to directly update xo_ctune value to calibration data bypassing the freq offset loop,
- * 			valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set.
+ * 			valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. The range of xo_ctune is [0, 255], and the typical value is 80
  * @note              To recalibrate gain offset after it has been burnt to flash, the user is required to first reset gain offset and then follow the calibration flow. \n
  *                    e.g.: rsi_calib_write(BURN_INTO_FLASH,BURN_GAIN_OFFSET,0,0); // which resets gain offset \n
  *                    Recalibration is not possible if EFuse is being used instead of flash as calibration data storage            
@@ -3804,6 +3865,34 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
         rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, rsi_response_wait_time);
 
       } break;
+      case RSI_WLAN_EXT_STATS: {
+
+        if (length < sizeof(rsi_wlan_ext_stats_t)) {
+          // Change the WLAN CMD state to allow
+          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          //   SL_PRINTF(SL_WLAN_GET_INSUFFICIENT_BUFFER_5, WLAN, LOG_ERROR, "status: %4x", status);
+          return RSI_ERROR_INSUFFICIENT_BUFFER;
+        }
+        // Allocate command buffer from WLAN pool
+        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+        // If allocation of packet fails
+        if (pkt == NULL) {
+          // Change the WLAN CMD state to allow
+          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          // Return packet allocation failure error
+          //  SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_9, WLAN, LOG_ERROR, "status: %4x", status);
+          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+        }
+#ifndef RSI_WLAN_SEM_BITMAP
+        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+        // Send Wi-fi STATS query request
+        status                 = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_EXT_STATS, pkt);
+        rsi_response_wait_time = RSI_WLAN_REQ_EXT_STATS_WAIT_TIME;
+        // Wait on WLAN semaphore
+        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, rsi_response_wait_time);
+      } break;
       case RSI_FW_VERSION:
         break;
       default:
@@ -3815,7 +3904,6 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
     status = rsi_wlan_get_status();
     // Change the WLAN CMD state to allow
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_GET_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
@@ -3850,10 +3938,8 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
  *	           ^        	             |    	  uint8_t mac_address[6];
  *	           ^                       |         }rsi_req_multicast_filter_info_t;
  *	           ^                       |      cmd_type are : \n
- *	           ^                       |      1 . RSI_ MULTICAST_MAC_ADD_BIT (To set particular bit in multicast bitmap) \n
- *	           ^        	             |    	2 . RSI_MULTICAST_MAC_CLEAR_BIT (To reset particular bit in multicast bitmap \n
- *	           ^        	             |    	3 . RSI_MULTICAST_MAC_CLEAR_ALL (To clear all the bits in multicast bitmap) \n
- *	           ^        	             |    	4 . RSI_MULTICAST_MAC_SET_ALL (To set all the bits in multicast bitmap) \n
+ *	           ^        	             |    	2 . RSI_MULTICAST_MAC_CLEAR_ALL (To clear all the bits in multicast bitmap) \n
+ *	           ^        	             |    	3 . RSI_MULTICAST_MAC_SET_ALL (To set all the bits in multicast bitmap) \n
  * 	 	         RSI_JOIN_BSSID          |      uint8_t join_bssid[6]
  * 	 	         RSI_CFG_SAVE            |      This cmd_type is used to save the parameters into non-volatile memory which are used either to join to an Access point (auto-join mode) or to create an Access point(auto-create mode).
  * 	 	         RSI_CFG_STORE           |      This cmd_type is used to give the configuration values which are supposed to be stored in the module's non-volatile memory and that are used in auto-join or auto-create modes. 
@@ -4136,6 +4222,7 @@ int32_t rsi_wlan_buffer_config(void)
  *		40		      |5200 
  *		44		      |5220 
  *		48		      |5240 
+ *		144		      |5700 
  *		149		      |5745 
  *		153		      |5765 
  *		157		      |5785 
@@ -4344,6 +4431,15 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
       }
         // No break
       // Fall through
+      case RSI_WLAN_STATE_CONNECTED: {
+        // Reject if AP is already up, allow if connected state is due to STA
+        if (wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE && wlan_cb->ap_state >= RSI_WLAN_STATE_CONNECTED) {
+          status = RSI_ERROR_COMMAND_NOT_SUPPORTED;
+          break;
+        }
+      }
+        // No break
+      // Fall through
       case RSI_WLAN_STATE_IP_CONFIG_DONE:
       case RSI_WLAN_STATE_IPV6_CONFIG_DONE:
       case RSI_WLAN_STATE_INIT_DONE: {
@@ -4514,7 +4610,6 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 
       case RSI_WLAN_STATE_NONE:
       case RSI_WLAN_STATE_SCAN_DONE:
-      case RSI_WLAN_STATE_CONNECTED:
       case RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON:
       case RSI_WLAN_STATE_AUTO_CONFIG_DONE:
       case RSI_WLAN_STATE_AUTO_CONFIG_FAILED:
@@ -4630,7 +4725,7 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *		         To enable this mode, follow procedure below: \n
  *             Add ENABLE_ENHANCED_MAX_PSP (BIT(26)) in RSI_CONFIG_FEATURE_BITMAP \n
  *             Set psp_type to RSI_FAST_PSP (1) \n
- *             Configure Monitor interval by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file. (default value is 50 ms)
+ *             Configure Monitor interval by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file. (default value is 50 ms) \n
  * @note	     1. psp_type is only valid in psp_mode 1 and 2. \n
  * @note	     2. psp_type UAPSD is applicable only if WMM_PS is enabled in rsi_wlan_config.h file. \n
  * @note       3. In RSI_MAX_PSP mode, Few Access points won't aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.\n
@@ -4685,7 +4780,7 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *	          If host does not set any sleep time, then the timer is configured for 3sec by default. Upon wakeup module sends a wakeup message to the host and expects host to give ACK before \n
  *		        it goes into next sleep cycle. Host either send ACK or any other messages but once ACK is sent no other packet should be sent before receiving next wakeup message. \n
  *            When ulp_mode_enable is set to '2', after waking up from sleep, the module sends WKP FRM SLEEP message to host when RAM retention is not enabled. \n
- *		        After receiving WKP FRM SLEEP message, host needs to start giving commands from beginning (opermode) as module's state is not retained.
+ *		        After receiving WKP FRM SLEEP message, host needs to start giving commands from beginning (opermode) as module's state is not retained. \n
  * @return    0               -  Success \n
  *            Non-Zero	Value - Failure \n
  *	          If return value is less than 0 \n
@@ -4694,6 +4789,8 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *	          -4              - Buffer not available to serve the command \n
  *            If return value is greater than 0 \n
  * 	          0x0021,0x0025,0x002C,0xFFF8,0x0015,0x0026,0x0052
+ * @note      If the user wants to enable power save in CoEx mode (WLAN + BT LE) mode - It is mandatory to enable WLAN power save along with BT LE power save. \n
+ * @note      The device will enter into power save if and only if both protocol (WLAN, BLE) power save modes are enabled. \n
  * @note      Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -4751,13 +4848,29 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *                      1- Continuous Mode \n
  *                      2- Continuous wave Mode (non modulation) in DC mode \n
  *                      3- Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) \n
- *                      4- Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz)
+ *                      4- Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz) \n
+ * Burst mode: DUT transmits a burst of packets with the given power, rate, length in the channel configured. \n
+ *             The burst size will be determined by the <number of packets> and if its zero, then DUT keeps transmitting till a rsi_transmit_test_stop API is called. \n
+ * 
+ * Continuous Mode: The DUT transmits a unmodulated waveform continuously \n
+ * 
+ * Continuous Wave Mode (Non-Modulation) in DC Mode: The DUT transmits a spectrum only at the center frequency of the channel. \n
+ *                                                   A basic signal with no modulation is that of a sine wave and is usually referred to as a continuous wave (CW) signal. \n
+ *                                                   A basic signal source produces sine waves. Ideally, the sine wave is perfect. In the frequency domain, it is viewed as a single line at some specified frequency. \n
+ *
+ * Continuous Wave Mode (Non-Modulation) in single tone Mode (Center frequency -2.5MHz): The DUT transmits a spectrum that is generated at -2.5MHz from the center frequency of the channel selected. \n 
+ *                                                                                       Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2409.5MHz \n
+ *
+ * Continuous Wave Mode (Non-Modulation) in single tone Mode (Center frequency +5MHz): The DUT transmits a spectrum that is generated at 5MHz from the center frequency of the channel selected. \n 
+ *                                                                                     Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2417MHz. 
  * @param[in]  channel - Set the channel number in 2.4 GHz / 5GHz.
- * @note                 1. Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
+ * @note                 1. Rate flags can be added in rsi_wlan_common_config.h file \n
+ *                          i.  BIT(6) - Immediate Transfer, set this bit to transfer packets immediately ignoring energy/traffic in channel \n
+ * @note                 2. Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
  *                          i.  Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
  *                          ii. Stop Continuous mode \n 
  *                          iii Start Continuous Wave mode \n
- * @note                 2. If user wants to switch continuous wave mode, first need to stop the per mode and again need to give continous wave mode which user wants to switch. 
+ * @note                 3. If user wants to switch continuous wave mode, first need to stop the per mode and again need to give continous wave mode which user wants to switch. 
  *      ### Data Rates ###       
  *			Data rate(Mbps)	|	Value of rate 
  *			:--------------:|:-------------------:
@@ -5028,7 +5141,7 @@ int32_t rsi_transmit_test_stop(void)
  * @brief     Get the Transmit (TX) & Receive (RX) packets statistics.When this API is called by the host with  valid channel number,
  *            the module gives the statistics to the host for every 1 second asynchronously. If wlan_receive_stats_response_handler()
  *            is registered through rsi_wlan_register_callbacks(), it's a non blocking, otherwise, a blocking call
- * @pre       \ref rsi_wireless_init() API needs to be called before this API.
+ * @pre       \ref rsi_wlan_radio_init() API needs to be called before this API.
  * @param[in] channel         - Valid channel number 2.4GHz or 5GHz          
  * @return    0               - Success
  *            Non-Zero Value  - Failure \n
@@ -5323,10 +5436,10 @@ int32_t rsi_wlan_wfd_start_discovery(
       rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_P2P_RESPONSE_WAIT_TIME);
       // Get WLAN/network command response status
       status = rsi_wlan_get_status();
+      //Changing the wlan cmd state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
     }
 
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
@@ -5430,10 +5543,10 @@ int32_t rsi_wlan_wfd_connect(int8_t *device_name,
       rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_JOIN_RESPONSE_WAIT_TIME);
       // Get WLAN/network command response status
       status = rsi_wlan_get_status();
+      //Changing the wlan cmd state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
     }
 
-    // Change the WLAN CMD state to allow
-    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   } else {
     // Return WLAN command error
     SL_PRINTF(SL_WLAN_WFD_CONNECT_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
@@ -5467,54 +5580,64 @@ int32_t rsi_wlan_send_data(uint8_t *buffer, uint32_t length)
   uint8_t *host_desc;
   rsi_pkt_t *pkt;
   SL_PRINTF(SL_WLAN_SEND_DATA_ENTRY, WLAN, LOG_INFO);
+  // Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
   // If buffer is not valid
   if ((buffer == NULL) || (length == 0)) {
     // Return packet allocation failure error
     SL_PRINTF(SL_WLAN_SEND_DATA_INVALID_PARAM, WLAN, LOG_ERROR, "status: %4x", status);
     return RSI_ERROR_INVALID_PARAM;
   }
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+    // Allocate packet to send data
+    pkt = rsi_pkt_alloc(&rsi_driver_cb->wlan_cb->wlan_tx_pool);
 
-  // Allocate packet to send data
-  pkt = rsi_pkt_alloc(&rsi_driver_cb->wlan_cb->wlan_tx_pool);
+    if (pkt == NULL) {
+      SL_PRINTF(SL_WLAN_SEND_DATA_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      //Changing the wlan cmd state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
 
-  if (pkt == NULL) {
-    SL_PRINTF(SL_WLAN_SEND_DATA_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
-    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
-  }
+    // Get host descriptor pointer
+    host_desc = pkt->desc;
 
-  // Get host descriptor pointer
-  host_desc = pkt->desc;
+    // Memset host descriptor
+    memset(host_desc, 0, RSI_HOST_DESC_LENGTH);
 
-  // Memset host descriptor
-  memset(host_desc, 0, RSI_HOST_DESC_LENGTH);
+    // Fill host descriptor
+    rsi_uint16_to_2bytes(host_desc, (length & 0xFFF));
 
-  // Fill host descriptor
-  rsi_uint16_to_2bytes(host_desc, (length & 0xFFF));
+    // Fill packet type
+    host_desc[1] |= (RSI_WLAN_DATA_Q << 4);
+    host_desc[2] |= 0x01;
 
-  // Fill packet type
-  host_desc[1] |= (RSI_WLAN_DATA_Q << 4);
-  host_desc[2] |= 0x01;
+    // Copy data to be sent
+    memcpy(pkt->data, buffer, length);
 
-  // Copy data to be sent
-  memcpy(pkt->data, buffer, length);
-
-  // Enqueue packet to WLAN TX queue
-  rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
+    // Enqueue packet to WLAN TX queue
+    rsi_enqueue_pkt(&rsi_driver_cb->wlan_tx_q, pkt);
 
 #ifndef RSI_SEND_SEM_BITMAP
-  rsi_driver_cb_non_rom->send_wait_bitmap |= BIT(0);
+    rsi_driver_cb_non_rom->send_wait_bitmap |= BIT(0);
 #endif
-  // Set TX packet pending event
-  rsi_set_event(RSI_TX_EVENT);
+    // Set TX packet pending event
+    rsi_set_event(RSI_TX_EVENT);
 
-  if (rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->send_data_sem, RSI_SEND_DATA_RESPONSE_WAIT_TIME)
-      != RSI_ERROR_NONE) {
-    SL_PRINTF(SL_WLAN_SEND_DATA_RESPONSE_TIMEOUT, WLAN, LOG_ERROR, "status: %4x", status);
-    return RSI_ERROR_RESPONSE_TIMEOUT;
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->send_data_sem, RSI_SEND_DATA_RESPONSE_WAIT_TIME);
+
+    status = rsi_wlan_get_status();
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   }
-  status = rsi_wlan_get_status();
   // Return status
   SL_PRINTF(SL_WLAN_SEND_DATA_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+
   return status;
 }
 /// @cond DOCS_9117
@@ -5558,7 +5681,7 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
     if (twt_req_params->wake_duration_unit > 1) {
       return RSI_ERROR_INVALID_PARAM;
     }
-    if (twt_req_params->implicit_twt > 1 || twt_req_params->un_announced_twt > 1 || twt_req_params->triggered_twt > 1
+    if (twt_req_params->un_announced_twt > 1 || twt_req_params->triggered_twt > 1
         || twt_req_params->restrict_tx_outside_tsp > 1) {
       return RSI_ERROR_INVALID_PARAM;
     }
@@ -5571,7 +5694,8 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
     if (twt_req_params->req_type > 2) {
       return RSI_ERROR_INVALID_PARAM;
     }
-    if ((twt_req_params->twt_channel != 0) || (twt_req_params->twt_protection != 0)) {
+    if ((twt_req_params->twt_channel != 0) || (twt_req_params->twt_protection != 0)
+        || (twt_req_params->implicit_twt != 1)) {
       return RSI_ERROR_INVALID_PARAM;
     }
   } else {
@@ -5606,7 +5730,7 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
       twt_req->wake_duration_tol  = twt_req_params->wake_duration_tol;
       twt_req->wake_int_exp       = twt_req_params->wake_int_exp;
       twt_req->wake_int_exp_tol   = twt_req_params->wake_int_exp_tol;
-      twt_req->wake_duration_unit = twt_req_params->wake_duration;
+      twt_req->wake_duration_unit = twt_req_params->wake_duration_unit;
       rsi_uint16_to_2bytes(twt_req->wake_int_mantissa, twt_req_params->wake_int_mantissa);
       rsi_uint16_to_2bytes(twt_req->wake_int_mantissa_tol, twt_req_params->wake_int_mantissa_tol);
       twt_req->implicit_twt            = twt_req_params->implicit_twt;
@@ -6673,13 +6797,19 @@ int32_t rsi_wlan_pmk_generate(int8_t type, int8_t *psk, int8_t *ssid, uint8_t *p
  *
  *
  */
-int32_t rsi_wlan_11ax_config(void)
+int32_t rsi_wlan_11ax_config(uint8_t gi_ltf)
 {
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
-  if (wlan_cb->state >= RSI_WLAN_STATE_INIT_DONE) {
+#if !(HE_PARAMS_SUPPORT)
+  // Change WLAN CMD state to allow
+  rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+  // Return command not supported error
+  return RSI_ERROR_COMMAND_NOT_SUPPORTED;
+#endif
+  if (wlan_cb->state >= RSI_WLAN_STATE_INIT_DONE && wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
     // Change WLAN CMD state to allow
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
     // Return command given in wrong state error
@@ -6697,6 +6827,20 @@ int32_t rsi_wlan_11ax_config(void)
 #ifndef RSI_WLAN_SEM_BITMAP
   rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
 #endif
+  wlan_11ax_config_params_t *config = (wlan_11ax_config_params_t *)pkt->data;
+  config->guard_interval            = gi_ltf;
+  config->nominal_pe                = NOMINAL_PE;
+  config->dcm_enable                = DCM_ENABLE;
+  config->ldpc_enable               = LDPC_ENABLE;
+  config->ng_cb_enable              = NG_CB_ENABLE;
+  config->ng_cb_values              = NG_CB_VALUES;
+  config->uora_enable               = UORA_ENABLE;
+  config->trigger_rsp_ind           = TRIGGER_RESP_IND;
+  config->ipps_valid_value          = IPPS_VALID_VALUE;
+  config->tx_only_on_ap_trig        = TX_ONLY_ON_AP_TRIG;
+  config->twt_support               = TWT_SUPPORT;
+  config->config_er_su              = CONFIG_ER_SU;
+
   // Send antenna select command
   status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_11AX_PARAMS, pkt);
 
@@ -6832,6 +6976,102 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  *             RSI_WLAN_ASYNC_STATS                      |   Called when async response come from the FW to the host. Host can register this callback to get all the information regarding AP connectivity. @param buffer rsi_state_notification_t ( \ref rsi_state_notification_s) response structure is provided in callback   \n @param status NA
  * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |   Called when WLAN assertion is triggered from FW. It returns the assert value to the application @param buffer   NULL\n @param status   Assert Value
  *             RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         |   Reserved
+ * 
+ * #### RSI_WLAN_ASYNC_STATS ####
+ * • Asychronous messages are used to indicate module state to host. Asynchronous message are enabled by setting bit 10 of the custom feature bitmap in opermode. \n
+ * • In async messages time_stamp, state_code, reason_code, rsi_channel, rsi_rssi and rsi_bssid are logged. \n
+ * - time_stamp (4 bytes)
+ *    - This is the value of the time stamp counter at the time of message; timestamps increment at intervals of 100ms. \n
+ *  
+ * - state_code (1 byte)
+ *    - This field indicates the state of the module. `state_code` contains two parts, the upper nibble and lower nibble. \n
+ *    - The upper nibble indicates the state of the rejoin process. The following table documents the possible values of the upper nibble of state_code. \n
+ * State                           | Upper Nibble | Indication                                                      
+ *|:---------------------------------|:--------------|:-----------------------------------------------------------------
+ * Scan Trigger (State I)          | `0x00`       | Startup. Initial Roam                                           
+ * ^                                | `0x10`       | Beacon Loss. Failover Roam                                      
+ * ^                               | `0x20`       | De-authentication. AP induced roam / Disconnect from supplicant 
+ * Scan Result/Decision (State II) | `0x50`       | Current AP is best                                              
+ * ^                                | `0x60`       | Better AP found                                                 
+ * ^                               | `0x70`       | No AP found                                                     
+ * Final Connection (State III)    | `0x80`       | Associated                                                      
+ *  ^                               | `0x90`       | Unassociated                                                    
+ *    - The lower nibble of state_code indicates the reason for a state change. The following table documents the possible values of the lower nibble of state_code.
+ * Lower Nibble | Reason for State Change                                                                     
+ *|:--------------|:-----------------------------------------------------------------------------------------
+ * `0x00`       | No reason specified                                                                         
+ * `0x01`       | No response from AP for authentication request(Authentication denial)                       
+ * `0x02`       | Association denial                                                                          
+ * `0x03`       | User configured AP is not present                                                           
+ * `0x05`       | EAPOL TX failure                                                                            
+ * `0x06`       | Deauthentication from user                                                                  
+ * `0x07`       | PSK not configured                                                                          
+ * `0x08`       | key-handshake failure during rejoin/roaming/after connection(Disconnection from supplicant) 
+ * `0x09`       | Roaming not enabled                                                                         
+ * 
+ * - reason_code (1 byte)
+ *      - Indicates the reason for a failure. \n
+ *      - These failures also include EAP connection errors for certificate parsing. \n
+ *      - All supported reason codes are listed below 
+ * reason_code |   Reason codes 
+ * |:-------|:----------------------
+ * 0x00 | No reason specified                                                                         
+ * 0x01 | No response from AP for authentication request(Authentication denial)                       
+ * 0x02 | Association denial                                                                          
+ * 0x03 | User configured AP is not present                                                           
+ * 0x05 | EAPOL TX failure                                                                            
+ * 0x06 | Deauthentication from user                                                                  
+ * 0x07 | PSK not configured                                                                          
+ * 0x08 | key-handshake failure during rejoin/roaming/after connection(Disconnection from supplicant) 
+ * 0x09 | Roaming not enabled                                                                         
+ * 0x10 | Beacon Loss (failover Roam)                                                                 
+ * 0x20 | De-authentication (AP induced Roam/Deauth from supplicant)                                  
+ * 0x28 |TLS CA Cert not present                      
+ * 0x29 |TLS PRIVATE key not present                
+ * 0x2A |TLS Client Cert not present                
+ * 0x2B |TLS no Cert present                        
+ * 0x2C |PEAP CA Cert not present                   
+ * 0x2D |Server Cert Invalid Key Type               
+ * 0x2E |Server Intermediate CA Invalid Key Type    
+ * 0x2F |Server Root CA Invalid Key Type            
+ * 0x30 |Client Cert Invalid Key Type               
+ * 0x31 |Client Root CA Invalid Key Type            
+ * 0x32 |FIPS Server Cert Invalid Length            
+ * 0x33 |FIPS Server Intermediate CA Invalid Length 
+ * 0x34 |FIPS Server Root CA Invalid Length         
+ * 0x35 |FIPS Client Cert Invlaid Length            
+ * 0x36 |FIPS Client Root CA Invalid Length         
+ * 0x37 |Server Cert Invalid Length                 
+ * 0x38 |Server Intermediate CA Invalid Length      
+ * 0x39 |Server Root CA Invalid Length              
+ * 0x3A |Client Cert Invalid Lenght                 
+ * 0x3B |Client Root CA Invalid Length              
+ * 0x3C |Server Cert Invalid Sign Alg               
+ * 0x3D |Server Intermediate CA Invalid Sign Alg    
+ * 0x3E |Server Root CA Invalid Sign Length         
+ * 0x3F |Client Cert Invalid Sign Alg               
+ * 0x40 |Client Root CA Invalid Sign Length         
+ * 0x41 |Server Intermediate CA not Present         
+ * 0x42 |Server Root CA Parse Error                 
+ * 0x43 |Server Intermediate Root CA Parse Error    
+ * 0x44 |Sever Cert Parse Error                     
+ * 0x45 |Client Cert Parse Error                    
+ * 0x46 |Incorrect Private Key Password             
+ * 0x47 |EAP Failure Received                       
+ * 0x48 |Client Cert Bad Date Error                 
+ * 0x49 |Server Cert Bad Date Error                 
+ * 0x4A |Server Root CA Bad Date Error              
+ * 0x4B |Client Root CA Bad Date Error              
+ * 0x4C |Server Intermediate Root CA Bad Date Error   
+ * 0x4D |Pem Header Error                           
+ * 0x4E |Pem Footer Error                           
+ * 0x4F |Client Intermediate CA Invalid Sign Length 
+ * 0x50 |Client Intermediate CA Invalid Length      
+ * 0x51 |FIPS Client Intermediate CA Invalid Length 
+ * 0x52 |Client Intermediate CA invalid Key Type    
+ * 0x53 |Pem Error                                  
+ *      - In addition to the above, reason code received in Deauthentication/Disassociation frame from AP  is added. This will set the MSB bit of reason_code. \n
+ *      - If MSB bit is set in reason code, then mask it with 0x7f to get the acutal reason code received in Deauthentication/Disassociation frame.
  */
 uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
                                      void (*callback_handler_ptr)(uint16_t status,
@@ -6881,7 +7121,9 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
   } else if (callback_id == RSI_WLAN_RAW_DATA_RECEIVE_HANDLER) {
     // Register raw data receive notify callback handler
     rsi_wlan_cb_non_rom->callback_list.raw_data_receive_handler = callback_handler_ptr;
-
+  } else if (callback_id == RSI_WLAN_RECEIVE_CSI_DATA) {
+    // Register CSI data receive notify callback handler
+    rsi_wlan_cb_non_rom->callback_list.wlan_receive_csi_data_response_handler = callback_handler_ptr;
   }
 #ifndef RSI_M4_INTERFACE
   else if (callback_id == RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB) {
@@ -7236,13 +7478,11 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 }
 
 #endif
-
 /** @} */
 
 /** @addtogroup WLAN
 * @{
 */
-
 /*==============================================*/
 /**
  * @brief      Assign the user configurable channel gain values in different regions to the module from user.This method is used for overwriting default gain tables that are present in firmware. \n
@@ -7324,8 +7564,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                a. 5G is divided into 4 sub bands: 
  *                                      band 1: channel number <= 48 
  *                                      band 2: channel number > 48 and channel number <= 64 
- *                                      band 3: channel number > 64 and channel number <= 140
- *                                      band 4: channel number > 140
+ *                                      band 3: channel number > 64 and channel number <= 144 
+ *                                      band 4: channel number > 144 
  *                                b. If any channel in a band has different set of power values, specify the channel number followed by power values. 
  *                                c. If all the channels in a band 1 has same power values, specify the band number as 1 followed by power value. 
  *                                d. If all the channels in a band 2 has same power values, specify the band number as 2 followed by power value. 
@@ -7535,6 +7775,95 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
 
   // Return status if error in sending command occurs
   SL_PRINTF(SL_WLAN_UPDATE_GAIN_TABLE_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @brief     Enable or disable CSI data retrieval with configured periodicity.
+ * @pre   	  \ref rsi_wlan_scan() API needs to be called before this API.
+ * @param[in] enable                                - Enable or disable CSI data retrieval. 
+ * @param[in] periodicity                           - Periodicity of CSI data retrieval in microseconds.
+ * @param[in] rsi_wlan_csi_data_response_handler    - Called when CSI data has been received from the module.
+ * @note      Callback implementation example - \n
+ *            void rsi_wlan_csi_data_response_handler(uint16_t status, rsi_rsp_csi_data_t *payload, const uint32_t payload_length) \n
+ * @param[out]	status               - Response status: 0 - Success, 0x21 - rsi_wlan_csi_config_async() called in wrong state 
+ * @param[out]  payload              - Response buffer
+ * @param[out]  payload_length       - Length of the response buffer. Payload length will be 224 bytes.
+ * @note      \ref rsi_rsp_csi_data_s : Structure type supposed to hold incoming CSI data
+ * @return    0              - Success \n
+ *            Non-Zero Value - Failure \n
+ *            -1  - Callback not registered \n
+ *            -4  - Buffer unavailable to serve the command
+ * @note      Refer to Error Codes section for the description of the above error codes  \ref error-codes
+ * 
+ */
+int32_t rsi_wlan_csi_config_async(uint8_t enable,
+                                  uint32_t periodicity,
+                                  void (*wlan_csi_data_response_handler)(uint16_t status,
+                                                                         uint8_t *buffer,
+                                                                         const uint32_t length))
+{
+  int32_t status                   = 0;
+  rsi_pkt_t *pkt                   = NULL;
+  rsi_csi_config_t *rsi_csi_config = NULL;
+
+  SL_PRINTF(SL_WLAN_CSI_CONFIG_ENTRY, NETWORK, LOG_INFO);
+
+  if (rsi_wlan_cb_non_rom->callback_list.wlan_receive_csi_data_response_handler == NULL) {
+    if (wlan_csi_data_response_handler != NULL) {
+      rsi_wlan_cb_non_rom->callback_list.wlan_receive_csi_data_response_handler = wlan_csi_data_response_handler;
+    } else {
+      return RSI_FAILURE;
+    }
+  }
+
+  // Get WLAN CB struct pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_CSI_CONFIG_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    rsi_csi_config = (rsi_csi_config_t *)pkt->data;
+
+    // Memset buffer
+    memset(&pkt->data, 0, sizeof(rsi_csi_config_t));
+
+    // Fill enable/disable status
+    rsi_csi_config->csi_enable = enable;
+
+    // Fill periodicity of receiving CSI data from module
+    rsi_csi_config->periodicity = periodicity;
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send CSI data retrieval request command
+    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_GET_CSI_DATA, pkt);
+
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_CSI_CONFIG_WLAN_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_CSI_CONFIG_ERROR_IN_SENDING_COMMAND, NETWORK, LOG_ERROR, "status: %4x", status);
   return status;
 }
 /** @} */

@@ -30,6 +30,14 @@ uint8_t pwr_index_to_db_array[] = { 11, 13, 17, 23, 31, 44, 45, 47, 49, 52, 55, 
                                     63, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78 };
 
 /**
+ * Structure for Power index and corresponding output power in db for WMS module
+ * The values are in dBm at Antenna
+ * index 0 corresponds to -8 dBm , array size is 24
+ */
+uint8_t wms_pwr_index_to_db_array[] = { 8,  10, 13, 18, 29, 39, 40, 41, 42, 44, 45, 48,
+                                        50, 54, 61, 70, 71, 72, 73, 74, 75, 76, 77, 78 };
+
+/**
  * @fn         uint8_t rsi_convert_db_to_powindex(int8_t tx_power_in_dBm)
  * @brief      Convert power from dBm to power index.
  * @param[in]  tx_power_in_dBm - tx power in  dBm( -8 dBm to 15 dBm)
@@ -38,15 +46,33 @@ uint8_t pwr_index_to_db_array[] = { 11, 13, 17, 23, 31, 44, 45, 47, 49, 52, 55, 
  */
 uint8_t rsi_convert_db_to_powindex(int8_t tx_power_in_dBm)
 {
-
+  module_type mod_type_temp;
+  int16_t status;
   SL_PRINTF(SL_RSI_CONVERT_DB_TO_POWERINDEX_TRIGGER, BLE, LOG_INFO);
-  /* Converting At antenna  dBm to On screen dBm  */
-  tx_power_in_dBm += BLE_OUTPUT_POWER_FRONT_END_LOSS;
-  if ((tx_power_in_dBm < -8) || (tx_power_in_dBm > 15)) {
-    return 0;
+  status = rsi_get_module_type(&mod_type_temp);
+  if (status == RSI_SUCCESS) {
+    tx_power_in_dBm += BLE_OUTPUT_POWER_FRONT_END_LOSS;
+    if ((tx_power_in_dBm < RSI_MIN_OUTPUT_POWER_IN_DBM) || (tx_power_in_dBm > RSI_MAX_OUTPUT_POWER_IN_DBM)) {
+      return 0;
+    }
+    /* Converting At antenna  dBm to On screen dBm  */
+    tx_power_in_dBm -= RSI_MIN_OUTPUT_POWER_IN_DBM;
+    switch (mod_type_temp) {
+      case RSI_MODULE_TYPE_WMS: {
+        return (wms_pwr_index_to_db_array[tx_power_in_dBm]);
+        //no break
+      }
+      case RSI_MODULE_TYPE_Q7:
+      case RSI_MODULE_TYPE_SB:
+      case RSI_MODULE_TYPE_M7DB:
+      case RSI_MODULE_TYPE_M4SB:
+      default: {
+        return (pwr_index_to_db_array[tx_power_in_dBm]);
+        //no break
+      }
+    }
   }
-  tx_power_in_dBm += 8;
-  return (pwr_index_to_db_array[tx_power_in_dBm]);
+  return 0;
 }
 
 /** @addtogroup BT-LOW-ENERGY1
@@ -545,6 +571,7 @@ int32_t rsi_ble_connect_cancel(int8_t *remote_dev_address)
 #else
   memcpy(ble_disconnect.dev_addr, remote_dev_address, 6);
 #endif
+  ble_disconnect.type = BLE_CONNECT_CANCEL;
 
   // Send connect cancel command
   return rsi_bt_driver_send_cmd(RSI_BLE_REQ_DISCONNECT, &ble_disconnect, NULL);
@@ -574,6 +601,7 @@ int32_t rsi_ble_disconnect(int8_t *remote_dev_address)
 #else
   memcpy(ble_disconnect.dev_addr, remote_dev_address, 6);
 #endif
+  ble_disconnect.type = BLE_DISCONNECT;
   // Send disconnect command
   return rsi_bt_driver_send_cmd(RSI_BLE_REQ_DISCONNECT, &ble_disconnect, NULL);
 }

@@ -13,9 +13,17 @@ typedef struct {
 
 #define PIN(port_id, pin_id)  (rsi_pin_t){.port=gpioPort##port_id, .pin=pin_id}
 
+//! For 9117 EVK swap below pin configuration
+#ifdef EXP_BOARD
+#define SLEEP_CONFIRM_PIN   PIN(B, 1)
+#ifndef LOGGING_STATS
+#define WAKE_INDICATOR_PIN  PIN(B, 0)
+#endif
+#else
 #define SLEEP_CONFIRM_PIN   PIN(B, 0)
 #ifndef LOGGING_STATS
 #define WAKE_INDICATOR_PIN  PIN(B, 1)
+#endif
 #endif
 #define RESET_PIN           PIN(D, 2)
 #define INTERRUPT_PIN       PIN(D, 3)

@@ -174,8 +174,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
@@ -198,7 +198,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 6. After successful SPP Connection, Module go to sleep depending on the selected type of PSP TYPE.
 
-7. Send some data (Ex: "Silicon Labs signals") from the remote device to Silicon Labs device and same data will send back from Silicon Labs device to remote device. Refer the given image for sending and receiving data from the remote device.
+7. Send some data (Ex: "Silicon Labs") from the remote device to Silicon Labs device and same data will send back from Silicon Labs device to remote device. Refer the given image for sending and receiving data from the remote device.
 
 ![Send some data from the remote device to Silicon Labs device](resources/readme/image18d.png)
 

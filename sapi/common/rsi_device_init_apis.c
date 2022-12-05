@@ -194,6 +194,12 @@ int32_t rsi_device_init(uint8_t select_option)
     return status;
   }
 #endif
+#ifdef RSI_INTEGRITY_CHECK_BYPASS_ENABLE
+  status = rsi_integrity_check_bypass();
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+#endif
   status = rsi_bl_select_option(select_option);
   if (status < 0) {
     SL_PRINTF(SL_DEVICE_INIT_BL_SELECT_OPTION_ERROR, COMMON, LOG_ERROR, "status: %4x", status);

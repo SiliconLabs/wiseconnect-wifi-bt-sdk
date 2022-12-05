@@ -2,10 +2,11 @@
 
 ## Introduction
 
-This application demonstrates the process for configuring the RS9116 WiSeConnect EVK in power save profile mode 2.
-It provides steps to configure the RS9116W EVK in station mode and then initiate a connection to an Access point to send UDP data to a remote server in  power save mode.
+This application demonstrates the process for configuring the RS9116W WiSeConnect EVK in power save profile mode 2, also providing the steps to configure the RS9116W EVK in station mode and initiate a connection to an Access Point. When the module is in deep sleep, it wakes up in periodic intervals based on DTIM or Listen Interval.
 
-The application enables analysis of various power save profiles using a power analyzer during the Associated state with data transfer via UDP.
+If the UDP data transfer feature is enabled, the application then connects to a remote server to send UDP data in power save mode.
+
+The application also enables the analysis of various power save profiles using a power analyzer during the Associated state with data transfer via UDP.
 
 ## Setting Up 
 To use this application, the following hardware, software and project setup is required.
@@ -19,6 +20,7 @@ To use this application, the following hardware, software and project setup is r
 	- [STM32F411 Nucleo](https://st.com/)
   - Wi-Fi Access point with a connection to the internet
   - PC2 (Remote PC) with UDP server application (iperf)
+  - 2 wire connectors for GPIO pins
   - Power analyzer
 
 ![Figure: Setup Diagram for Power Save Standby Example](resources/readme/image184.png) 
@@ -30,12 +32,7 @@ To use this application, the following hardware, software and project setup is r
     - For STM32, use [Keil](https://www.keil.com/demo/eval/arm.htm)
   - [Iperf Application](https://iperf.fr/iperf-download.php)
    
-### Project Setup
-  - **Silicon Labs EFx32 Host**. Follow the the [Getting Started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) to setup the example to work with EFx32 and Simplicity Studio.
-  - **STM32F411 Host**. Follow the the [Getting Started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/) to setup the example to work with STM32 and Keil.
-
-
-## Configuring the Application
+## Application Build Environment
 The application can be configured to suit your requirements and development environment.
 Read through the following sections and make any changes needed. 
 
@@ -44,11 +41,35 @@ Read through the following sections and make any changes needed.
 * By default, the application is configured to use the SPI bus for interfacing between Host platforms(STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
 * This application is also configured to use the SDIO bus for interfacing between Host platforms(EFM32GG11) and the RS9116W EVK.
 
+### Project Configuration
+
+The Application is provided with the project folder consists of Keil and Simplicity studio (ssl) project files.
+
+*  Keil project :
+
+   - The Keil can be executed on STM32 platform.
+
+   - Project Path : `<SDK>\examples\featured\powersave_standby_associated\projects\powersave_standby_associated-nucleo-f411re.uvprojx`
+
+* Simplicity Studio :
+
+   - The Simplicity Studio project can be executed on EFR32MG21.
+
+   - Project Path : 
+   - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180a-mg21.slsproj`
+   - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180b-mg21.slsproj`
+
+  - EFM32GG11 platform
+    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+    - Project path:`<SDK>/examples/featured/powersave_standby_associated/projects/powersave_standby_associated-brd2204a-gg11.slsproj`
+
 ### Bare Metal/RTOS Support
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 
+## Application Configuration Parameters
+
 ### Wi-Fi Configuration
-Configure the following parameters in [rsi_aws_device_shadow.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/powersave_standby_associated/rsi_wlan_connected_sleep_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
+Configure the following parameters in [rsi_wlan_connected_sleep_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/powersave_standby_associated/rsi_wlan_connected_sleep_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
 #define SSID           "SILABS_AP"      // Wi-Fi Network Name
@@ -64,6 +85,8 @@ Configure the following parameters in [rsi_aws_device_shadow.c](https://github.c
   #define SERVER_PORT        <remote port>
   #define SERVER_IP_ADDRESS  0x640AA8C0      // 192.168.10.100 => | 0x64 = 100 | 0x0A = 10 | 0xA8 = 168 | 0xC0 = 192 |
 ```
+
+> **Note!** The feature to connect to a remote UDP server is disabled by default. To enable this feature, see [common steps](#common-steps)
 
 ### Memory & Throughput
   - `NUMBER_OF_PACKETS` controls the number of packets sent to the remote UDP server.
@@ -165,10 +188,58 @@ The application defaults to the `RSI_SLEEP_MODE_2` configuration. Other powersav
 - `RSI_WMM_PS_UAPSD_BITMAP` refers to the UAPSD bitmap. If `RSI_WMM_PS_ENABLE` is enabled, then `PSP_TYPE` must be set to `RSI_UAPSD` in order to WMM power save to work.
 
 
-# Testing the Application
-After making any custom configuration changes required, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 
+## Testing the Application
 
-Open a command prompt on the remote PC connected to the Wi-Fi access point.
+Follow the steps below for the successful execution of the application.
+
+### Loading the RS9116W Firmware
+
+Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconnect-getting-started) to load the firmware into RS9116W EVK.
+
+The firmware file is located in `<SDK>/firmware/`
+
+
+### Building the Application on Host Platform
+
+#### Using STM32
+
+Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
+
+- Configure STM32 CN10 header pin-4 should connect to UULP_GPIO_0 and CN10 header pin-2 should connect to UULP_GPIO_2.
+- Open the project `<SDK>\examples\featured\powersave_standby_associated\projects\powersave_standby_associated-nucleo-f411re.uvprojx` 
+- Build and debug the project.
+- Check for the RESET pin:
+  - If RESET pin is connected from STM32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before Free run.
+  - If RESET pin is not connected from STM32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before Free run.
+- Free run the project.
+- Then continue the [common steps](#common-steps).
+
+
+#### Using EFX
+
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+
+
+- Configure EFX32 J4 pin-9 should connect to UULP_GPIO_0 and EVFX32 J4 pin-7 should connect to UULP_GPIO_2.
+- Open Simplicity Studio and import the project `<SDK>\examples\featured\powersave_standby_associated\projects`
+-  Select the appropriate .slsproj as per the Radio Board type mentioned in [Project Configuration](#project-configuration) for Simplicity Studio.
+- Compile and flash the project in to Host MCU
+- Debug the project
+- Check for the RESET pin:
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+- Free run the project
+- Then continue the [common steps](#common-steps).
+
+### Common Steps
+
+To enable the feature for data transfer with remote UDP server, follow the steps given below.
+> - Open the project in Simplicity Studio
+> - Right click on the project and choose 'Properties'
+> - Go to 'C/C++ Build' | 'Settings' | 'GNU ARM C Compiler' | 'Preprocessor' and add the macro 'ENABLE_DATA_TRANSFER_DEMO=1'
+> - Select 'Apply' and 'OK' to save the settings
+
+With the feature now enabled, open a command prompt on the remote PC connected to the Wi-Fi access point.
 Start a UDP server using the below command in command prompt.
 
 > `C:\ iperf.exe –s -u -p <SERVER_PORT> -i 1` 

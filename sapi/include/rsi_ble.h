@@ -475,6 +475,10 @@ typedef struct rsi_ble_req_conn_s {
 typedef struct rsi_ble_req_disconnect_s {
   //uint8[6], address of the device to disconnect
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+#define COMPATABILITY      0
+#define BLE_CONNECT_CANCEL 1
+#define BLE_DISCONNECT     2
+  uint8_t type;
 } rsi_ble_req_disconnect_t;
 
 //SMP protocol structures

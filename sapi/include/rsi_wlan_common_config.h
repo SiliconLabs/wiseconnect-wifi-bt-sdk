@@ -365,6 +365,16 @@
 #define RSI_PRIVATE_KEY_PASSWORD ""
 #endif
 
+/* OKC value of EAP command
+BIT[0] - OKC (Opportunistic Key Caching)
+BIT[1] - CA certificate for PEAP connection.
+BIT[2-12] - EAP Ciphers list
+BIT[13-31] - Reserved
+*/
+#ifndef OKC_VALUE
+#define OKC_VALUE 0
+#endif
+
 /*=======================================================================*/
 
 // AP configuration command parameters
@@ -431,6 +441,9 @@
 #ifndef RSI_TX_TEST_RATE_FLAGS
 #define RSI_TX_TEST_RATE_FLAGS 0
 #endif
+
+// BIT description of PER rate flags
+#define RSI_TX_IMMEDIATE_TRANSFER BIT(6)
 
 // TX TEST per channel bandwidth
 #ifndef RSI_TX_TEST_PER_CH_BW
@@ -1275,5 +1288,7 @@
 #define IPPS_VALID_VALUE   0
 #define TX_ONLY_ON_AP_TRIG 0
 #define TWT_SUPPORT        RSI_DISABLE
+/* 0 - NO ER_SU support, 1 - Use ER_SU rates along with Non_ER_SU rates, 2 - Use ER_SU rates only */
+#define CONFIG_ER_SU NO_ER_SU_SUPPORT
 /*========================================================================*/
 #endif
