@@ -548,13 +548,24 @@
 // SCAN COMMAND PARAMETERS OPTIONS
 /*=========================================================================*/
 
-// Scan feature bitmap paramters !//
+// Scan feature bitmap parameters !//
 
 // If this bit is set,module scans for the AP given in scan API
 // and posts the scan results immediately to the host after finding
 // one Accesspoint.This bit is valid only if specific channel and
 // ssid to scan is given.
 #define RSI_ENABLE_QUICK_SCAN BIT(0)
+
+// Timeout bitmap parameters !//
+
+//Set timeout for association and authentication request in msec
+#define RSI_ASSOCIATION_AND_AUTHENTICATION_TIMEOUT_MSEC BIT(0)
+
+//Set each channel active scan time in msec
+#define RSI_CHANNEL_SCAN_TIME_MSEC BIT(1)
+
+//Used for WLAN keep alive timeout in sec
+#define RSI_WLAN_KEEP_ALIBE_TIMEOUT_SEC BIT(2)
 
 /*=========================================================================*/
 

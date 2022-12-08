@@ -62,7 +62,7 @@ Configure the following parameters in [rsi_wlan_config.h](https://github.com/Sil
                                                 // sent on-air, after that transmission will be stopped.
                                                 // If this macro is set as 0 then packets will be sent 
                                                 // continuously until user stops the transmission.
-  #define RSI_TX_IMMEDIATE_TRANSFER   BIT(6)    // To transfer packets immediately by ignoring CCA, set BIT(6) in RSI_TX_TEST_RATE_FLAGS macro
+  #define RSI_TX_TEST_RATE_FLAGS   RSI_TX_IMMEDIATE_TRANSFER       // To transfer packets immediately by ignoring CCA, set RSI_TX_IMMEDIATE_TRANSFER flag.
                                                 // Default value is '0',i.e., CCA is enabled by default.
 ```
 											

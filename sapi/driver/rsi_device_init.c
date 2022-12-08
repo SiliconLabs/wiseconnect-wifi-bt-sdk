@@ -422,9 +422,7 @@ int32_t rsi_set_fast_fw_up(void)
   return retval;
 }
 /** @} */
-/** @addtogroup INTERNAL
-* @{
-*/
+/*! \cond PRIVATE */
 /**
  * @fn          int32_t rsi_integrity_check_bypass(void)
  * @brief       This API bypasses the fw image integrity check during initialization sequence. It will be called after board 
@@ -451,6 +449,7 @@ int32_t rsi_integrity_check_bypass(void)
   }
   return retval;
 }
+/*! \endcond */
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_rom_version(void)

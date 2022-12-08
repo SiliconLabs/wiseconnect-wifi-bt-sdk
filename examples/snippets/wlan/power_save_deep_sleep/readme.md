@@ -18,7 +18,7 @@ Before running the application, the user will need the following things to setup
     - [STM32F411 Nucleo](https://st.com/) 
 - Wireless Access point
 - Windows PC2 (Remote PC) with UDP server application (Iperf Application)
-- 2 wire connectors for GPIO pins
+- 2-wire connectors for GPIO pins
 - Agilent power analyzer
 
 ![Setup Diagram for Power save deep sleep Example](resources/readme/image_p1.png)
@@ -340,7 +340,8 @@ Refer [Getting started with a PC](https://docs.silabs.com/rs9116/latest/wiseconn
 
 Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
 
-- Configure STM32 CN10 header pin-4 should connect to UULP_GPIO_0 and CN10 header pin-2 should connect to UULP_GPIO_2.
+- Connect STM32 CN10 header pin-4 to UULP_GPIO_0
+- Connect STM32 CN10 header pin-2 to UULP_GPIO_2
 - Open the project `<SDK>/examples/snippets/wlan/power_save_deep_sleep/projects/power_save_deep_sleep-nucleo-f411re.uvprojx`
 - Build and Debug the project
 - Check for the RESET pin:
@@ -349,11 +350,12 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Free run the project.
 - Then continue the common steps from **5.3**
 
-#### 5.2.2 Using EFX32 
+#### 5.2.2 Using EFx32 
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+Refer [Getting started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
-- Configure EFX32 J4 pin-9 should connect to UULP_GPIO_0 and EVFX32 J4 pin-7 should connect to UULP_GPIO_2.
+- Connect EFx32 J4 pin-9 to UULP_GPIO_0
+- Connect EFx32 J4 pin-7 to UULP_GPIO_2
 - Open Simplicity Studio and import the EFR32/EFM32 project from `<SDK>/examples/snippets/wlan/power_save_deep_sleep/projects`
     - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
    (or)
@@ -361,8 +363,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU.
 - Debug the project.
 - Check for the RESET pin:
-    - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before Free run.
-    - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before the Free run.
+    - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before Free run.
+    - If RESET pin is not connected from EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before the Free run.
 - Free run the project.
 - Then continue the common steps from **5.3**
 

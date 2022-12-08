@@ -190,7 +190,7 @@ See [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconnect
 
 ### Building the Application on the Host Platform
 
-**Using EFX32**
+**Using EFx32**
 
 See [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) to setup EFR & EFM host platforms
   - Import the EFR32/EFM32 project from `<SDK>/examples/snippets/bt_ble/update_gain_table/projects`

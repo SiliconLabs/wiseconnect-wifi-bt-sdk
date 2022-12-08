@@ -195,7 +195,7 @@ Refer [Getting started with PC ](https://docs.silabs.com/rs9116/latest/wiseconne
 
 ### Building the Application on the Host Platform
 
-**EFX32 Platform**
+**EFx32 Platform**
 
 Refer to [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), to setup EFR32 & EFM32 host platforms.
   - Import the EFR32/EFM32 project from `<SDK>/examples/eatured/bt_per/projects`

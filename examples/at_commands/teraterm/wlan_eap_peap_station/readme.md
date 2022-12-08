@@ -1,5 +1,5 @@
 ## Wi-Fi Client in Enterprise Security Mode Tera Term Script
-This application demonstrates the procedure about how to configure the RS9116W Module in WLAN STA mode wher Access Point is configured with Enterprise Security (PEAP MSCHAPv2 Method).
+This application demonstrates the procedure about how to configure the RS9116W Module in WLAN STA mode where Access Point is configured with Enterprise Security (PEAP MSCHAPv2 Method).
 
 Before continuing, ensure the RS9116 EVK is plugged into your computer and TeraTerm is connected as described in [Getting Started with PC using AT Commands](http://docs.silabs.com/rs9116-wiseconnect/2.4/wifibt-wc-getting-started-with-pc/). 
 

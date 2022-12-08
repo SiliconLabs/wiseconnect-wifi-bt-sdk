@@ -348,9 +348,9 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Then continue the common steps from **5.5**
 
 
-#### 5.4.2 Using EFX32
+#### 5.4.2 Using EFx32
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
+Refer [Getting started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
 - Open Simplicity Studio and import the EFR32/EFM32 project from `<SDK>/examples/snippets/wlan/enterprise_client/projects`
     - Select the appropriate .slsproj as per Radio Board type mentioned in **Section 3.3** for EFR32 board.
@@ -359,8 +359,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **5.5**
 

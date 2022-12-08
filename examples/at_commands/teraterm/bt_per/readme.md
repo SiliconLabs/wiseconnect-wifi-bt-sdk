@@ -262,4 +262,4 @@ The following steps describe how to configure the RS9116W for BLE Receive PER me
 
 ![PER Stats command](./resources/per-rx-stats.png)
 
-Refer to the [BLUTOOTH Programming Reference Manual](https://docs.silabs.com/rs9116/wiseconnect/rs9116w-bt-classic-at-command-prm/latest/08-bt-classic-commands) for further details on how to change the parameters.
+Refer to the [Bluetooth Classic Programming Reference Manual](https://docs.silabs.com/rs9116/wiseconnect/rs9116w-bt-classic-at-command-prm/latest/08-bt-classic-commands) for further details on how to change the parameters.

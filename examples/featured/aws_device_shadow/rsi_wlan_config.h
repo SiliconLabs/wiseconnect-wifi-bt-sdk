@@ -395,10 +395,10 @@
 //RSI_ENABLE or RSI_DISABLE Timeout support
 #define RSI_TIMEOUT_SUPPORT RSI_DISABLE
 
-// roaming threshold value
-#define RSI_TIMEOUT_BIT_MAP 1
+// timeout bitmap
+#define RSI_TIMEOUT_BIT_MAP RSI_ASSOCIATION_AND_AUTHENTICATION_TIMEOUT_MSEC
 
-// roaming hysteresis value
+// timeout value
 #define RSI_TIMEOUT_VALUE 1500
 
 // Timeout for ping request

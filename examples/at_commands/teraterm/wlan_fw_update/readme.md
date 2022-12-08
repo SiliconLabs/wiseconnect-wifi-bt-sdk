@@ -106,5 +106,7 @@ Once the webpage is opened select the `"ADMINISTRATION"` tab.
 
 ![FWUPSUCCESS Tera Term](./resources/firmware-upgraded-success-teraterm.png)
 
+**Note:** If you have issues running the “FW_upgrade_over_wifi.ttl” script, you need to clear the webpages which were loaded in the Module flash using following commands.
 
-
+1. To erase the webpage given the filename use this command : “at+rsi_erasefile=< filename >\r\n”
+2. To erase the webpage while filename is unknown use this command : “at+rsi_clearfiles=1\r\n”

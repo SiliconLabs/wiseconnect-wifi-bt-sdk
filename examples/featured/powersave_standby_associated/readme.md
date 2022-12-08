@@ -2,7 +2,9 @@
 
 ## Introduction
 
-This application demonstrates the process for configuring the RS9116W WiSeConnect EVK in power save profile mode 2, also providing the steps to configure the RS9116W EVK in station mode and initiate a connection to an Access Point. When the module is in deep sleep, it wakes up in periodic intervals based on DTIM or Listen Interval.
+This application demonstrates the process for configuring the RS9116W WiSeConnect EVK in power save profile mode 2. 
+
+It provides the steps to configure the RS9116W EVK in station mode and initiate a connection to an Access Point. When the module is in deep sleep, it wakes up in periodic intervals based on DTIM or Listen Interval.
 
 If the UDP data transfer feature is enabled, the application then connects to a remote server to send UDP data in power save mode.
 
@@ -43,24 +45,19 @@ Read through the following sections and make any changes needed.
 
 ### Project Configuration
 
-The Application is provided with the project folder consists of Keil and Simplicity studio (ssl) project files.
+The application is provided with the project folder consists of Keil and Simplicity Studio project files.
 
-*  Keil project :
-
-   - The Keil can be executed on STM32 platform.
-
+* Keil project:
+   - The Keil project can be executed on STM32 platform.
    - Project Path : `<SDK>\examples\featured\powersave_standby_associated\projects\powersave_standby_associated-nucleo-f411re.uvprojx`
 
 * Simplicity Studio :
-
-   - The Simplicity Studio project can be executed on EFR32MG21.
-
-   - Project Path : 
-   - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180a-mg21.slsproj`
-   - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180b-mg21.slsproj`
-
+   - The Simplicity Studio project is used for evaluating the application on the Silabs EFx32 platforms.
+   - EFR32MG21 platform
+     - Project Path :
+       - If the Radio Board is **BRD4180A** or **BRD4181A**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180a-mg21.slsproj`
+       - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>\examples\featured\powersave_standby_associated\projects\device_shadow_logging_stats\projects\powersave_standby_associated-brd4180b-mg21.slsproj`
   - EFM32GG11 platform
-    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
     - Project path:`<SDK>/examples/featured/powersave_standby_associated/projects/powersave_standby_associated-brd2204a-gg11.slsproj`
 
 ### Bare Metal/RTOS Support
@@ -205,7 +202,8 @@ The firmware file is located in `<SDK>/firmware/`
 
 Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-stm32/)
 
-- Configure STM32 CN10 header pin-4 should connect to UULP_GPIO_0 and CN10 header pin-2 should connect to UULP_GPIO_2.
+- Connect STM32 CN10 header pin-4 to UULP_GPIO_0 
+- Connect STM32 CN10 header pin-2 to UULP_GPIO_2
 - Open the project `<SDK>\examples\featured\powersave_standby_associated\projects\powersave_standby_associated-nucleo-f411re.uvprojx` 
 - Build and debug the project.
 - Check for the RESET pin:
@@ -215,19 +213,20 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Then continue the [common steps](#common-steps).
 
 
-#### Using EFX
+#### Using EFx32
 
-Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+Refer [Getting started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 
-- Configure EFX32 J4 pin-9 should connect to UULP_GPIO_0 and EVFX32 J4 pin-7 should connect to UULP_GPIO_2.
+- Connect EFx32 J4 pin-9 to UULP_GPIO_0
+- Connect EFx32 J4 pin-7 to UULP_GPIO_2
 - Open Simplicity Studio and import the project `<SDK>\examples\featured\powersave_standby_associated\projects`
 -  Select the appropriate .slsproj as per the Radio Board type mentioned in [Project Configuration](#project-configuration) for Simplicity Studio.
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the [common steps](#common-steps).
 

@@ -12,7 +12,7 @@ This application demonstrates how to update the RS9116W firmware via Wi-Fi by do
 To test the application, the following hardware, software and project setup is required.
 
 ### Hardware Requirements	
-  - PC or Mac (used to program the Host MCU).
+  - PC or Mac (used for programming the Host MCU).
   - Linux PC or Cygwin on Windows (to build and run the TCP server source provided)
   - Silicon Labs [RS9116 Wi-Fi Evaluation Kit](https://www.silabs.com/development-tools/wireless/wi-fi/rs9116x-sb-evk-development-kit)
   - Host MCU Eval Kit. This example has been tested with:
@@ -72,9 +72,9 @@ Before a test of the RS9116 firwmare update application can be performed, the TC
 ## Build and run the TCP Server
   1. Copy the TCP server application [firmware_update_tcp_server.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/firmware_update/firmware_update_tcp_server.c) provided with the application source to a Linux PC connected to the Wi-Fi access point. 
   2. Compile the application
-> `user@linux:~$ gcc firmware_update_tcp_server.c` -o ota_server.bin
+     * `user@linux:~$ gcc firmware_update_tcp_server.c -o ota_server.bin`
   3. Run the application providing the TCP port number (specified in the RS9116 app) together with the firmware file and path
-> `user@linux:~$ ./ota_server.bin 5001 RS9116.NBZ.WC.GEN.OSI.x.x.x.rps`
+     * `user@linux:~$ ./ota_server.bin 5001 RS9116.NBZ.WC.GEN.OSI.x.x.x.rps`
 
 ... where [RS9116.NBZ.WC.GEN.OSI.x.x.x.rps](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/firmware) is the firmware image to be sent to RS9116.
 
