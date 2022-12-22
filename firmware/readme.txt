@@ -1,0 +1,1 @@
+Note:  The SAPI SDK for this firmware is same as 2.4.1.16
