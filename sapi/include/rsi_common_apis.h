@@ -176,7 +176,7 @@ extern int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
 extern int32_t rsi_driver_version(uint8_t *request);
 extern int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
 
-#define RSI_DRIVER_VERSION "2.7.0.39"
+#define RSI_DRIVER_VERSION "2.7.1.6"
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
 #endif

@@ -268,6 +268,18 @@ BT_GLOBAL_BUFF_LEN refers Number of bytes required by the application and the dr
 #define BT_GLOBAL_BUFF_LEN                            15000
 ```
 
+WLAN Task stack size is configured by this macro
+	 
+```c
+#define RSI_WLAN_BLE_TASK_STACK_SIZE           1000
+```
+
+Driver Task stack size is configured by this macro
+	 
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         3000
+```  
+
 
 **4.3** Open `rsi_wlan_config.h` file. User can also modify the below parameters as per their needs and requirements. 
 
@@ -282,6 +294,20 @@ BT_GLOBAL_BUFF_LEN refers Number of bytes required by the application and the dr
 #define RSI_EXT_TCPIP_FEATURE_BIT_MAP                EXT_DYNAMIC_COEX_MEMORY
 #define RSI_BT_FEATURE_BITMAP             (BT_RF_TYPE | ENABLE_BLE_PROTOCOL)
 #define RSI_BAND                                     RSI_BAND_2P4GHZ 
+```
+
+**4.4** Open `main.c` file. The following parameters are configured if OS is used.
+
+WLAN_BLE task should be of low priority
+
+```c
+#define RSI_WLAN_BLE_TASK_PRIORITY                   1
+```
+
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 4
 ```
 
 ## 5. Testing the Application
@@ -306,7 +332,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
-### 5.2.2 Using EFx32
+### 5.2.2 Using EFX32
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
@@ -315,8 +341,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

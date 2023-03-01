@@ -103,20 +103,44 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 int16_t rsi_bl_module_power_cycle(void)
 {
   SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_ENTRY, DRIVER, LOG_INFO);
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  // configure POC_IN pin in GPIO mode
+  rsi_hal_config_gpio(RSI_HAL_POC_IN_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
+#endif
+
   // configure Reset pin in GPIO mode
   rsi_hal_config_gpio(RSI_HAL_RESET_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
 
   // reset/drive low value on the GPIO
   rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
 
+#ifdef ENABLE_POC_IN_TOGGLE
+  rsi_delay_ms(2);
+
+  // reset/drive low value on the GPIO
+  rsi_hal_clear_gpio(RSI_HAL_POC_IN_PIN);
+#endif
+
+  // delay for 100 milli seconds
   rsi_delay_ms(100);
-  // Set/drive high value on the GPIO
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  // set/drive high value on the GPIO
+  rsi_hal_set_gpio(RSI_HAL_POC_IN_PIN);
+
+  // delay for 100 milli seconds
+  rsi_delay_ms(2);
+#endif
+
+  // set/drive high value on the GPIO
   rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
 
   // delay for 100 milli seconds
   rsi_delay_ms(100);
 
   SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_EXIT, DRIVER, LOG_INFO);
+
   return RSI_SUCCESS;
 }
 /** @} */
@@ -450,6 +474,11 @@ int32_t rsi_integrity_check_bypass(void)
   return retval;
 }
 /*! \endcond */
+
+/** @} */
+/** @addtogroup DRIVER6
+* @{
+*/
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_rom_version(void)

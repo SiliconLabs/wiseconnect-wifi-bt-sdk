@@ -66,6 +66,11 @@ void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
    GPIO_PinModeSet(gpioPortA,12,gpioModePushPull,0);
 
    GPIO_PinModeSet(gpioPortA,13,gpioModeInput,0);
+
+#ifdef ENABLE_POC_IN_TOGGLE
+   GPIO_PinModeSet(gpioPortC,1,gpioModePushPull,1);
+#endif
+
 #endif
 
    GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11,gpioModePushPull,1);//Reset PB 11
@@ -112,6 +117,14 @@ void rsi_hal_set_gpio(uint8_t gpio_number)
     {
       GPIO_PinModeSet((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11,gpioModePushPull,1);
     }
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  if(gpio_number ==  RSI_HAL_POC_IN_PIN)
+    {
+      GPIO_PinModeSet(gpioPortC,1,gpioModePushPull,1);
+    }
+#endif
+
   return;
 }
 
@@ -206,6 +219,12 @@ void rsi_hal_clear_gpio(uint8_t gpio_number)
         GPIO_PinOutClear((GPIO_Port_TypeDef)SL_GPIO_PORT_B,11);
       }
 
+#ifdef ENABLE_POC_IN_TOGGLE
+  if(gpio_number ==  RSI_HAL_POC_IN_PIN)
+  {
+    GPIO_PinOutClear(gpioPortC,1);
+  }    
+#endif
   
   return;
 }

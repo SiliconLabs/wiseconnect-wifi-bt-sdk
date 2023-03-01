@@ -50,6 +50,9 @@
 //! ULP GPIO to give confirmation to module to goto wake on wireless mode
 #define RSI_HAL_WOWLAN_CONFIRM_TO_DEV_PIN 8
 
+//! GPIO for Power On Control Input to reset WiSeConnect Module
+#define RSI_HAL_POC_IN_PIN                9
+
 //! GPIO Pins related Macros
 //! Macro to configure GPIO in output mode
 #define RSI_HAL_GPIO_OUTPUT_MODE          1

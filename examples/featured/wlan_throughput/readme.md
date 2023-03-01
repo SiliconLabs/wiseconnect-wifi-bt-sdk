@@ -55,6 +55,31 @@ Configure the following parameters in [rsi_throughput_app.c](https://github.com/
 #define CHANNEL_NO     0                // Wi-Fi channel if the softAP is used (0 = auto select)
 ```
 
+### RTOS Configuration
+The following parameters are configured if OS is used. Application task should be of low priority
+
+```c
+#define RSI_APPLICATION_TASK_PRIORITY                   1
+```
+   
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 2
+```
+
+WLAN Task stack size is configured by this macro
+	 
+```c
+#define RSI_APPLICATION_TASK_STACK_SIZE           500
+```
+
+Driver Task stack size is configured by this macro
+	 
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         500
+```  
+
 ### Client/Server IP Settings
 ```c
 #define PORT_NUM           <local_port>   // Local port to use

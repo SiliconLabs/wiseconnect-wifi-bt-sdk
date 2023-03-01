@@ -120,6 +120,36 @@ PSK refers to the secret key of the Access point(applies when AP is configured i
 #define PSK                          "1234567890"
 ```
 
+The following parameters are configured if OS is used. WLAN task should be of low priority
+
+```c
+#define RSI_WLAN_TASK_PRIORITY                   1
+```
+   
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 2
+```
+
+WLAN Task stack size is configured by this macro
+	 
+```c
+#define RSI_WLAN_TASK_STACK_SIZE           500
+```
+
+Driver Task stack size is configured by this macro
+	 
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         500
+```
+
+GLOBAL_BUFF_LEN refers the memory length for driver
+
+```c
+#define GLOBAL_BUFF_LEN                      15000
+```
+
 DHCP_MODE refers the way of configuring IP address to Silicon Labs module
 
    1-Enables DHCP mode (gets the IP from DHCP server)
@@ -344,17 +374,17 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
-#### 5.2.2 Using EFx32
+#### 5.2.2 Using EFX32
 
-Refer [Getting started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/http_otaf/projects`
 - Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

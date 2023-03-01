@@ -719,9 +719,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *	           ^        	            |    	2 : WPA2
  *	           ^        	            |    	3 : WEP
  *	           ^        	            |    	4 : WPA Enterprise
- * 	           ^        	            |    	5 . WPA2 Enterprise
- *	           ^        	            |    	7 . WPA3 Personal
- *	           ^        	            |    	8 . WPA3 Personal Transition
+ *	           ^        	            |    	5 : WPA2 Enterprise
+ *	           ^                      |     6 : WPA3
  * 	 	         rssi_val	              |       RSSI value of the Access Point
  * 	 	         network_type	          |       This is the type of the network
  * 	 	         ^            	        |       1 : Infrastructure mode	
@@ -879,8 +878,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *	           ^        	             |    	3 . WEP
  *	           ^        	             |    	4 . WPA Enterprise
  *	           ^        	             |    	5 . WPA2 Enterprise
- *	           ^        	             |    	7 . WPA3 Personal
- *	           ^        	             |    	8 . WPA3 Personal Transition
+ *	           ^        	             |    	7 . WPA3
  * 	 	         rssi_val	               |       RSSI value of the Access Point
  * 	 	         network_type	           |       Type of network
  * 	 	         ^            	         |       1 . Infrastructure mode	
@@ -1246,8 +1244,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 				10: RSI_USE_GENERATED_WPSPIN, \n
  * 				11: RSI_WPS_PUSH_BUTTON, \n
  * 				12: RSI_WPA_WPA2_MIXED_PMK, \n
- * 				13: RSI_WPA3, \n
- * 				14: RSI_WPA3_TRANSITION
+ * 				13: RSI_WPA3
  * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
  * 		Security type(sec_type)	|	Secret key structure format (secret_key)
  * 		:-----------------------|:--------------------------------------------------------------------------------------------------
@@ -1285,7 +1282,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
  * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- *    RSI_WPA3_TRANSITION |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			   #define RSI_TIMEOUT_BIT_MAP 4 \n
@@ -1377,11 +1373,6 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *				  **0x0025,0x0026,0x0028,0x0039,0x003C,0x0044,0x0045,0x0046,** \n
  *
  *				  **0x0047,0x0048,0x0049,0xFFF8**
- * @note    WPA3 security not supported in AP mode. \n
- *          WPA3 STA supports both H2E and Hunting-and-pecking for WPA3 authentication. It picks authentication algorithm based on AP's capability. \n
- *          WPA3 STA supports PMKSA caching. If STA has valid PMKID (generated after first connection) with an AP it will trigger OPEN authentication for successive connection attempts. By default the lifetime for PMKSA entry is 12 hours. \n
- *          In WPA3 Personal Transition Mode if both WPA2 and WPA3 APs are available in scan results, STA will pick the AP which has strongest RSSI (it could be either WPA2 or WPA3). \n
- *          If connected WPA3 AP enables Transition Disable Indication, from that moment onwards STA in transistion mode will not try connections to WPA2 APs. This behavior will persist until reset of the STA. \n
  * @note		Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -1447,8 +1438,7 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *                               10: RSI_USE_GENERATED_WPSPIN, \n
  *                               11: RSI_WPS_PUSH_BUTTON, \n
  *                               12: RSI_WPA_WPA2_MIXED_PMK, \n
- *                               13: RSI_WPA3, \n
- *                               14: RSI_WPA3_TRANSITION
+ *                               13: RSI_WPA3
  * @param[in]   secret_key			  - Pointer to a buffer that contains security information based on sec_type.
  *              Security type(sec_type) |       Secret key structure format (secret_key)
  *              :-----------------------|:-----------------------------------------------------------------------------------------------------------------
@@ -1486,7 +1476,6 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
  *              RSI_USE_GENERATED_WPSPIN|       NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  *              RSI_WPS_PUSH_BUTTON     |       NULL string indicate to generate push button event
  *              RSI_WPA3                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- *              RSI_WPA3_TRANSITION     |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * @param[in]   join_response_handler - Called when the response for join has been received from the module \n
  *                                        Parameters involved are status, buffer, & length \n
  * @param[out]  Status                - Response status. If status is zero, then the join response is stated as Success  \n
@@ -7052,11 +7041,11 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  * 0x34 |FIPS Server Root CA Invalid Length         
  * 0x35 |FIPS Client Cert Invlaid Length            
  * 0x36 |FIPS Client Root CA Invalid Length         
- * 0x37 |Server Cert 4096-bit length support is not enabled                               
- * 0x38 |Server Intermediate CA 4096-bit length support is not enabled  
- * 0x39 |Server Root CA 4096-bit length support is not enabled      
- * 0x3A |Client Cert 4096-bit length support is not enabled
- * 0x3B |Client Root CA 4096-bit length support is not enabled                 
+ * 0x37 |Server Cert Invalid Length                 
+ * 0x38 |Server Intermediate CA Invalid Length      
+ * 0x39 |Server Root CA Invalid Length              
+ * 0x3A |Client Cert Invalid Lenght                 
+ * 0x3B |Client Root CA Invalid Length              
  * 0x3C |Server Cert Invalid Sign Alg               
  * 0x3D |Server Intermediate CA Invalid Sign Alg    
  * 0x3E |Server Root CA Invalid Sign Length         
@@ -7082,9 +7071,7 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  * 0x52 |Client Intermediate CA invalid Key Type    
  * 0x53 |Pem Error                                  
  *      - In addition to the above, reason code received in Deauthentication/Disassociation frame from AP  is added. This will set the MSB bit of reason_code. \n
- *      - If MSB bit is set in reason code, then mask it with 0x7f to get the acutal reason code received in Deauthentication/Disassociation frame. \n
- *      - In RS9116 Rev 1.4, above reason codes will come only in TCP/IP bypass mode. \n
- *      - Pem Header Error(0x4D) or Pem Footer Error(0x4E) are only applicable if certificates are loaded individually. In case if certificates are loaded combinedly in a single file, only Pem Error(0x53) will be triggered for Header or Footer errors. \n
+ *      - If MSB bit is set in reason code, then mask it with 0x7f to get the acutal reason code received in Deauthentication/Disassociation frame.
  */
 uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
                                      void (*callback_handler_ptr)(uint16_t status,

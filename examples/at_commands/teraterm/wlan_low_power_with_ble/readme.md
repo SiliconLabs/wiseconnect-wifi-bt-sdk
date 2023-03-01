@@ -102,7 +102,7 @@ The module responds with information of the Access Points scanned.
 **STEP 12.** 
  
  
-`at+rsi_join=Silicon_labs,0,2,6,2,1000`
+`at+rsi_join=Silicon_labs,0,2,6`
  
 
  This command connects the Wi-Fi client to the Access Point with SSID "Silicon_labs”. On successful association, the module responds with OK.

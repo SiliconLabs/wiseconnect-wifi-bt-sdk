@@ -78,7 +78,32 @@ Configure the following parameters in [rsi_aws_device_shadow.c](https://github.c
 #define PSK            "1234567890"     // Wi-Fi Password
 #define SECURITY_TYPE  RSI_WPA2         // Wi-Fi Security Type: RSI_OPEN / RSI_WPA / RSI_WPA2
 ```
-    
+
+### RTOS Configuration
+The following parameters are configured if OS is used. Application task should be of low priority
+
+```c
+#define RSI_APPLICATION_TASK_PRIORITY                   1
+```
+   
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 2
+```
+
+WLAN Task stack size is configured by this macro
+	 
+```c
+#define RSI_APPLICATION_TASK_STACK_SIZE           512 * 4
+```
+
+Driver Task stack size is configured by this macro
+	 
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         512 * 2
+```  
+
 Configure `AWS_IOT_MQTT_HOST` in the file [aws_iot_config.h](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/aws_device_shadow/rsi_aws_iot_config.h) to match the endpoint for your device in AWS.
 
 ```c

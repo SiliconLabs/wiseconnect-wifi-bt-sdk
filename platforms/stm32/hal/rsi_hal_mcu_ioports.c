@@ -82,6 +82,7 @@ void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
 #ifndef LOGGING_STATS
     /*Configure GPIO pin : PC6 */
     GPIO_InitStruct.Pin = GPIO_PIN_6;
@@ -90,6 +91,16 @@ void rsi_hal_config_gpio(uint8_t gpio_number,uint8_t mode,uint8_t value)
     GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 #endif
+
+#ifdef ENABLE_POC_IN_TOGGLE
+	/*Configure GPIO pin : PC4 */
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; 
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+#endif
+
    return;
 }
 
@@ -133,6 +144,13 @@ void rsi_hal_set_gpio(uint8_t gpio_number)
 	{
 	  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_5,GPIO_PIN_SET);
 	}
+
+#ifdef ENABLE_POC_IN_TOGGLE
+	if(gpio_number ==  RSI_HAL_POC_IN_PIN)
+	{
+	  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_4,GPIO_PIN_SET);
+	}
+#endif
     
   return;
 }
@@ -223,6 +241,14 @@ void rsi_hal_clear_gpio(uint8_t gpio_number)
 	{
 	  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_5,GPIO_PIN_RESET);
 	}
+
+#ifdef ENABLE_POC_IN_TOGGLE
+	if(gpio_number ==  RSI_HAL_POC_IN_PIN)
+	{
+		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_4,GPIO_PIN_RESET);
+	}
+#endif
+
 	return;
 }
 

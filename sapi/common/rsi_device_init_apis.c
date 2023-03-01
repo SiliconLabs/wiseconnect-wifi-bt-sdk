@@ -42,12 +42,13 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 */
 /*==============================================*/
 /**
- * @brief       Power cycle the module and set the firmware image type to be loaded for WiSeConnect features. Initialize the module SPI.  This is a blocking API.
+ * @brief       Power cycle the module and set the firmware image type to be loaded for WiSeConnect features. Initialize the module SPI. This is a blocking API.
  * @pre         \ref rsi_driver_init() must be called before this API
  * @param[in]   select_option - \ref LOAD_NWP_FW            	    : To load Firmware image \n
  *                              \ref LOAD_DEFAULT_NWP_FW_ACTIVE_LOW : To load active low Firmware image. \n
  *                              Active low firmware will generate active low interrupts to indicate that packets are pending on the \n
  *                              module, instead of the default active high. \n
+ * @note        Add the ENABLE_POC_IN_TOGGLE macro in the preprocessor to enable toggling of the POC_IN pin if it is controlled by the host to power cycle the module. For STM32 and EFM32 hosts, pins have been configured to drive the POC_IN pin. For EFR32, a pin has to be configured by the user to drive the POC_IN pin.  
  * @return      **Success**  - RSI_SUCCESS \n
  *              **Failure**  - Non-Zero Value
  */
@@ -251,6 +252,9 @@ int32_t rsi_device_init(uint8_t select_option)
 
 int32_t rsi_device_deinit(void)
 {
+#ifdef RSI_WITH_OS
+  int32_t status = RSI_SUCCESS;
+#endif
   SL_PRINTF(SL_DEVICE_DEINIT_ENTRY, COMMON, LOG_INFO);
 #ifdef RSI_WLAN_ENABLE
   uint8_t i;
@@ -294,6 +298,32 @@ int32_t rsi_device_deinit(void)
   if (rsi_socket_pool_non_rom != NULL) {
     // Added this loop for socket pool not memset/clear while deinit/reset
     for (i = 0; i < NUMBER_OF_SOCKETS; i++) {
+#ifdef RSI_WITH_OS
+      status = rsi_semaphore_check_and_destroy(&(rsi_socket_pool_non_rom[i].socket_sem));
+      if (status != RSI_ERROR_NONE) {
+#ifdef RSI_WITH_OS
+        rsi_set_os_errno(RSI_ERROR_EBUSY);
+#endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_3, NETWORK, LOG_ERROR);
+        return RSI_SOCK_ERROR;
+      }
+      status = rsi_semaphore_check_and_destroy(&(rsi_socket_pool_non_rom[i].sock_recv_sem));
+      if (status != RSI_ERROR_NONE) {
+#ifdef RSI_WITH_OS
+        rsi_set_os_errno(RSI_ERROR_EBUSY);
+#endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_EXIT4, NETWORK, LOG_ERROR);
+        return RSI_SOCK_ERROR;
+      }
+      status = rsi_semaphore_check_and_destroy(&(rsi_socket_pool_non_rom[i].sock_send_sem));
+      if (status != RSI_ERROR_NONE) {
+#ifdef RSI_WITH_OS
+        rsi_set_os_errno(RSI_ERROR_EBUSY);
+#endif
+        SL_PRINTF(SL_SOCKET_ASYNC_NONO_ROM_SOCK_ERROR_5, NETWORK, LOG_ERROR);
+        return RSI_SOCK_ERROR;
+      }
+#endif
       // Memset socket info
       memset(&rsi_socket_pool_non_rom[i], 0, sizeof(rsi_socket_info_non_rom_t));
     }

@@ -20,7 +20,5 @@
    
 4. Description of "advanced_logging" folder
 ===========================================================================================================
-   1) app_logging-
-      It consists of files required to decode sapi/app logs.
-   2) firmware_logging-
-      It consists of files required to decode firmware logs.
+   "advanced_logs_generator.py", "log_decoder.py" are the python files required for the Logging enhancement support.
+

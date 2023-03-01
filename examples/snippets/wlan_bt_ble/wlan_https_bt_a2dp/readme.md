@@ -175,6 +175,13 @@ Configure below macros to make Use of Local HTTPS server to download the files.
 > Note:
 > BY default, when 'HTTPS_DOWNLOAD' is set, SSL and LOAD_CERTIFICATE will be set to '1' as it is required for HTTPS download.
 
+**4.4** Open `main.c` file and configure below macros.
+
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 4
+```
 
 ## 5. Testing the Application
 

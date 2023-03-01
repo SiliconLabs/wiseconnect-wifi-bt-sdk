@@ -102,7 +102,7 @@
 #define RSI_WLAN_TASK_PRIORITY 1
 
 //! Wireless driver task priority
-#define RSI_DRIVER_TASK_PRIORITY 1
+#define RSI_DRIVER_TASK_PRIORITY 2
 
 //! Wlan task stack size
 #define RSI_WLAN_TASK_STACK_SIZE 500

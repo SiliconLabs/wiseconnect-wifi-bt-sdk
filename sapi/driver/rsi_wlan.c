@@ -3185,6 +3185,52 @@ void sort_index_based_on_rssi(struct wpa_scan_results_arr *scan_results_array)
 /*==============================================*/
 /**
  *
+ * @fn         get_akm_suites_info
+ * @brief      This function lists the AKM suites supported by AP. 
+ * @param[in]  akmcnt - AKM count. 
+ * @param[in]  ie_data -  pointer to IE buffer. 
+ * @return     key_mgmt value.
+ *
+ * @section description
+ * This function returns list of AKM suites supported by AP.
+ *
+ */
+
+static unsigned int get_akm_suites_info(const uint16_t akmcnt, const uint8_t *ie_data)
+{
+  int i;
+  unsigned int key_mgmt = 0;
+  uint32_t oui_type;
+
+  if (!ie_data) {
+    return 0;
+  }
+
+  for (i = 0; i < akmcnt; i++) {
+    oui_type = (*(uint32_t *)&ie_data[(RSN_SELECTOR_LEN * i)]);
+    switch (oui_type) {
+      case RSN_AUTH_KEY_MGMT_UNSPEC_802_1X:
+        key_mgmt |= WPA_DRIVER_CAPA_KEY_MGMT_WPA | WPA_DRIVER_CAPA_KEY_MGMT_WPA2;
+        break;
+      case RSN_AUTH_KEY_MGMT_PSK_OVER_802_1X:
+        key_mgmt |= WPA_DRIVER_CAPA_KEY_MGMT_WPA_PSK | WPA_DRIVER_CAPA_KEY_MGMT_WPA2_PSK;
+        break;
+      case RSN_AUTH_KEY_MGMT_802_1X_SHA256:
+        key_mgmt |= WPA_DRIVER_CAPA_KEY_MGMT_802_1X_SHA256;
+        break;
+      case RSN_AUTH_KEY_MGMT_PSK_SHA256:
+        key_mgmt |= WPA_DRIVER_CAPA_KEY_MGMT_PSK_SHA256;
+        break;
+      case RSN_AUTH_KEY_MGMT_SAE:
+        key_mgmt |= WPA_DRIVER_CAPA_KEY_MGMT_SAE;
+        break;
+    }
+  }
+  return key_mgmt;
+}
+/*==============================================*/
+/**
+ *
  * @fn         int process_scan_results(uint8_t *buf, uint16_t len, int8_t rssi, uint8_t channel, uint16_t freq)
  * @brief      Process received beacons and probe responses. 
  * @param[in]  buf     - Received frame. 
@@ -3331,17 +3377,18 @@ int process_scan_results(uint8_t *buf, uint16_t len, int8_t rssi, uint8_t channe
             if (!memcmp((uint8_t *)&bss[WIFI_OUI_RSN], WLAN_WIFI_OUI_RSN, 3)) {
               result->security_mode = SME_WPA2; /* WPA2 psk */
               pairwise_cipher_count = *(uint16_t *)&bss[8];
-              uint16_t akmcnt       = *(uint16_t *)&bss[8 + 2 + 4 * pairwise_cipher_count];
-              if (akmcnt == 1) {
-                if (bss[15 + pairwise_cipher_count * 4] == 8) /* WPA3 psk */
+              uint16_t akmcnt       = *(uint16_t *)&bss[RSN_AKM_OFFSET + (RSN_SELECTOR_LEN * pairwise_cipher_count)];
+              unsigned int key_mgmt =
+                get_akm_suites_info(akmcnt, &bss[RSN_AKM_OFFSET + (RSN_SELECTOR_LEN * pairwise_cipher_count)]);
+              if (key_mgmt & WPA_DRIVER_CAPA_KEY_MGMT_SAE) /* WPA3 psk */
+              {
+                if (akmcnt == 1) {
                   result->security_mode = SME_WPA3;
-                else if (bss[15 + pairwise_cipher_count * 4] == 1) /* WPA2 Enterprise */
-                  result->security_mode = SME_WPA2_ENTERPRISE;
-              } else if (akmcnt == 2) {
-                if (((bss[15 + 4 + pairwise_cipher_count * 4]) == 8)
-                    && (((bss[15 + pairwise_cipher_count * 4]) == 2)
-                        || ((bss[15 + pairwise_cipher_count * 4]) == 6))) /* WPA2/3 */
-                  result->security_mode = SME_WPA3_TRANSITION;
+                } else {
+                  if ((key_mgmt & WPA_DRIVER_CAPA_KEY_MGMT_PSK_SHA256)
+                      || (key_mgmt & WPA_DRIVER_CAPA_KEY_MGMT_WPA2_PSK))
+                    result->security_mode = SME_WPA3_TRANSITION;
+                }
               }
             }
             break;
