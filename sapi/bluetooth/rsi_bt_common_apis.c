@@ -56,7 +56,7 @@ int32_t rsi_bt_set_bd_addr(uint8_t *dev_addr)
  *             Non-Zero Value	-	Failure
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
-int32_t rsi_bt_ber_enable_or_disable(struct rsi_bt_ber_cmd_s *ber_cmd)
+int32_t rsi_bt_ber_enable_or_disable(rsi_bt_ber_cmd_t *ber_cmd)
 {
   if (ber_cmd == NULL) {
     SL_PRINTF(SL_RSI_ERROR_INVALID_PARAMETER, BLUETOOTH, LOG_ERROR);
@@ -103,6 +103,7 @@ int32_t rsi_bt_set_local_name(uint8_t *local_name)
  * @param[in]  payload_len - Length of the payload.
  * @param[in]  payload     - Payload containing table data of gain table offset/max power
  * @param[in]  req_type    - update gain table request type (0 - max power update, 1 - offset update)
+ * @note       This API is applicable for High performance(HP) mode only.
  * @return     0		-	Success \n
  *             0x4F01		-	Invalid gain table payload length \n
  *             0x4F02		-	Invalid region. \n

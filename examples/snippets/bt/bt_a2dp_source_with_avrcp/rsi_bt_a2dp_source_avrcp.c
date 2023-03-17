@@ -39,7 +39,7 @@
 #ifdef RSI_M4_INTERFACE
 #include <rsi_board.h>
 #endif
-#if (RSI_AUDIO_DATA_SRC == ARRAY)
+#if (RSI_AUDIO_DATA_SRC == BT_ARRAY)
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO)
 #include "pcm_data_buff.h"
 #endif
@@ -1916,7 +1916,7 @@ int16_t send_audio_data(FILE *fp)
 
 #endif
 
-#elif (RSI_AUDIO_DATA_SRC == ARRAY)
+#elif (RSI_AUDIO_DATA_SRC == BT_ARRAY)
 
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO)
   static int16_t ix = 0;

@@ -11,7 +11,8 @@ WiSeConnect documentation is [available online](http://docs.silabs.com/rs9116-wi
 - [Release Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-release-notes/)
 
 # SDK Outline
-The WiSeConnect SDK contains the following files and folders.
+This release consists of a few SAPI changes over the previous release 2.7.1 for the purpose of building the Wi-Fi Matter solution. 
+Please consider this release only for the Matter evaluation. The WiSeConnect SDK contains the following files and folders.
 
 ```
   +--examples

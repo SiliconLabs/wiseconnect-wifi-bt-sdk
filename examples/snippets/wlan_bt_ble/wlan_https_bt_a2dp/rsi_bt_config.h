@@ -120,7 +120,7 @@
 #define MP3_INPUT_BUFFER_SIZE 10 * 512
 
 #define BIN_FILE    1
-#define ARRAY       2
+#define BT_ARRAY    2
 #define SD_BIN_FILE 3
 
 #define RSI_AUDIO_DATA_SRC SD_BIN_FILE

@@ -37,6 +37,8 @@
 /*
   Global Variables
  */
+void rsi_sdio_hal_efm_deinit(void);
+
 /** @addtogroup DRIVER1
 * @{
 */

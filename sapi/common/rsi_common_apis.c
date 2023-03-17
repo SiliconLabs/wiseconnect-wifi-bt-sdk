@@ -46,6 +46,11 @@ extern rom_apis_t *rom_apis;
 extern void rom_init(void);
 int32_t rsi_driver_memory_estimate(void);
 
+/* For Remove sapi Wranings*/
+#if defined(RSI_SDIO_INTERFACE)
+void rsi_sdio_deinit(void);
+#endif
+
 /** @addtogroup COMMON 
 * @{
 */
@@ -92,7 +97,6 @@ void rsi_common_set_status(int32_t status)
  *             			**RSI_ERROR_INVALID_PARAM**   -    If maximum sockets is greater than 10
  */
 
-/** @} */
 uint8_t *buffer_addr = NULL;
 int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 {
@@ -393,6 +397,8 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   SL_PRINTF(SL_DRIVER_INIT_EXIT, COMMON, LOG_INFO, "actual_length=%4x", actual_length);
   return actual_length;
 }
+/** @} */
+
 /** @addtogroup COMMON 
 * @{
 */
