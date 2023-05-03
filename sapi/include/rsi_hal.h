@@ -132,8 +132,6 @@ void rsi_hal_enable_uart_irq(void);
 void rsi_interrupt_handler(void);
 void ABRD(void);
 
-void Error_Handler(void);
-
 /* RTC Related API's */
 uint32_t rsi_rtc_get_time(void);
 int32_t rsi_rtc_set_time(uint32_t time);

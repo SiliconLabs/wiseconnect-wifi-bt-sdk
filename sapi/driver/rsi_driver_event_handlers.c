@@ -33,6 +33,7 @@
 #endif
 #include "rsi_wlan_non_rom.h"
 #include "rsi_sdio.h"
+#include "wrl_hw.h"
 #include "rsi_pkt_mgmt.h"
 
 // Sleep Ack frame
@@ -846,7 +847,8 @@ void rsi_rx_event_handler(void)
     rsi_driver_cb_non_rom->driver_rx_timer_start = 0;
 #endif
     SL_PRINTF(SL_RSI_ERROR_TIMEOUT_READ, BLUETOOTH, LOG_ERROR, "STATUS: %4x", status);
-
+    /* Enable,- Start UART RX DMA to allow the module to send more frames (HW Control flow) */
+    wrl_RsiRxStartFrame ();
     return;
   }
 
@@ -903,6 +905,8 @@ void rsi_rx_event_handler(void)
       rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
     }
 #endif
+    /* Enable,- Start UART RX DMA to allow the module to send more frames (HW Control flow) */
+    wrl_RsiRxStartFrame ();
     return;
 #endif
   }
@@ -1065,6 +1069,9 @@ void rsi_rx_event_handler(void)
     rsi_mutex_unlock(&rsi_driver_cb_non_rom->tx_mutex);
   }
 #endif
+
+  /* Enable,- Start UART RX DMA to allow the module to send more frames (HW Control flow) */
+  wrl_RsiRxStartFrame ();
 
   return;
 }

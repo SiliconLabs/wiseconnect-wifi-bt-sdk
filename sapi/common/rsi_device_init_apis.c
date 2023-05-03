@@ -68,12 +68,6 @@ int32_t rsi_device_init(uint8_t select_option)
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
-#if defined(RSI_SPI_INTERFACE) || defined(RSI_M4_INTERFACE) || defined(RSI_UART_INTERFACE) \
-  || defined(RSI_SDIO_INTERFACE)
-  // Board Initialization
-  rsi_hal_board_init();
-#endif
-
 #ifdef RSI_M4_INTERFACE
 
   SysTick_Config(SystemCoreClock / 1000);
@@ -139,14 +133,6 @@ int32_t rsi_device_init(uint8_t select_option)
   }
 #endif
 #else
-#ifndef RSI_M4_INTERFACE
-  // power cycle the module
-  status = rsi_bl_module_power_cycle();
-  if (status != RSI_SUCCESS) {
-    SL_PRINTF(SL_DEVICE_INIT_MODULE_POWER_CYCLE_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
-    return status;
-  }
-#endif
 #if defined(RSI_SDIO_INTERFACE)
   // SDIO interface initialization
   status = rsi_sdio_iface_init();

@@ -484,10 +484,6 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
     // Wait until receive card ready
     rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 
-    if (rsi_timer_expired(&timer_instance)) {
-      SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
-      return RSI_ERROR_CARD_READY_TIMEOUT;
-    }
 #else
 #ifndef RSI_COMMON_SEM_BITMAP
     rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(3);
@@ -1715,7 +1711,7 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
  * @return      Void
  */
 
-void rsi_wireless_driver_task(void)
+void rsi_wireless_driver_task(void* params)
 {
   SL_PRINTF(SL_WIRELESS_DRIVER_TASK_ENTRY, COMMON, LOG_INFO);
 #ifdef RSI_WITH_OS

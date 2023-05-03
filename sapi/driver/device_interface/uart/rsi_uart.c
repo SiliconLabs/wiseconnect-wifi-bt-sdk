@@ -34,7 +34,8 @@
 #ifdef RSI_UART_INTERFACE
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_uart.h"
-extern UART_HandleTypeDef huart1;
+#include "wrl_hw.h"
+extern UART_HandleTypeDef huart2;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,7 +61,7 @@ int16_t rsi_frame_read(uint8_t *pkt_buffer)
 
   memcpy(pkt_buffer, uart_rev_buf + 4, desired_len);
 
-  return 0;
+  return WRL_HW_s16UartRxStatus;
 }
 
 /*==============================================*/
@@ -72,10 +73,15 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
 
   // API to write packet to UART interface
   retval = rsi_uart_send((uint8_t *)uFrameDscFrame, (size_param + RSI_FRAME_DESC_LEN));
-  while (huart1.gState != HAL_UART_STATE_READY)
-    ;
-  while (huart1.TxXferCount != 0)
-    ;
+  while(huart2.gState!=HAL_UART_STATE_READY)
+  {
+      vTaskDelay(1);
+  }
+
+  while (huart2.hdmatx->State != HAL_DMA_STATE_READY)
+  {
+      vTaskDelay(1);
+  }
   return retval;
 }
 
@@ -89,16 +95,6 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
 
 int32_t rsi_uart_init(void)
 {
-  SL_PRINTF(SL_UART_INIT_ENTRY, DRIVER, LOG_INFO);
-  huart1.Instance          = USART1;
-  huart1.Init.BaudRate     = 921600;
-  huart1.Init.WordLength   = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits     = UART_STOPBITS_1;
-  huart1.Init.Parity       = UART_PARITY_NONE;
-  huart1.Init.Mode         = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  SL_PRINTF(SL_UART_INIT_EXIT, DRIVER, LOG_INFO);
   return 0;
 }
 

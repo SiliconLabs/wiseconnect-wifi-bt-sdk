@@ -170,7 +170,7 @@ extern int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_le
 extern int32_t rsi_socket_config(void);
 extern int32_t rsi_wireless_deinit(void);
 extern int32_t rsi_common_get_status(void);
-extern void rsi_wireless_driver_task(void);
+extern void rsi_wireless_driver_task(void* params);
 extern int16_t rsi_check_assertion(void);
 extern int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
 extern int32_t rsi_driver_version(uint8_t *request);

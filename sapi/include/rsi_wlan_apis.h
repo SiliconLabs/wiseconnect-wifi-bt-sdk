@@ -1783,12 +1783,12 @@ int32_t rsi_wlan_csi_config_async(uint8_t enable,
                                                                          const uint32_t length));
 
 void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(uint16_t status, uint8_t state));
-STATIC INLINE void set_option(uint32_t *parameter, uint32_t flag)
+static inline void set_option(uint32_t *parameter, uint32_t flag)
 {
   *parameter |= flag;
 }
 
-STATIC INLINE void clear_option(uint32_t *parameter, uint32_t flag)
+static inline void clear_option(uint32_t *parameter, uint32_t flag)
 {
   *parameter &= ~flag;
 }
