@@ -2,9 +2,8 @@
 
 ## 1. Purpose / Scope 
 
-This application demonstrates how to connect to a FTP server opened on remote peer using FTP client, read a file from the FTP server and write the file on to the FTP server.
-In this application, the Silicon Labs device connects to an Access Point and establishes an FTP client connection with FTP server opened on remote peer. 
-After a successful connection, the application writes the data to a file created on the FTP server. It then demonstrates how to rename the file and read the contents back from the renamed file.
+This application demonstrates how to connect to a FTP server opened on remote peer using FTP client, read a file from FTP server and write the file on to the FTP server.
+In this application, the Silicon Labs device connects to Access Point and establishes FTP client connection with FTP server opened on remote peer. After successful connection, the application writes the data to a file created on the FTP server. Then demonstrates renaming of the file and then reads the contents of the renamed file.
 
 File Transfer Protocol (FTP) is a protocol through which internet users can upload files from their computers to a website or download files from a website to their PCs.
 FTP is a client-server protocol that relies on two TCP communications channels between client and server and a command channel for controlling the conversation (command port) and a data channel for transmitting file content(data port). 
@@ -219,17 +218,16 @@ The application can be configured to suit user requirements and development envi
 #define NETMASK                             0x00FFFFFF
 ```
 
-   The following parameters need to be configure if OS is used.
-   WLAN task priority is given and this should be of low priority
+   The following parameters need to be configure if OS is used. WLAN task should be of low priority
 	 
 ```c
 #define RSI_WLAN_TASK_PRIORITY             1
 ```
 
-   Driver task priority is given and this should be of highest priority
+   Driver task should be of highest priority
 	 
 ```c
-#define RSI_DRIVER_TASK_PRIORITY           1
+#define RSI_DRIVER_TASK_PRIORITY           2
 ```
 
    WLAN Task stack size is configured by this macro
@@ -308,17 +306,17 @@ Refer [Getting started with STM32](https://docs.silabs.com/rs9116-wiseconnect/la
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 
-#### 5.2.2 Using EFx32
+#### 5.2.2 Using EFX32
 
-Refer [Getting started with EFx32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
+Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/), for settin-up EFR & EFM host platforms
 
 - Open Simplicity Studio and import the project from `<SDK>/examples/snippets/wlan/ftp_client/projects`
 - Select the appropriate .slsproj as per the Radio Board type mentioned in **Section 3.3**
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

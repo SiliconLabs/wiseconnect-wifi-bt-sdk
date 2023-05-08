@@ -111,16 +111,16 @@ The application can be configured to suit your requirements and development envi
 #define BUF_SIZE                                 1400
 ```
    
-   The following parameters are configured if OS is used. WLAN task priority is given and this should be of low priority
+   The following parameters are configured if OS is used. WLAN task should be of low priority
 
 ```c
 #define RSI_WLAN_TASK_PRIORITY                   1
 ```
    
-   Driver task priority is given and this should be of the highest priority
+   Driver task should have the highest priority among all threads
 
 ```c
-#define RSI_DRIVER_TASK_PRIORITY                 1
+#define RSI_DRIVER_TASK_PRIORITY                 4
 ```
    
    WLAN Task stack size is configured by this macro
@@ -316,7 +316,7 @@ Refer [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Then continue the common steps from **Section 5.3**
 
 
-### 5.2.2 Using EFx32
+### 5.2.2 Using EFX32
 
 Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/)
 
@@ -325,8 +325,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 - Compile and flash the project in to Host MCU
 - Debug the project
 - Check for the RESET pin:
-  - If RESET pin is connected from EFx32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
-  - If RESET pin is not connected from EFx32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
+  - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
+  - If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
 - Then continue the common steps from **Section 5.3**
 

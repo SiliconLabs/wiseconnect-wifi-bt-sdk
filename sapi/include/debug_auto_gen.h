@@ -2,7 +2,7 @@
 //! do not modifiy this file directly
 #ifndef DEBUGS_AUTOGEN_H
 #define DEBUGS_AUTOGEN_H
-#define SL_LOG_VERSION  "2022/12/08-09:11:48"
+#define SL_LOG_VERSION  "2023/02/17-07:53:28"
 
 enum {
 SL_RSI_BT_AVRCP_INIT,

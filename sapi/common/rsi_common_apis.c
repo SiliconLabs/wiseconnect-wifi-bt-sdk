@@ -151,13 +151,6 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   buffer += sizeof(struct wpa_scan_results_arr);
 #endif
 
-#ifdef SAPI_LOGGING_ENABLE
-  buffer += sl_log_init(buffer);
-#endif
-#ifdef FW_LOGGING_ENABLE
-  buffer += sl_fw_log_init(buffer);
-#endif
-
   // Check for max no of sockets
   if (RSI_NUMBER_OF_SOCKETS > (10 + RSI_NUMBER_OF_LTCP_SOCKETS)) {
     status = RSI_ERROR_INVALID_PARAM;
@@ -182,6 +175,13 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   // Designate memory for common_cb
   rsi_driver_cb_non_rom = (rsi_driver_cb_non_rom_t *)buffer;
   buffer += sizeof(rsi_driver_cb_non_rom_t);
+
+#ifdef SAPI_LOGGING_ENABLE
+  buffer += sl_log_init(buffer);
+#endif
+#ifdef FW_LOGGING_ENABLE
+  buffer += sl_fw_log_init(buffer);
+#endif
 
   // Designate memory for common_cb
   rsi_driver_cb->common_cb = (rsi_common_cb_t *)buffer;

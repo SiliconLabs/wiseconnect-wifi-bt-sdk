@@ -65,7 +65,32 @@ Configure the following parameters in [rsi_wlan_config.h](https://github.com/Sil
   #define RSI_TX_TEST_RATE_FLAGS   RSI_TX_IMMEDIATE_TRANSFER       // To transfer packets immediately by ignoring CCA, set RSI_TX_IMMEDIATE_TRANSFER flag.
                                                 // Default value is '0',i.e., CCA is enabled by default.
 ```
-											
+
+### RTOS Configuration
+The following parameters are configured if OS is used. Application task should be of low priority
+
+```c
+#define RSI_APPLICATION_TASK_PRIORITY                   1
+```
+   
+Driver task should have the highest priority among all threads
+
+```c
+#define RSI_DRIVER_TASK_PRIORITY                 2
+```
+
+WLAN Task stack size is configured by this macro
+	 
+```c
+#define RSI_APPLICATION_TASK_STACK_SIZE           500
+```
+
+Driver Task stack size is configured by this macro
+	 
+```c
+#define RSI_DRIVER_TASK_STACK_SIZE         500
+```  
+
 # Run the Application
 After making any custom configuration changes required, build, download and run the application as described in the [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/) or [STM32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-getting-started-with-efx32/). 
 

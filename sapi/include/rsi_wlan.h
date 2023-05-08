@@ -95,6 +95,30 @@
 
 // frame type of raw data packets for host stack
 #define DUAL_HOST_RAW_DATA_PACKET 1
+
+// AKM suite types
+#define RSN_SELECTOR(d, c, b, a) \
+  ((((uint32_t)(a)) << 24) | (((uint32_t)(b)) << 16) | (((uint32_t)(c)) << 8) | (uint32_t)(d))
+#define RSN_AKM_OFFSET                         12
+#define RSN_SELECTOR_LEN                       4
+#define WPA_DRIVER_CAPA_KEY_MGMT_WPA           0x00000001
+#define WPA_DRIVER_CAPA_KEY_MGMT_WPA2          0x00000002
+#define WPA_DRIVER_CAPA_KEY_MGMT_WPA_PSK       0x00000004
+#define WPA_DRIVER_CAPA_KEY_MGMT_WPA2_PSK      0x00000008
+#define WPA_DRIVER_CAPA_KEY_MGMT_WPA_NONE      0x00000010
+#define WPA_DRIVER_CAPA_KEY_MGMT_SAE           0x00010000
+#define WPA_DRIVER_CAPA_KEY_MGMT_802_1X_SHA256 0x00020000
+#define WPA_DRIVER_CAPA_KEY_MGMT_PSK_SHA256    0x00040000
+
+#define RSN_AUTH_KEY_MGMT_UNSPEC_802_1X   RSN_SELECTOR(0x00, 0x0f, 0xac, 1)
+#define RSN_AUTH_KEY_MGMT_PSK_OVER_802_1X RSN_SELECTOR(0x00, 0x0f, 0xac, 2)
+#define RSN_AUTH_KEY_MGMT_FT_802_1X       RSN_SELECTOR(0x00, 0x0f, 0xac, 3)
+#define RSN_AUTH_KEY_MGMT_FT_PSK          RSN_SELECTOR(0x00, 0x0f, 0xac, 4)
+#define RSN_AUTH_KEY_MGMT_802_1X_SHA256   RSN_SELECTOR(0x00, 0x0f, 0xac, 5)
+#define RSN_AUTH_KEY_MGMT_PSK_SHA256      RSN_SELECTOR(0x00, 0x0f, 0xac, 6)
+#define RSN_AUTH_KEY_MGMT_TPK_HANDSHAKE   RSN_SELECTOR(0x00, 0x0f, 0xac, 7)
+#define RSN_AUTH_KEY_MGMT_SAE             RSN_SELECTOR(0x00, 0x0f, 0xac, 8)
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
