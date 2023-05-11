@@ -37,7 +37,7 @@
 
 #define BLE_VENDOR_RF_TYPE_CMD_OPCODE               0xFC14
 #define BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD 0xFC1B
-
+#define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS           1
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -127,6 +127,7 @@ typedef enum rsi_ble_cmd_request_e {
   RSI_BLE_CMD_WRITE_RESP                             = 0x010A,
   RSI_BLE_CMD_PREPARE_WRITE_RESP                     = 0x010B,
   RSI_BLE_CMD_SET_LOCAL_IRK                          = 0x010C,
+  RSI_BLE_REQ_SMP_PAIRING_FAILED                     = 0x0111,
   RSI_BLE_CMD_SET_PROP_PROTOCOL_BLE_BANDEDGE_TXPOWER = 0x012A,
   RSI_BLE_CMD_MTU_EXCHANGE_RESP                      = 0x012B,
   RSI_BLE_CMD_SET_BLE_TX_POWER                       = 0x012D,
@@ -220,6 +221,7 @@ typedef enum rsi_ble_cmd_resp_e {
   RSI_BLE_RSP_MTU_EXCHANGE_REQUEST                   = 0x0107,
   RSI_BLE_RSP_SET_WWO_RESP_NOTIFY_BUF_INFO           = 0x0108,
   RSI_BLE_RSP_SET_LOCAL_IRK                          = 0x010C,
+  RSI_BLE_RSP_SMP_PAIRING_FAILED                     = 0x0111,
   RSI_BLE_RSP_SET_PROP_PROTOCOL_BLE_BANDEDGE_TXPOWER = 0x012A,
   RSI_BLE_RSP_MTU_EXCHANGE_RESP                      = 0x012B,
   RSI_BLE_RSP_SET_BLE_TX_POWER                       = 0x012D,
@@ -281,7 +283,14 @@ typedef enum rsi_ble_event_e {
   RSI_BLE_EVENT_CHIP_MEMORY_STATS           = 0x1530,
   RSI_BLE_EVENT_SC_METHOD                   = 0x1540,
   RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION    = 0x1541,
+  RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION   = 0x1543,
 } rsi_ble_event_t;
+
+typedef enum {
+  RSI_SMP_PAIRING_NOT_SUPPORTED = 0x05,
+  RSI_SMP_UNSPECIFIED_REASON    = 0x08,
+  RSI_SMP_REPEATED_ATTEMPTS     = 0x09,
+} smp_failure_error;
 
 /********************************************************
  * *                 Structure Definitions
@@ -647,6 +656,12 @@ typedef struct rsi_ble_set_le_ltkreqreply_s {
   uint8_t localltk[16];
 } rsi_ble_set_le_ltkreqreply_t;
 
+//SMP Pairing Failed (cmd), cmd_ix = 0x0111
+typedef struct rsi_ble_req_smp_pair_failed_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint8_t reason;
+} rsi_ble_req_smp_pair_failed_t;
+
 // GATT structures
 
 // GATT Profiles list request structure
@@ -917,6 +932,12 @@ typedef struct rsi_ble_set_local_irk_s {
   uint8_t irk[16];
 } rsi_ble_set_local_irk_t;
 
+// BLE GAP extended callback ids
+typedef enum rsi_ble_gap_extended_callbacks_s {
+  RSI_BLE_ON_REMOTE_DEVICE_INFORMATION = 1,
+
+} rsi_ble_gap_extended_callbacks_t;
+
 //attribute codes
 #define RSI_BLE_ATT_EXCHANGE_MTU_REQUEST       0x02
 #define RSI_BLE_ATT_FIND_INFORMATION_REQUEST   0x04
@@ -976,6 +997,7 @@ struct rsi_ble_cb_s {
   rsi_ble_on_le_ping_payload_timeout_t ble_on_le_ping_time_expired_event;
   rsi_ble_on_conn_update_complete_t ble_on_conn_update_complete_event;
   rsi_ble_on_remote_features_t ble_on_remote_features_event;
+  rsi_ble_on_remote_device_info_t ble_on_remote_device_info_event;
   rsi_ble_on_le_more_data_req_t ble_on_le_more_data_req_event;
   rsi_ble_on_remote_conn_params_request_t ble_on_remote_conn_params_request_event;
 

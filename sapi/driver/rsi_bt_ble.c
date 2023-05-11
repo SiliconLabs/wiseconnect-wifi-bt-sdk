@@ -356,10 +356,10 @@ uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb)
            || (rsp_type == RSI_BLE_CMD_ATT_ERROR) || (rsp_type == RSI_BLE_CMD_SET_BLE_TX_POWER)
            || (rsp_type == RSI_BLE_CMD_INDICATE_SYNC)
            || ((rsp_type >= RSI_BLE_REQ_PROFILES_ASYNC) && (rsp_type <= RSI_BLE_EXECUTE_LONGDESCWRITE_ASYNC))
-           || (rsp_type == RSI_BLE_SET_SMP_PAIRING_CAPABILITY_DATA)
+           || (rsp_type == RSI_BLE_SET_SMP_PAIRING_CAPABILITY_DATA) || (rsp_type == RSI_BLE_REQ_SMP_PAIRING_FAILED)
            || ((rsp_type >= RSI_BLE_CONN_PARAM_RESP_CMD) && (rsp_type <= RSI_BLE_CMD_MTU_EXCHANGE_RESP))
-           || ((rsp_type >= RSI_BLE_EVENT_GATT_ERROR_RESPONSE)
-               && (rsp_type <= RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION))) {
+           || ((rsp_type >= RSI_BLE_EVENT_GATT_ERROR_RESPONSE) && (rsp_type <= RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION))
+           || (rsp_type == RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION)) {
 
     return_value = RSI_PROTO_BLE;
     *bt_cb       = rsi_driver_cb->ble_cb;
@@ -2449,6 +2449,44 @@ void rsi_ble_gatt_extended_register_callbacks(rsi_ble_on_mtu_exchange_info_t ble
   // Assign the call backs to the respective call back
   ble_specific_cb->ble_on_mtu_exchange_info_event = ble_on_mtu_exchange_info_event;
 }
+
+/**
+ * @fn       uint16_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id, void (*callback_handler_ptr)(uint16_t status,
+ *                                                uint8_t *buffer))
+ * @brief    Register the BLE call back functions.
+ * @param[in]  callback_id                       - This is the Id of the call back function following ids are supported:
+ * @param[in]  void (*callback_handler_ptr)(void - This is the Call back handler
+ * @param[in]  status                            - status of the asynchronous response
+ * @param[in]  buffer                            - payload of the asynchronous response
+ * @return      0 - Success \n
+ *              -53 - Failure \n
+ *             If call_back_id is greater than the maximum callbacks to register, returns ref/ RSI_ERROR_BLE_INVALID_CALLBACK_CNT.
+ * @note        In callbacks, application should not initiate any TX operation to the module.
+ */
+uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
+                                                          void (*callback_handler_ptr)(uint16_t status,
+                                                                                       uint8_t *buffer))
+{
+  // Get BLE cb struct pointer
+  rsi_ble_cb_t *ble_specific_cb = rsi_driver_cb->ble_cb->bt_global_cb->ble_specific_cb;
+
+  if (callback_id > RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS) {
+
+    /*Return , if the callback number exceeds the RSI_BT_COMMON_MAX_NUM_EXT_CALLBACKS */
+    return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
+  }
+
+  switch (callback_id) {
+    case RSI_BLE_ON_REMOTE_DEVICE_INFORMATION: {
+      ble_specific_cb->ble_on_remote_device_info_event = (rsi_ble_on_remote_device_info_t)callback_handler_ptr;
+    } break;
+    default:
+      LOG_PRINT("\nInvalid Callback ID\n");
+      return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
+  }
+  return RSI_SUCCESS;
+}
+
 /** @} */
 
 /*==============================================*/
@@ -2826,6 +2864,11 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
       if (ble_specific_cb->ble_on_remote_conn_params_request_event != NULL) {
         ble_specific_cb->ble_on_remote_conn_params_request_event((rsi_ble_event_remote_conn_param_req_t *)payload,
                                                                  status);
+      }
+    } break;
+    case RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION: {
+      if (ble_specific_cb->ble_on_remote_device_info_event != NULL) {
+        ble_specific_cb->ble_on_remote_device_info_event(status, (rsi_ble_event_remote_device_info_t *)payload);
       }
     } break;
     default: {
@@ -3702,6 +3745,11 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
 
     case RSI_BLE_SMP_PASSKEY: {
       payload_size = sizeof(rsi_ble_smp_passkey_t);
+      memcpy(pkt->data, cmd_struct, payload_size);
+    } break;
+
+    case RSI_BLE_REQ_SMP_PAIRING_FAILED: {
+      payload_size = sizeof(rsi_ble_req_smp_pair_failed_t);
       memcpy(pkt->data, cmd_struct, payload_size);
     } break;
 

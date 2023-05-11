@@ -652,6 +652,13 @@ typedef struct rsi_ble_resp_local_att_value_s {
   uint8_t data[RSI_DEV_ATT_LEN];
 } rsi_ble_resp_local_att_value_t;
 
+typedef struct rsi_ble_event_remote_device_info_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint8_t remote_version;
+  uint16_t remote_company_id;
+  uint16_t remote_sub_version;
+} rsi_ble_event_remote_device_info_t;
+
 // GATT Event structures
 
 // GATT Write event structure
@@ -1023,6 +1030,7 @@ typedef struct rsi_ble_per_receive_s {
        1  Duty Cycling Enabled */
   uint8_t duty_cycling_en;
 } rsi_ble_per_receive_t;
+
 /******************************************************
  * *                 Global Variables
  * ******************************************************/
@@ -1432,6 +1440,11 @@ int32_t rsi_ble_gatt_read_response(uint8_t *dev_addr,
  * @fn         rsi_ble_smp_pair_request
  */
 int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capability, uint8_t mitm_req);
+
+/**
+ * @fn         rsi_ble_smp_pair_failed
+ */
+int32_t rsi_ble_smp_pair_failed(uint8_t *remote_dev_address, uint8_t reason);
 
 /**
  * @fn         rsi_ble_smp_pair_response
@@ -2225,6 +2238,21 @@ typedef void (*rsi_ble_on_mtu_event_t)(rsi_ble_event_mtu_t *rsi_ble_event_mtu);
 typedef void (*rsi_ble_on_mtu_exchange_info_t)(
   rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info);
 
+/**
+ * @callback   rsi_ble_on_remote_device_info_t
+ * @brief      Callback function to peer device information.
+ * @param[out]  resp_status, contains the response status (Success or Error code) \n
+ *               0              - SUCCESS \n
+ *               Non-Zero Value - ErrorCodes
+ * @note        Refer Bluetooth Generic Error Codes section  upto 0x4FF8 from \ref error-codes.
+ * @param[out] resp_buffer, contains the remote device version information.
+ * @return      void
+ * @section description
+ * This callback function will be called when conn update complete event is received
+ * This callback has to be registered using rsi_ble_enhanced_gap_extended_register_callbacks API
+ */
+typedef void (*rsi_ble_on_remote_device_info_t)(uint16_t status, rsi_ble_event_remote_device_info_t *resp_buffer);
+
 /** @} */
 /******************************************************
  * * BLE GATT Callbacks register function Declarations
@@ -2393,5 +2421,8 @@ int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size);
 int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size);
 void rsi_ble_gap_extended_register_callbacks(rsi_ble_on_remote_features_t ble_on_remote_features_event,
                                              rsi_ble_on_le_more_data_req_t ble_on_le_more_data_req_event);
+uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
+                                                          void (*callback_handler_ptr)(uint16_t status,
+                                                                                       uint8_t *buffer));
 int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt);
 #endif

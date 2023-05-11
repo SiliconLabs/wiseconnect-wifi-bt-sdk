@@ -755,6 +755,41 @@ int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capabil
   return rsi_bt_driver_send_cmd(RSI_BLE_REQ_SMP_PAIR, &smp_pair_req, NULL);
 }
 
+/** @} */
+/** @addtogroup BT-LOW-ENERGY1
+* @{
+*/
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_smp_pair_failed(uint8_t *remote_dev_address ,uint8_t reason)
+ * @brief      Send SMP pairing failure reason to the remote device.
+ * @pre        \ref rsi_ble_connect() API needs to be called before this API.
+ * @param[in]  remote_dev_address -  This is the remote device address
+ * @param[in]  reason - This is the reason for SMP Pairing Failure \n
+ *                            0x05 - Pairing Not Supported \n
+ *                            0x09 - Repeated Attempts \n
+ * @return     0 - Success \n
+ *             Non-Zero Value - Failure \n
+ *             If the return value is less than 0 \n
+ *             -4 - Buffer not available to serve the command
+ */
+
+int32_t rsi_ble_smp_pair_failed(uint8_t *remote_dev_address, uint8_t reason)
+{
+
+  rsi_ble_req_smp_pair_failed_t smp_pair_failed;
+  memset(&smp_pair_failed, 0, sizeof(smp_pair_failed));
+
+#ifdef BD_ADDR_IN_ASCII
+  rsi_ascii_dev_address_to_6bytes_rev(smp_pair_failed.dev_addr, remote_dev_address);
+#else
+  memcpy(smp_pair_failed.dev_addr, (int8_t *)remote_dev_address, 6);
+#endif
+  smp_pair_failed.reason = reason;
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_REQ_SMP_PAIRING_FAILED, &smp_pair_failed, NULL);
+}
+
 /*==============================================*/
 /**
  * @fn         int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address,

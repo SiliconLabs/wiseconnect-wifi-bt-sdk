@@ -20,6 +20,9 @@
 #include "MQTTPacket.h"
 #include "MQTT_wrappers.h" //Platform specific implementation header file
 
+#include "rsi_common.h"
+#include "rsi_user.h"
+
 #define MAX_PACKET_ID 65535
 #define MAX_MESSAGE_HANDLERS 5
 
@@ -88,5 +91,17 @@ struct Client {
 };
 
 #define DefaultClient {0, 0, 0, 0, NULL, NULL, 0, 0, 0}
+/* Macro Definition: Defines the timeout value to read the entire payload of one TCP Packet.
+ * for ex:
+ *        i. One TCP Packet i.e. MQTT PUBLISH 1st byte (MQTT Header)
+ *           + 2nd byte(MSG LEN)+3rd byte(MSG LEN)
+ *           + 4th byte to Nth byte(MQTT PUBLISH Payload)
+ *           Note: one more example i.e. MQTT PING RESPONSE
+ *           1st byte(MQTT Header)+2nd byte(MSG LEN)
+ *        ii. Once host application starts reading the 1st byte(i.e. MQTT Header),
+ *           remaining bytes(of single TCP Packet) to be read by host mandatorily.
+ *           Otherwise, Host will not be able to identify the subsequent bytes properly.
+ * Here, the Wait time is considered based on the logic present in rsi_socket_recvfrom() */
+#define SINGLE_PKT_TCP_STREAM_TIMEOUT WAIT_TIMEOOUT + RSI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
 
 #endif

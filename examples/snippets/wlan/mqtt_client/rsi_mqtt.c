@@ -452,7 +452,14 @@ start:
   publish_msg.payloadlen = sizeof(publish_message);
 
   //! Publish message on the topic
-  rsi_mqtt_publish(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC, &publish_msg);
+  status = rsi_mqtt_publish(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC, &publish_msg);
+  if (status != RSI_SUCCESS) {
+    status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    LOG_PRINT("\r\nPublish to Topic Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nPublish to Topic Success\r\n");
+  }
 
   while (!halt) {
     //! Recv data published on the subscribed topic

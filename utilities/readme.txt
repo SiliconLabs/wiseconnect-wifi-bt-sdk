@@ -22,3 +22,11 @@
 ===========================================================================================================
    "advanced_logs_generator.py", "log_decoder.py" are the python files required for the Logging enhancement support.
 
+5. Description of "ipv6_utils" folder
+===========================================================================================================
+   "inet6.c" : It is required to convert IPv6 canonical address format(deleting leading zeros, replacing Longest 0’s string with ::) to hexadecimal address format and vice versa.
+
+   EXAMPLE:
+   Canonical address format   - 2001:4367:2983:1236::9             
+   Hexadecimal address format - 0x20014367, 0x29831236, 0x00000000, 0x00000009
+                                

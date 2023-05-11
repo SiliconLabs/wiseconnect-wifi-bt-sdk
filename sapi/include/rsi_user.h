@@ -102,6 +102,13 @@
 #define LOG_TSF_GRANULARITY_TICKS 1UL
 #endif
 
+#ifdef ENABLE_POC_IN_TOGGLE
+// Configurable delay between clearing the POC_IN and RESET pin. For example, here the delay is set to 10 milliseconds.
+#define CONFIG_DELAY_POCIN_RESET_PIN_CLEAR 10
+// Configurable delay between setting the POC_IN and RESET pin. For example, here the delay is set to 30 milliseconds.
+#define CONFIG_DELAY_POCIN_RESET_PIN_SET 30
+#endif
+
 /******************************************************
  * *                    Constants
  * ******************************************************/

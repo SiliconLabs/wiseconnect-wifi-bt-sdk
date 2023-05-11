@@ -110,11 +110,11 @@ int readPacket(Client* c, Timer* timer)
 
     len = 1;
     /* 2. read the remaining length.  This is variable in itself */
-    decodePacket(c, &rem_len, left_ms_mqtt(timer));
+    decodePacket(c, &rem_len, SINGLE_PKT_TCP_STREAM_TIMEOUT);
     len += MQTTPacket_encode(c->readbuf + 1, rem_len); /* put the original remaining length back into the buffer */
 
     /* 3. read the rest of the buffer using a callback to supply the rest of the data */
-  if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, left_ms_mqtt(timer)) != rem_len))
+    if (rem_len > 0 && (c->ipstack->mqttread(c->ipstack, c->readbuf + len, rem_len, SINGLE_PKT_TCP_STREAM_TIMEOUT) != rem_len))
         goto exit;
 
     header.byte = c->readbuf[0];

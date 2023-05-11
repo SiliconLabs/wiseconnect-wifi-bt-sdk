@@ -42,7 +42,7 @@
  * *               Function Declarations
  * ******************************************************/
 #if RSI_HTTP_STATUS_INDICATION_EN
-int32_t rsi_http_client_get_async(uint8_t flags,
+int32_t rsi_http_client_get_async(uint16_t flags,
                                   uint8_t *ip_address,
                                   uint16_t port,
                                   uint8_t *resource,
@@ -55,7 +55,7 @@ int32_t rsi_http_client_get_async(uint8_t flags,
                                                                            const uint16_t length,
                                                                            const uint32_t moredata,
                                                                            uint16_t status_code));
-int32_t rsi_http_client_post_async(uint8_t flags,
+int32_t rsi_http_client_post_async(uint16_t flags,
                                    uint8_t *ip_address,
                                    uint16_t port,
                                    uint8_t *resource,
@@ -79,7 +79,7 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
                                                                             const uint32_t moredata,
                                                                             uint16_t status_code));
 #else
-int32_t rsi_http_client_get_async(uint8_t flags,
+int32_t rsi_http_client_get_async(uint16_t flags,
                                   uint8_t *ip_address,
                                   uint16_t port,
                                   uint8_t *resource,
@@ -91,7 +91,7 @@ int32_t rsi_http_client_get_async(uint8_t flags,
                                                                            const uint8_t *buffer,
                                                                            const uint16_t length,
                                                                            const uint32_t moredata));
-int32_t rsi_http_client_post_async(uint8_t flags,
+int32_t rsi_http_client_post_async(uint16_t flags,
                                    uint8_t *ip_address,
                                    uint16_t port,
                                    uint8_t *resource,
@@ -116,7 +116,7 @@ int32_t rsi_http_client_post_data(uint8_t *file_content,
 int32_t rsi_http_client_abort(void);
 
 int32_t rsi_http_client_put_start(
-  uint8_t flags,
+  uint16_t flags,
   uint8_t *ip_address,
   uint32_t port_number,
   uint8_t *resource,

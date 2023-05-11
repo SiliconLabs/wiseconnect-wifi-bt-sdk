@@ -71,7 +71,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
  *
  */
 
-int32_t rsi_http_client_get_async(uint8_t flags,
+int32_t rsi_http_client_get_async(uint16_t flags,
                                   uint8_t *ip_address,
                                   uint16_t port,
                                   uint8_t *resource,
@@ -157,7 +157,7 @@ int32_t rsi_http_client_get_async(uint8_t flags,
  * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
  *
  */
-int32_t rsi_http_client_post_async(uint8_t flags,
+int32_t rsi_http_client_post_async(uint16_t flags,
                                    uint8_t *ip_address,
                                    uint16_t port,
                                    uint8_t *resource,
@@ -207,15 +207,17 @@ int32_t rsi_http_client_post_async(uint8_t flags,
  * @param[in]  type             - 0  RSI_HTTP_GET, 1  RSI_HTTP_POST 
  * @param[in]  flags            - Select version and security \n
  * 
- *   Flags |     Macro       |          Description
- *  :------|:----------------|:-----------------------------------------------------------------------
- *  BIT(0) | RSI_IPV6        |    Set this bit to enable IPv6, by default, it is configured to IPv4
- *  BIT(1) | RSI_SSL_ENABLE  |    Set this bit to enable SSL feature
- *  BIT(2) | RSI_SSL_V_1_0   |    Set this bit to support SSL TLS Version 1.0 if HTTPS is enabled
- *  BIT(3) | RSI_SSL_V_1_2   |    Set this bit to support SSL_TLS Version 1.2 if HTTPS is enabled
- *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
- *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
- *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *   Flags |     Macro          |          Description
+ *  :------|:-------------------|:-----------------------------------------------------------------------
+ *  BIT(0) | RSI_IPV6           |    Set this bit to enable IPv6, by default, it is configured to IPv4
+ *  BIT(1) | RSI_SSL_ENABLE     |    Set this bit to enable SSL feature
+ *  BIT(2) | RSI_SSL_V_1_0      |    Set this bit to support SSL TLS Version 1.0 if HTTPS is enabled
+ *  BIT(3) | RSI_SSL_V_1_2      |    Set this bit to support SSL_TLS Version 1.2 if HTTPS is enabled
+ *  BIT(4) | RSI_SSL_V_1_1      |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
+ *  BIT(5) | HTTP_POST_DATA     |    Set this bit to enable Http_post large data feature
+ *  BIT(6) | HTTP_V_1_1         |    Set this bit  to use HTTP version 1.1
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate cert at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate cert at index 2 to be used for HTTPS, Leave both unset for cert index 0
  *
  * 
  * @param[in]   ip_address       - Server IP address
@@ -250,7 +252,7 @@ int32_t rsi_http_client_post_async(uint8_t flags,
  */
 
 int32_t rsi_http_client_async(uint8_t type,
-                              uint8_t flags,
+                              uint16_t flags,
                               uint8_t *ip_address,
                               uint16_t port,
                               uint8_t *resource,
@@ -276,12 +278,12 @@ int32_t rsi_http_client_async(uint8_t type,
 {
   rsi_req_http_client_t *http_client;
   rsi_pkt_t *pkt;
-  int32_t status       = RSI_SUCCESS;
-  uint8_t https_enable = 0;
-  uint16_t http_length = 0;
-  uint32_t send_size   = 0;
-  uint8_t *host_desc   = NULL;
-  uint8_t tmp_str[7]   = { 0 };
+  int32_t status        = RSI_SUCCESS;
+  uint16_t https_enable = 0;
+  uint16_t http_length  = 0;
+  uint32_t send_size    = 0;
+  uint8_t *host_desc    = NULL;
+  uint8_t tmp_str[7]    = { 0 };
   SL_PRINTF(SL_HTTP_CLIENT_ASYNC_ENTRY, NETWORK, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -347,6 +349,7 @@ int32_t rsi_http_client_async(uint8_t type,
     if (flags & RSI_SSL_ENABLE) {
       // Set HTTPS feature
       https_enable = 1;
+      https_enable |= flags & (HTTPS_CERT_INDEX_1 | HTTPS_CERT_INDEX_2);
     }
 
     // Set default by NULL delimiter
@@ -733,7 +736,7 @@ int32_t rsi_http_client_put_delete(void)
  */
 
 int32_t rsi_http_client_put_start(
-  uint8_t flags,
+  uint16_t flags,
   uint8_t *ip_address,
   uint32_t port_number,
   uint8_t *resource,
@@ -745,11 +748,11 @@ int32_t rsi_http_client_put_start(
   void (*callback)(uint16_t status, uint8_t type, const uint8_t *buffer, uint16_t length, const uint8_t end_of_put_pkt))
 {
   rsi_pkt_t *pkt;
-  int32_t status       = RSI_SUCCESS;
-  uint8_t https_enable = 0;
-  uint16_t http_length = 0;
-  uint16_t send_size   = 0;
-  uint8_t *host_desc   = NULL;
+  int32_t status        = RSI_SUCCESS;
+  uint16_t https_enable = 0;
+  uint16_t http_length  = 0;
+  uint16_t send_size    = 0;
+  uint8_t *host_desc    = NULL;
   rsi_http_client_put_req_t *http_put_req;
   rsi_http_client_put_start_t *http_put_start;
   SL_PRINTF(SL_HTTP_CLIENT_PUT_START_ENTRY, NETWORK, LOG_INFO);
@@ -803,6 +806,7 @@ int32_t rsi_http_client_put_start(
     if (flags & RSI_SSL_ENABLE) {
       // Set HTTPS feature
       https_enable = 1;
+      https_enable |= flags & (HTTPS_CERT_INDEX_1 | HTTPS_CERT_INDEX_2);
 
       // Set default by NULL delimiter
       https_enable |= BIT(1);

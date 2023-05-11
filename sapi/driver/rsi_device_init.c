@@ -92,8 +92,7 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 /*===========================================================*/
 /**
  * @fn          int16_t rsi_bl_module_power_cycle(void)
- * @brief       Power cycle the module.This API is valid only if there is a power gate, external to the module,which is controlling the power 
- *              to the module using a GPIO signal of the MCU.
+ * @brief       This API resets the module.
  * @pre         \ref rsi_driver_init() must be called before this API. 
  * @param[in]   void 
  * @return      0              - Success \n 
@@ -112,15 +111,15 @@ int16_t rsi_bl_module_power_cycle(void)
   // configure Reset pin in GPIO mode
   rsi_hal_config_gpio(RSI_HAL_RESET_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
 
-  // reset/drive low value on the GPIO
-  rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
-
 #ifdef ENABLE_POC_IN_TOGGLE
-  rsi_delay_ms(2);
-
   // reset/drive low value on the GPIO
   rsi_hal_clear_gpio(RSI_HAL_POC_IN_PIN);
+
+  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_CLEAR);
 #endif
+
+  // reset/drive low value on the GPIO
+  rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
 
   // delay for 100 milli seconds
   rsi_delay_ms(100);
@@ -129,8 +128,7 @@ int16_t rsi_bl_module_power_cycle(void)
   // set/drive high value on the GPIO
   rsi_hal_set_gpio(RSI_HAL_POC_IN_PIN);
 
-  // delay for 100 milli seconds
-  rsi_delay_ms(2);
+  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_SET);
 #endif
 
   // set/drive high value on the GPIO

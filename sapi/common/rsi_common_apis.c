@@ -92,7 +92,6 @@ void rsi_common_set_status(int32_t status)
  *             			**RSI_ERROR_INVALID_PARAM**   -    If maximum sockets is greater than 10
  */
 
-/** @} */
 uint8_t *buffer_addr = NULL;
 int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 {
@@ -393,6 +392,8 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   SL_PRINTF(SL_DRIVER_INIT_EXIT, COMMON, LOG_INFO, "actual_length=%4x", actual_length);
   return actual_length;
 }
+/** @} */
+
 /** @addtogroup COMMON 
 * @{
 */
@@ -2758,4 +2759,40 @@ int32_t rsi_gpio_write(uint8_t gpio_num, uint8_t write)
 }
 
 #endif
+/*==============================================*/
+/**
+ * @fn          int32_t rsi_set_region(void)
+ * @brief       set/change the region on user based configuration
+ * @param[in]   void
+ * @return      0              - Success \n
+ *              Non-Zero Value - Failure
+ */
+int32_t rsi_set_region(void)
+{
+  rsi_pkt_t *pkt;
+  int32_t status         = RSI_SUCCESS;
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+#if RSI_SET_REGION_SUPPORT
+  // allocate command buffer  from common pool
+  pkt = rsi_pkt_alloc(&rsi_driver_cb->common_cb->common_tx_pool);
+  if (pkt == NULL) {
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+    return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+  }
+  memset(&pkt->data, 0, sizeof(rsi_req_set_region_t));
+#ifndef RSI_WLAN_SEM_BITMAP
+  rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+  status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_REGION, pkt);
+  rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_REGION_RESPONSE_WAIT_TIME);
+  status = rsi_wlan_get_status();
+  if (status != RSI_SUCCESS) {
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+    return status;
+  }
+#else
+  return RSI_ERROR_SET_REGION_NOT_ENABLED;
+#endif
+  return status;
+}
 /** @} */

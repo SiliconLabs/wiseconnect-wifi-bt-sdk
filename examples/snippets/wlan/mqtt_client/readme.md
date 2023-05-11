@@ -180,6 +180,10 @@ MQTT Message to publish on the topic subscribed
 uint8_t publish_message[] ="THIS IS MQTT CLIENT DEMO FROM APPLICATION"
 ```
 
+> Note :
+> As the publish message will be appended to MQTT header it is recommended to substract (topic length + 7 bytes of MQTT control fields) from maximum buf size limit for the protocol(TCP/SSL) to decide payload size.
+> Example, if topic is "MQTT_DEMO", for TCP payload size should be of size 1444 bytes( = 1460 - 9 - 7), for SSL it sums up to 1354 bytes( = 1370 - 9 - 7).
+
 MQTT Client ID with which MQTT client connects to MQTT broker/server
 
 ```c

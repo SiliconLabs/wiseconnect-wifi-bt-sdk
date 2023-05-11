@@ -48,7 +48,10 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
  *                              \ref LOAD_DEFAULT_NWP_FW_ACTIVE_LOW : To load active low Firmware image. \n
  *                              Active low firmware will generate active low interrupts to indicate that packets are pending on the \n
  *                              module, instead of the default active high. \n
- * @note        Add the ENABLE_POC_IN_TOGGLE macro in the preprocessor to enable toggling of the POC_IN pin if it is controlled by the host to power cycle the module. For STM32 and EFM32 hosts, pins have been configured to drive the POC_IN pin. For EFR32, a pin has to be configured by the user to drive the POC_IN pin.  
+ * @note        Add the ENABLE_POC_IN_TOGGLE macro in the preprocessor to enable toggling of the POC_IN pin if it is controlled by the host to reset the module. For STM32 and EFM32 hosts, pins have been configured to drive the POC_IN pin. For EFR32, a pin has to be configured by the user to drive the POC_IN pin. \n
+ *              Configure the following macros used in rsi_bl_module_power_cycle() to set the delay between toggling the POC_IN pin and RESET pin - \n
+ *              \ref CONFIG_DELAY_POCIN_RESET_PIN_CLEAR : Configurable delay between clearing the POC_IN and RESET pin. \n
+ *              \ref CONFIG_DELAY_POCIN_RESET_PIN_SET   : Configurable delay between setting the POC_IN and RESET pin. \n
  * @return      **Success**  - RSI_SUCCESS \n
  *              **Failure**  - Non-Zero Value
  */
