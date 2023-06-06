@@ -106,6 +106,7 @@ int32_t application(void)
 #endif
 
   // Driver initialization
+#ifndef RSI_M4_INTERFACE
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
@@ -118,7 +119,7 @@ int32_t application(void)
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-
+#endif
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 
@@ -172,6 +173,23 @@ int32_t application(void)
 // main function definition
 int main(void)
 {
+#ifdef RSI_M4_INTERFACE
+  int32_t status = RSI_SUCCESS;
+  // Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
+
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;
 

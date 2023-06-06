@@ -126,8 +126,9 @@ uint8_t rsi_add_ble_conn_id(uint8_t *remote_dev_addr, uint8_t *remote_name, uint
     if (!memcmp(rsi_ble_conn_info[i].remote_dev_addr, RSI_NULL_BLE_ADDR, RSI_REM_DEV_ADDR_LEN)) {
       memcpy(rsi_ble_conn_info[i].remote_dev_addr, remote_dev_addr, RSI_REM_DEV_ADDR_LEN);
 #if (CONNECT_OPTION == CONN_BY_NAME)
-
+#ifdef RSI_WITH_OS
       rsi_ble_conn_info[i].rsi_remote_name = (uint8_t *)rsi_malloc((size + 1) * sizeof(uint8_t));
+#endif
       memset(rsi_ble_conn_info[i].rsi_remote_name, 0, size + 1);
       memcpy(rsi_ble_conn_info[i].rsi_remote_name, remote_name, size);
 #endif

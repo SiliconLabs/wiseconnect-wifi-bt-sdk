@@ -76,6 +76,9 @@
 // Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 500
 
+// Enable or disable receive stats
+#define RECEIVE_STATS 0
+
 #ifdef CHIP_9117
 // User mask shall be in the range 0-31
 #define RSI_USER_MASK 0
@@ -84,6 +87,7 @@
 // Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
+#if RECEIVE_STATS
 // Variable used to stop receiving stats
 volatile uint8_t stop_receiving_stats = 0;
 
@@ -106,15 +110,13 @@ void rsi_wlan_stats_receive_handler(uint16_t status, uint8_t *buffer, const uint
     stop_receiving_stats = 1;
   }
 }
+#endif
 
 int32_t application()
 {
   int32_t status = RSI_SUCCESS;
 
-#ifdef RSI_WITH_OS
-  rsi_task_handle_t driver_task_handle = NULL;
-#endif
-
+#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -124,10 +126,14 @@ int32_t application()
   // Module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
 
 #ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
   // Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -154,21 +160,25 @@ int32_t application()
   }
   LOG_PRINT("\r\nSend Feature Frame Success\r\n");
 
+#if RECEIVE_STATS
   // Register WLAN receive stats call back handler
   rsi_wlan_register_callbacks(RSI_WLAN_RECEIVE_STATS_RESPONSE_CB, rsi_wlan_stats_receive_handler);
-
+#endif
   // Wlan radio init
   status = rsi_wlan_radio_init();
   if (status != RSI_SUCCESS) {
-    // Return the status if error in sending command occurs
+    LOG_PRINT("\r\nRadio Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nRadio Initialization Success\r\n");
 
   // To select Internal antenna or uFL connector
   status = rsi_wireless_antenna(RSI_ANTENNA, RSI_ANTENNA_GAIN_2G, RSI_ANTENNA_GAIN_5G);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nAntenna Command Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nAntenna Command Frame Success\r\n");
 
   // transmit test start
   status = rsi_transmit_test_start(RSI_TX_TEST_POWER,
@@ -177,18 +187,22 @@ int32_t application()
                                    RSI_TX_TEST_MODE,
                                    RSI_TX_TEST_CHANNEL);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nTransmit test start Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
-
+  LOG_PRINT("\r\nTransmit test start Success\r\n");
   // Add delay here to see the TX packets on AIR
   rsi_delay_ms(1000);
 
   // Stop TX transmit
   status = rsi_transmit_test_stop();
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nTransmit test stop Failed, Error Code : 0x%lX\r\n", status);
     return status;
   }
+  LOG_PRINT("\r\nTransmit test stop Success\r\n");
 
+#if RECEIVE_STATS
   ////////////////////////////////////////
   // Transmit data/TX from the peer//////
   ////////////////////////////////////////
@@ -210,6 +224,7 @@ int32_t application()
   if (status != RSI_SUCCESS) {
     return status;
   }
+#endif
 
   return status;
 }
@@ -217,6 +232,23 @@ int32_t application()
 // main function definition
 int main(void)
 {
+#ifdef RSI_M4_INTERFACE
+  int32_t status = RSI_SUCCESS;
+  // Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
+
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;
 

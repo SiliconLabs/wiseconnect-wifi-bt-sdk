@@ -33,6 +33,11 @@
 #include "rsi_wlan_defines.h"
 #include "rsi_user.h"
 #include <rsi_data_types.h>
+
+#ifdef CHIP_9117B0
+#define CHIP_9117 1
+#endif
+
 /******************************************************
  * *                      WLAN
  * ******************************************************/
@@ -195,7 +200,7 @@
 
 // "US" or "EU" or "JP" or other region codes
 #ifndef RSI_COUNTRY_CODE
-#define RSI_COUNTRY_CODE "US "
+#define RSI_COUNTRY_CODE "US" //TODO: review
 #endif
 
 /*=======================================================================*/

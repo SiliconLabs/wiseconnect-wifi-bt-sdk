@@ -28,6 +28,7 @@
 
 #define RSI_BLE_MAX_RESP_LIST   0x05
 #define RSI_MAX_ADV_REPORT_SIZE 31
+#define BLE_PASSKEY_SIZE        6
 
 #ifndef BLE_OUTPUT_POWER_FRONT_END_LOSS
 #define BLE_OUTPUT_POWER_FRONT_END_LOSS 0 /* db */
@@ -111,7 +112,7 @@ typedef struct rsi_ble_event_enhnace_conn_status_s {
 typedef struct rsi_ble_event_disconnect_s {
   /**device address of the disconnected device*/
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  /**The type of the disconnected device -(Classic/LE) */
+  /**device type (Classic/LE) in lower nibble and remote address type in the upper nibble*/
   uint8_t dev_type;
 
 } rsi_ble_event_disconnect_t;
@@ -237,7 +238,7 @@ typedef struct rsi_bt_event_smp_passkey_display_s {
   /**address of remote device*/
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   /**This is the key required in pairing process( 6 bytes)*/
-  uint8_t passkey[6];
+  uint8_t passkey[BLE_PASSKEY_SIZE];
 } rsi_bt_event_smp_passkey_display_t;
 
 //SMP passkey display event structure
@@ -262,6 +263,11 @@ typedef struct rsi_bt_event_sc_method_s {
      RSI_BT_LE_SC_PASSKEY   		0x02 */
   uint8_t sc_method;
 } rsi_bt_event_sc_method_t;
+
+typedef struct rsi_bt_event_ctkd_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint8_t key[16];
+} rsi_ble_event_ctkd_t;
 
 // phy update complete event
 typedef struct rsi_ble_event_phy_update_s {
@@ -315,6 +321,18 @@ typedef struct rsi_ble_event_remote_features_s {
      @note please refer spec for the supported features list */
   uint8_t remote_features[8];
 } rsi_ble_event_remote_features_t;
+
+// remote device version information event
+typedef struct rsi_ble_event_remote_device_info_s {
+  /** BD address of the remote device */
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  /** BLE version of the remote device  */
+  uint8_t remote_version;
+  /** Company ID of the remote device  */
+  uint16_t remote_company_id;
+  /** Sub-Version of the remote device   */
+  uint16_t remote_sub_version;
+} rsi_ble_event_remote_device_info_t;
 
 // LE Device Buffer Indication
 typedef struct rsi_ble_event_le_dev_buf_ind_s {
@@ -651,13 +669,6 @@ typedef struct rsi_ble_resp_local_att_value_s {
   /** Attribute value (data). The maximum value is 240, please refer RSI_DEV_ATT_LEN Macro */
   uint8_t data[RSI_DEV_ATT_LEN];
 } rsi_ble_resp_local_att_value_t;
-
-typedef struct rsi_ble_event_remote_device_info_s {
-  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  uint8_t remote_version;
-  uint16_t remote_company_id;
-  uint16_t remote_sub_version;
-} rsi_ble_event_remote_device_info_t;
 
 // GATT Event structures
 
@@ -1031,6 +1042,205 @@ typedef struct rsi_ble_per_receive_s {
   uint8_t duty_cycling_en;
 } rsi_ble_per_receive_t;
 
+#define ADV_DATA_LEN    210
+#define DEVICE_ADDR_LEN 6
+
+//! ae adv report event
+typedef struct rsi_ble_ae_adv_report_s {
+  /**
+ *    -----------------------------------------------------------------------------------------
+ *   |       Bit Number    |                    Parameter Description                          |
+ *   ----------------------|-------------------------------------------------------------------
+ *   |      0              |                   Connectable Advertising                         |
+ *   |      1              |                   Scannable Advertising                           |  
+ *   |      2              |                   Direct Advertising                              |
+ *   |      3              |                    Scan Response                                  |
+ *   |      4              |                 Legacy Advertising PDUs used                      |
+ *   |    5 to 6           |                       Data status : \n                            |
+ *   |                     |             0b00  = complete \n                                   |
+ *   |                     |             0b01  = Incomplete, more data to come \n              |
+ *   |                     |             0b10  = Incomplete, data truncated, no more to come \n| 
+ *   |                     |             0b11  = Reserved for future use                       |
+ */
+  uint16_t event_type;
+  /**
+    uint8_t Remote Address Type, Indicates the type of the Address
+         0x00 - Public Device Adrdress
+         0x01 - Random Device Address
+         0x02 - Public Identity Address (corresponds to Resolved Private Address)
+         0x03 - Random (static) Identity Address (corresponds to Resolved Private Address)
+   */
+  uint8_t remote_addr_type;
+  /**  uint8[6] remote_Address : Address of the remote address Type */
+  uint8_t remote_addr[DEVICE_ADDR_LEN];
+  /**
+       uint8_t Primary Phy
+        0x01 - Advertiser PHY is LE 1M
+        0x03 - Advertiser PHY is LE Coded
+  */
+  uint8_t pri_phy;
+  /**
+       uint8_t Secondary PHY 
+          0x00 - No packets on the secondary advertising physical channel
+          0x01 - Advertiser PHY is LE 1M
+          0x02 - Advertiser PHY is LE 2M
+          0x03 - Advertiser PHY is LE Coded
+  */
+  uint8_t sec_phy;
+  /** uint8_t Advertising_SID
+   *    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   *   |           Value     |                    Parameter Description                                                                                                                                         |
+   *   ----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   *   |       0x00 to 0x0F  |  Value of the Advertising SID subfield in the ADI field of the PDU or, \n  for  scan responses, in the ADI field of the original scannable advertisement                         |
+   *   |           0xFF      |                   No ADI field provided                                                                                                                                          |
+   * 
+   */
+  uint8_t SID;
+  /**
+    uint8_t TX_Power, It shall be set based on the AUX_SYNC_IND PDU
+     TX_Power ranges from -127 to +20 and it's units is in dBm
+  */
+  uint8_t tx_power;
+  /** 
+    uint8_t RSSI , this parameter contains the RSSI value, excluding any constant tone Extension. 
+     RSSI ranges from -127 to +20 and it's units is in dBm
+  */
+  uint8_t RSSI;
+  /** uint16_t Periodic_Advertising_Interval , This parameter specifies the interval between the periodic advertising events */
+  uint16_t per_adv_interval;
+  /**
+   uint8_t Direct Address Type ,Indicates the type of the Address
+         0x00 - Public Device Adrdress
+         0x01 - Random Device Address
+         0x02 - Public Identity Address (corresponds to Resolved Private Address)
+         0x03 - Random (static) Identity Address (corresponds to Resolved Private Address)
+         0xFE - Resolves Private Address
+  */
+  uint8_t direct_addr_type;
+  /** uint8[6] Direct_Address, Direct_Address of the Advertsier type */
+  uint8_t direct_addr[DEVICE_ADDR_LEN];
+  /** uint8_t Data _length , Length of the Data field for each device which responded , ranges from 0 to 229 */
+  uint8_t data_len;
+  /** uint8[256] Data */
+  uint8_t data[ADV_DATA_LEN];
+} rsi_ble_ae_adv_report_t;
+
+//! ae periodic sync estabilisment report event
+typedef struct rsi_ble_per_adv_sync_estbl_s {
+  /** 
+     uint8_t status , It indicates whether Periodic Advetising is Successful or not
+              0 - Periodic advertising sync successful
+             !0 - Periodic advertising sync failed
+  */
+  uint8_t status;
+  /** uint16_t Sync_Handle, It identifies the periodic Advertising train. Range : 0x0000 to 0x0EFF */
+  uint16_t sync_handle;
+  /** uint8_t Advertising_SID, Value of the Advertising SID subfield in the ADI field of the PDU, Range : 0x00 to 0x0F */
+  uint8_t adv_sid;
+  /**
+    uint8_t Advertiser_Address_Type : Indicates the type of the Address
+         0x00 - Public Device Adrdress
+         0x01 - Random Device Address
+         0x02 - Public Identity Address (corresponds to Resolved Private Address)
+         0x03 - Random (static) Identity Address (corresponds to Resolved Private Address)
+  */
+  uint8_t advertiser_addr_type;
+  /** uint8[6], Advertiser_Address of the Advertsier type */
+  uint8_t advertiser_addr[DEVICE_ADDR_LEN];
+  /**
+     uint8_t Advertiser_PHY , This  parameter specifies the PHY used for the periodic advertising.
+                 0x01 - Advertiser PHY is LE 1M
+                 0x02 - Advertiser PHY is LE 2M
+                 0x03 - Advertiser PHY is LE Coded
+  */
+  uint8_t advertiser_phy;
+  /** uint16_t Periodic_Advertising_Interval , This parameter specifies the interval between the periodic advertising events */
+  uint16_t per_adv_interval;
+  /**
+    uint16_t Advertiser_Clock_Accuracy, This  parameter specifies the accuracy of the periodic advertiser's clock.
+                  0x00 - 500ppm
+                  0x01 - 250ppm
+                  0x02 - 150ppm
+                  0x03 - 100 ppm
+                  0x04 - 75 ppm
+                  0x05 - 50 ppm
+                  0x06 - 30 ppm
+                  0x07 - 20 ppm
+  */
+  uint16_t advertiser_clock_accuracy;
+} rsi_ble_per_adv_sync_estbl_t;
+
+//! ae periodic adv report event
+typedef struct rsi_ble_per_adv_report_s {
+  /** uint16_t Sync_Handle, It identifies the periodic Advertising train. Range : 0x0000 to 0x0EFF */
+  uint16_t sync_handle;
+  /** int8_t TX_Power, It shall be set based on the AUX_SYNC_IND PDU
+     TX_Power ranges from -127 to +20 and it's units is in dBm
+  */
+  int8_t tx_power;
+  /** int8_t RSSI , this parameter contains the RSSI value, excluding any constant tone Extension. 
+     RSSI ranges from -127 to +20 and it's units is in dBm
+  */
+  int8_t RSSI;
+  uint8_t unused;
+  /** 
+     uint8_t Data_Status, It specifies about the staus of the Data sent
+                 0x00 - Data Complete
+                 0x01 - Data Incomplete, more Data to come
+  */
+  uint8_t data_status;
+  /** uint8_t Data_Length ,Length of the Data Field, Ranges from 0 to 247 */
+  uint8_t data_len;
+  /** uint8[256] Data, Data received from a Periodic Advertisisng Packet */
+  uint8_t data[ADV_DATA_LEN];
+} rsi_ble_per_adv_report_t;
+
+//! ae periodic sync lost report event
+typedef struct rsi_ble_per_adv_sync_lost_s {
+  /** uint16_t Sync_Handle, It identifies the periodic Advertising train. Range : 0x0000 to 0x0EFF */
+  uint16_t sync_handle;
+} rsi_ble_per_adv_sync_lost_t;
+
+//! ae scan timeout report event
+typedef struct rsi_ble_scan_timeout_s {
+  /** uint8_t status , Status indicates that scanning has ended because the duration has expired */
+  uint8_t status;
+} rsi_ble_scan_timeout_t;
+
+//! ae adv set terminated report event
+typedef struct rsi_ble_adv_set_terminated_s {
+  /** uint8_t status : Status shows the status on how the Advertising ended
+        0 - Advertising successfully ended with a connection being created
+       !0 - Advertising ended for another reason and ususally error codes would be listed
+  */
+  uint8_t status;
+  /** uint8_t Advertising_Handle : Advertising_Handle in which Advertising has ended, Range : 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /** uint16_t Connection_Handle : It is the Connection Handle of the connection whose creation ended the advertising, Range : 0x00 to 0xEF */
+  uint16_t conn_handle;
+  /** 
+     uint8_t Num_Completed_Extended_Advertising_Events
+     Number of completed extended advertising events transmitted by the Controller
+  */
+  uint8_t num_completed_ae_events;
+} rsi_ble_adv_set_terminated_t;
+
+//! ae scan request recvd report event
+typedef struct rsi_ble_scan_req_recvd_s {
+  /** uint8_t Advertising_Handle : Used to identify an Advertising set , Range : 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /** 
+      uint8_t Scanner_Address_Type : Indicates the type of the Address
+         0x00 - Public Device Adrdress
+         0x01 - Random Device Address
+         0x02 - Public Identity Address (corresponds to Resolved Private Address)
+         0x03 - Random (static) Identity Address (corresponds to Resolved Private Address)
+  */
+  uint8_t scanner_addr_type;
+  /** uint8[6] Scanner_Address : Address of the Advertising Type */
+  uint8_t scanner_addr[DEVICE_ADDR_LEN];
+} rsi_ble_scan_req_recvd_t;
+
 /******************************************************
  * *                 Global Variables
  * ******************************************************/
@@ -1044,6 +1254,9 @@ typedef struct chip_ble_buffers_stats_s {
  * *              GAP API's Declarations
  * ******************************************************/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 //*==============================================*/
 /**
  * @fn         rsi_convert_db_to_powindex
@@ -1135,6 +1348,12 @@ int32_t rsi_ble_connect_with_params(uint8_t remote_dev_addr_type,
 
 /*==============================================*/
 /**
+ * @fn         rsi_ble_enhance_connect_with_params
+ * */
+int32_t rsi_ble_enhance_connect_with_params(void *ble_enhance_conn_params);
+
+/*==============================================*/
+/**
  * @fn         rsi_ble_connect_cancel
  * 
  * */
@@ -1183,6 +1402,98 @@ int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, u
  * @fn         rsi_ble_set_privacy_mode
  */
 int32_t rsi_ble_set_privacy_mode(uint8_t remote_dev_addr_type, uint8_t *remote_dev_address, uint8_t privacy_mode);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_get_max_adv_data_len
+ */
+int32_t rsi_ble_get_max_adv_data_len(uint8_t *resp);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_get_max_no_of_supp_adv_sets
+ */
+int32_t rsi_ble_get_max_no_of_supp_adv_sets(uint8_t *resp);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_set_ae_set_random_address 
+ */
+int32_t rsi_ble_set_ae_set_random_address(uint8_t handle, uint8_t *rand_addr);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_set_ae_data
+ */
+int32_t rsi_ble_set_ae_data(void *ble_ae_data);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_set_ae_params
+ */
+int32_t rsi_ble_set_ae_params(void *ble_ae_params, int8_t *sel_tx_pwr);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_start_ae_advertising
+ */
+int32_t rsi_ble_start_ae_advertising(void *adv_enable);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_app_adv_set_clear_or_remove
+ */
+int32_t rsi_ble_app_adv_set_clear_or_remove(uint8_t type, uint8_t handle);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_app_set_periodic_ae_params
+ */
+int32_t rsi_ble_app_set_periodic_ae_params(void *periodic_adv_params);
+/*==============================================*/
+/**
+ * @fn        rsi_ble_app_set_periodic_ae_enable 
+ */
+int32_t rsi_ble_app_set_periodic_ae_enable(uint8_t enable, uint8_t handle);
+/*==============================================*/
+/**
+ * @fn        rsi_ble_ae_set_scan_params 
+ */
+int32_t rsi_ble_ae_set_scan_params(void *ae_scan_params);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_ae_set_scan_enable
+ */
+int32_t rsi_ble_ae_set_scan_enable(void *ae_scan_enable);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_ae_set_periodic_sync
+ */
+int32_t rsi_ble_ae_set_periodic_sync(uint8_t type, void *periodic_sync_data);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_ae_dev_to_periodic_list
+ */
+int32_t rsi_ble_ae_dev_to_periodic_list(void *dev_to_list);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_ae_read_periodic_adv_list_size
+ */
+int32_t rsi_ble_ae_read_periodic_adv_list_size(uint8_t *resp);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_extended_connect_with_params
+ */
+int32_t rsi_ble_extended_connect_with_params(void *ext_create_conn);
+
+/*==============================================*/
+/**
+ * @fn         rsi_ble_read_transmit_power
+ */
+int32_t rsi_ble_read_transmit_power(void *resp);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_read_rf_path_compensation
+ */
+int32_t rsi_ble_read_rf_path_compensation(void *resp);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_write_rf_path_compensation
+ */
+int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_path_value);
+
 /******************************************************
  * *        GATT Client API's Declarations
  * ******************************************************/
@@ -1488,7 +1799,7 @@ uint32_t rsi_ble_cbfc_disconnect(uint8_t *dev_addr, uint16_t lcid);
 */
 /**
  * @typedef    void (*rsi_ble_on_adv_report_event_t)(rsi_ble_event_adv_report_t *rsi_ble_event_adv);
- * @brief      Callback function to be called if advertise report event is received
+ * @brief      The callback function will be called if advertise report event is received
  * @param[out]  rsi_ble_event_adv contains the advertise report information. Please refer rsi_ble_event_adv_report_s for more info.
  * @return      void
  * @section description
@@ -1499,29 +1810,29 @@ typedef void (*rsi_ble_on_adv_report_event_t)(rsi_ble_event_adv_report_t *rsi_bl
 
 /**
  * @typedef   void (*rsi_ble_on_connect_t)(rsi_ble_event_conn_status_t *rsi_ble_event_conn);
- * @brief      Callback function to be called if BLE connection status is received
+ * @brief      The callback function will be called if BLE connection status is received
  * @param[out]  rsi_ble_event_conn contains the BLE connection status. Please refer rsi_ble_event_conn_status_s for more info.
  * @return      void
  * @section description
- * This callback function will be called if the BLE connection status is received from the module. For BLE 4.0 version this callback will be triggered \n
+ * This callback function will be called if the BLE connection status is received from the module. For BLE 4.1 and lower version this callback will be called \n
  * This callback has to be registered using rsi_ble_gap_register_callbacks API
  */
 typedef void (*rsi_ble_on_connect_t)(rsi_ble_event_conn_status_t *rsi_ble_event_conn);
 
 /**
  * @typedef    void (*rsi_ble_on_enhance_connect_t)(rsi_ble_event_enhance_conn_status_t *rsi_ble_event_enhance_conn);
- * @brief      Callback function to be called if BLE connection status is received
+ * @brief      The callback function will be called if BLE connection status is received
  * @param[out]  rsi_ble_event_conn contains the BLE connection status. Please refer rsi_ble_event_enhance_conn_status_s for more info.
  * @return      void
  * @section description
- * This callback function will be called if the BLE connection status is received from the module. For BLE 4.2 and above version this callback will be triggered  \n
+ * This callback function will be called if the BLE connection status is received from the module. For BLE 4.2 and above version this callback will be called  \n
  * This callback has to be registered using rsi_ble_gap_register_callbacks API
  */
 typedef void (*rsi_ble_on_enhance_connect_t)(rsi_ble_event_enhance_conn_status_t *rsi_ble_event_enhance_conn);
 
 /**
  * @typedef void (*rsi_ble_on_disconnect_t)(rsi_ble_event_disconnect_t *rsi_ble_event_disconnect, uint16_t reason);
- * @brief      Callback function to be called if disconnect event is received
+ * @brief      The callback function will be called if disconnect event is received
  * @param[out]  rsi_ble_event_disconnect contains the disconnect status. Please refer rsi_ble_event_disconnect_s for more info.
  * @param[out]  reason contains reason for failure. \n
  * @note        Few reason for failure are given below \n
@@ -1540,7 +1851,7 @@ typedef void (*rsi_ble_on_disconnect_t)(rsi_ble_event_disconnect_t *rsi_ble_even
 
 /**
  * @typedef void (*rsi_ble_on_le_ping_payload_timeout_t)(rsi_ble_event_le_ping_time_expired_t *rsi_ble_event_timeout_expired);
- * @brief      Callback function to be called if le ping payload timeout expired event is received
+ * @brief      The callback function will be called if le ping payload timeout expired event is received
  * @param[out]  rsi_ble_event_disconnect contains the disconnect status. Please refer rsi_ble_event_le_ping_time_expired_s for more info.
  * @return      void
  * @section description
@@ -1552,7 +1863,7 @@ typedef void (*rsi_ble_on_le_ping_payload_timeout_t)(
 
 /**
  * @typedef    void (*rsi_ble_on_le_ltk_req_event_t)(rsi_bt_event_le_ltk_request_t *rsi_ble_event_le_ltk_request);
- * @brief      Callback function to be called if le ltk request event is received
+ * @brief      The callback function will be called if le ltk request event is received
  * @param[out]  rsi_ble_event_le_ltk_request contains the ltk request info. Please refer  rsi_bt_event_le_ltk_request_s for more info
  * @return      void
  * @section description
@@ -1563,7 +1874,7 @@ typedef void (*rsi_ble_on_le_ltk_req_event_t)(rsi_bt_event_le_ltk_request_t *rsi
 
 /**
  * @typedef    void (*rsi_ble_on_le_security_keys_t)(rsi_bt_event_le_security_keys_t *rsi_ble_event_le_security_keys);
- * @brief      Callback function to be called if le security keys event is received
+ * @brief      The callback function will be called if le security keys event is received
  * @param[out]  rsi_bt_event_le_security_keys_t contains security keys. Please refer rsi_bt_event_le_security_keys_s for more info
  * @return      void
  * @section description
@@ -1580,7 +1891,7 @@ typedef void (*rsi_ble_on_le_security_keys_t)(rsi_bt_event_le_security_keys_t *r
 */
 /**
  * @typedef    void (*rsi_ble_on_smp_request_t)(rsi_bt_event_smp_req_t *remote_dev_address);
- * @brief      Callback function to be called if smp request is received in Master mode
+ * @brief      The callback function will be called if smp request is received in Master mode
  * @param[out] resp_status contains the response status (Success or Error code)
  * @param[out] remote_dev_address contains the smp requested device address. Please refer rsi_bt_event_smp_req_s for more info.
  * @return     void
@@ -1593,7 +1904,7 @@ typedef void (*rsi_ble_on_smp_request_t)(rsi_bt_event_smp_req_t *remote_dev_addr
 /*==============================================*/
 /**
  * @typedef    void (*rsi_ble_on_smp_response_t)(rsi_bt_event_smp_resp_t *remote_dev_address);
- * @brief      Callback function to be called if smp request is received in slave mode
+ * @brief      The callback function will be called if smp request is received in slave mode
  * @param[out] remote_dev_address contains the smp resp information. please refer rsi_bt_event_smp_resp_s for more info
  * @return     void
  * @section description
@@ -1605,7 +1916,7 @@ typedef void (*rsi_ble_on_smp_response_t)(rsi_bt_event_smp_resp_t *remote_dev_ad
 /*==============================================*/
 /**
  * @typedef    void (*rsi_ble_on_smp_passkey_t)(rsi_bt_event_smp_passkey_t *remote_dev_address);
- * @brief      Callback function to be called if smp passkey event is received from module
+ * @brief      The callback function will be called if smp passkey event is received from module
  * @param[out] resp_status, contains the response status (Success or Error code)
  * @param[out] remote_dev_address contains the remote device address. please refer rsi_bt_event_smp_passkey_s for more info
  * @return     void
@@ -1618,7 +1929,7 @@ typedef void (*rsi_ble_on_smp_passkey_t)(rsi_bt_event_smp_passkey_t *remote_dev_
 /*==============================================*/
 /**
  * @typedef    void (*rsi_ble_on_smp_passkey_display_t)(rsi_bt_event_smp_passkey_display_t *smp_passkey_display);
- * @brief      Callback function to be called if smp passkey event is received from module
+ * @brief      The callback function will be called if smp passkey event is received from module
  * @param[out] resp_status contains the response status (Success or Error code)
  * @param[out] smp_passkey_display contains the smp passkey display information. Please refer rsi_bt_event_smp_passkey_display_s for more info.
  * @return     void
@@ -1631,7 +1942,7 @@ typedef void (*rsi_ble_on_smp_passkey_display_t)(rsi_bt_event_smp_passkey_displa
 /*==============================================*/
 /**
  * @typedef    void (*rsi_ble_on_smp_failed_t)(uint16_t resp_status, rsi_bt_event_smp_failed_t *remote_dev_address);
- * @brief      Callback function to be called if smp failed event is received from module
+ * @brief      The callback function will be called if smp failed event is received from module
  * @param[out] resp_status contains the response status (Success or Error code) \n
  * @note       Error codes for SMP FAILED are given below \n
  *              0x4B01	SMP Passkey entry failed  \n
@@ -1656,7 +1967,7 @@ typedef void (*rsi_ble_on_smp_failed_t)(uint16_t resp_status, rsi_bt_event_smp_f
 /*==============================================*/
 /**
  * @typedef   void (*rsi_ble_on_sc_method_t)(rsi_bt_event_sc_method_t *scmethod);
- * @brief      Callback function to be called if security method event is received from module 
+ * @brief      The callback function will be called if security method event is received from module 
  * @param[out] scmethod contains Security Method 1 means Just works or 2 means Passkey. Please refer rsi_bt_event_sc_method_s for more info.
  * @return     void
  * @section description
@@ -1668,7 +1979,7 @@ typedef void (*rsi_ble_on_sc_method_t)(rsi_bt_event_sc_method_t *scmethod);
 /*==============================================*/
 /**
  * @typedef    void (*rsi_ble_on_encrypt_started_t)(uint16_t resp_status, rsi_bt_event_encryption_enabled_t *enc_enabled);
- * @brief      Callback function to be called if encrypted event is received from module
+ * @brief      The callback function will be called if encrypted event is received from module
  * @param[out] resp_status contains the response status (Success or Error code)
  * @param[out] enc_enabled contains encryption information. Please refer rsi_bt_event_encryption_enabled_s for more info. 
  * @return     void
@@ -1681,7 +1992,7 @@ typedef void (*rsi_ble_on_encrypt_started_t)(uint16_t resp_status, rsi_bt_event_
 /*==============================================*/
 /**
  * @typedef void (*rsi_ble_on_sc_passkey_t)(rsi_bt_event_sc_passkey_t *sc_passkey);
- * @brief      Callback function to be called if BLE Secure connection passkey event received from module
+ * @brief      The callback function will be called if BLE Secure connection passkey event received from module
  * @param[out] sc_passkey contains LE SC Passkey information. Please refer rsi_bt_event_encryption_enabled_s for more info.
  * @return     void
  * @section description
@@ -1692,7 +2003,7 @@ typedef void (*rsi_ble_on_sc_passkey_t)(rsi_bt_event_sc_passkey_t *sc_passkey);
 
 /**
  * @typedef    void (*rsi_ble_on_phy_update_complete_t)(rsi_ble_event_phy_update_t *rsi_ble_event_phy_update_complete);
- * @brief      Callback function to be called when phy update complete event is received
+ * @brief      The callback function will be called when phy update complete event is received
  * @param[out] rsi_ble_event_phy_update_complete  contains the controller support phy information. Please refer rsi_ble_event_phy_update_s for more info.
  * @return      void
  * @section description
@@ -1704,7 +2015,7 @@ typedef void (*rsi_ble_on_phy_update_complete_t)(rsi_ble_event_phy_update_t *rsi
 /**
  * @typedef void (*rsi_ble_on_conn_update_complete_t)(rsi_ble_event_conn_update_t *rsi_ble_event_conn_update_complete,
                                                   uint16_t resp_status);
- * @brief      Callback function to be called when conn update complete event is received
+ * @brief      The callback function will be called when conn update complete event is received
  * @param[out] rsi_ble_event_conn_update_complete contains the controller support conn information. Please refer rsi_ble_event_conn_update_s for more info.
  * @param[out] resp_status contains the response status (Success or Error code)
  * @return      void
@@ -1718,7 +2029,7 @@ typedef void (*rsi_ble_on_conn_update_complete_t)(rsi_ble_event_conn_update_t *r
  * @typedef void (*rsi_ble_on_remote_conn_params_request_t)(
  *                              rsi_ble_event_remote_conn_param_req_t *rsi_ble_event_remote_conn_param,
  *                              uint16_t resp_status);
- * @brief      Callback function to be called if remote conn params request is received.
+ * @brief      The callback function will be called if remote conn params request is received.
  * @param[out] resp_status contains the response status (Success or Error code)
  * @param[out] rsi_ble_event_remote_features contains the remote device supported features. Please refer rsi_ble_event_remote_features_s for more info.
  * @return      void
@@ -1766,7 +2077,7 @@ typedef void (*rsi_ble_on_data_length_update_t)(rsi_ble_event_data_length_update
 
 /**
  * @typedef    void (*rsi_ble_on_directed_adv_report_event_t)(rsi_ble_event_directedadv_report_t *rsi_ble_event_directed);
- * @brief      Callback function to be called if directed advertise report event is received
+ * @brief      The callback function will be called if directed advertise report event is received
  * @param[in]  rsi_ble_event_directed, contains the advertise report information
  * @return     void
  * @section    description
@@ -1792,6 +2103,13 @@ void rsi_ble_gap_register_callbacks(rsi_ble_on_adv_report_event_t ble_on_adv_rep
 
 /*==============================================*/
 /**
+ * @fn         rsi_ble_adv_ext_events_register_callbacks
+ */
+int32_t rsi_ble_adv_ext_events_register_callbacks(uint16_t callback_id,
+                                                  void (*callback_handler_ptr)(uint16_t status, uint8_t *buffer));
+
+/*==============================================*/
+/**
  * @fn         rsi_ble_smp_register_callbacks
  */
 void rsi_ble_smp_register_callbacks(rsi_ble_on_smp_request_t ble_on_smp_request_event,
@@ -1814,7 +2132,7 @@ void rsi_ble_smp_register_callbacks(rsi_ble_on_smp_request_t ble_on_smp_request_
 */
 /**
  * @typedef    void (*rsi_ble_on_gatt_error_resp_t)(uint16_t event_status, rsi_ble_event_error_resp_t *rsi_ble_gatt_error);
- * @brief      Callback function to be called if gatt error event is received
+ * @brief      The callback function will be called if gatt error event is received
  * @param[out]  event_status contains the error response  \n
  *              Non-Zero Value	-	Failure \n
  * @note        Attribute protocol error codes \n 
@@ -1839,7 +2157,7 @@ typedef void (*rsi_ble_on_gatt_error_resp_t)(uint16_t event_status, rsi_ble_even
 /**
  * @typedef void (*rsi_ble_on_gatt_desc_val_event_t)(uint16_t event_status,
                                                  rsi_ble_event_gatt_desc_t *rsi_ble_gatt_desc_val);
- * @brief      Callback function to be called if attribute descriptors event is received
+ * @brief      The callback function will be called if attribute descriptors event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1855,7 +2173,7 @@ typedef void (*rsi_ble_on_gatt_desc_val_event_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_profiles_list_t)(uint16_t event_status,
                                                  rsi_ble_event_profiles_list_t *rsi_ble_event_profiles);
- * @brief      Callback function to be called if profiles list event is received
+ * @brief      The callback function will be called if profiles list event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1871,7 +2189,7 @@ typedef void (*rsi_ble_on_event_profiles_list_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_profile_by_uuid_t)(uint16_t event_status,
                                                    rsi_ble_event_profile_by_uuid_t *rsi_ble_event_profile);
- * @brief      Callback function to be called if profile event is received
+ * @brief      The callback function will be called if profile event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1886,7 +2204,7 @@ typedef void (*rsi_ble_on_event_profile_by_uuid_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_read_by_char_services_t)(uint16_t event_status,
                                                          rsi_ble_event_read_by_type1_t *rsi_ble_event_read_type1);
- * @brief      Callback function to be called if characteristic services list event is received
+ * @brief      The callback function will be called if characteristic services list event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1902,7 +2220,7 @@ typedef void (*rsi_ble_on_event_read_by_char_services_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_read_by_inc_services_t)(uint16_t event_status,
                                                         rsi_ble_event_read_by_type2_t *rsi_ble_event_read_type2);
- * @brief      Callback function to be called if include services list event is received
+ * @brief      The callback function will be called if include services list event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1917,7 +2235,7 @@ typedef void (*rsi_ble_on_event_read_by_inc_services_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_read_att_value_t)(uint16_t event_status,
                                                   rsi_ble_event_read_by_type3_t *rsi_ble_event_read_type3);
- * @brief      Callback function to be called if attribute value event is received
+ * @brief      The callback function will be called if attribute value event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1932,7 +2250,7 @@ typedef void (*rsi_ble_on_event_read_att_value_t)(uint16_t event_status,
 
 /**
  * @typedef void (*rsi_ble_on_event_read_resp_t)(uint16_t event_status, rsi_ble_event_att_value_t *rsi_ble_event_att_val);
- * @brief      Callback function to be called if attribute value event is received
+ * @brief      The callback function will be called if attribute value event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1946,7 +2264,7 @@ typedef void (*rsi_ble_on_event_read_resp_t)(uint16_t event_status, rsi_ble_even
 
 /**
  * @typedef    void (*rsi_ble_on_event_write_resp_t)(uint16_t event_status, rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rsp);
- * @brief      Callback function to be called if gatt write event is received
+ * @brief      The callback function will be called if gatt write event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1960,7 +2278,7 @@ typedef void (*rsi_ble_on_event_write_resp_t)(uint16_t event_status, rsi_ble_set
 /**
  * @typedef void (*rsi_ble_on_event_indicate_confirmation_t)(uint16_t event_status,
                                                          rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rsp);
- * @brief      Callback function to be called if indication confirmation event is received
+ * @brief      The callback function will be called if indication confirmation event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1975,7 +2293,7 @@ typedef void (*rsi_ble_on_event_indicate_confirmation_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_event_prepare_write_resp_t)(uint16_t event_status,
                                                       rsi_ble_prepare_write_resp_t *rsi_ble_event_prepare_write);
- * @brief      Callback function to be called if GATT prepare event is received
+ * @brief      The callback function will be called if GATT prepare event is received
  * @param[out]  event_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -1991,7 +2309,7 @@ typedef void (*rsi_ble_on_event_prepare_write_resp_t)(uint16_t event_status,
 /**
  * @typedef void (*rsi_ble_on_profiles_list_resp_t)(uint16_t resp_status,
                                                 rsi_ble_resp_profiles_list_t *rsi_ble_resp_profiles);
- * @brief      Callback function to be called if profiles list response is received
+ * @brief      The callback function will be called if profiles list response is received
  * @param[out]  resp_status contains the response status \n
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n 
@@ -2009,7 +2327,7 @@ typedef void (*rsi_ble_on_profiles_list_resp_t)(uint16_t resp_status,
 
 /**
  * @typedef void (*rsi_ble_on_profile_resp_t)(uint16_t resp_status, profile_descriptors_t *rsi_ble_resp_profile);
- * @brief      Callback function to be called if profile response is received
+ * @brief      The callback function will be called if profile response is received
  * @param[out]  resp_status contains the response status \n
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2028,7 +2346,7 @@ typedef void (*rsi_ble_on_profile_resp_t)(uint16_t resp_status, profile_descript
 /**
  * @typedef void (*rsi_ble_on_char_services_resp_t)(uint16_t resp_status,
                                                 rsi_ble_resp_char_services_t *rsi_ble_resp_char_serv);
- * @brief      Callback function to be called if service characteristics response is received
+ * @brief      The callback function will be called if service characteristics response is received
  * @param[out]  resp_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2053,7 +2371,7 @@ typedef void (*rsi_ble_on_char_services_resp_t)(uint16_t resp_status,
 /**
  * @typedef void (*rsi_ble_on_inc_services_resp_t)(uint16_t resp_status,
                                                rsi_ble_resp_inc_services_t *rsi_ble_resp_inc_serv);
- * @brief      Callback function to be called if include services response is received
+ * @brief      The callback function will be called if include services response is received
  * @param[out]  resp_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2077,7 +2395,7 @@ typedef void (*rsi_ble_on_inc_services_resp_t)(uint16_t resp_status,
 
 /**
  * @typedef     void (*rsi_ble_on_att_desc_resp_t)(uint16_t resp_status, rsi_ble_resp_att_descs_t *rsi_ble_resp_att_desc);
- * @brief      Callback function to be called if attribute descriptors response is received
+ * @brief      The callback function will be called if attribute descriptors response is received
  * @param[out]  resp_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2101,7 +2419,7 @@ typedef void (*rsi_ble_on_att_desc_resp_t)(uint16_t resp_status, rsi_ble_resp_at
  * @typedef void (*rsi_ble_on_read_resp_t)(uint16_t resp_status,
                                        uint16_t resp_id,
                                        rsi_ble_resp_att_value_t *rsi_ble_resp_att_val);
- * @brief      Callback function to be called upon receiving the attribute value
+ * @brief      The callback function will be called upon receiving the attribute value
  * @param[out]  resp_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2130,7 +2448,7 @@ typedef void (*rsi_ble_on_read_resp_t)(uint16_t resp_status,
 
 /**
  * @typedef void (*rsi_ble_on_write_resp_t)(uint16_t resp_status, uint16_t resp_id);
- * @brief      Callback function to be called if the attribute set/prepare/execute action is completed
+ * @brief      The callback function will be called if the attribute set/prepare/execute action is completed
  * @param[out]  resp_status contains the response status \n 
  *              0 - Success \n 
  *              Non-Zero Value	-	Failure \n
@@ -2161,10 +2479,8 @@ typedef void (*rsi_ble_on_write_resp_t)(uint16_t resp_status, uint16_t resp_id);
 */
 /**
  * @typedef void (*rsi_ble_on_gatt_write_event_t)(uint16_t event_id, rsi_ble_event_write_t *rsi_ble_write);
- * @brief      Callback function to be called if the GATT write/notify/indicate events are received
- * @param[out]  event_id contains the response status \n 
- *              0 - Success \n 
- *              Non-Zero Value	-	Failure \n
+ * @brief       The callback function will be called if the GATT write/notify/indicate events are received
+ * @param[out]  event_id contains the gatt_write event id (RSI_BLE_EVENT_GATT_WRITE) \n
  * @param[out]  rsi_ble_write  contains the GATT event information. Please refer rsi_ble_event_write_s for more info
  * @return      void
  * @section description
@@ -2175,10 +2491,9 @@ typedef void (*rsi_ble_on_gatt_write_event_t)(uint16_t event_id, rsi_ble_event_w
 
 /**
  * @typedef void (*rsi_ble_on_gatt_prepare_write_event_t)(uint16_t event_id, rsi_ble_event_prepare_write_t *rsi_ble_write);
- * @brief      Callback function to be called if the GATT prepare events are received
- * @param[out]  event_id contains the response status \n 
- *              0 - Success \n 
- *              Non-Zero Value	-	Failure \n
+ * @brief      The callback function will be called if the GATT prepare events are received
+ * @param[out]  event_id contains the gatt_prepare_write event id (RSI_BLE_EVENT_PREPARE_WRITE) \n 
+
  * @param[out]  rsi_ble_write  contains the GATT prepare event information. Please refer rsi_ble_event_prepare_write_s for more info
  * @return      void
  * @section description
@@ -2189,10 +2504,8 @@ typedef void (*rsi_ble_on_gatt_prepare_write_event_t)(uint16_t event_id, rsi_ble
 
 /**
  * @typedef void (*rsi_ble_on_execute_write_event_t)(uint16_t event_id, rsi_ble_execute_write_t *rsi_ble_execute_write);
- * @brief      Callback function to be called if the GATT execute events are received
- * @param[out]  event_id contains the response status \n 
- *              0 - Success \n 
- *              Non-Zero Value	-	Failure \n
+ * @brief      The callback function will be called if the GATT execute events are received
+ * @param[out]  event_id contains the gatt_execute_write event id (RSI_BLE_EVENT_EXECUTE_WRITE) \n
  * @param[out]  rsi_ble_write  contains the GATT event information. Please refer rsi_ble_execute_write_s for more info.
  * @return      void
  * @section description
@@ -2203,10 +2516,9 @@ typedef void (*rsi_ble_on_execute_write_event_t)(uint16_t event_id, rsi_ble_exec
 
 /**
  * @typedef    void (*rsi_ble_on_read_req_event_t)(uint16_t event_id, rsi_ble_read_req_t *rsi_ble_read_req);
- * @brief      Callback function to be called if the GATT read request events are received
- * @param[out]  event_id contains the response status \n 
- *              0 - Success \n 
- *              Non-Zero Value	-	Failure \n
+ * @brief      The callback function will be called if the GATT read request events are received
+ * @param[out]  event_id contains the gatt_read_req_event id (RSI_BLE_EVENT_READ_REQ) \n 
+
  * @param[out]  rsi_ble_write contains the GATT event information. Please refer rsi_ble_read_req_s for more info.
  * @return      void
  * @section description
@@ -2217,7 +2529,7 @@ typedef void (*rsi_ble_on_read_req_event_t)(uint16_t event_id, rsi_ble_read_req_
 
 /**
  * @typedef void (*rsi_ble_on_mtu_event_t)(rsi_ble_event_mtu_t *rsi_ble_event_mtu);
- * @brief      Callback function to be called if MTU size request is received.
+ * @brief      The callback function will be called if MTU size request is received.
  * @param[out]  rsi_ble_event_mtu  contains the MTU size information. Please refer rsi_ble_event_mtu_s for more info.
  * @return      void
  * @section description
@@ -2239,17 +2551,14 @@ typedef void (*rsi_ble_on_mtu_exchange_info_t)(
   rsi_ble_event_mtu_exchange_information_t *rsi_ble_event_mtu_exchange_info);
 
 /**
- * @callback   rsi_ble_on_remote_device_info_t
- * @brief      Callback function to peer device information.
- * @param[out]  resp_status, contains the response status (Success or Error code) \n
- *               0              - SUCCESS \n
- *               Non-Zero Value - ErrorCodes
- * @note        Refer Bluetooth Generic Error Codes section  upto 0x4FF8 from \ref error-codes.
- * @param[out] resp_buffer, contains the remote device version information.
+ * @typedef void (*rsi_ble_on_remote_device_info_t)(uint16_t status, rsi_ble_event_remote_device_info_t *resp_buffer);
+ * @brief      Callback function to get peer device information.
+ * @param[in]  status                            - status of the asynchronous response
+ * @param[out]  resp_buffer - remote device ble version information. Please refer rsi_ble_event_remote_device_info_s for more info. \n
  * @return      void
  * @section description
- * This callback function will be called when conn update complete event is received
- * This callback has to be registered using rsi_ble_enhanced_gap_extended_register_callbacks API
+ * This callback function will be called when conn update complete event is received \n
+ * This callback has to be registered using rsi_ble_enhanced_gap_extended_register_callbacks API \n
  */
 typedef void (*rsi_ble_on_remote_device_info_t)(uint16_t status, rsi_ble_event_remote_device_info_t *resp_buffer);
 
@@ -2369,6 +2678,88 @@ typedef void (*chip_ble_buffers_stats_handler_t)(chip_ble_buffers_stats_t *chip_
  */
 int32_t rsi_ble_vendor_rf_type(uint8_t ble_power_index);
 
+/**
+ * callback   rsi_ble_ae_report_complete_t
+ * @brief      Callback function to report the AE Advertisements
+ * @param[out] rsi_ble_event_ae_report,  contains the controller support AE Adv packets information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE adv report event is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_report_complete_t)(uint16_t resp_status, rsi_ble_ae_adv_report_t *rsi_ble_event_ae_report);
+
+/**
+ * @callback   rsi_ble_ae_per_adv_sync_estbl_t
+ * @brief      Callback function to report the AE periodic sync estabilished event
+ * @param[out] rsi_ble_event_per_adv_sync_estbl,  contains the controller support AE periodic sync estabilished information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE periodic sync estabilished event is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_per_adv_sync_estbl_t)(uint16_t resp_status,
+                                                rsi_ble_per_adv_sync_estbl_t *rsi_ble_event_per_adv_sync_estbl);
+
+/**
+ * @callback   rsi_ble_ae_per_adv_report_t
+ * @brief      Callback function to report the AE periodic advertisement event
+ * @param[out] rsi_ble_event_per_adv_report,  contains the controller support AE periodic advertisement information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE periodic advertisement event is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_per_adv_report_t)(uint16_t resp_status,
+                                            rsi_ble_per_adv_report_t *rsi_ble_event_per_adv_report);
+
+/**
+ * @callback   rsi_ble_ae_per_adv_sync_lost_t
+ * @brief      Callback function to report the AE periodic sync lost event
+ * @param[out] rsi_ble_event_per_adv_sync_lost,  contains the controller support AE periodic sync lost information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE periodic sync lost event is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_per_adv_sync_lost_t)(uint16_t resp_status,
+                                               rsi_ble_per_adv_sync_lost_t *rsi_ble_event_per_adv_sync_lost);
+
+/**
+ * @callback   rsi_ble_ae_scan_timeout_t
+ * @brief      Callback function to report the AE scan timeout event
+ * @param[out] rsi_ble_event_scan_timeout,  contains the controller support AE scan timeout information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE scan timeout is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_scan_timeout_t)(uint16_t resp_status, rsi_ble_scan_timeout_t *rsi_ble_event_scan_timeout);
+
+/**
+ * @callback   rsi_ble_ae_adv_set_terminated_t
+ * @brief      Callback function to report the AE advertising set terminated event
+ * @param[out] rsi_ble_event_adv_set_terminated,  contains the controller support AE advertising set terminated information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE advertising set terminated is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_adv_set_terminated_t)(uint16_t resp_status,
+                                                rsi_ble_adv_set_terminated_t *rsi_ble_event_adv_set_terminated);
+
+/**
+ * @callback   rsi_ble_ae_scan_req_recvd_t
+ * @brief      Callback function to report the AE scan request received event
+ * @param[out] rsi_ble_event_scan_req_recvd,  contains the controller support AE scan request received information
+ * @return      void
+ * @section description
+ * This callback function will be called when AE scan request received is received
+ * This callback has to be registered using rsi_ble_ae_events_register_callbacks API
+ */
+typedef void (*rsi_ble_ae_scan_req_recvd_t)(uint16_t resp_status,
+                                            rsi_ble_scan_req_recvd_t *rsi_ble_event_scan_req_recvd);
+
 /*==============================================*/
 /**
  * @fn         BT_LE_ADPacketExtract
@@ -2425,4 +2816,7 @@ uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
                                                           void (*callback_handler_ptr)(uint16_t status,
                                                                                        uint8_t *buffer));
 int32_t rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt);
+#ifdef __cplusplus
+}
+#endif
 #endif

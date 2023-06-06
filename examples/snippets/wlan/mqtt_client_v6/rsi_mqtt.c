@@ -126,7 +126,7 @@
 #define RSI_WLAN_TASK_PRIORITY 1
 
 //! Wireless driver task priority
-#define RSI_DRIVER_TASK_PRIORITY 1
+#define RSI_DRIVER_TASK_PRIORITY 2
 
 //! Wlan task stack size
 #define RSI_WLAN_TASK_STACK_SIZE 500
@@ -170,6 +170,10 @@ int8_t password[] = "password";
 volatile int halt = 0;
 
 int8_t mqqt_client_buffer[MQTT_CLIENT_INIT_BUFF_LEN];
+
+#ifdef RSI_M4_INTERFACE
+uint32_t xtal_enable = 1;
+#endif
 
 #if ENABLE_POWER_SAVE
 //! Power Save Profile mode
@@ -280,20 +284,6 @@ int32_t rsi_mqtt_client_app()
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Silabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -304,6 +294,20 @@ int32_t rsi_mqtt_client_app()
                   &driver_task_handle);
 #endif
 
+  //! Silabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+
+#ifdef RSI_M4_INTERFACE
+  /* MCU Hardware Configuration for Low-Power Applications */
+  RSI_WISEMCU_HardwareSetup();
+#endif
+
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
@@ -312,6 +316,13 @@ int32_t rsi_mqtt_client_app()
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+
+#ifdef RSI_M4_INTERFACE
+  status = rsi_cmd_m4_ta_secure_handshake(RSI_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+#endif
 
   //! Send feature frame
   status = rsi_send_feature_frame();
@@ -344,9 +355,9 @@ int32_t rsi_mqtt_client_app()
 #if DHCP_MODE
   status = rsi_config_ipaddress(RSI_IP_VERSION, dhcp_mode, 0, 0, 0, (uint8_t *)ip_buff, sizeof(ip_buff), 0);
 #ifdef RSI_CONFIGURE_IPV6
-  rsi_inet_ntop6(&ip_buff[1], &link_local_addr, sizeof(link_local_addr));
-  rsi_inet_ntop6(&ip_buff[5], global_addr, sizeof(global_addr));
-  rsi_inet_ntop6(&ip_buff[9], gateway6, sizeof(gateway6));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[1], (char *)link_local_addr, sizeof(link_local_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[5], (char *)global_addr, sizeof(global_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[9], (char *)gateway6, sizeof(gateway6));
 #endif
 #else
 
@@ -405,25 +416,36 @@ start:
     if (mqqt_client_buffer == NULL) {
       goto start;
     }
+    LOG_PRINT("\r\nMQTT initialization Success\r\n");
     //! Connect to the MQTT broker/server
     status = rsi_mqtt_connect(rsi_mqtt_client, 0, (uint8_t *)&clientID, NULL, NULL, handleMQTT);
     if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nConnect to the MQTT broker/server Failed, Error Code : 0x%lX\r\n", status);
       rsi_mqtt_disconnect(rsi_mqtt_client);
       continue;
+    } else {
+      LOG_PRINT("\r\nConnect to the MQTT broker/server Success\r\n");
     }
 
     while (1) {
+#ifndef RSI_WITH_OS
       rsi_wireless_driver_task();
+#endif
       if (rsi_mqtt_client->mqtt_client.isconnected == 1) {
         //! Subscribe to the topic given
         status = rsi_mqtt_subscribe(rsi_mqtt_client, QOS, (int8_t *)RSI_MQTT_TOPIC, NULL);
         if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nSubscription to Topic Failed, Error Code : 0x%lX\r\n", status);
           rsi_mqtt_disconnect(rsi_mqtt_client);
           continue;
+        } else {
+          LOG_PRINT("\r\nSubscription to Topic Success\r\n");
         }
 
         while (1) {
+#ifndef RSI_WITH_OS
           rsi_wireless_driver_task();
+#endif
 
           if ((suback) && pub == 1) {
             //!The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver a PUBLISH Packet
@@ -448,7 +470,14 @@ start:
             publish_msg.payloadlen = sizeof(publish_message);
 
             //! Publish message on the topic
-            rsi_mqtt_publish(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC, &publish_msg);
+            status = rsi_mqtt_publish(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC, &publish_msg);
+            if (status != RSI_SUCCESS) {
+              status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+              LOG_PRINT("\r\nPublish to Topic Failed, Error Code : 0x%lX\r\n", status);
+              continue;
+            } else {
+              LOG_PRINT("\r\nPublish to Topic Success\r\n");
+            }
             pub = 0;
           }
         }
@@ -569,7 +598,11 @@ int main()
 
 #endif
 
-  //! Unmask interrupts
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
 
 #ifdef RSI_WITH_OS
   //! OS case

@@ -1,4 +1,4 @@
-# MQTT Client
+# MQTT Client (IPv6)
 
 ## 1. Purpose / Scope 
 
@@ -21,7 +21,7 @@ Before running the application, the user will need the following things to setup
 - Windows PC1 with with MQTT broker installed in it
 - Windows PC2 with with MQTT client utility installed in it
 
-![Setup Diagram for MQTT Client Example](resources/readme/image_2.png) 
+![Setup Diagram for MQTT Client Example](resources/readme/mqttclientv6setupncp.png) 
 
 
 ### 2.2 Software Requirements 
@@ -95,7 +95,7 @@ The application can be configured to suit user requirements and development envi
 SSID refers to the name of the Access point.
 
 ```c
-#define SSID                                       "SILABS_AP"
+#define SSID "SILABS_AP"
 ```
 
 SECURITY_TYPE refers to the type of security. In this application, STA supports Open, WPA-PSK, WPA2-PSK securities.
@@ -109,42 +109,43 @@ SECURITY_TYPE refers to the type of security. In this application, STA supports 
    - RSI_WPA2 - For WPA2 security mode
 
 ```c
-#define SECURITY_TYPE                              RSI_OPEN
+#define SECURITY_TYPE RSI_OPEN
 ```
 
 PSK refers to the secret key if the Access point configured in WPA-PSK/WPA2-PSK security modes.
 
 ```c
-#define PSK                                        "<psk>"
+#define PSK "<psk>"
 ```
 
 CLIENT_PORT port refers to device MQTT client port number
 
 ```c
-#define CLIENT_PORT                                5001
+#define CLIENT_PORT 5001
 ```
 
 SERVER_PORT port refers remote MQTT broker/server port number
 
 ```c
-#define SERVER_PORT                                1883
+#define SERVER_PORT 1883
 ```
 
-SERVER_IP_ADDRESS refers remote peer IP address (Windows PC2) to connect with MQTT broker/server socket.
+SERVER_IP_ADDRESS refers remote peer IPv6 address (Windows PC2) to connect with MQTT broker/server socket.
 
 ```c
-#define SERVER_IP_ADDRESS                           "2001:db8:0:1::121"
+#define SERVER_IP_ADDRESS "2001:db8:0:1::121"
+```
 
 MQTT client keep alive period
 
 ```c
-#define RSI_KEEP_ALIVE_PERIOD                      100
+#define RSI_KEEP_ALIVE_PERIOD 100
 ```
 
 Memory to initialize MQTT client Info structure
 
 ```c
-#define MQTT_CLIENT_INIT_BUFF_LEN                  3500
+#define MQTT_CLIENT_INIT_BUFF_LEN 3500
 ```
 
 Global buffer or memory which is used for MQTT client initialization. This buffer is used for the MQTT client information storage.
@@ -164,13 +165,13 @@ QOS indicates the level of assurance for delivery of an Application Message.
    2 - Exactly once delivery
 
 ```c
-#define QOS                                        0
+#define QOS 0
 ```
 
 RSI_MQTT_TOPIC refers to which topic WiSeConnect MQTT client is supposed to subscribe.
 
 ```c
-#define RSI_MQTT_TOPIC                             "MQTT_DEMO"
+#define RSI_MQTT_TOPIC "MQTT_DEMO"
 ```
    
 MQTT Message to publish on the topic subscribed
@@ -202,7 +203,7 @@ int8_t password[] = "password"
 Application memory length which is required by the driver
 
 ```c
-#define GLOBAL_BUFF_LEN                            15000
+#define GLOBAL_BUFF_LEN 15000
 ```
 
 To configure IP address
@@ -210,52 +211,54 @@ To configure IP address
    DHCP_MODE refers whether IP address configured through DHCP or STATIC
 
 ```c
-#define DHCP_MODE                                  1
+#define DHCP_MODE 1
 ```
    
 **Note!**
 > If the user wants to configure the STA IP address through DHCP then set DHCP_MODE to "1" and skip configuring the following DEVICE_IP6, and GATEWAY6 macros Otherwise set the DHCP_MODE macro to "0" and configure the following DEVICE_IP6 and GATEWAY6 macros.
 ****
 
-IPv6 address to be configured to the device 
+IPv6 address to be configured to the device.
 
    Example: To configure "2001:db8:0:1::121" as IP address, update the macro DEVICE_IP6 as below
 
 ```c
-#define DEVICE_IP6                             "2001:db8:0:1::121"
+#define DEVICE_IP6 "2001:db8:0:1::121"
 ```
 
-IP address of the gateway 
+IP address of the gateway.
+
    Example: To configure "2001:db8:0:1::121" as Gateway, update the macro GATEWAY6 as below
 
 ```c
-#define GATEWAY6                               "2001:db8:0:1::121"
+#define GATEWAY6 "2001:db8:0:1::121"
 ```
 
 ### 4.2 Open rsi_wlan_config.h file. User can also modify the below parameters as per their needs and requirements. 
 
 
 ```c
-#define CONCURRENT_MODE                            RSI_DISABLE
-#define RSI_FEATURE_BIT_MAP                        FEAT_SECURITY_OPEN
-#define RSI_TCP_IP_BYPASS                          RSI_DISABLE
-#define RSI_TCP_IP_FEATURE_BIT_MAP                 (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6)
-#define RSI_CUSTOM_FEATURE_BIT_MAP                 0
-#define RSI_BAND                                   RSI_BAND_2P4GHZ
+#define CONCURRENT_MODE            RSI_DISABLE
+#define RSI_FEATURE_BIT_MAP        FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS          RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6)
+#define RSI_CUSTOM_FEATURE_BIT_MAP 0
+#define RSI_BAND                   RSI_BAND_2P4GHZ
 ```
 
  For running **MQTT** with **SSL**, please enable **TCP_IP_FEAT_SSL** in **rsi_wlan_config.h** file, as shown below. Also load the related **SSL Certificates** in the module using rsi_wlan_set_certificate() API and Need to enable **SSL** flag **RSI_SSL_ENABLE** in rsi_mqtt_connect() API. 
 
 
 ```c
-#define CONCURRENT_MODE                            RSI_DISABLE
-#define RSI_FEATURE_BIT_MAP                        FEAT_SECURITY_OPEN
-#define RSI_TCP_IP_BYPASS                          RSI_DISABLE
-#define RSI_TCP_IP_FEATURE_BIT_MAP                 (TCP_IP_FEAT_DHCPV4_CLIENT |  TCP_IP_FEAT_SSL  |  TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
-#define RSI_CUSTOM_FEATURE_BIT_MAP                 EXT_FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP             EXT_FEAT_256k_MODE
-#define RSI_EXT_TCPIP_FEATURE_BITMAP               CONFIG_FEAT_EXTENTION_VALID
-#define RSI_BAND                                   RSI_BAND_2P4GHZ
+#define CONCURRENT_MODE     RSI_DISABLE
+#define RSI_FEATURE_BIT_MAP FEAT_SECURITY_OPEN
+#define RSI_TCP_IP_BYPASS   RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP \
+  (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
+#define RSI_CUSTOM_FEATURE_BIT_MAP     EXT_FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM
+#define RSI_EXT_TCPIP_FEATURE_BITMAP   CONFIG_FEAT_EXTENTION_VALID
+#define RSI_BAND                       RSI_BAND_2P4GHZ
 ```
 
 > Note:
@@ -332,7 +335,7 @@ mosquitto.exe –p 1883 –v
 
 7. Once the RS9116W EVK gets connected to the MQTT broker, it will subscribe to the topic **RSI_MQTT_TOPIC (Ex: "MQTT_DEMO")**. The user can see the client connected and subscription success information in the MQTT broker.
 
-![User can see the client connected and subscription success information](resources/readme/image_7.png)
+![User can see the client connected and subscription success information](resources/readme/mosquittoconnectsubscribemqttdemov6.png)
 
 8. After successful subscription to the topic **RSI_MQTT_TOPIC (Ex: "MQTT_DEMO")**, the RS9116W EVK publishes a message which is given in **publish_message** array
   (Ex: "THIS IS MQTT CLIENT DEMO FROM APPLICATION") on the subscribed topic.
@@ -343,7 +346,7 @@ mosquitto.exe –p 1883 –v
 
 10. In the MQTT broker, user can observe the published message as the MQTT client is subscribed topic to that topic. 
 
-![In MQTT broker, user can observe the published message](resources/readme/image_9.png)
+![In MQTT broker, user can observe the published message](resources/readme/mosquittopublishfrommodulemqttdemov6.png)
 
 11. Now to publish a message using MQTT Explorer, enter the topic name under "Publish" tab, select "raw" data format, type the data that user wishes to send and then click on "publish". This message will be received by the RS9116W EVK.
 

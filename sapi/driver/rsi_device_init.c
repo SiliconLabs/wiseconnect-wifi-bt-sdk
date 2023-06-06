@@ -39,12 +39,12 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 * @{
 */
 /** @fn          int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t size_param)
- * @brief       Write the given data to the specified register address in the Module. This API writes the given data in ping or pong buffer
+ * @brief       Write the given data in the ping or pong buffer to the specified register address in the module.
  * @param[in]   ping_pong  - ping or pong buffer write
  * @param[in]   size_param - Number of bytes to read. (def: 2 since we have 16 bit regs)
  * @param[in ]  src_addr   - pointer contain the buffer of content to be written
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *              
  */
 
@@ -92,55 +92,14 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 /*===========================================================*/
 /**
  * @fn          int16_t rsi_bl_module_power_cycle(void)
- * @brief       This API resets the module.
+ * @brief       Power cycles the module. This API is valid only if there is a power gate, external to the module, 
+ *              which is controlling the power to the module using a GPIO signal of the MCU.
  * @pre         \ref rsi_driver_init() must be called before this API. 
  * @param[in]   void 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_driver_init() must be called before this API.
  */
-
-int16_t rsi_bl_module_power_cycle(void)
-{
-  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_ENTRY, DRIVER, LOG_INFO);
-
-#ifdef ENABLE_POC_IN_TOGGLE
-  // configure POC_IN pin in GPIO mode
-  rsi_hal_config_gpio(RSI_HAL_POC_IN_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
-#endif
-
-  // configure Reset pin in GPIO mode
-  rsi_hal_config_gpio(RSI_HAL_RESET_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
-
-#ifdef ENABLE_POC_IN_TOGGLE
-  // reset/drive low value on the GPIO
-  rsi_hal_clear_gpio(RSI_HAL_POC_IN_PIN);
-
-  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_CLEAR);
-#endif
-
-  // reset/drive low value on the GPIO
-  rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
-
-  // delay for 100 milli seconds
-  rsi_delay_ms(100);
-
-#ifdef ENABLE_POC_IN_TOGGLE
-  // set/drive high value on the GPIO
-  rsi_hal_set_gpio(RSI_HAL_POC_IN_PIN);
-
-  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_SET);
-#endif
-
-  // set/drive high value on the GPIO
-  rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
-
-  // delay for 100 milli seconds
-  rsi_delay_ms(100);
-
-  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_EXIT, DRIVER, LOG_INFO);
-
-  return RSI_SUCCESS;
-}
 /** @} */
 /** @addtogroup DRIVER5
 * @{
@@ -151,11 +110,7 @@ int16_t rsi_bl_module_power_cycle(void)
  * @brief       This API checks for the readiness of the bootloader to receive the commands from the host.
  * @param[in]   void 
  * @return      0              - Success \n
- *              Negative Value - Failure \n
- *                               -3 - Board ready not received \n
- *                               -4 - Bootup options last configuration not saved \n
- *                               -5 - Bootup options checksum failed \n
- *                               -6 - Bootloader version mismatch 
+ * @return      Negative Value  - Failure \n
  */
 /// @private
 int16_t rsi_bl_waitfor_boardready(void)
@@ -196,17 +151,14 @@ int16_t rsi_bl_waitfor_boardready(void)
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bl_select_option(uint8_t cmd)
- * @brief       Send firmware load request to module or update default configurations.
+ * @brief       Send firmware load request or update default configurations to the module.
  * @param[in]   cmd - type of configuration to be saved \n
  *                    BURN_NWP_FW                    - 0x42 \n
  *                    LOAD_NWP_FW                    - 0x31 \n
  *                    LOAD_DEFAULT_NWP_FW_ACTIVE_LOW - 0x71 \n
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure \n
- *                               -28 - Firmware Load or Upgrade timeout error \n
- *                               -14 - Valid Firmware not present \n
- *                               -15 - Invalid Option
- *  
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffff2, 0xfffffff1, 0xffffffe4) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 /// @private
 int16_t rsi_bl_select_option(uint8_t cmd)
@@ -294,28 +246,24 @@ int16_t rsi_bl_select_option(uint8_t cmd)
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image , uint32_t fw_image_size, uint8_t flags)
- * @brief       Upgrade the firmware in the WiSeConnect device from the host. The firmware file is given in chunks to this API.
- *              Each chunk must be a multiple of 4096 bytes unless it is the last chunk.For the first chunk, 
- *              set RSI_FW_START_OF_FILE in flags.For the last chunk set RSI_FW_END_OF_FILE in flags. This is blocking API. 
+ * @brief       Upgrade the firmware in the module from the host. The firmware file is given in chunks to this API. \n
+ *              Each chunk must be a multiple of 4096 bytes unless it is the last chunk. \n
+ *              This is blocking API.
  * @param[in]   firmware_image - This is a pointer to firmware image buffer 
  * @param[in]   fw_image_size  - This is the size of firmware image 
- * @param[in]   flags          - 1 - RSI_FW_START_OF_FILE  \n
- *                               2 - RSI_FW_END_OF_FILE \n
- *                               Set flags to \n
- *                               1 - if it is the first chunk \n
- *                               2 - if it is last chunk \n
+ * @param[in]   flags          - 1 - RSI_FW_START_OF_FILE, set for the first chunk  \n
+ *                               2 - RSI_FW_END_OF_FILE, set for the last chunk \n
  *                               0 - for all other chunks  
- * @note        1. In rsi_bootloader_instructions() API, By default, RSI_HAL_MAX_WR_BUFF_LEN Macro (Max supported write buffer size) is 4096 bytes. \n
- *                 Users can reduce this buffer size (Minimum value of 1600 bytes is expected) \n
- *                 as per HAL memory availability at the cost of the increase in execution time of this API. \n
- *                 This macro can be configured at rsi_user.h \n
- *                 Example: uint8_t dummy[RSI_HAL_MAX_WR_BUFF_LEN];   
- * @note        2. For safe firmware upgrade via the bootloader, \n
- *                 it will take approx. 65 sec duration for upgrading the firmware of 1.5 MB file. 
- * @note        3. For Fast firmware upgrade via the bootloader, \n
- *                 it will take approx. 35 sec duration for upgrading the firmware of 1.5 MB file.                
+ * @note        In rsi_bootloader_instructions() API, by default the RSI_HAL_MAX_WR_BUFF_LEN macro (Max supported write buffer size) is 4096 bytes.
+ *              You can reduce this buffer size (minimum value of 1600 bytes is expected) as per HAL memory availability at the cost of the increase in execution time of this API. \n
+ *              This macro can be configured in rsi_user.h file. \n
+ *              Example: uint8_t dummy[RSI_HAL_MAX_WR_BUFF_LEN];
+ * @note        For safe firmware upgrade via the bootloader, \n
+ *              it will take approx. 65 sec duration for upgrading the firmware of 1.5 MB file.
+ * @note        For fast firmware upgrade via the bootloader, \n
+ *              it will take approx. 35 sec duration for upgrading the firmware of 1.5 MB file.
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *              
  */
 
@@ -415,10 +363,10 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
 */
 /**
  * @fn          int32_t rsi_set_fast_fw_up(void)
- * @brief       Fast setting of fw_up
+ * @brief       Set fast firmware upgrade.
  * @param[in]   void 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 ///@private
 int32_t rsi_set_fast_fw_up(void)
@@ -480,10 +428,10 @@ int32_t rsi_integrity_check_bypass(void)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_rom_version(void)
- * @brief       Get the rom version of the module.
+ * @brief       Get the ROM version of the module.
  * @param[in]   void 
  * @return      1 - RSI_ROM_VERSION_1P0 \n 
- *              2 - RSI_ROM_VERSION_1P1 
+ * @return      2 - RSI_ROM_VERSION_1P1 
  * 
  * @note        The return value of this API can be used to infer chip version of the module. \n
  *                     1 - 1.4EVK \n
@@ -502,7 +450,7 @@ int32_t rsi_get_rom_version(void)
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
- * @brief       Send boot instructions to module.
+ * @brief       Send boot instructions to the module
  * @param[in]   type - type of the insruction to perform \n
  *                     0xD1 - RSI_REG_READ \n
  *                     0xD2 - RSI_REG_WRITE \n
@@ -513,11 +461,9 @@ int32_t rsi_get_rom_version(void)
  *                     0x71 - LOAD_DEFAULT_NWP_FW_ACTIVE_LOW 
  * @param[in]   data - pointer to data which is to be read/write \n
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure \n
- *                               -28       - Firmware Load or Upgrade timeout error \n
- *                                -2       - Invalid Parameter \n
- *                                -1 or -2 - SPI Failure 
- * @note        This is a proprietry API and it is not recommended to be used by the user directly.
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xffffffff, 0xfffffffe, 0xffffffe4) \n
+ * @note        Refer to \ref error-codes for the description of above error codes.
+ * @note        This is a proprietry API and is not recommended to be used
  */
 /// @private
 int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
@@ -627,13 +573,13 @@ int16_t rsi_bootloader_instructions(uint8_t type, uint16_t *data)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_ram_dump(uint32_t addr, uint16_t length, uint8_t *buf)
- * @brief       Get ram dump through master reads. This is blocking API. 
- * @pre         \ref rsi_wireless_init() API needs to be called before this API. 
- * @param[in]   addr   - address of memory location in RS9116 
- * @param[in]   length - length of the content to read
- * @param[out]  buf    -  buffer to keep the read content
+ * @brief       Get RAM dump. This is blocking API.
+ * @param[in]   addr   - Address of memory location in RS9116
+ * @param[in]   length - Length of the content to read
+ * @param[out]  buf    - Buffer to keep the read content
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
+ * @note        	**Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  *              
  */
 
@@ -658,4 +604,62 @@ int32_t rsi_get_ram_dump(uint32_t addr, uint16_t length, uint8_t *buf)
 #endif
 #endif
 #endif
+
+/** @} */
+/** @addtogroup DRIVER6
+* @{
+*/
+/*===========================================================*/
+/**
+ * @fn          int16_t rsi_bl_module_power_cycle(void)
+ * @brief       Power cycle the module.This API is valid only if there is a power gate, external to the module,which is controlling the power 
+ *              to the module using a GPIO signal of the MCU.
+ * @pre         \ref rsi_driver_init() must be called before this API. 
+ * @param[in]   void 
+ * @return      0              - Success \n 
+ *              Non-Zero Value - Failure
+ */
+
+int16_t rsi_bl_module_power_cycle(void)
+{
+  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_ENTRY, DRIVER, LOG_INFO);
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  // configure POC_IN pin in GPIO mode
+  rsi_hal_config_gpio(RSI_HAL_POC_IN_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
+#endif
+
+  // configure Reset pin in GPIO mode
+  rsi_hal_config_gpio(RSI_HAL_RESET_PIN, RSI_HAL_GPIO_OUTPUT_MODE, RSI_HAL_GPIO_LOW);
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  // reset/drive low value on the GPIO
+  rsi_hal_clear_gpio(RSI_HAL_POC_IN_PIN);
+
+  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_CLEAR);
+#endif
+
+  // reset/drive low value on the GPIO
+  rsi_hal_clear_gpio(RSI_HAL_RESET_PIN);
+
+  // delay for 100 milli seconds
+  rsi_delay_ms(100);
+
+#ifdef ENABLE_POC_IN_TOGGLE
+  // set/drive high value on the GPIO
+  rsi_hal_set_gpio(RSI_HAL_POC_IN_PIN);
+
+  rsi_delay_ms(CONFIG_DELAY_POCIN_RESET_PIN_SET);
+#endif
+
+  // set/drive high value on the GPIO
+  rsi_hal_set_gpio(RSI_HAL_RESET_PIN);
+
+  // delay for 100 milli seconds
+  rsi_delay_ms(100);
+
+  SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_EXIT, DRIVER, LOG_INFO);
+
+  return RSI_SUCCESS;
+}
 #endif

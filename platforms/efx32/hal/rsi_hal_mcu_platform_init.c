@@ -283,6 +283,10 @@ void rsi_hal_board_init(void)
 
   //! configure packet pending interrupt priority
   NVIC_SetPriority(GPIO_ODD_IRQn, PACKET_PENDING_INT_PRI);
+#ifdef EXP_BOARD
+  NVIC_SetPriority(GPIO_EVEN_IRQn, PACKET_PENDING_INT_PRI);
+  NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+#endif
   
   // Configure interrupt pin
   GPIO_PinModeSet(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, gpioModeInput, 0);

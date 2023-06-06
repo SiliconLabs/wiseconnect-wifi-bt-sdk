@@ -42,10 +42,13 @@
 //! OS include file to refer OS specific functionality
 #include "rsi_os.h"
 #include "rsi_utils.h"
-#include <string.h>
+#include "string.h"
 
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
+#endif
+#ifdef RSI_M4_INTERFACE
+#include "rsi_wisemcu_hardware_setup.h"
 #endif
 
 //! Access point SSID to connect
@@ -107,9 +110,21 @@
 //! Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 500
 
+//! Module sleep time configured in ms
+#define SLEEP_DELAY 3000
+
 //! set sleep timer  enable or disable
 #define SET_SLEEP_TIME RSI_DISABLE
+#ifdef RSI_M4_INTERFACE
+#ifdef COMMON_FLASH_EN
+#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
+#else
+#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
+#endif
+#define WKP_RAM_USAGE_LOCATION 0x24061000 /*<!Bootloader RAM usage location upon wake up  */
 
+#define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
+#endif
 //! Sleep Timer value in seconds,Minimum value is 1sec, and maximum value is 2100seconds.
 #define SLEEP_TIME 30
 
@@ -117,9 +132,11 @@
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 uint64_t ip_to_reverse_hex(char *ip);
 
+int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type);
 int32_t rsi_powersave_profile_app()
 {
   uint8_t ip_buff[20];
+  uint8_t xtal_enable = 0;
   int32_t client_socket;
   struct rsi_sockaddr_in server_addr;
   int32_t status       = RSI_SUCCESS;
@@ -135,14 +152,14 @@ int32_t rsi_powersave_profile_app()
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-
+#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
 
-  //! SiLabs module intialisation
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -150,6 +167,10 @@ int32_t rsi_powersave_profile_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
+#ifdef RSI_M4_INTERFACE
+  RSI_WISEMCU_HardwareSetup();
+#endif
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -167,6 +188,13 @@ int32_t rsi_powersave_profile_app()
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+#ifdef RSI_M4_INTERFACE
+  xtal_enable = 1;
+  status      = rsi_cmd_m4_ta_secure_handshake(RSI_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+#endif
 
   while (1) {
     //! Wlan radio init
@@ -191,12 +219,8 @@ int32_t rsi_powersave_profile_app()
     } else {
       LOG_PRINT("\r\nPower save profile with deep sleep Success\r\n");
     }
-    //! wait in scheduler for some time
-    for (delay = 0; delay < RSI_DELAY; delay++) {
-#ifndef RSI_WITH_OS
-      rsi_wireless_driver_task();
-#endif
-    }
+
+    rsi_delay_ms(SLEEP_DELAY);
 
     //! Disable power save profile
     status = rsi_wlan_power_save_profile(RSI_ACTIVE, PSP_TYPE);
@@ -310,6 +334,22 @@ int main()
 
   rsi_task_handle_t wlan_task_handle = NULL;
 
+#endif
+#ifdef RSI_M4_INTERFACE
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
 #endif
 
 #ifdef RSI_WITH_OS

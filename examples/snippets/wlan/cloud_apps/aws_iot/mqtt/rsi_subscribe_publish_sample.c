@@ -62,7 +62,7 @@
 
 #define RSI_MQTT_TOPIC     "$aws/things/Test_IoT/shadow/update"
 #define DISCONNECTION_TIME 100
-#define GPIO_PIN           0
+#define GPIO_PIN           10
 #define DHCP_MODE          1
 #define SSID               "SILABS_AP"
 #define SECURITY_TYPE      RSI_WPA2
@@ -240,6 +240,7 @@ int32_t rsi_mqtt_client_app()
   connectParams.pPassword   = (char *)password_mq;
   connectParams.passwordLen = strlen((char *)password_mq);
 
+#ifndef RSI_M4_INTERFACE
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
@@ -252,6 +253,7 @@ int32_t rsi_mqtt_client_app()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
 
 #ifdef RSI_WITH_OS
   //! Create Semaphores
@@ -462,8 +464,9 @@ int32_t rsi_mqtt_client_app()
         LOG_PRINT("AWS IOT MQTT Yield ...\n");
 #ifdef RSI_M4_INTERFACE
         //! Configure LED
-        RSI_EGPIO_SetPinMux(EGPIO1, EGPIO_PORT0, GPIO_PIN, EGPIO_PIN_MUX_MODE0);
-        RSI_EGPIO_SetDir(EGPIO1, EGPIO_PORT0, GPIO_PIN, EGPIO_CONFIG_DIR_OUTPUT);
+        RSI_EGPIO_PadSelectionEnable(5);
+        RSI_EGPIO_SetPinMux(EGPIO, EGPIO_PORT0, GPIO_PIN, EGPIO_PIN_MUX_MODE0);
+        RSI_EGPIO_SetDir(EGPIO, EGPIO_PORT0, GPIO_PIN, EGPIO_CONFIG_DIR_OUTPUT);
 #endif
         //! Waiting for data from cloud
         LOG_PRINT("Waiting for data from cloud...\n");
@@ -478,7 +481,7 @@ int32_t rsi_mqtt_client_app()
               && client.clientData.readBuf[i + 2] == 'g') {
             LOG_PRINT("Toggling LED\n");
 #ifdef RSI_M4_INTERFACE
-            RSI_EGPIO_TogglePort(EGPIO1, EGPIO_PORT0, (0x1 << GPIO_PIN));
+            RSI_EGPIO_TogglePort(EGPIO, EGPIO_PORT0, (0x1 << GPIO_PIN));
 #endif
             break;
           }
@@ -530,6 +533,23 @@ int32_t rsi_mqtt_client_app()
 
 int main()
 {
+#ifdef RSI_M4_INTERFACE
+  int32_t status = RSI_SUCCESS;
+  // Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
+
 #ifdef RSI_WITH_OS
   //! Common Init task
   rsi_task_create((void *)rsi_mqtt_client_app,

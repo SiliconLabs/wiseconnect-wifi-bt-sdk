@@ -43,13 +43,12 @@
 */
 /*===========================================================================*/
 /**
- * @brief       Perform a memory write to the module.
+ * @brief       Memory write to the module
  * @param[in]   addr  - Address to write to
  * @param[in]   len   - Number of bytes to write
  * @param[in]   dBuf  - Pointer to the buffer of data to write
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  *
  *
  */
@@ -113,13 +112,12 @@ int16_t rsi_mem_wr(uint32_t addr, uint16_t len, uint8_t *dBuf)
 
 /*===========================================================================*/
 /**
- * @brief       Perform a memory read from the module.
+ * @brief       Memory read from the module
  * @param[in]   addr - Address to read from
  * @param[in]   len  - Number of bytes to read
  * @param[in]   dBuf - Pointer to the buffer to receive the data into
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  *
  *
  */

@@ -159,10 +159,10 @@ rsi_error_t rsi_semaphore_destroy(rsi_semaphore_handle_t *semaphore)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_semaphore_check_and_destroy(rsi_semaphore_handle_t *semaphore)
- * @brief        Check whether semaphore is created or not, It destroys the semaphore instance,if its created, otherwise should return Success 
+ * @brief        Checks whether the semaphore is created and destroys the semaphore instance, if its created 
  * @param[in]    semaphore - Semaphore handle pointer  
  * @return       0              - Success \n
- *               Negative Value - Failure
+ * @return       Negative Value - Failure
  *
  */
 /// @private

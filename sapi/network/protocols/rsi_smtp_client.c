@@ -23,10 +23,8 @@
 */
 /*==============================================*/
 /**
- * @note        This API is not supported in current release.
  * @brief       Create an SMTP client. nitialize the client with a given configuration.
  *              This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   flags         - Select IPV4/IPv6 version  \n
  *   
  *  Flags                  |          Description
@@ -38,17 +36,18 @@
  * @param[in]   password      - Password for authentication, must be a NULL terminated string
  * @param[in]   from_address  - Sender's address, must be a NULL terminated string
  * @param[in]   client_domain - Domain name of the client, must be a NULL terminated string
- * @param[in]   auth_type     - Client authentication type \n
- * 							                 1 - SMTP_CLIENT_AUTH_LOGIN \n
+ * @param[in]   auth_type     - Client authentication type. \n
+ * 							                 1 - SMTP_CLIENT_AUTH_LOGIN, \n
  *                               3 - SMTP_CLIENT_AUTH_PLAIN
- * @param[in]   server_ip     - SMTP server IP address \n
- *                               IPv4 address - 4 Bytes hexa-decimal \n
+ * @param[in]   server_ip     - SMTP server IP address. \n
+ *                               IPv4 address - 4 Bytes hexa-decimal, \n
  *                               IPv6 address - 16 Bytes hexa-decimal
  * @param[in]   port          - SMTP server TCP port
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *             -3             - Command given in wrong state \n
- *             -4             - Buffer not available to serve the command
+ * @return      0              -  Success \n
+ * @return      Non-Zero Value - Failure 	(**Possible Error Codes** - 0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        **This API is not supported in current release.**
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_smtp_client_create(uint8_t flags,
@@ -241,28 +240,26 @@ int32_t rsi_smtp_client_create(uint8_t flags,
 */
 /*==============================================*/
 /**
- * @note        This API is not supported in current release.
  * @brief       Send mail to the recipient from the SMTP client.
  *              This is non-blocking API.
- * @pre		\ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   mail_recipient_address            - Mail recipient address
- * @param[in]   priority                          - Priority level at which mail is delivered \n
- *                                                  1 - RSI_SMTP_MAIL_PRIORITY_LOW \n
- *                                                  2 - RSI_SMTP_MAIL_PRIORITY_NORMAL \n
+ * @param[in]   priority                          - Priority level at which mail is delivered. \n
+ *                                                  1 - RSI_SMTP_MAIL_PRIORITY_LOW, \n
+ *                                                  2 - RSI_SMTP_MAIL_PRIORITY_NORMAL, \n
  *                                                  4 - RSI_SMTP_MAIL_PRIORITY_HIGH
  * @param[in]   mail_subject                      - Subject line text, a null terminated string.
  * @param[in]   mail_body                         - Mail message
  * @param[in]   mail_body_length                  - Length of the mail body
- * @param[in]   smtp_client_mail_response_handler - Callback when asynchronous response comes from the sent mail \n
- *                                                  Status: status code \n
- *                                                  cmd: sub command type
- * @return     0              -  Success  \n
- *             Negative Value - Failure  \n
- *            -3              - Command given in wrong state \n
- *            -4              - Buffer not available to serve the command
- * 
- * @note      1. The total maximum length of mail_recipient_address, mail_subject & mail_body is 1024 bytes \n
- *            2. If status in callback is non-zero, then sub command type will be in 6th byte of the descriptor
+ * @param[in]   smtp_client_mail_response_handler - Callback when asynchronous response comes from the sent mail. \n
+ *                                                  status: Status code, \n
+ *                                                  cmd: Sub-command type
+ * @return      0              -  Success \n
+ * @return      Non-Zero Value - Failure 	(**Possible Error Codes** - 0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        **This API is not supported in current release.**
+ * @note        The total maximum length of mail_recipient_address, mail_subject & mail_body is 1024 bytes \n
+ * @note        If status in callback is non-zero, then sub command type will be in 6th byte of the descriptor
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *   
  */
 
@@ -387,18 +384,16 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
 */
 /*==============================================*/
 /**
- * @note        This API is not supported in current release.
  * @brief       Delete SMTP client.
  *              This is a non-blocking API.
- * @pre		\ref rsi_config_ipaddress, rsi_smtp_client_create API needs to be called before this API.
  * @param[in]   smtp_client_delete_response_handler - Callback when asynchronous response comes for the delete request \n
- *                                                    status:Status code \n
+ *                                                    status: Status code \n
  *                                                    cmd   : Sub-command type
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *             -3             - Command given in wrong state \n
- *             -4             - Buffer not available to serve the command
- * @note       If status in callback is non-zero, then sub-command type will be in 6th byte of the descriptor.
+ * @return      0              -  Success \n
+ * @return      Non-Zero Value - Failure 	(**Possible Error Codes** - 0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        **This API is not supported in current release.**
+ * @note        If status in callback is non-zero, then sub-command type will be in 6th byte of the descriptor.
  */
 
 int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)(uint16_t status,

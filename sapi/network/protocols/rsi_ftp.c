@@ -22,9 +22,8 @@
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
- * @brief      Create FTP objects and connect to the FTP server on the given server port. This should be the first command for accessing FTP server. This is a blocking API.
- * @pre  \ref  rsi_config_ipaddress() API needs to be called before this API.
+ * @brief      Create FTP objects and connect to the FTP server on the given server port. This should be the first command for accessing FTP server. \n
+ *             This is a blocking API.
  * @param[in]   flags      - Network flags. Each bit in the flag has its own significance \n
  *                                  
  *  Flags                  |          Description
@@ -36,16 +35,11 @@
  * @param[in]  username    - Username for server authentication
  * @param[in]  password    - Password for server authentication
  * @param[in]  server_port - Port number of FTP server \n
- * @note                     FTP server port is also configurable on a non-standard port
- * @return      0              - Success \n
- *              Non Zero Value - Failure \n
- *                         If return value is less than 0 \n
- *                         -3: Command given in wrong state \n
- *                         -4: Buffer not available to serve the command \n
- *                         If return value is greater than 0 \n
- *
- *                         0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n
+ * @note       **Precondition** - \ref  rsi_config_ipaddress() API needs to be called before this API.
+ * @note       FTP server port is also configurable on a non-standard port
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int8_t *password, uint32_t server_port)
@@ -192,20 +186,13 @@ int32_t rsi_ftp_connect(uint16_t flags, int8_t *server_ip, int8_t *username, int
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
- * @brief      Disconnect from the FTP server and destroy the FTP objects. Once the FTP objects are
- *             destroyed, FTP server cannot be accessed. For further accessing, FTP objects should be created again. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief       Disconnect from the FTP server and destroy the FTP objects. Once the FTP objects are destroyed, FTP server cannot be accessed. \n
+ *              For further accessing, FTP objects should be created again. This is a blocking API.
+ * @param       void
  * @return      0              - Success \n
- *              Non Zero Value - Failure \n
- *                               If return value is less than 0 \n
- *				            -3 - Command given in wrong state \n
- *				            -4 - Buffer not available to serve the command \n
- *		                 If return value is greater than 0 \n
- *
- *		                 0x0021,0x002C,0x0015		             
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
- *
+ * @return      Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_disconnect(void)
 {
@@ -323,19 +310,12 @@ int32_t rsi_ftp_disconnect(void)
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
- * @brief      Open a file in the specified path on the FTP server. This is a blocking API.
- * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  file_name - Filename or filename with the path
+ * @brief       Open a file in the specified path on the FTP server. This is a blocking API.
+ * @param[in]   file_name - Filename or filename with the path
  * @return      0              - Success \n
- *              Non Zero Value - Failure \n
- *                               If return value is less than 0 \n
- *                              -3 - Command given in wrong state \n
- *				-4 - Buffer not available to serve the command \n 
- *				If return value is greater than 0 \n
- *
- *				0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_file_write(int8_t *file_name)
 {
@@ -419,9 +399,7 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
 */
 /*==============================================*/
 /**
- * @note        This API is not supported
  * @brief       Write the content into the file that was opened using \ref rsi_ftp_file_write() API. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   flags          - Network flags.  \n
  *  
  *  Flags                  |          Description
@@ -431,21 +409,16 @@ int32_t rsi_ftp_file_write(int8_t *file_name)
  * 
  * @param[in]   file_content   - Data stream to be written into the file
  * @param[in]   content_length - File content length
- * @param[in]   end_of_file    - Flag that indicates the end of file \n
- *                                1 – Represent the end of content to be written into the file \n
+ * @param[in]   end_of_file    - Flag that indicates the end of file. \n
+ *                                1 – Represent the end of content to be written into the file, \n
  *                                0 – Extra data that is pending to write into the file \n
- * @note                      (a) This API can be called multiple times to append data into the same file. \n
- *                            (b) File content length should not exceed 1344 bytes in case of IPV4 \n 
- *                                and 1324 bytes in case of IPV6.If exceeds, this API will break the file \n 
- *                                content and send it in multiple packets.
- * @return      0              -  Success \n
- *              Non Zero Value -  Failure \n
- *                                If return value is less than 0 \n
- *                                -3: Command given in wrong state \n
- *                                -4: Buffer not available to serve the command \n
- *                                If return value is greater than 0 \n
- *
- *                                0x0021,0x002C,0x0015 
+ * @return      0              - Success \n
+ * @return      Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        This API can be called multiple times to append data into the same file. \n
+ * @note        File content length should not exceed 1344 bytes in case of IPV4 and 1324 bytes in case of IPV6. \n  
+ *              If exceeded, this API will break the file content and send it in multiple packets. \n                                               
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t content_length, uint8_t end_of_file)
 {
@@ -596,25 +569,19 @@ int32_t rsi_ftp_file_write_content(uint16_t flags, int8_t *file_content, int16_t
 */
 /*==============================================*/
 /**
- * @note         This API is not supported
  * @brief        Read the content from the specified file on the FTP server. This is a non-blocking API.
- * @pre  \ref    rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]    file_name              - Filename or filename with path
  * @param[in]    call_back_handler_ptr  - Called when asynchronous response is received from module for file read request
- * @param[out]   status                 - Success - RSI_SUCCESS\n
- *                                        Failure - Negative value\n
- *                                                  -2 : Invalid parameter,expects call back handler \n
- *                                                  -3 : Command given in wrong state \n
- *                                                  -4 : Buffer not available to serve the command \n
- *                                                 Other Possible error codes are: 0x0021,0x002C,0x0015
- *                                                 Other parameters of the callback are valid only if status is 0
- * @param[out]   file_content           -  File content
- * @param[out]   content_length         -  Length of file content
- * @param[out]   end_of_file            -  Indicate the end of file \n
- *                                        1 – No more data \n
+ * @param[out]   status                 - Status code \n
+ * @param[out]   file_content           - File content
+ * @param[out]   content_length         - Length of file content
+ * @param[out]   end_of_file            - Indicate the end of file. \n
+ *                                        1 – No more data, \n
  *                                        0 – More data present
- * @return      Status of the call_back_handler_ptr is returned
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return       0              - Success \n
+ * @return       Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note         **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note         Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_file_read_aysnc(
   int8_t *file_name,
@@ -700,19 +667,13 @@ int32_t rsi_ftp_file_read_aysnc(
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
  * @brief      Delete the file that is present in the specified path on the FTP server. This is a blocking API.
  * @pre  \ref  rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  file_name - Filename or filename with path to delete
- * @return      0             - Success \n
- *             Non Zero Value - Failure \n
- *                          If return value is less than zero
- *                         -3 - Command given in wrong state \n
- *                         -4 - Buffer not available to serve the command \n
- *                         If return value is greater than 0 \n
- *
- *                         0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_file_delete(int8_t *file_name)
 {
@@ -796,20 +757,13 @@ int32_t rsi_ftp_file_delete(int8_t *file_name)
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
  * @brief      Rename the file with a new name on the FTP server. This is a blocking API.
- * @pre  \ref  rsi_config_ipaddress() API needs to be called before this API 
  * @param[in]  old_file_name - Filename or filename with path to rename
  * @param[in]  new_file_name - New filename
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *                          If return value is less than 0 \n
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command \n
- *                         If return value is greater than 0 \n
- *
- *                         0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
 {
@@ -896,19 +850,12 @@ int32_t rsi_ftp_file_rename(int8_t *old_file_name, int8_t *new_file_name)
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
  * @brief      Create a directory on the FTP server. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  directory_name - Directory name (with path if required) to create
- * @return     0              -  Success  \n
- *             Non Zero Value - Failure \n
- *                         If return value is less than 0 \n
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command \n
- *                         If return value is greater than 0 \n
- *
- *                         0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_directory_create(int8_t *directory_name)
 {
@@ -992,19 +939,12 @@ int32_t rsi_ftp_directory_create(int8_t *directory_name)
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
  * @brief      Delete the directory on the FTP server. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API 
  * @param[in]  directory_name - Directory name (with path if required) to delete
- * @return     0              -  Success  \n
- *             Non Zero Value - Failure \n
- *                              If return value is less than 0 \n
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command \n
- *                              If return value is greater than 0 \n
- *
- *                              0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_directory_delete(int8_t *directory_name)
 {
@@ -1087,19 +1027,12 @@ int32_t rsi_ftp_directory_delete(int8_t *directory_name)
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
  * @brief      Change the current working directory to the specified directory path on the FTP server. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  directory_path - Directory name (with path if required) to create
- * @return     0              -  Success  \n
- *             Non Zero Value -  Failure \n
- *                              If return value is less than 0
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command \n
- *                         If return value is greater than 0 \n
- *
- *                         0x0021,0x002C,0x0015
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_directory_set(int8_t *directory_path)
 {
@@ -1183,25 +1116,19 @@ int32_t rsi_ftp_directory_set(int8_t *directory_path)
 */
 /*==============================================*/
 /**
- * @note        This API is not supported
  * @brief       Get the list of directories present in the specified directory on the FTP server. This is a non-blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   directory_path        - Directory path(with path if required) to list
  * @param[in]   call_back_handler_ptr -  Called when asynchronous response is received from module for directory list request
- * @param[out]  status                -  Success - RSI_SUCCESS\n
- *                                       Failure - Negative value\n
- *                                                  -2 : Invalid parameter, expects call back handler \n
- *                                                  -3 : Command given in wrong state \n
- *                                                  -4 : Buffer not available to serve the command \n
- *                                                 Other possible error codes are: 0x0021,0x002C,0x0015
- *                                                 Other parameters of callback are valid only if status is 0
+ * @param[out]  status                -  Status code
  * @param[out]  directory_list        -  Stream of data with directory list as content
  * @param[out]  length                -  Length of content
- * @param[out]  end_of_list           -  Indicate end of list \n
- *                                      1 – No more data \n
- *                                      0 – More data present
- * @return      Status of the call_back_handler_ptr is returned
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @param[out]  end_of_list           -  Indicate end of list. \n
+ *                                       1 – No more data, \n
+ *                                       0 – More data present
+ * @return      0              - Success \n
+ * @return      Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_ftp_directory_list_async(
   int8_t *directory_path,
@@ -1288,27 +1215,20 @@ int32_t rsi_ftp_directory_list_async(
 */
 /*==============================================*/
 /**
- * @note       This API is not supported
- * @brief      Set the FTP client mode - either in Passive mode or Active Mode.
- *             In active FTP, client establishes the command channel and the server establishes the data channel.
- *             In passive FTP, both the command channel and the data channel are established by the client.
- *             Set the FTP Transfer mode - either in Block transfer mode or Stream transfer Mode.
- *             In stream transfer mode, Data is sent as a continuous stream
- *             In block transfer mode, FTP puts each record (or line) of data into several blocks and sent it on to TCP.
+ * @brief      Set the FTP client mode - either in Passive mode or Active Mode. \n
+ *             In active mode, FTP client establishes the command channel, and the server establishes the data channel. \n
+ *             In passive mode, both the command channel and the data channel are established by the client. \n
  *             This is a blocking API.
- * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  mode - Used to select the mode of FTP client if FTP is enabled \n
- *        In mode variable, BIT(0) refers FTP client mode and BIT(1) refers FTP transfer mode \n
- *		  BIT(0) is 0 then active mode is enabled \n
- *        BIT(0) is 1 then passive mode is enabled \n
- *        BIT(1) is 0 then stream transfer mode is enabled \n
- *        BIT(1) is 1 then block transfer mode is enabled
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *                         -2 - Invalid parameter \n
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @param[in]  mode - Used to select the mode of FTP client if FTP is enabled. \n
+ *                    BIT(0) refers FTP client mode and BIT(1) refers FTP transfer mode. \n
+ *		                BIT(0) - 0 then active mode is enabled, \n
+ *                    BIT(0) - 1 then passive mode is enabled, \n
+ *                    BIT(1) - 0 then stream transfer mode is enabled, \n
+ *                    BIT(1) - 1 then block transfer mode is enabled
+ * @return      0              - Success \n
+ * @return      Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_ftp_mode_set(uint8_t mode)
@@ -1388,18 +1308,15 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
 * @{
 */
 /*==============================================*/
-/**
- * @note       This API is supported only in 9117
- *             This API should called before every \ref rsi_ftp_file_write_content() when the Block transfer mode is in use
+/**            
  * @brief      Set the file size
- * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  file_size - represents the size of the file in bytes that is to be transferred. \n
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *                         -2 - Invalid parameter \n
- *                         -3 - Command given in wrong state \n 
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021, 0x002C, 0x0015) \n	             
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       This API is supported only in 9117
+ * @note       This API should called before every \ref rsi_ftp_file_write_content() when the Block transfer mode is in use
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 #ifdef CHIP_9117
 int32_t rsi_ftp_file_size_set(uint32_t file_size)

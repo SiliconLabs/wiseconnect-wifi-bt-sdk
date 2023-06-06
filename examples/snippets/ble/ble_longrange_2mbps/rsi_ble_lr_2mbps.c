@@ -38,6 +38,8 @@
 #include "sl_fw_logging.h"
 #endif
 
+#define RSI_DEVICE_DATA_RATE LONG_RANGE
+
 //! Address type of the device to connect
 #define RSI_BLE_DEV_ADDR_TYPE LE_PUBLIC_ADDRESS
 
@@ -329,6 +331,19 @@ int32_t rsi_ble_central(void)
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
+
+#if (RSI_DEVICE_DATA_RATE == LONG_RANGE)
+  uint8_t tx_phy_rate    = BLE_CODED_TX_PHY;
+  uint8_t rx_phy_rate    = BLE_CODED_RX_PHY;
+  uint8_t coded_phy_rate = BLE_500KBPS_CODED_PHY;
+#endif
+
+#if (RSI_DEVICE_DATA_RATE == BLE_2MBPS)
+  uint8_t tx_phy_rate    = BLE_2MBPS_TX_PHY;
+  uint8_t rx_phy_rate    = BLE_2MBPS_RX_PHY;
+  uint8_t coded_phy_rate = BLE_2MBPS_CODED_PHY;
+#endif
+
 #ifdef FW_LOGGING_ENABLE
   //Fw log component level
   sl_fw_log_level_t fw_component_log_level;
@@ -350,11 +365,16 @@ int32_t rsi_ble_central(void)
   }
 #endif
 #ifdef RSI_WITH_OS
-  //! SiLabs module intialisation
+#ifndef RSI_M4_INTERFACE
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -486,8 +506,7 @@ int32_t rsi_ble_central(void)
           return status;
         }
 
-        status =
-          rsi_ble_setphy((int8_t *)rsi_app_connected_device.dev_addr, 1 /* tx_phy */, 2 /*rx_phy */, 0 /* coded_phy */);
+        status = rsi_ble_setphy((int8_t *)rsi_app_connected_device.dev_addr, tx_phy_rate, rx_phy_rate, coded_phy_rate);
         if (status != RSI_SUCCESS) {
           return status;
         }
@@ -546,7 +565,20 @@ int32_t rsi_ble_central(void)
 
       case RSI_APP_EVENT_PHY_UPDATE_COMPLETE: {
         //! phy update complete event
-        LOG_PRINT("\r\nIn Phy rate update complete event\r\n");
+        LOG_PRINT("\r\nPhy rate update complete event\r\n");
+        if ((rsi_app_phy_update_complete.TxPhy != BLE_2MBPS) && (rsi_app_phy_update_complete.RxPhy != BLE_2MBPS)) {
+          if (coded_phy_rate == BLE_500_KBPS) {
+            LOG_PRINT("\r\nPHY data rate is updated to 500kbps\n");
+          } else if (coded_phy_rate == BLE_125_KBPS) {
+            LOG_PRINT("\r\nPHY data rate is updated to 125kbps PHY data rate \n");
+          }
+        } else if ((rsi_app_phy_update_complete.TxPhy == BLE_1MBPS)
+                   && (rsi_app_phy_update_complete.RxPhy == BLE_1MBPS)) {
+          LOG_PRINT("\r\nPHY data rate is updated to 1Mbps PHY data rate \n");
+        } else {
+          LOG_PRINT("\r\nPHY data rate is updated to 2Mbps PHY data rate \n");
+        }
+
         //! clear the phy updare complete event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_PHY_UPDATE_COMPLETE);
       } break;
@@ -606,7 +638,14 @@ int main(void)
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
-
+#ifdef RSI_M4_INTERFACE
+  // Silicon labs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+#endif
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 

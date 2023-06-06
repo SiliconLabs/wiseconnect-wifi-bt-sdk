@@ -92,7 +92,7 @@ The application can be configured to suit your requirements and development envi
 #define RSI_TCP_IP_BYPASS                  RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP         TCP_IP_FEAT_DHCPV4_CLIENT
 #define RSI_CUSTOM_FEATURE_BIT_MAP         FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP     EXT_FEAT_384K_MODE 
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP     RAM_LEVEL_NWP_ALL_MCU_ZERO 
 ```
 
 **4.1.2** Open `rsi_bt_app.c` file and update/modify following macros:

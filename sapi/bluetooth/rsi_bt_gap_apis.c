@@ -474,6 +474,8 @@ int32_t rsi_bt_cancel_inquiry(void)
 {
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_INQUIRY_CANCEL, NULL, NULL);
 }
+
+/*! \cond RS9116 */
 /** @} */
 /** @addtogroup BT-CLASSIC5
 * @{
@@ -1087,6 +1089,7 @@ int32_t rsi_bt_per_tx(uint32_t *bt_pertx)
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_PER_CMD, bt_pertx, NULL);
 }
 /** @} */
+/*! \endcond */
 
 /*==============================================*/
 /**
@@ -1294,6 +1297,37 @@ int32_t rsi_bt_encryption_enable_or_disable(int8_t *remote_dev_addr, uint8_t ena
   return rsi_bt_driver_send_cmd(RSI_BT_REQ_ENABLE_ENC, &bt_conn_enc, NULL);
 }
 /** @} */
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_bt_link_policy_settings_config(uint8_t *remote_dev_addr, uint8_t link_policy)
+ * @brief      To set new link policy configuration.
+ *             ENABLE_ROLE_SWITCH   BIT(0)
+ *             ENABLE_HOLD_MODE     BIT(1) //Not actively being used
+ *             ENABLE_SNIFF_MODE    BIT(2) 
+ *             ENABLE_PARK_STATE    BIT(3) //Not actively being used
+ *             
+ *             Note: Old link policy settings will be overwritten with the updated value of link_policy_settings 
+ *             Eg: 1. If you want to enable role_switch and sniff_mode you have to pass the link_policy_settings with value 5 (ENABLE_ROLE_SWITCH | ENABLE_SNIFF_MODE)
+ *                 2. If you want to disable role_switch and keep the sniff_mode enabled you have to pass with value 4 (Only enable ENABLE_SNIFF_MODE)
+ *                 3. If you want to enable role_switch and disable the sniff_mode you have to pass with value 1 (Only enable ENABLE_ROLE_SWITCH)
+ * @pre        \ref rsi_wireless_init API needs to be called before this API
+ * @return     0               -       Success \n
+ *             Non-Zero Value  -       Failure
+ */
+int32_t rsi_bt_link_policy_settings_config(uint8_t *remote_dev_addr, uint16_t link_policy_settings)
+{
+
+  rsi_bt_cmd_link_policy_settings_t link_policy_sett;
+
+  if (link_policy_settings > 7 || link_policy_settings < 0) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  memset(&link_policy_sett, NULL, sizeof(rsi_bt_cmd_link_policy_settings_t));
+  memcpy(link_policy_sett.dev_addr, (uint8_t *)remote_dev_addr, RSI_DEV_ADDR_LEN);
+  link_policy_sett.link_policy_settings = link_policy_settings;
+  return rsi_bt_driver_send_cmd(RSI_BT_LINK_POLICY_CONFIG, &link_policy_sett, NULL);
+}
 
 /*=================================================*/
 /**

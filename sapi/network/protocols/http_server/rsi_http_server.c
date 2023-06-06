@@ -23,17 +23,16 @@
 */
 /*==============================================*/
 /**
- * @brief             Load the webpage to the HTTP Server's file system that is present in the WiSeConnect module.
- *                    This is a blocking API.
- * @pre  \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]   flags     - BIT (2) is used to set the webpage that is associated with JSON object
+ * @brief       Load the webpage to the HTTP Server's file system that is present in the module.
+ *              This is a blocking API.
+ * @param[in]   flags     - BIT [2] is used to set the webpage that is associated with JSON object
  * @param[in]   file_name - Filename of the HTML webpage
  * @param[in]   webpage   - Pointer to the HTML webpage that contains the HTML webpage content
  * @param[in]   length    - Webpage length
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffc) \n
+ * @note     	  **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_webpage_load(uint8_t flags, uint8_t *file_name, uint8_t *webpage, uint32_t length)
@@ -146,16 +145,16 @@ int32_t rsi_webpage_load(uint8_t flags, uint8_t *file_name, uint8_t *webpage, ui
 */
 /*==============================================*/
 /**
- * @brief             Create the JSON object to the webpage that is already present in the WiSeConnect module's HTTP server file system. This is a blocking API.
- * @pre  \ref rsi_wireless_init() API needs to be called before this API
+ * @brief       Create the JSON object to the webpage that is already present in the module's HTTP server file system. 
+ *              This is a blocking API.
  * @param[in]   flags       -  Reserved
  * @param[in]   file_name   - Filename of the JSON object data
  * @param[in]   json_object - Pointer to the JSON object data
  * @param[in]   length      - Length of the JSON object data
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffc) \n
+ * @note     	  **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -264,15 +263,15 @@ int32_t rsi_json_object_create(uint8_t flags, const char *file_name, uint8_t *js
 */
 /*==============================================*/
 /**
- * @brief        Erase the webpage from HTTP server's file system that is present in the WiSeConnect module. This is a blocking API.
- * @pre  \ref rsi_wireless_init() API needs to be called before this API
- * @param[in]    file_name - Erase particular/all loaded webpage files from the HTTP server's file system \n
- *                           file_name - Erase a particular webpage file \n
+ * @brief        Erase the webpage from HTTP server's file system that is present in the module. 
+ *               This is a blocking API.
+ * @param[in]    file_name - Erase particular/all loaded webpage files from the HTTP server's file system. \n
+ *                           file_name - Erase a particular webpage file. \n
  *                           NULL - Erase all loaded webpage files
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffc) \n
+ * @note     	  **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_webpage_erase(uint8_t *file_name)
@@ -378,13 +377,13 @@ int32_t rsi_webpage_erase(uint8_t *file_name)
 */
 /*==============================================*/
 /**
- * @brief             Delete the JSON object of the HTTP server's file system that is already present in the WiSeConnect module. This is a blocking API.
- * @pre  \ref rsi_wireless_init() API needs to be called before this API.
+ * @brief       Delete the JSON object of the HTTP server's file system that is already present in the module. 
+ *              This is a blocking API.
  * @param[in]   file_name - Delete a particular JSON object that is already created in the HTTP server's file system
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffc) \n
+ * @note     	  **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_json_object_delete(uint8_t *file_name)
@@ -465,14 +464,13 @@ int32_t rsi_json_object_delete(uint8_t *file_name)
 /*==============================================*/
 /**
  * @brief             Send the webpage to HTTP server's file system. This is a blocking API.
- * @pre  \ref rsi_wlan_connect() API needs to be called before this API.
  * @param[in]   flags   - Reserved
  * @param[in]   webpage - Pointer to the HTML webpage that contains the HTML webpage content
  * @param[in]   length  - Webpage length
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -4 - Buffer not available to serve the command 
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffc) \n
+ * @note     	  **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_webpage_send(uint8_t flags, uint8_t *webpage, uint32_t length)
@@ -594,22 +592,14 @@ int32_t rsi_webpage_send(uint8_t flags, uint8_t *webpage, uint32_t length)
 */
 /*==============================================*/
 /**
- * @brief             Wireless firmware upgrade request. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief       Request wireless firmware upgrade. This is a blocking API
  * @param[in]   Void
- * @return     0              -  Success \n
- *             Negative Value - Failure \n
- *                         -2 - Invalid parameters \n
- *                         -4 - Buffer not available to serve the command 
- * @note        1. For Wireless firmware upgrade, \n
- *                 it will take approx. 85 sec duration for upgrading the firmware of 1.5 MB file.      
- * @note        2. Need to call rsi_bl_module_power_cycle() api  for module reboot after firmware upgradation successful and also need to wait for 50 seconds(simply use rsi_delay_ms(50000)) to reflect updated firmware. \n
- *              Example: \n
- *                       rsi_bl_module_power_cycle(); \n
- *                       LOG_PRINT("\nModule is Rebooted\r\n"); \n
- *                       LOG_PRINT("\nwait for 50 seconds to reflect updated firmware\r\n"); \n
- *                       rsi_delay_ms(50000); 
- * @note        3. Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              -  Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffc)\n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        For wireless firmware upgrade, it will take approximately 85 seconds for upgrading the firmware file of 1.5 MB      
+ * @note        Need to call rsi_bl_module_power_cycle() API, for the module to reboot after successful firmware upgradation and wait for 50 seconds for the upgraded firmware to be reflected. \n 
+ * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
  */
 ///@private
 int32_t rsi_req_wireless_fwup(void)
@@ -669,13 +659,12 @@ int32_t rsi_req_wireless_fwup(void)
 */
 /*============================================================================== */
 /**
- * @brief            Create an HTTP server credentials request.Set username and password for HTTP server. This is a blocking API.
- * @pre  Call this API after rsi_wireless_init API.
- * @param[in]   username - User-given username
- * @param[in]   password - User-given password
+ * @brief      Create HTTP server credentials request. Set username and password for HTTP server. This is a blocking API.
+ * @param[in]  username - User-given username
+ * @param[in]  password - User-given password
  * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *			               -3 - Command given in wrong state
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffd) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  * 
  **/
 

@@ -19,6 +19,9 @@
   Includes
  */
 #include "rsi_driver.h"
+#ifdef SLEEP_WAKEUP_LOGGING
+#include "sleep_wakeup_logging.h"
+#endif
 /*
   Global Variables
  */
@@ -53,7 +56,7 @@ void rsi_scheduler_init(rsi_scheduler_cb_t *scheduler_cb)
 /*====================================================*/
 /**
  * @fn          uint32_t rsi_get_event(rsi_scheduler_cb_t *scheduler_cb)
- * @brief       Handle events
+ * @brief       Get an event
  * @param[in]   scheduler_cb - pointer to scheduler cb structure 
  * @return      Current event map
  */
@@ -72,7 +75,7 @@ uint32_t rsi_get_event(rsi_scheduler_cb_t *scheduler_cb)
 /*====================================================*/
 /**
  * @fn          void rsi_scheduler(rsi_scheduler_cb_t *scheduler_cb)
- * @brief       Scheduler function handles events
+ * @brief       Handles events
  * @param[in]   scheduler_cb - pointer to scheduler cb structure 
  * @return      void 
  */
@@ -88,12 +91,15 @@ void rsi_scheduler(rsi_scheduler_cb_t *scheduler_cb)
 #if defined(FW_LOGGING_ENABLE) && !defined(RSI_WITH_OS)
   sl_fw_log_task();
 #endif
+#if defined(SLEEP_WAKEUP_LOGGING) && !defined(RSI_WITH_OS)
+  sl_sleepwakeup_log_task();
+#endif
 #endif
 }
 /*====================================================*/
 /**
  * @fn          uint32_t rsi_get_event_non_rom(rsi_scheduler_cb_t *scheduler_cb)
- * @brief       Handle events on rom
+ * @brief       Get an event on ROM
  * @param[in]   scheduler_cb - pointer to scheduler cb structure 
  * @return      Current event map 
  */
@@ -129,7 +135,7 @@ uint32_t rsi_get_event_non_rom(rsi_scheduler_cb_t *scheduler_cb)
 /*====================================================*/
 /**
  * @fn          void rsi_scheduler_non_rom(rsi_scheduler_cb_t *scheduler_cb)
- * @brief       Scheduler function handles events
+ * @brief       Handles events
  * @param[in]   scheduler_cb - pointer to scheduler cb structure \n 
  * @return      void  
  */

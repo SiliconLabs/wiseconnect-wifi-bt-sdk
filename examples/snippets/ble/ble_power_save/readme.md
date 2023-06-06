@@ -156,7 +156,7 @@ the user has to change the application as well as GPIO handshake signals        
 #define RSI_TCP_IP_BYPASS                             RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP                    TCP_IP_FEAT_DHCPV4_CLIENT
 #define RSI_CUSTOM_FEATURE_BIT_MAP                    FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (EXT_FEAT_384K_MODE|EXT_FEAT_XTAL_CLK_ENABLE |           EXT_FEAT_LOW_POWER_MODE)
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (RAM_LEVEL_NWP_ALL_MCU_ZERO|EXT_FEAT_XTAL_CLK_ENABLE |           EXT_FEAT_LOW_POWER_MODE)
 ```
 
    `RSI_HAND_SHAKE_TYPE` is used to select GPIO or Message based handshake in RSI_SLEEP_MODE_2 and RSI_SLEEP_MODE_8 modes.

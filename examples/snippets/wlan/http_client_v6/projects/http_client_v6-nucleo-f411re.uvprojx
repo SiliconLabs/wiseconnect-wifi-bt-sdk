@@ -336,7 +336,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--C99 --reduce_paths</MiscControls>
-              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_WLAN_API_ENABLE </Define>
+              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE EXECUTION_FROM_RAM USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_WLAN_API_ENABLE </Define>
               <Undefine></Undefine>
               <IncludePath>../../../../../examples/snippets/wlan/http_client_v6;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; ../../../../../sapi/network/protocols; ../../../../../resources/certificates; platforms/stm32/boards/nucleo-f411re</IncludePath>
             </VariousControls>
@@ -391,6 +391,11 @@
          </Files>
          <Files>
            
+           <File>
+             <FileName>index.txt</FileName>
+             <FileType>5</FileType>
+             <FilePath>../../../../../examples/snippets/wlan/http_client_v6/index.txt</FilePath>
+           </File>
            <File>
              <FileName>rsi_wlan_config.h</FileName>
              <FileType>5</FileType>
@@ -776,25 +781,6 @@
 	                <FileName>rsi_wlan_apis.c</FileName>
 	                <FileType>1</FileType>
 	                <FilePath>../../../../../sapi/wlan/rsi_wlan_apis.c</FilePath>
-	             </File>
-	           </Files>
-	        
-	           <Files>
-	           
-	             <File>
-	                <FileName>sl_app_logging.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../sapi/logging/sl_app_logging.c</FilePath>
-	             </File>
-	             <File>
-	                <FileName>sl_fw_logging.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../sapi/logging/sl_fw_logging.c</FilePath>
-	             </File>
-	             <File>
-	                <FileName>firmware_logging_utils.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../utilities/advanced_logging/firmware_logging/firmware_logging_utils.c</FilePath>
 	             </File>
 	           </Files>
 	        

@@ -1919,12 +1919,14 @@ void rsi_ble_main_app_task()
             //! store the connection identifier in individual connection specific buffer
             rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[slave_task_instances].conn_id = slave_conn_id;
             //! create task for processing new slave connection
+#ifdef RSI_WITH_OS
             status = rsi_task_create((rsi_task_function_t)rsi_ble_task_on_conn,
                                      (uint8_t *)"ble_slave_task",
                                      RSI_BLE_APP_TASK_SIZE,
                                      &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[slave_task_instances],
                                      RSI_BLE_APP_TASK_PRIORITY,
                                      &ble_app_task_handle[slave_conn_id]);
+#endif
             if (status != RSI_ERROR_NONE) {
               LOG_PRINT("\r\n task%d failed to create, reason = %ld\r\n", slave_conn_id, status);
               slave_con_req_pending = 0;
@@ -1957,7 +1959,7 @@ void rsi_ble_main_app_task()
               //! store the connection identifier in individual connection specific buffer
               rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances]
                 .conn_id = master_conn_id;
-
+#ifdef RSI_WITH_OS
               //! create task for processing new master connection
               status = rsi_task_create(
                 (rsi_task_function_t)rsi_ble_task_on_conn,
@@ -1966,6 +1968,7 @@ void rsi_ble_main_app_task()
                 &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances],
                 RSI_BLE_APP_TASK_PRIORITY,
                 &ble_app_task_handle[master_conn_id]);
+#endif
               if (status != RSI_ERROR_NONE) {
                 LOG_PRINT("\r\n task%d failed to create\r\n", master_conn_id);
                 //! remove device from local list
@@ -2007,6 +2010,7 @@ void rsi_ble_main_app_task()
                 .conn_id = master_conn_id;
               //LOG_PRINT("free bytes remaining before connection1 - %ld \r\n",xPortGetFreeHeapSize());
               //! create task for processing new master connection
+#ifdef RSI_WITH_OS
               status = rsi_task_create(
                 (rsi_task_function_t)rsi_ble_task_on_conn,
                 (uint8_t *)"ble_master_task",
@@ -2014,6 +2018,7 @@ void rsi_ble_main_app_task()
                 &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances],
                 RSI_BLE_APP_TASK_PRIORITY,
                 &ble_app_task_handle[master_conn_id]);
+#endif
               if (status != RSI_ERROR_NONE) {
                 LOG_PRINT("\r\n task%d failed to create\r\n", master_conn_id);
                 //! remove device from local list

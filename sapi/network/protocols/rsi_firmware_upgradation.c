@@ -27,9 +27,9 @@
  * @param[in]   type    - Firmware upgrade chunk type
  * @param[in]   content - Firmware content
  * @param[in]   length  - Length of the content
- * @return      Zero    - Success \n
- *              3       -  Firmware upgrade completed successfully \n
- *              Negative Value -  Failure
+ * @return      0       - Success \n
+ * @return      3       -  Firmware upgrade completed successfully \n
+ * @return      Negative Value -  Failure
  */
 /// @private
 static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
@@ -111,13 +111,11 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
 /*==============================================*/
 /**
  * @brief       Send the RPS header content of firmware file. This is a blocking API.
- * @pre         \ref rsi_wlan_radio_init() API needs to be called before this API
  * @param[in]   rps_header     - Pointer to the RPS header content
  * @return      0              - Success \n
- *              Negative Value - Failure \n
- *                          -2 - Invalid Parameters \n
- *                          -4 - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffc) \n
+ * @note        **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_fwup_start(uint8_t *rps_header)
 {
@@ -141,11 +139,10 @@ int32_t rsi_fwup_start(uint8_t *rps_header)
  * @param[in]  content         -  Pointer to the firmware file content
  * @param[in]  length          -  Length of the content
  * @return      0              -  Success \n
- *              Negative Value -  Failure \n
- *                          3  -  Firmware upgradate is completed successfully \n
- *                         -2  -  Invalid parameters \n
- *			   -4  -  Buffer not availableto serve the command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      3  -  Firmware upgradate is completed successfully \n
+ * @return      Negative Value -  Failure 	(**Possible Error Codes** - 0xfffffffe, 0xfffffffc) \n            
+ * @note        **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_fwup_load(uint8_t *content, uint16_t length)

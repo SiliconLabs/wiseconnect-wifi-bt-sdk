@@ -31,7 +31,7 @@
  * @param[in]  total_size - size of pool to create \n 
  * @param[in]  pkt_size   - size of each packet in pool \n 
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Non-Zero Value - Failure
  *
  */
 ///@private
@@ -50,7 +50,7 @@ int32_t rsi_pkt_pool_init(rsi_pkt_pool_t *pool_cb, uint8_t *buffer, uint32_t tot
  * @brief       Allocate packet from a given packet pool 
  * @param[in]   pool_cb - packet pool pointer from which packet needs to be allocated  
  * @return      0              - Success \n
- *              Positive Value - Failure
+ * @return      Non-Zero Value - Failure
  *
  */
 ///@private
@@ -70,7 +70,7 @@ rsi_pkt_t *rsi_pkt_alloc(rsi_pkt_pool_t *pool_cb)
  * @param[in]  pool_cb - packet pool to which packet needs to be freed  
  * @param[in]  pkt     - packet pointer which needs to be freed 
  * @return     0              - Success \n
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  *
  */
 ///@private
@@ -86,9 +86,9 @@ int32_t rsi_pkt_free(rsi_pkt_pool_t *pool_cb, rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn         uint32_t rsi_is_pkt_available(rsi_pkt_pool_t *pool_cb)
- * @brief      Return number of available packets in pool
+ * @brief      Number of available packets in pool
  * @param[in]  pool_cb - pool pointer to check available packet count 
- * @return     >=0     - Number of packets in pool
+ * @return     Number of packets in pool (>=0)
  *
  */
 ///@private

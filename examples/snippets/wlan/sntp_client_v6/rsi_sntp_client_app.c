@@ -79,10 +79,8 @@
 //! flags
 #define FLAGS 0
 #else
-#define SERVER_IP                                  \
-  {                                                \
-    0x26100020, 0x6f960096, 0x00000000, 0x00000006 \
-  }
+#define SERVER_IP "2610:20:6f96:96::4"
+
 #define RSI_IP_VERSION RSI_IP_VERSION_6
 //! flags
 #define FLAGS          1
@@ -115,18 +113,10 @@
 
 #else
 //! IPv6 address of the module
-#define DEVICE_IP6                                 \
-  {                                                \
-    0x20010db8, 0x00000001, 0x00000000, 0x00000121 \
-  }
-//! IPv6 address of Gateway
-#define GATEWAY6                                   \
-  {                                                \
-    0x20010db8, 0x00000001, 0x00000000, 0x00000120 \
-  }
+#define DEVICE_IP6 "2401:4290:1289:10ed::106"
 
-//! IP address of netmask
-#define NETMASK "255.255.255.0" //0x00FFFFFF
+//! IPv6 address of Gateway
+#define GATEWAY6   "2401:4290:1289:10ed::106"
 #endif
 #endif
 
@@ -172,6 +162,9 @@ void main_loop(void);
 //! SNTP response handler
 void rsi_sntp_client_create_response_handler(uint16_t status, const uint8_t cmd_type, const uint8_t *buffer);
 
+extern const char *rsi_inet_ntop6(const unsigned char *input, char *dst, rsi_socklen_t size);
+extern int rsi_inet_pton6(const char *src, const char *src_endp, unsigned char *dst, unsigned int *ptr_result);
+
 //! sntp client  Application
 int32_t rsi_sntp_client_app()
 {
@@ -179,6 +172,10 @@ int32_t rsi_sntp_client_app()
   uint8_t ip_buff[20];
 #else
   uint32_t ip_buff[13];
+  unsigned char hex_addr[RSI_IPV6_ADDRESS_LENGTH] = { 0 };
+  unsigned char link_local_addr[46]               = { 0 };
+  unsigned char global_addr[46]                   = { 0 };
+  unsigned char gateway6[46]                      = { 0 };
 #endif
   int32_t status = RSI_SUCCESS;
 #if !(DHCP_MODE)
@@ -187,17 +184,17 @@ int32_t rsi_sntp_client_app()
   uint32_t network_mask = NETMASK;
   uint32_t gateway      = GATEWAY;
 #else
-  uint32_t ip_addr[4]    = DEVICE_IP6;
-  uint32_t gateway[4]    = GATEWAY6;
+  uint32_t ip_addr[4];
+  uint32_t gateway[4];
   uint32_t *network_mask = NULL;
 #endif
 #else
-  uint8_t dhcp_mode     = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
+  uint8_t dhcp_mode                               = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
 #ifndef RSI_CONFIGURE_IPV6
   uint32_t server_ip = SERVER_IP;
 #else
-  uint32_t server_ip[4] = SERVER_IP;
+  uint32_t server_ip[4];
 #endif
 
   uint16_t length = RSI_SNTP_RSP_BUFFER_LENGTH;
@@ -232,8 +229,17 @@ int32_t rsi_sntp_client_app()
   //! Configure IP
 #if DHCP_MODE
   status = rsi_config_ipaddress(RSI_IP_VERSION, dhcp_mode, 0, 0, 0, (uint8_t *)ip_buff, sizeof(ip_buff), 0);
+#ifdef RSI_CONFIGURE_IPV6
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[1], (char *)link_local_addr, sizeof(link_local_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[5], (char *)global_addr, sizeof(global_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[9], (char *)gateway6, sizeof(gateway6));
+#endif
 #else
-  status                = rsi_config_ipaddress(RSI_IP_VERSION,
+#ifdef RSI_CONFIGURE_IPV6
+  status = rsi_inet_pton6(DEVICE_IP6, DEVICE_IP6 + strlen(DEVICE_IP6), hex_addr, ip_addr);
+  status = rsi_inet_pton6(GATEWAY6, GATEWAY6 + strlen(GATEWAY6), hex_addr, gateway);
+#endif
+  status = rsi_config_ipaddress(RSI_IP_VERSION,
                                 RSI_STATIC,
                                 (uint8_t *)&ip_addr,
                                 (uint8_t *)&network_mask,
@@ -254,10 +260,11 @@ int32_t rsi_sntp_client_app()
 #else
   LOG_PRINT("RSI_STA IP ADDR \r\n");
   LOG_PRINT("prefix length : %d\r\n", ip_buff[0]);
-  LOG_PRINT("linklocaladdr:%x.%x.%x.%x \r\n", ip_buff[1], ip_buff[2], ip_buff[3], ip_buff[4]);
-  LOG_PRINT("global addr:  %x.%x.%x.%x \r\n", ip_buff[5], ip_buff[6], ip_buff[7], ip_buff[8]);
-  LOG_PRINT("gateway addr: %x.%x.%x.%x \r\n", ip_buff[9], ip_buff[10], ip_buff[11], ip_buff[12]);
+  LOG_PRINT("linklocaladdr: %s\r\n", link_local_addr);
+  LOG_PRINT("global addr:   %s\r\n", global_addr);
+  LOG_PRINT("gateway addr:  %s\r\n", gateway6);
 
+  status = rsi_inet_pton6(SERVER_IP, SERVER_IP + strlen(SERVER_IP), hex_addr, server_ip);
 #endif
 
   //! Create sntp client

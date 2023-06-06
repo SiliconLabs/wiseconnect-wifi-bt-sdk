@@ -638,13 +638,17 @@ void rsi_ble_task_on_conn(void *parameters)
 #endif
             //! allocate memory
             if (rsi_ble_profile_list_by_conn.profile_desc == NULL) {
+#ifdef RSI_WITH_OS
               rsi_ble_profile_list_by_conn.profile_desc =
                 (profile_descriptors_t *)rsi_malloc(sizeof(profile_descriptors_t) * no_of_profiles);
+#endif
               memset(rsi_ble_profile_list_by_conn.profile_desc, 0, sizeof(profile_descriptors_t) * no_of_profiles);
             } else {
               void *temp = NULL;
               //rsi_ble_profile_list_by_conn.profile_desc = (profile_descriptors_t *)realloc(rsi_ble_profile_list_by_conn.profile_desc, sizeof(profile_descriptors_t) * (total_remote_profiles + no_of_profiles));
+#ifdef RSI_WITH_OS
               temp = (void *)rsi_malloc(sizeof(profile_descriptors_t) * (total_remote_profiles + no_of_profiles));
+#endif
               if (temp == NULL) {
                 LOG_PRINT("failed to allocate memory for rsi_ble_profile_list_by_conn.profile_desc \r\n, conn_id:%d",
                           l_conn_id);
@@ -656,8 +660,10 @@ void rsi_ble_task_on_conn(void *parameters)
               memcpy(temp,
                      rsi_ble_profile_list_by_conn.profile_desc,
                      (sizeof(profile_descriptors_t) * total_remote_profiles));
+#ifdef RSI_WITH_OS
               //! free the old buffer which holds data
               rsi_free(rsi_ble_profile_list_by_conn.profile_desc);
+#endif
               //! assign the new buffer to old buffer
               rsi_ble_profile_list_by_conn.profile_desc = temp;
             }
@@ -761,8 +767,10 @@ void rsi_ble_task_on_conn(void *parameters)
 #endif
         if (!profile_mem_init) {
           if (rsi_ble_profile_list_by_conn.profile_info_uuid == NULL) {
+#ifdef RSI_WITH_OS
             rsi_ble_profile_list_by_conn.profile_info_uuid = (rsi_ble_event_profile_by_uuid_t *)rsi_malloc(
               sizeof(rsi_ble_event_profile_by_uuid_t) * total_remote_profiles);
+#endif
           }
           if (rsi_ble_profile_list_by_conn.profile_info_uuid == NULL) {
             LOG_PRINT("failed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_info_uuid \r\n",
@@ -847,8 +855,10 @@ void rsi_ble_task_on_conn(void *parameters)
 #endif
         if (!service_char_mem_init) {
           if (rsi_ble_profile_list_by_conn.profile_char_info == NULL) {
+#ifdef RSI_WITH_OS
             rsi_ble_profile_list_by_conn.profile_char_info = (rsi_ble_event_read_by_type1_t *)rsi_malloc(
               sizeof(rsi_ble_event_read_by_type1_t) * total_remote_profiles);
+#endif
           }
           if (rsi_ble_profile_list_by_conn.profile_char_info == NULL) {
             LOG_PRINT("failed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_char_info \r\n",
@@ -1186,9 +1196,11 @@ void rsi_ble_task_on_conn(void *parameters)
         ble_app_event_task_map1[l_conn_id] = 0;
         rsi_current_state[l_conn_id]       = 0;
         //! clear the profile data
+#ifdef RSI_WITH_OS
         rsi_free(rsi_ble_profile_list_by_conn.profile_desc);
         rsi_free(rsi_ble_profile_list_by_conn.profile_info_uuid);
         rsi_free(rsi_ble_profile_list_by_conn.profile_char_info);
+#endif
         memset(rsi_connected_dev_addr, 0, RSI_DEV_ADDR_LEN);
 
         /*copying the subtask which needs to be deleted, to prevent any wrong task being deleted due to creation of new subtask
@@ -1253,8 +1265,10 @@ void rsi_ble_task_on_conn(void *parameters)
         }
 
         LOG_PRINT("\r\n delete task%d resources \r\n", l_conn_id);
+#ifdef RSI_WITH_OS
         //! delete the task
         rsi_task_destroy(task_to_be_deleted);
+#endif
         l_conn_id = 0xff;
       } break;
       case RSI_BLE_GATT_WRITE_EVENT: {

@@ -211,6 +211,10 @@ Configure FLAGS to choose the version and security type to be enabled
    #define HTTP_V_1_1       BIT(6) 
    ```
    
+In code, **AWS_ENABLE** macro is enabled by default in application.<br />
+Depending on the requirement user can enable downloading firmware from Azure Blob storage (Enable Macro **AZURE_ENABLE**).<br />
+Else if both AWS and Azure macro is disabled, HTTP/s Apache server can be used to download the firmware.
+
 - HTTP_PORT refers to HTTP Server port number
 - HTTP_SERVER_IP_ADDRESS refers to HTTP Server IP address
 - HTTP_URL refers to HTTP resource name
@@ -249,11 +253,11 @@ Configure FLAGS to choose the version and security type to be enabled
    #define PASSWORD                "admin"
    ```
  
-* **For AWS S3 Bucket** 
+**For AWS S3 Bucket** 
  
-   * Include Digicert (Baltimore CyberTrust Root) certificate file for SSL connection
+   * Include Starfield root certificate file for SSL connection
   
-> Note : The certificate authority for Amazon AWS S3 is Digicert, hence we need to include Digicert Root (Baltimore CyberTrust Root) certification for SSL connection to be successful. This certificate is already included in the SDK in linear array format "http_batimore_ca.pem.h" which can be directly used for SSL connection to AWS S3.
+> Note : The certificate authority for Amazon AWS S3 is Starfield, hence we need to include Starfield Root certification for SSL connection to be successful. This certificate is already included in the SDK in linear array format "aws_starfield_ca.pem.h" which can be directly used for SSL connection to AWS S3.
 
    * Extract the hostname from AWS S3 bucket URL `https://<Your-S3-Bucket-name>.s3.<Your-nearest-S3-location>.amazonaws.com/firmware.rps` and provide it in **hostname**
   
@@ -265,7 +269,7 @@ Configure FLAGS to choose the version and security type to be enabled
  
    ```c
    //Sample configurations
-   #include "http_baltimore_ca.pem.h"         //Baltimore CyberTrust Root
+   #include "aws_starfield_ca.pem.h"         //CA certificate
    #define FLAGS                              HTTPS_SUPPORT
    #define HTTP_PORT                          443
    #define HTTP_URL                           "firmware.rps" //firwmare file name to download
@@ -349,8 +353,17 @@ For firmware download using HTTPs Apache server, replace the below certificate i
  status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, cacert, (sizeof(cacert) - 1));
 ```
 
-**Note:** For AWS S3/Azure Blob storage use the certificate "http_baltimore_ca.pem.h" included in release pacakge for SSL connection.
+**Note:** For AWS S3 use the certificate "aws_starfield_ca.pem.h" and for Azure Blob storage use the certificate "http_baltimore_ca.pem.h" included in release pacakge for SSL connection. The corresponding rsi_wlan_set_certificate function calls would be as follows:
 
+For AWS
+```
+status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, aws_starfield_ca, (sizeof(aws_starfield_ca) - 1));
+```
+
+For Azure
+```
+status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, http_baltimore_ca, (sizeof(http_baltimore_ca) - 1));
+```
 
 ## 5. Testing the Application
 

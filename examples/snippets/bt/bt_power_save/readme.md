@@ -132,7 +132,7 @@ The application can be configured to suit your requirements and development envi
 #define RSI_TCP_IP_BYPASS                             RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP                    TCP_IP_FEAT_DHCPV4_CLIENT
 #define RSI_CUSTOM_FEATURE_BIT_MAP                    FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (EXT_FEAT_LOW_POWER_MODE\|EXT_FEAT_XTAL_CLK_ENABLE\|EXT_FEAT_384K_MODE)
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                (EXT_FEAT_LOW_POWER_MODE\|EXT_FEAT_XTAL_CLK_ENABLE\|RAM_LEVEL_NWP_ALL_MCU_ZERO)
 
 ```
 

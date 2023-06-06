@@ -1,4 +1,4 @@
-# WLAN Throughput
+# WLAN Throughput (IPv6)
 
 ## Introduction
 This application demonstrates the procedure to measure WLAN UDP/TCP/SSL throughput by configuring the RS9116W in client/server role.
@@ -17,7 +17,7 @@ To use this application, the following hardware, software and project setup is r
   - [STM32F411 Nucleo](https://st.com/) 
 - Wi-Fi Access Point
 
-![Figure: Setup Diagram for WLAN Throughput Example](resources/readme/image216g.png)
+![Figure: Setup Diagram for WLAN Throughput Example](resources/readme/wlanthroughputv6setupncp.png)
 
 ### Software Requirements
 - [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
@@ -49,30 +49,29 @@ To select a bare metal configuration, see [Selecting bare metal](#selecting-bare
 Configure the following parameters in [rsi_throughput_app.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/examples/featured/wlan_throughput/rsi_throughput_app.c) to enable your Silicon Labs Wi-Fi device to connect to your Wi-Fi network.
 
 ```c
-#define SSID           "SILABS_AP"      // Wi-Fi Network Name
-#define PSK            "1234567890"     // Wi-Fi Password
-#define SECURITY_TYPE  RSI_WPA2         // Wi-Fi Security Type: RSI_OPEN / RSI_WPA / RSI_WPA2
-#define CHANNEL_NO     0                // Wi-Fi channel if the softAP is used (0 = auto select)
+#define SSID          "SILABS_AP"  // Wi-Fi Network Name
+#define PSK           "1234567890" // Wi-Fi Password
+#define SECURITY_TYPE RSI_WPA2     // Wi-Fi Security Type: RSI_OPEN / RSI_WPA / RSI_WPA2
+#define CHANNEL_NO    0            // Wi-Fi channel if the softAP is used (0 = auto select)
 ```
 
 ### Client/Server IP Settings
 ```c
-#define PORT_NUM           <local_port>   // Local port to use
-#define SERVER_PORT        <remote_port>  // Remote server port
-#define SERVER_IP_ADDRESS  "2001:db8:0:1::121"  // Remote server IP address 
-                                          
+#define PORT_NUM          <local_port>        // Local port to use
+#define SERVER_PORT       <remote_port>       // Remote server port
+#define SERVER_IP_ADDRESS "2001:db8:0:1::121" // Remote server IP address                                          
 ```
 
 ## Throughput Measurement Types
 The application may be configured to measure throughput using UDP, TCP or SSL/TLS packets. Choose the measurement type using the `THROUGHPUT_TYPE` macro.
 ```c
-#define THROUGHPUT_TYPE  TCP_TX     // Selects the throughput option; see the following diagrams. 
-#define TCP_TX           0			// RS9116W transmits packets to remote TCP client
-#define TCP_RX           1			// RS9116W receives packets from remote TCP server
-#define UDP_TX           2			// RS9116W transmits packets to remote UDP client
-#define UDP_RX           3			// RS9116W receives packets from remote UDP server
-#define SSL_TX           4			// RS9116W transmits packets to remote SSL client
-#define SSL_RX           5			// RS9116W receives packets from remote SSL server
+#define THROUGHPUT_TYPE TCP_TX // Selects the throughput option; see the following diagrams.
+#define TCP_TX          0      // RS9116W transmits packets to remote TCP client
+#define TCP_RX          1      // RS9116W receives packets from remote TCP server
+#define UDP_TX          2      // RS9116W transmits packets to remote UDP client
+#define UDP_RX          3      // RS9116W receives packets from remote UDP server
+#define SSL_TX          4      // RS9116W transmits packets to remote SSL client
+#define SSL_RX          5      // RS9116W receives packets from remote SSL server
 ```
 
 **RS9116 is a TCP Client (sends TCP packets to a remote server) ...**
@@ -106,7 +105,7 @@ The default value of `MAX_TX_PKTS` is 10000. To measure throughput for higher in
 
 ### Discrete Interval Measurements (UDP Tx and TCP Tx)
 ```c
-#define THROUGHPUT_AVG_TIME  30000   // Throughput average time in ms
+#define THROUGHPUT_AVG_TIME 30000 // Throughput average time in ms
 ```
 Configure `THROUGHPUT_AVG_TIME` to suit the desired interval.
 
@@ -116,7 +115,7 @@ Configure `THROUGHPUT_AVG_TIME` to suit the desired interval.
 
 ### Continous Throughput Measurements
 ```c
-#define CONTINUOUS_THROUGHPUT        0
+#define CONTINUOUS_THROUGHPUT 0
 ```
 
 **`CONTINUOUS_THROUGHPUT` = `0`** (default value)
@@ -138,8 +137,7 @@ If `CONTINUOUS_THROUGHPUT` = `1`, ensure that the RS9116W client/server runs wit
 
 ***
 
-
-# Testing Throughput
+#Testing Throughput
 There are two 'ends' involved when measuring throughput, data is sent between the client end and the server end. By default, the Iperf protocol sends data from the Client to the Server to measure throughput. Depending on the configuration selected, the RS9116W may be the client or the server. In general, it is advisable to start the server before the client since the client will immediately begin to try to connect to the server to send data. 
 
 The following sections describe how to run the RS9116W throughput application together with examples for various Iperf configurations that run on the PC.   
@@ -164,11 +162,11 @@ The Iperf command to start the UDP server on the PC is:
 To measure UDP Rx throughput, configure the RS9116W as a UDP server and start a UDP client on the remote PC.
 The Iperf command to start the UDP client is: 
 	
-> `C:\> iperf.exe -c <Module_IP> -u -V -p <Module_Port> -i 1 -b <Bandwidth> -t <time interval in seconds>`
+> `C:\> iperf.exe -c <Module_IP> -u -V -l 1450 -p <Module_Port> -i 1 -b <Bandwidth> -t <time interval in seconds>`
 >
 > For example ...
 >
-> `C:\> iperf.exe -c  2001:db8:0:1::121 -u -V -p 5001 -i 1 -b 50M -t 30`  
+> `C:\> iperf.exe -c 2001:db8:0:1::121 -u -V -l 1450 -p 5001 -i 1 -b 50M -t 30`  
 
 ## TCP Tx Throuhgput
 To measure TCP Tx throughput, configure the RS9116W as a TCP client and start a TCP server on the remote PC.
@@ -212,7 +210,7 @@ In this release, due to a low SPI frequency configured for the EFR32, WLAN throu
 
 ***
 
-# Selecting Bare Metal
+#Selecting Bare Metal
 The application has been designed to work with FreeRTOS and Bare Metal configurations. By default, the application project files (Keil and Simplicity studio) are configured with FreeRTOS enabled. The following steps demonstrate how to configure Simplicity Studio and Keil to test the application in a Bare Metal environment.
 
 ## Bare Metal with Simplicity Studio

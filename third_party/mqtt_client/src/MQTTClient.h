@@ -19,6 +19,8 @@
 
 #include "MQTTPacket.h"
 #include "MQTT_wrappers.h" //Platform specific implementation header file
+#include "rsi_common.h"
+#include "rsi_user.h"
 
 #include "rsi_common.h"
 #include "rsi_user.h"

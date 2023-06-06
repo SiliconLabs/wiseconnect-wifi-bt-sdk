@@ -46,6 +46,8 @@ void rsi_hal_config_gpio(uint8_t gpio_number, uint8_t mode, uint8_t value) {
      case RSI_HAL_SLEEP_CONFIRM_PIN:     GPIO_PinModeSet(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin, gpioModeWiredOrPullDown, 1); break;
 #ifndef LOGGING_STATS
      case RSI_HAL_WAKEUP_INDICATION_PIN: GPIO_PinModeSet(WAKE_INDICATOR_PIN.port, WAKE_INDICATOR_PIN.pin, gpioModeWiredOrPullDown, 0); break;
+#else
+     case RSI_HAL_WAKEUP_INDICATION_PIN: GPIO_PinModeSet(LOGGING_WAKE_INDICATOR_PIN.port, LOGGING_WAKE_INDICATOR_PIN.pin, gpioModeInput, 1); break;
 #endif
      case RSI_HAL_RESET_PIN:             GPIO_PinModeSet(RESET_PIN.port, RESET_PIN.pin, gpioModePushPull, 1); break;
      case RSI_HAL_LP_SLEEP_CONFIRM_PIN:  GPIO_PinModeSet(SLEEP_CONFIRM_PIN.port, SLEEP_CONFIRM_PIN.pin, gpioModeWiredOrPullDown, 1);break;

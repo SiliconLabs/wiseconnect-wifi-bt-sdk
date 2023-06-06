@@ -30,16 +30,18 @@
 #include "rsi_wlan_non_rom.h"
 extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 
+/* For Remove sapi Warnings */
+void vPortSetupTimerInterrupt(void);
+
 /** @addtogroup RTOS
 * @{
 */
 /*==============================================*/
 /**
  * @fn          rsi_reg_flags_t rsi_critical_section_entry()
- * @brief       Disable interrupt to enter crtical section.
+ * @brief       Enter critical section
  * @param[in]   None
- * @return      flags - interrupt status before entering critical section
- *
+ * @return      Interrupt status before entering critical section
  *
  */
 rsi_reg_flags_t rsi_critical_section_entry()
@@ -63,7 +65,7 @@ rsi_reg_flags_t rsi_critical_section_entry()
 /**
  * @fn         rsi_critical_section_exit(rsi_reg_flags_t xflags)
  * @brief      Exit critical section by restoring interrupts.
- * @param[in]  xflags - interrupt status to restore interrupt on exit from critical section
+ * @param[in]  xflags - Interrupt status to restore interrupt on exit from critical section
  * @return     Void
  *
  *
@@ -87,7 +89,7 @@ void rsi_critical_section_exit(rsi_reg_flags_t xflags)
  * @brief        Create and initialize the mutex 
  * @param[in]    mutex - Mutex handle pointer
  * @return       0              - Success \n
- *               Negative Value - Failure 
+ * @return          Negative Value - Failure
  *
  *
  */
@@ -112,10 +114,10 @@ rsi_error_t rsi_mutex_create(rsi_mutex_handle_t *mutex)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
- * @brief        Take the mutex 
+ * @brief        Lock the mutex 
  * @param[in]    mutex - Mutex handle pointer  
  * @return       0              - Success \n
- *               Negative Value - Failure  
+ * @return       Negative Value - Failure    
  *
  */
 rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
@@ -139,10 +141,10 @@ rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex)
- * @brief        Take the mutex from ISR context
+ * @brief        Lock the mutex from ISR context
  * @param[in]    mutex - Mutex handle pointer  
  * @return       0              - Success \n
- *               Negative Value - Failure  
+ * @return       Negative Value - Failure   
  *
  */
 void rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex)
@@ -154,10 +156,10 @@ void rsi_mutex_lock_from_isr(volatile rsi_mutex_handle_t *mutex)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex)
- * @brief        Give the mutex 
+ * @brief        Unlock the mutex 
  * @param[in]    mutex - Mutex handle pointer  
  * @return       0              - Success \n 
- *               Negative Value - Failure 
+ * @return       Negative Value - Failure  
  *
  */
 rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex)
@@ -175,9 +177,9 @@ rsi_error_t rsi_mutex_unlock(volatile rsi_mutex_handle_t *mutex)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex)
- * @brief        Give the mutex from ISR context
+ * @brief        Unlock the mutex from ISR context
  * @param[in]    mutex - Mutex handle pointer  
- * @return       none
+ * @return       None
  *
  */
 void rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex)
@@ -189,10 +191,10 @@ void rsi_mutex_unlock_from_isr(volatile rsi_mutex_handle_t *mutex)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_mutex_destroy(rsi_mutex_handle_t *mutex)
- * @brief        Destroye the mutex 
+ * @brief        Destroy the mutex 
  * @param[in]    mutex - Mutex handle pointer  
  * @return       0              - Success \n
- *               Negative Value - Failure 
+ * @return       Negative Value - Failure
  *
  */
 rsi_error_t rsi_mutex_destroy(rsi_mutex_handle_t *mutex)
@@ -214,7 +216,7 @@ rsi_error_t rsi_mutex_destroy(rsi_mutex_handle_t *mutex)
  * @param[in]    semaphore - Semaphore handle pointer  
  * @param[in]    count - Resource count   
  * @return       0              - Success \n 
- *               Negative Value - Failure 
+ * @return              Negative Value - Failure
  *
  */
 rsi_error_t rsi_semaphore_create(rsi_semaphore_handle_t *semaphore, uint32_t count)
@@ -240,7 +242,7 @@ rsi_error_t rsi_semaphore_create(rsi_semaphore_handle_t *semaphore, uint32_t cou
  * @brief        Destroy the semaphore instance
  * @param[in]    semaphore - Semaphore handle pointer  
  * @return       0              - Success \n
- *               Negative Value - Failure 
+ * @return              Negative Value - Failure
  */
 rsi_error_t rsi_semaphore_destroy(rsi_semaphore_handle_t *semaphore)
 {
@@ -259,6 +261,10 @@ rsi_error_t rsi_semaphore_destroy(rsi_semaphore_handle_t *semaphore)
 /*==============================================*/
 /**
  * @fn           rsi_error_t rsi_semaphore_check_and_destroy(rsi_semaphore_handle_t *semaphore)
+ * @brief        Check whether the semaphore is created and destroy, if created.
+ * @param[in]    semaphore - Semaphore handle pointer  
+ * @return       0              - Success \n
+ * @return       Negative Value - Failure  
  *
  */
 
@@ -279,12 +285,11 @@ rsi_error_t rsi_semaphore_check_and_destroy(rsi_semaphore_handle_t *semaphore)
 /*==============================================*/
 /**
  * @fn          rsi_error_t rsi_semaphore_wait(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms ) 
- * @brief       Wireless library to acquire or wait for semaphore.
+ * @brief       Wait for semaphore
  * @param[in]   semaphore - Semaphore handle pointer  
- * @param[in]   time_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0 then wait
-                till acquire semaphore.
+ * @param[in]   time_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0 then wait till semaphore is acquired.
  * @return      0              - Success \n 
- *              Negative Value - Failure 
+ * @return      Negative Value - Failure 
  *
  */
 
@@ -309,10 +314,10 @@ rsi_error_t rsi_semaphore_wait(rsi_semaphore_handle_t *semaphore, uint32_t timeo
 /*==============================================*/
 /**
  * @fn          rsi_error_t rsi_semaphore_post(rsi_semaphore_handle_t *semaphore) 
- * @brief       Wireless library to release semaphore, which was acquired.
+ * @brief       Release semaphore, which is acquired
  * @param[in]   semaphore - Semaphore handle pointer  
  * @return      0              - Success \n 
- *              Negative Value - Failure 
+ * @return      Negative Value - Failure 
  *
  */
 
@@ -334,10 +339,10 @@ rsi_error_t rsi_semaphore_post(rsi_semaphore_handle_t *semaphore)
 /*====================================================*/
 /**
  * @fn          rsi_error_t rsi_semaphore_post_from_isr(rsi_semaphore_handle_t *semaphore)
- * @brief       Wireless library to release semaphore, which was acquired.
+ * @brief       Release semaphore, which is acquired from ISR context
  * @param[in]   semphore - Semaphore handle pointer 
  * @return      0              - Success \n 
- *              Negative Value - Failure 
+ * @return      Negative Value - Failure 
  *             
  */
 
@@ -358,12 +363,12 @@ rsi_error_t rsi_semaphore_post_from_isr(rsi_semaphore_handle_t *semaphore)
 }
 
 /*==============================================*/
-/**
+/*
  * @fn          rsi_error_t rsi_semaphore_reset(rsi_semaphore_handle_t *semaphore) 
- * @brief       Used by Wireless Library to reset the semaphore
+ * @brief       Reset the semaphore
  * @param[in]   semphore - Semaphore handle pointer  
  * @return      0              - Success \n 
- *              Negative Value - Failure
+ * @return      Negative Value - Failure
  *
  */
 rsi_error_t rsi_semaphore_reset(rsi_semaphore_handle_t *semaphore)
@@ -385,15 +390,15 @@ rsi_error_t rsi_semaphore_reset(rsi_semaphore_handle_t *semaphore)
  * @fn           rsi_error_t rsi_task_create( rsi_task_function_t task_function,uint8_t *task_name,
                  uint32_t stack_size, void *parameters,
                  uint32_t task_priority,rsi_task_handle_t  *task_handle)
- * @brief        Wireless Library to create platform specific OS task/thread. 
- * @param[in]    task_function - Pointer to function to be executed by created thread. Prototype of the function
- * @param[in]    task_name     - Name of the created task  
- * @param[in]    stack_size    - Stack size given to the created task  
- * @param[in]    parameters    - Pointer to the parameters to be passed to task function
- * @param[in]    task_priority - task priority 
- * @param[in]    task_handle   - task handle/instance created 
+ * @brief        Create OS task/thread 
+ * @param[in]    task_function - Pointer to function to be executed by created thread. \n
+ * @param[in]    task_name     - Name of the created task  \n
+ * @param[in]    stack_size    - Stack size given to the created task \n  
+ * @param[in]    parameters    - Pointer to the parameters to be passed to task function \n
+ * @param[in]    task_priority - Task priority \n
+ * @param[in]    task_handle   - Task handle/instance created \n
  * @return       0              - Success \n
- *               Negative Value - Failure
+ * @return       Negative Value - Failure
  *
  */
 
@@ -423,9 +428,9 @@ rsi_error_t rsi_task_create(rsi_task_function_t task_function,
 /*==============================================*/
 /**
  * @fn          void rsi_task_destroy(rsi_task_handle_t *task_handle)
- * @brief       Delete the task created
+ * @brief       Destroy the task created
  * @param[in]   task_handle - Task handle/instance to be deleted
- * @return      void
+ * @return      Void
  *
  */
 
@@ -439,7 +444,7 @@ void rsi_task_destroy(rsi_task_handle_t *task_handle)
  * @fn          void rsi_os_task_delay(uint32_t timeout_ms)
  * @brief       Induce required delay in milli seconds
  * @param[in]   timeout_ms - Expected delay in milli seconds
- * @return      void 
+ * @return      Void 
  */
 void rsi_os_task_delay(uint32_t timeout_ms)
 {
@@ -451,7 +456,7 @@ void rsi_os_task_delay(uint32_t timeout_ms)
  * @fn           void rsi_start_os_scheduler()
  * @brief        Schedule the tasks created
  * @param[in]    None
- * @return       void 
+ * @return       Void  
  */
 void rsi_start_os_scheduler()
 {
@@ -459,10 +464,21 @@ void rsi_start_os_scheduler()
 }
 /*==============================================*/
 /**
+ * @fn           void rsi_setup_timer_os_interrupt()
+ * @brief        Setup the systick timer to generate the tick interrupts at the required frequency
+ * @param[in]    None
+ * @return       void
+ */
+void rsi_setup_timer_os_interrupt()
+{
+  vPortSetupTimerInterrupt();
+}
+/*==============================================*/
+/**
  * @fn          void rsi_set_os_errno(int32_t error)
- * @brief       Sets the os error .
+ * @brief       Sets the OS error .
  * @param[in]   error - Error
- * @return      void 
+ * @return      Void 
  */
 void rsi_set_os_errno(int32_t error)
 {
@@ -473,12 +489,12 @@ void rsi_set_os_errno(int32_t error)
 /**
  * @fn          rsi_base_type_t rsi_task_notify_wait(uint32_t ulBitsToClearOnEntry, uint32_t ulBitsToClearOnExit, uint32_t *pulNotificationValue, uint32_t timeout)
  * @brief       Allow a task to wait with optional timeout
- * @param[in]   ulBitsToClearOnEntry - bits set here will be cleared in the task’s notification value \n on entry to the function.
- * @param[in]   pulNotificationValue - used to pass out the task notification value and an optional paramter
- * @param[in]   ulBitsToClearOnExit  - bits to clear on exit 
- * @param[in]   timeout              - maximum amount of time the calling task should remain in blocked state
+ * @param[in]   ulBitsToClearOnEntry - Bits set here will be cleared in the task’s notification value on entry to the function.
+ * @param[in]   ulBitsToClearOnExit  - Bits to clear on exit 
+ * @param[in]   pulNotificationValue - Used to pass out the task notification value. Optional parameter
+ * @param[in]   timeout              - Maximum amount of time the calling task should remain in blocked state
  * @return      0              - Success \n
- *              Negative Value - Failure
+ * @return      Negative Value - Failure
  */
 rsi_base_type_t rsi_task_notify_wait(uint32_t ulBitsToClearOnEntry,
                                      uint32_t ulBitsToClearOnExit,
@@ -500,11 +516,11 @@ rsi_base_type_t rsi_task_notify_wait(uint32_t ulBitsToClearOnEntry,
 /*==============================================*/
 /**
  * @fn          rsi_base_type_t rsi_task_notify(rsi_task_handle_t xTaskToNotify, uint32_t ulValue)
- * @brief       Notify to a task
+ * @brief       Notify a task
  * @param[in]   xTaskToNotify - The handle of the task to which the notification is being sent
  * @param[in]   ulValue       - How ulValue is used is dependent on the eNotifyAction value
  * @return      0  - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 rsi_base_type_t rsi_task_notify(rsi_task_handle_t xTaskToNotify, uint32_t ulValue)
 {
@@ -520,12 +536,12 @@ rsi_base_type_t rsi_task_notify(rsi_task_handle_t xTaskToNotify, uint32_t ulValu
 /*==============================================*/
 /**
  * @fn          rsi_base_type_t rsi_task_notify_from_isr(rsi_task_handle_t xTaskToNotify, uint32_t ulValue, rsi_base_type_t *pxHigherPriorityTaskWoken )
- * @brief       Notification directly to a task and should be used in ISR only
+ * @brief       Notify a task from ISR context
  * @param[in]	xTaskToNotify			- The handle of the task to which the notification is being sent
  * @param[in]	ulValue       			- How ulValue is used is dependent on the eNotifyAction value
  * @param[in]	pxHigherPriorityTaskWoken	- Sets,if sending the notification caused a task to unblock, and the unblocked task has a priority higher than the currently running task.
  * @return      0  - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 rsi_base_type_t rsi_task_notify_from_isr(rsi_task_handle_t xTaskToNotify,
                                          uint32_t ulValue,
@@ -544,11 +560,11 @@ rsi_base_type_t rsi_task_notify_from_isr(rsi_task_handle_t xTaskToNotify,
 /*==============================================*/
 /**
  * @fn          uint32_t rsi_os_task_notify_take( BaseType_t xClearCountOnExit, TickType_t xTicksToWait )
- * @brief       Allow a task in wait in blocked state for its notification value >0
+ * @brief       Allow a task in wait in blocked state for its notification value
  * @param[in]   xClearCountOnExit - Based on this value calling task notification value will be decremented/zero
- * @param[in]   xTicksToWait      - maximum amount of time calling task should remain in blocked state
+ * @param[in]   xTicksToWait      - Maximum amount of time calling task should remain in blocked state
  * @return      0  - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 uint32_t rsi_os_task_notify_take(BaseType_t xClearCountOnExit, TickType_t xTicksToWait)
 {
@@ -560,8 +576,8 @@ uint32_t rsi_os_task_notify_take(BaseType_t xClearCountOnExit, TickType_t xTicks
  * @fn          BaseType_t rsi_os_task_notify_give(rsi_task_handle_t xTaskToNotify)
  * @brief       Notify to a task
  * @param[in]   xTaskToNotify - Task handle to notify
- * @return      Task notification value \n
- * 		-1 - Failure
+ * @return      Task notification value - Success\n
+ * @return      -1 - Failure
  */
 BaseType_t rsi_os_task_notify_give(rsi_task_handle_t xTaskToNotify)
 {
@@ -577,9 +593,9 @@ BaseType_t rsi_os_task_notify_give(rsi_task_handle_t xTaskToNotify)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_get_error(int32_t sockID)
- * @brief       Return wlan status
- * @param[in]   sockID - Socket Id
- * @return      wlan status
+ * @brief       Get WLAN status
+ * @param[in]   sockID - Socket ID
+ * @return      WLAN status
  */
 /// @private
 int32_t rsi_get_error(int32_t sockID)
@@ -640,9 +656,9 @@ int32_t rsi_get_error(int32_t sockID)
 /*==============================================*/
 /**
  * @fn          void *rsi_malloc (uint32_t size)
- * @brief       Allocate memory from the buffer which is maintained by freertos	
- * @param[in]   size - required bytes in size
- * @return      void
+ * @brief       Allocate memory from the buffer which is maintained by freeRTOS.	
+ * @param[in]   size - Required bytes in size
+ * @return      Void
  */
 
 void *rsi_malloc(uint32_t size)
@@ -659,7 +675,7 @@ void *rsi_malloc(uint32_t size)
  * @fn          void rsi_free (void *ptr)
  * @brief       Free the memory pointed by 'ptr'
  * @param[in]   ptr - starting address of the memory to be freed
- * @return      void
+ * @return      Void
  */
 void rsi_free(void *ptr)
 {
@@ -674,7 +690,7 @@ void rsi_free(void *ptr)
  * @fn          void rsi_vport_enter_critical(void)
  * @brief       Enter into critical section 
  * @param[in]   void 
- * @return      void 
+ * @return      Void  
  */
 void rsi_vport_enter_critical(void)
 {
@@ -684,9 +700,9 @@ void rsi_vport_enter_critical(void)
 /*==============================================*/
 /**
  * @fn         void rsi_vport_exit_critical(void)
- * @brief       Enter into exit section 
+ * @brief       Enter exit section 
  * @param[in]   void 
- * @return      void 
+ * @return      Void 
  */
 
 void rsi_vport_exit_critical(void)
@@ -697,9 +713,9 @@ void rsi_vport_exit_critical(void)
 /*==============================================*/
 /**
  * @fn          void rsi_task_suspend(rsi_task_handle_t *task_handle)
- * @brief       Exit into critical section 
+ * @brief       Exit critical section 
  * @param[in]   task_handle - Task handle to be suspended
- * @return      void 
+ * @return      Void 
  */
 void rsi_task_suspend(rsi_task_handle_t *task_handle)
 {

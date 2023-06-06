@@ -61,8 +61,6 @@
   <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
-  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
-  <folder name="utilities/advanced_logging/firmware_logging" uri="utilities/advanced_logging/firmware_logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
@@ -133,6 +131,7 @@
    <macroDefinition name="RSI_WLAN_API_ENABLE" />
    <macroDefinition name="RSI_BLE_ENABLE" />
   
+   <macroDefinition name="EXECUTION_FROM_RAM" />
   
   
   <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.flags" value="-c -x assembler-with-cpp -mfloat-abi=softfp -mfpu=fpv4-sp-d16 "/>

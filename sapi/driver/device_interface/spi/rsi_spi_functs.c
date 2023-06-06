@@ -44,12 +44,11 @@
 */
 /*==================================================*/
 /**
- * @brief       Send the C1 & C2 commands bytes, should check response for C1 command, if busy, should retry.
+ * @brief       Send the C1 and C2 commands. Check response for C1 command, if busy, should retry.
  * @param[in]   c1 - SPI c1 command
  * @param[in]   c2 - SPI c2 command
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
  */
 int16_t rsi_send_c1c2(uint8_t c1, uint8_t c2)
 {
@@ -91,13 +90,12 @@ int16_t rsi_send_c1c2(uint8_t c1, uint8_t c2)
 
 /*==================================================*/
 /**
- * @brief       The C3 & C4 command bytes to send.
- * @pre         A succesful rsi_send_c1c2 is required before this function.
+ * @brief       Send the C3 and C4 commands.
  * @param[in]   c3 - SPI c3 command bytes to be sent
  * @param[in]   c4 - SPI c4 command bytes to be sent
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return      0              - Success \n
+ * @return      Non-Zero value - Failure \n
+ * @note        A succesful rsi_send_c1c2() is required before this function.
  */
 int16_t rsi_send_c3c4(uint8_t c3, uint8_t c4)
 {
@@ -119,13 +117,12 @@ int16_t rsi_send_c3c4(uint8_t c3, uint8_t c4)
 
 /*==================================================*/
 /**
- * @brief         Loop reading the SPI until a start token, 0x55, is received.
- * @pre           Should issue read commands before using this function
+ * @brief         Loop read the SPI until a start token (i.e., 0x55) is received.
  * @param[in]     timeout -  Timeout for start token.
  * @param[in]     mode    -  To indicate 8-bit/32-bit mode.
- * @return        0 - SUCCESS \n
- *               -1 - SPI busy / Timeout \n
- *               -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
+ * @note          Should issue read commands before using this function
  */
 int16_t rsi_spi_wait_start_token(uint32_t timeout, uint8_t mode)
 {
@@ -170,11 +167,10 @@ int16_t rsi_spi_wait_start_token(uint32_t timeout, uint8_t mode)
 
 /*==================================================*/
 /**
- * @brief       Set the INTERRUPT MASK REGISTER of the module.
+ * @brief       Set the interrupt mask register of the module
  * @param[in]   interruptMask - The value to set the mask register to
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
 */
 int16_t rsi_set_intr_mask(uint8_t interruptMask)
 {
@@ -205,11 +201,10 @@ int16_t rsi_set_intr_mask(uint8_t interruptMask)
 
 /*==================================================*/
 /**
- * @brief       Set the INTERRUPT TYPE of the module based on selected LOAD_IMAGE.
+ * @brief       Set the interrupt type of the module
  * @param[in]   interruptMaskVal - The value to set the mask register
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
 */
 
 int16_t rsi_set_intr_type(uint32_t interruptMaskVal)
@@ -241,9 +236,8 @@ int16_t rsi_set_intr_type(uint32_t interruptMaskVal)
 /**
  * @brief       Clear the interrupt register.
  * @param[in]   interrutClear - The value to set the interrupt clear register to
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  */
 int16_t rsi_clear_interrupt(uint8_t interruptClear)
 {
@@ -271,11 +265,10 @@ int16_t rsi_clear_interrupt(uint8_t interruptClear)
 
 /*==================================================*/
 /**
- * @brief       Return the module SPI interrupt register status
+ * @brief       Read the SPI interrupt register status
  * @param[in]   int_status - Pointer to the buffer of data to be read, assumed to be at least a byte
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  */
 int16_t rsi_device_interrupt_status(uint8_t *int_status)
 {
@@ -305,11 +298,10 @@ int16_t rsi_device_interrupt_status(uint8_t *int_status)
 
 /*==================================================*/
 /**
- * @brief       Return the length of the incoming packet
+ * @brief       Read the length of the incoming packet to the module
  * @param[in]   length - Pointer to the buffer of data to write, assumed to be at least 2 bytes long
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  */
 int16_t rsi_spi_pkt_len(uint16_t *length)
 {
@@ -341,9 +333,8 @@ int16_t rsi_spi_pkt_len(uint16_t *length)
 /**
  * @brief      Configure the module SPI interface to high speed mode
  * @param[in]  void
- * @return     0 - SUCCESS \n
- *             -1 - SPI busy / Timeout \n
- *             -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  * @note       This API should be called only if the SPI clock frequency is more than 25 MHz and shouldn't be called otherwise.
  * @note       SPI initialization has to be done in low-speed mode. After device SPI is configured to high-speed mode using this API, \n
  *             rsi_switch_to_high_clk_freq() will be executed to configure the host SPI to a frequency that is more than 25 MHz. \n

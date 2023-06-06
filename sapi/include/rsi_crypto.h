@@ -1,6 +1,6 @@
 /*******************************************************************************
 * @file  rsi_crypto.h
-* @brief 
+* @brief
 *******************************************************************************
 * # License
 * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
@@ -29,6 +29,7 @@
 #define SHA_256 2
 #define SHA_384 3
 #define SHA_512 4
+#define SHA_224 5
 
 #define SHAKE_128 21
 #define SHAKE_256 17
@@ -37,15 +38,17 @@
 #define SHA3_384  13
 #define SHA3_512  9
 
-#define AES        2
-#define SHA        4
-#define HMAC_SHA   5
-#define DH         14
-#define ECDH       15
-#define SHA3       16
-#define CHACHAPOLY 17
-#define GCM        18
-#define SHAKE      19
+#define AES         2
+#define SHA         4
+#define HMAC_SHA    5
+#define DH          14
+#define ECDH        15
+#define SHA3        16
+#define CHACHAPOLY  17
+#define GCM         18
+#define SHAKE       19
+#define TRNG        21
+#define ATTESTATION 30
 
 #define ECDH_PM  1
 #define ECDH_PA  2
@@ -130,6 +133,15 @@
 #define MAX_DATA_SIZE_BYTES                1400 /*Data size*/
 #define MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY 1200 /*Data size for chachapoly*/
 
+#define TRNG_INIT       1
+#define TRNG_ENTROPY    2
+#define TRNG_KEY        3
+#define TRNG_GENERATION 4
+
+#define TRNG_INIT_MSG_LENGTH 16
+#define TRNG_KEY_SIZE        4
+#define TRNG_TEST_DATA_SIZE  64
+#define NONCE_DATA_SIZE      32
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -140,8 +152,23 @@
  * *                 Type Definitions
  * ******************************************************/
 
-// SHA Request Frames Structures
+// TRNG Request Frames Structures
+typedef struct rsi_trng_req_s {
+  uint8_t algorithm_type;
+  uint8_t algorithm_sub_type;
+  uint16_t total_msg_length;
+  uint32_t trng_key[TRNG_KEY_SIZE];
+  uint32_t msg[TRNG_TEST_DATA_SIZE];
+} rsi_trng_req_t;
 
+// Attestation token Request Frames Structures
+typedef struct rsi_token_req_s {
+  uint8_t algorithm_type;
+  uint16_t total_msg_length;
+  uint32_t msg[NONCE_DATA_SIZE];
+} rsi_token_req_t;
+
+// SHA Request Frames Structures
 typedef struct rsi_sha_req_s {
   uint16_t algorithm_type;
   uint8_t algorithm_sub_type;
@@ -369,5 +396,9 @@ int32_t rsi_gcm(uint8_t enc_dec,
                 uint8_t *header,
                 uint16_t header_length,
                 uint8_t *output);
-
+int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_length, uint32_t *output);
+int32_t trng_get_random_num(uint32_t *random_number, uint16_t length);
+int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length);
+int32_t trng_entropy(void);
+int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonce);
 #endif

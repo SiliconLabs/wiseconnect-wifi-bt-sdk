@@ -44,6 +44,17 @@
 #include "rsi_bt_common_apis.h"
 #include "rsi_ble_config.h"
 #include "rsi_common_config.h"
+#ifdef RSI_M4_INTERFACE
+#include "rsi_rtc.h"
+#include "rsi_board.h"
+#include "rsi_m4.h"
+#include "rsi_chip.h"
+#include "rsi_driver.h"
+#include "rsi_wisemcu_hardware_setup.h"
+#include <string.h>
+#include "rsi_ps_ram_func.h"
+#include "rsi_ds_timer.h"
+#endif
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/

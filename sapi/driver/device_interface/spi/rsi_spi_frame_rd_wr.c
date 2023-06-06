@@ -54,14 +54,13 @@ char debug_output[DEBUG_OUTPUT_SZ];
 
 /*====================================================*/
 /**
- * @brief       Reads response for every command and data from the module. 
- * @param[in]   pkt_buffer  - pointer to buffer to which packet has to read 
- * @return       0 - SUCCESS \n
- *             < 0 - FAILURE \n
- *              -1 - SPI busy / Timeout in case of SPI \n
- *              -2 - SPI Failure in case of SPI
- * @note       Enable DEBUG_PACKET_EXCHANGE macro for spi level packet exchange debug prints and \n
- *             MAX_PRINT_PAYLOAD_LEN for configuring no.bytes of payload to print, by default it will print 8 bytes of payload. 
+ * @brief       Read response for every command and data sent from the module 
+ * @param[in]   pkt_buffer  - pointer to buffer to which packet has to be read 
+ * @return       0                - Success \n
+ * @return       Non-Zero Failure - Failure \n
+ * @note       Enable DEBUG_PACKET_EXCHANGE macro for SPI level packet exchange debug prints and 
+ *             MAX_PRINT_PAYLOAD_LEN for configuring number of bytes of payload to print, 
+ *             by default it will print 8 bytes of payload. 
  *             
  */
 int16_t rsi_frame_read(uint8_t *pkt_buffer)
@@ -103,16 +102,15 @@ int16_t rsi_frame_read(uint8_t *pkt_buffer)
 
 /*====================================================*/
 /**
- * @brief       Process a command to the wlan module.
+ * @brief       Process a command to the module.
  * @param[in]   uFrameDscFrame  -  Frame descriptor
  * @param[in]   payloadparam    -  Pointer to the command payload parameter structure
  * @param[in]   size_param      -  Size of the payload for the command
- * @return       0              - SUCCESS \n
- *             < 0              - FAILURE \n
- *              -1              - SPI busy / Timeout in case of SPI \n
- *              -2              - SPI Failure in case of SPI
- * @note       Enable DEBUG_PACKET_EXCHANGE macro for spi level packet exchange debug prints and \n
- *             MAX_PRINT_PAYLOAD_LEN for configuring no.bytes of payload to print, by default it will print 8 bytes of payload..             
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
+ * @note       Enable DEBUG_PACKET_EXCHANGE macro for SPI level packet exchange debug prints and 
+ *             MAX_PRINT_PAYLOAD_LEN for configuring number of bytes of payload to print, 
+ *             by default it will print 8 bytes of payload.             
  *
  */
 int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam, uint16_t size_param)
@@ -154,11 +152,10 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
 
 /*===========================================================================*/
 /**
- * @brief       Perform a pre-frame decriptor read.
+ * @brief       Read a pre-frame descriptor
  * @param[in]   dbuf - Pointer to the buffer into which pre-decriptor has to be read
- * @return       0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
  *
  */
 int16_t rsi_pre_dsc_rd(uint8_t *dbuf)
@@ -212,14 +209,12 @@ int16_t rsi_pre_dsc_rd(uint8_t *dbuf)
 
 /*===========================================================================*/
 /**
- * @brief       Perform frame decriptor and payload read.
+ * @brief       Read frame descriptor and payload
  * @param[in]   buf       - Pointer to the buffer into which  decriptor and payload has to be read
  * @param[in]   dummy_len - Number of dummy bytes which can be discarded
  * @param[in]   total_len - Number of bytes to be read
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \nrsi_spi_frame_data_wr
- *              -2 - SPI Failure
- *
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
  */
 
 int16_t rsi_pkt_rd(uint8_t *buf, uint16_t dummy_len, uint16_t total_len)
@@ -290,11 +285,10 @@ int16_t rsi_pkt_rd(uint8_t *buf, uint16_t dummy_len, uint16_t total_len)
 
 /*===========================================================================*/
 /**
- * @brief       Write a Frame descriptor.
+ * @brief       Write the frame descriptor
  * @param[in]   uFrameDscFrame - Frame descriptor
- * @return      0  - SUCCESS \n
- *              -1  - SPI busy / Timeout \n
- *              -2  - SPI Failure
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
  *
  */
 int16_t rsi_spi_frame_dsc_wr(rsi_frame_desc_t *uFrameDscFrame)
@@ -343,14 +337,13 @@ int16_t rsi_spi_frame_dsc_wr(rsi_frame_desc_t *uFrameDscFrame)
 
 /*===========================================================================*/
 /**
- * @brief       Perform Frame Data Write.
+ * @brief       Write frame data
  * @param[in]   buflen       -   Length of the data buffer to write
  * @param[in]   dBuf         -   Pointer to the buffer of data to write
  * @param[in]   tbuflen      -   Length of the data fragment to write
  * @param[in]   tBuf         -   Pointer to the buffer of data fragment to write
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return       0              - Success \n
+ * @return       Non-Zero value - Failure \n
  *
  */
 int16_t rsi_spi_frame_data_wr(uint16_t bufLen, uint8_t *dBuf, uint16_t tbufLen, uint8_t *tBuf)

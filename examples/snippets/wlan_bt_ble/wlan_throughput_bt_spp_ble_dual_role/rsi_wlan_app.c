@@ -441,13 +441,14 @@ int32_t rsi_wlan_app_task(void)
           }
           wlan_thrput_conf[i].thread_id       = i;
           wlan_thrput_conf[i].throughput_type = socket_type[i];
-
+#ifdef RSI_WITH_OS
           status = rsi_task_create((rsi_task_function_t)(int32_t)wlan_throughput_task,
                                    (uint8_t *)"wlan_throughput_task1",
                                    RSI_WLAN_THRGPUT_TASK_STACK_SIZE,
                                    &wlan_thrput_conf[i],
                                    RSI_WLAN_THROUGHPUT_TASK_PRIORITY,
                                    NULL);
+#endif
           if (status != RSI_ERROR_NONE) {
             LOG_PRINT("Thread creation failed %s \r\n", "wlan_throughput_task1");
             return status;
@@ -467,7 +468,9 @@ int32_t rsi_wlan_app_task(void)
         // fall through
       case RSI_WLAN_IDLE_STATE: {
         //! Task has no work to do in this state, so adding a delay of 5sec
+#ifdef RSI_WITH_OS
         rsi_os_task_delay(5000);
+#endif
         break;
       }
       default:

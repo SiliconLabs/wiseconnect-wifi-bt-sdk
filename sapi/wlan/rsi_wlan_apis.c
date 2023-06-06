@@ -28,11 +28,10 @@ extern struct wpa_scan_results_arr *scan_results_array;
 #ifdef PROCESS_SCAN_RESULTS_AT_HOST
 /*==============================================*/
 /**
- * @brief       Sort the scan results in 'scan_results_array' in the order of RSSI.
- *              Application should call this API to get the scan result in sorted order.
- * @pre         \ref rsi_wlan_scan_with_bitmap_options() API needs to be called before this API.
+ * @brief       Sort the scan results in the order of RSSI.
  * @param[in]   scan_results_array     - Contains the array of scan results that need to be sorted.
  * @return      Void
+ * @note        **Precondition** - \ref rsi_wlan_scan_with_bitmap_options() API needs to be called before this API.
  */
 void rsi_sort_scan_results_array_based_on_rssi(struct wpa_scan_results_arr *scan_results_array)
 {
@@ -179,24 +178,24 @@ int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
 }
 /*==============================================*/
 /**
- * @brief       Scan available access points and post scan response to application.
- *              Application must call this API to get the scan results. This is a blocking API.
- * @pre         \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  ssid        - SSID of an access point to connect. \n SSID should be less than or equal to 32 bytes. \n
- *                             Note:
- *                             SSID is a null terminated string.
- * @param[in]  chno        - Channel number of the access point.
- * @param[in]  result      - Buffer address provided by the application to fill the scan response.
- * @param[in]  length      - Length of the resulting buffer measured in bytes to hold scan results.\n
- *                           Size of structure \ref rsi_rsp_scan_t is 54 bytes.\n
- *                           Length for storing one scan result is sizeof( \ref rsi_scan_info_t),
- *                           which is 44 bytes. \n
- *                           Maximum of 11 scan results will be returned by the
- *                           module, \n in this case, length should be configured
- *                           as  8 + 11*sizeof( \ref rsi_scan_info_t).
- * @param[in]  scan_bitmap    - Scan bitmap options
- * @return     0              -    Success \n
- *             Non-Zero Value -    Failure
+ * @brief      Scan surrounding access points and post scan response. You can call this API to get the scan results. This is a blocking API. 
+ * @param[in]  ssid            - SSID of an access point to connect. \n SSID should be less than or equal to 32 bytes. \n
+ *                               Note: SSID is a null terminated string.                          
+ * @param[in]  chno            - Channel number of the access point.
+ * @param[out]  result         - Buffer address provided by the application to fill the scan response.
+ * @param[in]  length          - Length of the resulting buffer measured in bytes to hold scan results.\n
+ *                               Size of structure \ref rsi_rsp_scan_t is 54 bytes.\n
+ *                               Length for storing one scan result is sizeof( \ref rsi_scan_info_t), which is 44 bytes. \n
+ *                               Maximum of 11 scan results will be returned by the module, \n 
+ *                               in this case, length should be configured as 8 + 11*sizeof( \ref rsi_scan_info_t).
+ * @param[in]  scan_bitmap     - Scan bitmap options. \n
+ *                               BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
+ *                               BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results are given to host. \n 
+ *                               After getting scan results, host has to issue another scan request by disabling this bit in scan feature bitmap in same API \n
+ *                               or call \ref rsi_wlan_scan API before issuing join command.                        
+ * @return     0                -    Success \n
+ * @return     Non-Zero Value   -    Failure
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  *
  */
 int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
@@ -260,7 +259,12 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
  * @param[in]   ssid     - SSID of an access point to connect. \n
  *                        SSID should be less than or equal to 32 bytes.
  * @param[in]   chno     - Channel number of the access point.
- * @param[in]   bitmap   - Scan feature bitmap
+ * @param[in]   bitmap   - Scan feature bitmap \n
+ *                         BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
+ *                         BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results
+ *                         are given to host. \n     After getting scan results, host has to issue another
+ *                         scan request by disabling this bit in scan feature bitmap in same api
+ *                         or call \ref rsi_wlan_scan api \n     before issuing join command.
  * @param[out]  status   - Response status
  * @param[out]  buffer   - Buffer address provided by the application to fill the scan response.
  * @param[out]  length   - Length of the response buffer measured
@@ -271,7 +275,6 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
  *                        Maximum of 11 scan results will be returned by the
  *                        module, \n in this case, length should be configured
  *                        as 8 + 11*sizeof( \ref rsi_scan_info_t).
- * @param[in]   scan_bitmap    - Scan feature bitmap
  * @return      0              -   Success \n
  *              Non-Zero Value -   Failure
  *
@@ -625,21 +628,18 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
 
 /*==============================================*/
 /**
- * @brief      Scan the surrounding Wi-Fi networks. This is a blocking API. Invoke rsi_wlan_scan_async(), which is an asynchronous call.
- *             Wait on WLAN command semaphore to get the status of the scan results. Return RSI_SUCCESS on success and optionally,
- *             a maximum of 11 scan results if rsi_rsp_scan_t parameter is configured.
- *             In case of failure, an appropriate error code is returned to the application.
+ * @brief      Scan the surrounding access points. Invokes rsi_wlan_scan_async() API, which is an asynchronous call. This is a blocking API.
  * @pre		     \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  ssid    - SSID size should be less than or equal to 32 bytes. Note: SSID is a null terminated string.
  * @param[in]  chno    - Channel number to perform scan. If 0, then the module will scan all the channels.
- * @param[in]  result  - Scanned Wi-Fi networks information. \n
- *                         This is an output parameter. This output contains a maximum of 11 scan results \n
- *                         The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
- *                         results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
- *                         information about each network scanned.
+ * @param[out]  result - Scanned Wi-Fi networks information. \n
+ *                       This output contains a maximum of 11 scan results \n
+ *                       The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
+ *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
+ *                       information about each network scanned.
  * @param[in]  length  - Size that should be allocated to buffer that will store scan results. \n
- *             #### Channels supported in 2.4 GHz Band ####
- *         		 Channel numbers       	 |	Ch no
+ *             ## Channels supported in 2.4 GHz Band ##
+ *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	           All Channels	       	   |       0	
  * 	         	 1			                 |       1	
@@ -657,7 +657,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *		         13			                 |       13	
  * 		         14			                 |       14	
  *             #### Channels supported in 5 GHz Band ####
- * 		         Channel numbers         |	Ch no
+ * 		         Channel numbers         |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		         All Channels		         |       0	
  * 		         36	        	           |       36
@@ -670,7 +670,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         161        		         |       161
  *		         165	         	         |       165
  *             #### DFS Channels supported in 5 GHz Band ####
- * 		         Channel numbers         |	Ch no
+ * 		         Channel numbers         |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		         52(DFS)	        	     |       52
  * 		         56(DFS)	        	     |       56
@@ -689,7 +689,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         140(DFS)         		   |       140
  * 		         144(DFS)         		   |       144
  *             #### Channels supported in 4.9 GHz Band ####
- * 		         Channel numbers         |	Ch no
+ * 		         Channel numbers         |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		         All Channels		         |       0	
  * 		         184	        	         |       184
@@ -699,6 +699,27 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         8	                     |       8
  * 		         12	                     |       12
  * 		         16	                     |       16
+ * @return     0              - Success
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ * 	          ##	Scan Info structure ##
+ * 		        Structure Fields        |	Description	
+ * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 	 	         rf_channel	            |      Access point channel number
+ * 	 	         security_mode	        |      Security modes
+ *             ^                             0 : Open
+ *	           ^        	                 	 1 : WPA
+ *	           ^        	                	 2 : WPA2
+ *	           ^        	                	 3 : WEP
+ *	           ^        	                	 4 : WPA Enterprise
+ *	           ^        	                	 5 : WPA2 Enterprise
+ *	           ^                             6 : WPA3
+ * 	 	         rssi_val	              |       RSSI value of the Access Point
+ * 	 	         network_type	          |       This is the type of the network
+ * 	 	         ^            	                1 : Infrastructure mode	
+ * 	 	         ssid		                |       SSID of the access point
+ * 	 	         bssid		              |       MAC address of the access point
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.   
+ * @note       Refer to \ref error-codes for the description of above error codes.    
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *      		   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *      		   #define RSI_TIMEOUT_BIT_MAP 2 \n
@@ -709,38 +730,6 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		        timeout_bitmap[1]     	|       Sets each channel active scan time in ms (default 100ms)
  * 		        timeout_bitmap[2] 	    |       Used for WLAN keep alive timeout(default value is 30s)
  * 		        timeout_bitmap[31-3]    |       Reserved
- * 	          ####	Scan structure ####
- * 		        Structure Fields        |	Description	
- * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
- * 	 	         rf_channel	            |      Access point channel number
- * 	 	         security_mode	        |      Security modes
- *             ^                      |     0 : Open
- *	           ^        	            |    	1 : WPA
- *	           ^        	            |    	2 : WPA2
- *	           ^        	            |    	3 : WEP
- *	           ^        	            |    	4 : WPA Enterprise
- *	           ^        	            |    	5 : WPA2 Enterprise
- *	           ^                      |     6 : WPA3
- * 	 	         rssi_val	              |       RSSI value of the Access Point
- * 	 	         network_type	          |       This is the type of the network
- * 	 	         ^            	        |       1 : Infrastructure mode	
- * 	 	         ssid		                |       SSID of the access point
- * 	 	         bssid		              |       MAC address of the access point
- * @return     **Success**  - RSI_SUCCESS \n
- * @return     **Failure**  - Non-Zero values \n
- *
- *			 `If return value is less than 0` \n
- *
- *            		 **RSI_ERROR_INVALID_PARAM**                 - Invalid parameters \n
- *
- *	         	 **RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE**  - Command given in wrong state \n
- *
- *	          	 **RSI_ERROR_PKT_ALLOCATION_FAILURE**        - Buffer not available to serve the command \n
- *
- *             		 `Other expected error codes are :` \n
- *
- * 	         	 **0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c**
- * @note       Refer to Error Codes section for above error codes description \ref error-codes.
  *
  *
  */
@@ -796,24 +785,19 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
 }
 /*==============================================*/
 /**
- * @note	     If status is Success , the argument buffer passed to scan_response_handler \n 
- * 			       holds scan results in \ref rsi_rsp_scan_t structure format.
- * @brief      Scan the surrounding Wi-Fi networks. A scan response handler is registered with it to get the response for scan.This is a non-blocking API.
- * @pre 	     \ref rsi_wireless_init() API needs to be called before this API. 
- * @param[in]  ssid		        			 - SSID to scan. If this input parameter is present, module will scan for that particular SSID only. SSID size should be less than or equal to 32 bytes
+ * @brief      Scan the surrounding access points. A scan response handler is registered with it to get the response for scan. This is a non-blocking API. 
+ * @param[in]  ssid		        			 - SSID to scan. If this input parameter is present, module will scan for that particular SSID only. SSID size should be less than or equal to 32 bytes \n
+ *                                     Note: SSID is a null terminated string.
  * @param[in]  chno 				         - Channel number to perform scan, if 0, then module will scan in all channels.
  * @param[in]  Scan_response_handler - Callback tht is called when the response for scan is received from the module. \n
- *				       The parameters involved are status, buffer, & length. \n
+ *				                             The parameters involved are status, buffer, & length. \n
  *@param[out]	 Status                - Response status.
- *	                                   RSI_SUCCESS - Scan response is stated as Success  \n
- *	                                   Negative -Failure \n
  *@param[out]	 Buffer                - Response buffer \n
  *@param[out]	 Length                - Length of the response buffer measured in bytes to hold scan results. \n Size of structure \ref rsi_rsp_scan_t is 54 bytes. \n
  *					                           Length for storing one scan result is sizeof(rsi_scan_info_t) which is 44 bytes. \n
- *						                         Maximum of 11 scan results will be returned by the module, \n in this case, length must be configured as 8 + 11*sizeof(rsi_scan_info_t).
- * @note       SSID is a null terminated string.
-*             #### Channels supported in 2.4 GHz Band ####
- *         		 Channel numbers       	 |	Ch no
+ *						                         Maximum of 11 scan results will be returned by the module, in this case, length must be configured as 8 + 11*sizeof(rsi_scan_info_t).      
+ *             ## Channels supported in 2.4 GHz Band ##
+ *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	           All Channels	       	   |       0	
  * 	         	 1			                 |       1	
@@ -831,7 +815,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *		         13			                 |       13	
  * 		         14			                 |       14	
  *             #### Channels supported in 5 GHz Band ####
- * 		         Channel numbers         |	Ch no
+ * 		         Channel numbers         |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 		         All Channels		         |       0	
  * 		         36	        	           |       36
@@ -850,6 +834,34 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * 		         157		                 |       157
  * 		         161        		         |       161
  *		         165	         	         |       165
+ * @return     0              -  Success \n
+ * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ * 	           #### Scan Response structure format ####
+ * 		         Structure Fields        |	Description	
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 	 	         scan_count	             |      Number of access points scanned.
+ * 	 	         ^                              scan_count[0] Contains the scan count.
+ * 	 	         ^                              scan_count[3-1] are reserved.
+ * 	 	         scan_info               |      Information about scanned Access points in rsi_scan_info_t structure.
+ * 	           ##	Scan Info - rsi_scan_info_t structure ##
+ * 		         Structure Fields        |	Description	
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 	 	         rf_channel	             |      Access point channel number
+ * 	 	         security_mode	         |      Security mode0 : Open
+ *	           ^        	                  	1 . WPA
+ *	           ^        	                  	2 . WPA2
+ *	           ^        	                  	3 . WEP
+ *	           ^        	                  	4 . WPA Enterprise
+ *	           ^        	                  	5 . WPA2 Enterprise
+ *	           ^        	                  	7 . WPA3
+ * 	 	         rssi_val	               |      RSSI value of the Access Point
+ * 	 	         network_type	           |      Type of network
+ * 	 	         ^            	                1 . Infrastructure mode	
+ * 	 	         ssid		                 |      SSID of the access point
+ * 	 	         bssid		               |      MAC address of the access point
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note	     If status is Success , the argument buffer passed to scan_response_handler \n 
+ * 			       holds scan results in \ref rsi_rsp_scan_t structure format.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
  *			       #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
  *			       #define RSI_TIMEOUT_BIT_MAP 4 \n
@@ -861,38 +873,6 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * 		         timeout_bitmap[1]     	 |       Sets each channel active scan time in ms (default 100ms)
  * 		         timeout_bitmap[2] 	     |       Used for WLAN keep alive timeout(default value is 30s)
  * 		         timeout_bitmap[31-3]    |       Reserved
- * 	           #### Scan Response structure format ####
- * 		         Structure Fields        |	Description	
- * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
- * 	 	         scan_count	             |      Number of access points scanned.
- * 	 	         ^                       |      scan_count[0] Contains the scan count.
- * 	 	         ^                       |      scan_count[3-1] are reserved.
- * 	 	         scan_info               |      Information about scanned Access points in rsi_scan_info_t structure.
- * 	           ####	Scan structure ####
- * 		         Structure Fields        |	Description	
- * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
- * 	 	         rf_channel	             |      Access point channel number
- * 	 	         security_mode	         |      Security mode0 : Open
- *	           ^        	             |    	1 . WPA
- *	           ^        	             |    	2 . WPA2
- *	           ^        	             |    	3 . WEP
- *	           ^        	             |    	4 . WPA Enterprise
- *	           ^        	             |    	5 . WPA2 Enterprise
- *	           ^        	             |    	7 . WPA3
- * 	 	         rssi_val	               |       RSSI value of the Access Point
- * 	 	         network_type	           |       Type of network
- * 	 	         ^            	         |       1 . Infrastructure mode	
- * 	 	         ssid		                 |       SSID of the access point
- * 	 	         bssid		               |       MAC address of the access point
- * @return     0              -  Success \n
- *             Non-Zero	Value - Failure \n
- *	           If return value is less than 0 \n
- *             -2             - Invalid parameters \n
- *	           -3             - Command given in wrong state \n
- *	           -4             - Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- * 	           0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c
- * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
 
@@ -1227,24 +1207,24 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
 /*==============================================*/
 /**
  * @brief       Connect to the specified Wi-Fi network. This is a blocking API.
- *              Call asynch connect to trigger connect call to AP and return RSI_SUCCESS or error in case of failure.
- * @pre		    \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]   ssid		- SSID of an access point to connect. SSID should be less than or equal to 32 bytes.
  * @param[in]   sec_type 	- Security type of the access point to connect. \n
- * 				0: RSI_OPEN, \n
- * 				1: RSI_WPA, \n
- * 				2: RSI_WPA2, \n
- * 				3: RSI_WEP, \n
- * 				4: RSI_WPA_EAP, \n
- * 				5: RSI_WPA2_EAP, \n
- * 				6: RSI_WPA_WPA2_MIXED, \n
- * 				7: RSI_WPA_PMK, \n
- * 				8: RSI_WPA2_PMK, \n
- * 				9: RSI_WPS_PIN, \n
- * 				10: RSI_USE_GENERATED_WPSPIN, \n
- * 				11: RSI_WPS_PUSH_BUTTON, \n
- * 				12: RSI_WPA_WPA2_MIXED_PMK, \n
- * 				13: RSI_WPA3
+ * 		Value	|	Security Type
+ * 		:-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		0		|	RSI_OPEN 
+ * 		1		|	RSI_WPA
+ * 		2		|	RSI_WPA2
+ * 		3		|	RSI_WEP
+ * 		4		|	RSI_WPA_EAP
+ * 		5		|	RSI_WPA2_EAP
+ * 		6		|	RSI_WPA_WPA2_MIXED
+ * 		7		|	RSI_WPA_PMK
+ * 		8		|	RSI_WPA2_PMK
+ * 		9		|	RSI_WPS_PIN
+ * 		10	|	RSI_USE_GENERATED_WPSPIN
+ * 		11	|	RSI_WPS_PUSH_BUTTON
+ * 		12	|	RSI_WPA_WPA2_MIXED_PMK
+ * 		13	|	RSI_WPA3
  * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
  * 		Security type(sec_type)	|	Secret key structure format (secret_key)
  * 		:-----------------------|:--------------------------------------------------------------------------------------------------
@@ -1252,29 +1232,29 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_WPA			|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * 		RSI_WPA2		|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
  * 		RSI_WEP			|	WEP keys should be in the following format:
- * 		^			|	typedef struct rsi_wep_keys_s
- * 		^			|	{ 
- * 		^			|	uint8_t index[2];
- * 		^			|	uint8_t key[4][32];
- * 		^			|	} rsi_wep_keys_t; 
- * 		^			|	index: WEP key index to use for TX packet encryption.
- * 		^			|	key: 4 WEP keys, last three WEP keys are optional. If only first WEP key is valid then index should be 0.
+ * 		^				typedef struct rsi_wep_keys_s
+ * 		^				{ 
+ * 		^				uint8_t index[2];
+ * 		^				uint8_t key[4][32];
+ * 		^				} rsi_wep_keys_t; 
+ * 		^				index: WEP key index to use for TX packet encryption.
+ * 		^				key: 4 WEP keys, last three WEP keys are optional. If only first WEP key is valid then index should be 0.
  * 		RSI_WPA_EAP		|	Enterprise credentials should be in the following format:
- * 		^			|	typedef struct rsi_eap_credentials_s
- * 		^			|	{ 
- * 		^			|	uint8_t username[64];
- * 		^			|	uint8_t password[128];
- * 		^			|	} rsi_eap_credentials_t;
- *		^			|	username: username to be used in enterprise
- * 		^			|	password: password for the given username
+ * 		^				typedef struct rsi_eap_credentials_s
+ * 		^				{ 
+ * 		^				uint8_t username[64];
+ * 		^				uint8_t password[128];
+ * 		^				} rsi_eap_credentials_t;
+ *		^				username: username to be used in enterprise
+ * 		^				password: password for the given username
  * 		RSI_WPA2_EAP		|	Enterprise credentials should be in the following format:
- * 		^			|	typedef struct rsi_eap_credentials_s
- * 		^			|	{ 
- * 		^			|	uint8_t username[64];
- * 		^			|	uint8_t password[128];
- * 		^			|	} rsi_eap_credentials_t;
- * 		^			|	username: username to be used in enterprise
- * 		^			|	password: password for a given username.
+ * 		^				typedef struct rsi_eap_credentials_s
+ * 		^				{ 
+ * 		^				uint8_t username[64];
+ * 		^				uint8_t password[128];
+ * 		^				} rsi_eap_credentials_t;
+ * 		^				username: username to be used in enterprise
+ * 		^				password: password for a given username.
  * 		RSI_WPA_WPA2_MIXED	|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes
  * 		RSI_WPA_PMK		|	PMK string, should be 32 bytes in length
  * 		RSI_WPA2_PMK		|	PMK string, should be 32 bytes in length
@@ -1282,98 +1262,42 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
  * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
  * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ * @return     0              -  Success \n
+ * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002,0x0003,0x0005,0x0008,0x0009,0x000A,0x000E,0x0014, \n
+ *                                                                  0x0015,0x0016,0x0019,0x001A,0x001E,0x0020,0x0021,0x0024,0x0025,0x0026,0x0028,0x0039,0x003C, \n
+ *                                                                  0x0044,0x0045,0x0046,0x0047,0x0048,0x0049,0xFFF8) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
- *			   #define RSI_TIMEOUT_SUPPORT RSI_ENABLE \n
- *			   #define RSI_TIMEOUT_BIT_MAP 4 \n
- *			   #define RSI_TIMEOUT_VALUE 300 \n
+ *			       #define RSI_TIMEOUT_SUPPORT RSI_ENABLE. \n
+ *			       #define RSI_TIMEOUT_BIT_MAP 4. \n
+ *			       #define RSI_TIMEOUT_VALUE 300. \n
  *
- *			   timeout_bitmap[0] -	Set timeout for association and authentication request. timeout_value : timeout value in ms(default 300ms). \n
- *			   timeout_bitmap[1] -	Sets each channel active scan time in ms (default 100ms) \n
- *			   timeout_bitmap[2] -	Used for WLAN keep alive timeout(default value is 30s) \n
- *			   timeout_bitmap[31-3] -	reserved \n 
- * @note	To set Rejoin params, user should configure the following macros in rsi_wlan_config.h \n 
- *		            RSI_REJOIN_PARAMS_SUPPORT      : Enable to send rejoin parameters command during Wi-Fi client connection \n
- *		            RSI_REJOIN_MAX_RETRY           : Number of maximum rejoin retries by module\n
- *		            note                           : If Max retries is 0 , retries infinity times \n
- *		            RSI_REJOIN_SCAN_INTERVAL       : Periodicity of rejoin attempt \n
- *		            RSI_REJOIN_BEACON_MISSED_COUNT : Number of consecutive beacon misses after which modules goes to unconnected state \n
- *		            RSI_REJOIN_FIRST_TIME_RETRY    : ENABLE  - Try to rejoin in the first attempt after join failure. \n
+ *        	   timeout_bitmap          |       Description	
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		         timeout_bitmap[0]     	 |	     Set timeout for association and authentication request.timeout_value : timeout value in ms(default 300ms).
+ * 		         timeout_bitmap[1]     	 |       Sets each channel active scan time in ms (default 100ms)
+ * 		         timeout_bitmap[2] 	     |       Used for WLAN keep alive timeout(default value is 30s)
+ * 		         timeout_bitmap[31-3]    |       Reserved
+ * @note	      To set Rejoin parameters, user should configure the following macros in rsi_wlan_config.h \n 
+ *        	      Macro                          |       Description	
+ * 		            :------------------------------|:--------------------------------------------------------------------------------------------------
+ *		            RSI_REJOIN_PARAMS_SUPPORT      | Enable to send rejoin parameters command during Wi-Fi client connection \n
+ *		            RSI_REJOIN_MAX_RETRY           | Number of maximum rejoin retries by module\n
+ *		            note                           | If Max retries is 0 , retries infinity times \n
+ *		            RSI_REJOIN_SCAN_INTERVAL       | Periodicity of rejoin attempt \n
+ *		            RSI_REJOIN_BEACON_MISSED_COUNT | Number of consecutive beacon misses after which modules goes to unconnected state \n
+ *		            RSI_REJOIN_FIRST_TIME_RETRY    | ENABLE  - Try to rejoin in the first attempt after join failure. \n
  *		                                             DISABLE - Try to rejoin based on maximum rejoin retries configured. \n
- *		When RSI_REJOIN_PARAMS_SUPPORT is enabled in the rsi_wlan_config.h, this rejoin frame will be sent to the firmware after scan done in the SAPI.
+ * @note	      When RSI_REJOIN_PARAMS_SUPPORT is enabled in the rsi_wlan_config.h, the rejoin frame will be sent to the firmware after the scan is done.
  * @note        This API internally handles following commands based on wlan_cb state and sends the next command and finally sends the join command. \n
- *                 •	Set mac address \n
- *                 •	Band \n
- *                 •	Timeout \n
- *                 •	Init \n
- *                 •	Set region \n
- *                 •	WMM parameters \n
- *                 •	Scan \n
- *                 •	EAP config \n
- *                 •	WMM PS parameters \n
- *                 •	WPS method \n
- *                 •	Set WEP keys \n
- *                 •	Host PSK \n
- *                 •	Rejoin params \n
- *                 •	Join \n
- *              For example, \n
- *              After calling rsi_wireless_init(), wlan_cb state is updated to opermode done state. So when we call this API, it will execute band, init, scan and join commands. \n
- *              After calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to band done state. So when we call this API, it will execute init, scan and join commands. \n
- *              After calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to scan done state. So when we call this API, it will execute join command directly.
- * #### EAP configuration #### 
- *              For EAP configuration below arguments are required and are congifured in rsi_wlan_config.h in enterprise_client applicaiton. \n
- *               • eap_method, inner_method, user_identity, password, okc, private_key_password \n
- *               • eap_method is 32 bytes and it can be any one of the following methods: TLS, TTLS, FAST, PEAP or LEAP, should be given as string in RSI_EAP_METHOD. \n
- *               • inner_method is 32 bytes, this field is valid only in TTLS/PEAP. In case of TTLS/PEAP supported inner methods are MSCHAP/MSCHAPV2. In case of TLS/FAST/LEAP this field is not valid and it should be fixed to MSCHAPV2. Here MSCHAP/MSCHAPV2 are given in RSI_EAP_INNER_METHOD. \n
- *               • user_identity is 64 bytes, this can be configured in USER_IDENTITY of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
- *               • password is 128 bytes, this can be configured in PASSWORD of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
- *               • okc is 4 bytes, This argument is used to enable or disable or select multiple features from user this value can be modified by OKC_VALUE macro.  \n
- *                          - BIT[0] of OKC is used to enable or disable opportunistic key caching (OKC), \n
- *                            -- `0` – disable \n
- *                            -- `1` – enable \n
- *                            -- When this is enabled, module will use cached PMKID to get MSK(Master Session Key) which is need for generating PMK which is needed for 4-way handshake. \n
- *                          - BIT[1] of OKC is used to enable or disable CA certification for PEAP connection. \n
- *                            -- `0` – CA certificate is not required.  \n
- *                            -- `1` – CA certificate is required. \n
- *                          - BIT[2-12] of OKC argument are used for Cipher list selection for EAP connection. All possible ciphers are listed below \n 
- * 	                                 BIT position  |   Cipher selected
- * 	                                 :--           |:-------
- *                                   2             |   DHE-RSA-AES256-SHA256                              
- *                                   3             |   DHE-RSA-AES128-SHA256                              
- *                                   4             |   DHE-RSA-AES256-SHA                                 
- *                                   5             |   DHE-RSA-AES128-SHA                                 
- *                                   6             |   AES256-SHA256                                      
- *                                   7             |   AES128-SHA256                                      
- *                                   8             |   AES256-SHA                                                                      
- *                                   9             |   AES128-SHA                                                                      
- *                                   10            |   RC4-SHA                                                                        
- *                                   11            |   DES-CBC3-SHA	                                                               
- *                                   12            |   RC4-MD5                                                                  
- *                          - BIT[13-31] of OKC argument is reserved. \n
- *                          - When user sets BIT[1] and does not provide the CA certificate for PEAP connection then error is thrown. If user provides invalid CA certificate then also error is thrown. User can set either one or multiple bits from BIT[2-12] to provide the cipher's list. When user does not provide any value in OKC's BIT[2-12] then by default all the ciphers are selected. \n
- *               • private_key_password is 82 bytes,This is password for encrypted private key given to the module. Module will use this password during decryption of encrypted private key. password length must be 80 bytes or less. Should be configured in RSI_PRIVATE_KEY_PASSWORD. \n
- *              
- * 
- * @return 	**Success**     - RSI_SUCCESS \n
- *              **Failure**     - Non-Zero Value \n
- *
- *              		 `if return value is less than zero :\n
- *
- *				  **RSI_ERROR_INVALID_PARAM**                - Invalid parameters \n
- *
- *				  **RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE** - Command given in wrong state \n
- *
- *				  **RSI_ERROR_PKT_ALLOCATION_FAILURE**       - Buffer not available to serve the command \n
- *
- *				`Other expected error code are :  \n
- *
- *				  **0x0002,0x0003,0x0005,0x0008,0x0009,0x000A,0x000E,0x0014,** \n
- *
- *				  **0x0015,0x0016,0x0019,0x001A,0x001E,0x0020,0x0021,0x0024,** \n
- *
- *				  **0x0025,0x0026,0x0028,0x0039,0x003C,0x0044,0x0045,0x0046,** \n
- *
- *				  **0x0047,0x0048,0x0049,0xFFF8**
- * @note		Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ *              Set MAC address, Band, Timeout, Init, Set region, WMM parameters, Scan, EAP config, WMM PS parameters, WPS method, Set WEP keys, Host PSK, Rejoin params, Join \n
+ * @note        For example, \n
+ *              after calling rsi_wireless_init(), wlan_cb state is updated to OPERMODE_DONE state. So when we call this API, it will execute band, init, scan and join commands. \n
+ * @note        For example, \n
+ *              after calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to BAND_DONE state. So when we call this API, it will execute init, scan and join commands. \n
+ * @note        For example, \n
+ *              after calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to SCAN_DONE state. So when we call this API, it will execute join command directly.
  *
  */
 
@@ -1421,102 +1345,101 @@ int32_t rsi_wlan_connect(int8_t *ssid, rsi_security_mode_t sec_type, void *secre
 }
 /*==============================================*/
 /**
- * @brief       Connect to the specified Wi-Fi network.A join response handler is registered to get the response for join.. This is a non-blocking API.
- * @pre        \ref rsi_wireless_init() API needs to be called before this API.
+ * @brief       Connect to the specified Wi-Fi network. A join response handler is registered to get the response for join. This is a non-blocking API.
  * @param[in]   ssid - SSID of an access point to connect. SSID should be less than or equal to 32 bytes.
- * @param[in]   sec_type			  - Security type of the access point to connect.
- *                                0: RSI_OPEN, \n
- *                                1: RSI_WPA, \n
- *                                2: RSI_WPA2, \n
- *                                3: RSI_WEP, \n
- *                                4: RSI_WPA_EAP, \n
- *                                5: RSI_WPA2_EAP, \n
- *                                6: RSI_WPA_WPA2_MIXED, \n
- *                                7: RSI_WPA_PMK, \n
- *                                8: RSI_WPA2_PMK, \n
- *                                9: RSI_WPS_PIN, \n
- *                               10: RSI_USE_GENERATED_WPSPIN, \n
- *                               11: RSI_WPS_PUSH_BUTTON, \n
- *                               12: RSI_WPA_WPA2_MIXED_PMK, \n
- *                               13: RSI_WPA3
- * @param[in]   secret_key			  - Pointer to a buffer that contains security information based on sec_type.
- *              Security type(sec_type) |       Secret key structure format (secret_key)
- *              :-----------------------|:-----------------------------------------------------------------------------------------------------------------
- *              RSI_OPEN                |       No secret key in open security mode.
- *              RSI_WPA                 |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- *              RSI_WPA2                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- *              RSI_WEP                 |       WEP keys should be in the following format:
- *              ^			|	typedef struct rsi_wep_keys_s 
- *              ^			|	{
- *              ^			|	uint8_t index[2];
- *              ^			|	uint8_t key[4][32];
- *              ^			|	} rsi_wep_keys_t;
- *              ^			|	index: WEP key index to use for TX packet encryption.
- *              ^			|	key: 4 WEP keys, last three WEP keys are optional. If only first WEP key is valid then index should be 0.
- *              RSI_WPA_EAP             |       Enterprise credentials should be in the following format:
- *              ^			|	typedef struct rsi_eap_credentials_s
- *              ^			|	{
- *              ^			|	uint8_t username[64];
- *              ^			|	uint8_t password[128];
- *              ^			|	} rsi_eap_credentials_t;
- *              ^			|	username: username to be used in enterprise
- *              ^			|	password: password for the given username
- *              RSI_WPA2_EAP            |       Enterprise credentials should be in the following format:
- *              ^			|	typedef struct rsi_eap_credentials_s
- *              ^			|	{
- *              ^			|	uint8_t username[64];
- *              ^			|	uint8_t password[128];
- *              ^			|	} rsi_eap_credentials_t;
- *              ^			|	username: username to be used in enterprise
- *              ^			|	password: password for a given username.
- *              RSI_WPA_WPA2_MIXED      |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes
- *              RSI_WPA_PMK             |       PMK string, should be 32 bytes in length
- *              RSI_WPA2_PMK            |       PMK string, should be 32 bytes in length
- *              RSI_WPS_PIN             |       8-byte WPS PIN
- *              RSI_USE_GENERATED_WPSPIN|       NULL string indicate to use PIN generated using rsi_wps_generate_pin API
- *              RSI_WPS_PUSH_BUTTON     |       NULL string indicate to generate push button event
- *              RSI_WPA3                |       PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
- * @param[in]   join_response_handler - Called when the response for join has been received from the module \n
- *                                        Parameters involved are status, buffer, & length \n
- * @param[out]  Status                - Response status. If status is zero, then the join response is stated as Success  \n
- * @param[out]  Buffer                - Response buffer. On successful execution of the command.  \n GO_Status (1 byte, hex): 0x47 (ASCII "G") If the module becomes a Group Owner (GO) after the GO
- *                                        negotiation stage or becomes an Access Point. \n 0x43 (ASCII "C") If the module does not become a GO after the GO negotiation stage or becomes a client (or station).
- * @param[out] length 		      -	Length of the response buffer.
- * @note         The module gets a default IP of 192.168.100.76 if it becomes a Group Owner or Access Point in case of IPv4. \n and gets a default IP of 2001:db8:0:1:0:0:0:120 in case of IPv6.
- * @note	 To set Rejoin params, user should configure the following macros in rsi_wlan_config.h \n 
- *		            RSI_REJOIN_PARAMS_SUPPORT      : Enable to send rejoin parameters command during Wi-Fi client connection \n
- *		            RSI_REJOIN_MAX_RETRY           : Number of maximum rejoin retries by module\n
- *		            note                           : If Max retries is 0 , retries infinity times \n
- *		            RSI_REJOIN_SCAN_INTERVAL       : Periodicity of rejoin attempt \n
- *		            RSI_REJOIN_BEACON_MISSED_COUNT : Number of consecutive beacon misses after which modules goes to unconnected state \n
- *		            RSI_REJOIN_FIRST_TIME_RETRY    : ENABLE  - Try to rejoin in the first attempt after join failure. \n
+ * @param[in]   sec_type 	- Security type of the access point to connect. \n
+ * 		Value	|	Security Type
+ * 		:-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		0		|	RSI_OPEN 
+ * 		1		|	RSI_WPA
+ * 		2		|	RSI_WPA2
+ * 		3		|	RSI_WEP
+ * 		4		|	RSI_WPA_EAP
+ * 		5		|	RSI_WPA2_EAP
+ * 		6		|	RSI_WPA_WPA2_MIXED
+ * 		7		|	RSI_WPA_PMK
+ * 		8		|	RSI_WPA2_PMK
+ * 		9		|	RSI_WPS_PIN
+ * 		10	|	RSI_USE_GENERATED_WPSPIN
+ * 		11	|	RSI_WPS_PUSH_BUTTON
+ * 		12	|	RSI_WPA_WPA2_MIXED_PMK
+ * 		13	|	RSI_WPA3
+ * @param[in]   secret_key	- Pointer to a buffer that contains security information based on sec_type. \n
+ * 		Security type(sec_type)	|	Secret key structure format (secret_key)
+ * 		:-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		RSI_OPEN		|	No secret key in open security mode.
+ * 		RSI_WPA			|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ * 		RSI_WPA2		|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ * 		RSI_WEP			|	WEP keys should be in the following format:
+ * 		^				typedef struct rsi_wep_keys_s
+ * 		^				{ 
+ * 		^				uint8_t index[2];
+ * 		^				uint8_t key[4][32];
+ * 		^				} rsi_wep_keys_t; 
+ * 		^				index: WEP key index to use for TX packet encryption.
+ * 		^				key: 4 WEP keys, last three WEP keys are optional. If only first WEP key is valid then index should be 0.
+ * 		RSI_WPA_EAP		|	Enterprise credentials should be in the following format:
+ * 		^				typedef struct rsi_eap_credentials_s
+ * 		^				{ 
+ * 		^				uint8_t username[64];
+ * 		^				uint8_t password[128];
+ * 		^				} rsi_eap_credentials_t;
+ *		^				username: username to be used in enterprise
+ * 		^				password: password for the given username
+ * 		RSI_WPA2_EAP		|	Enterprise credentials should be in the following format:
+ * 		^				typedef struct rsi_eap_credentials_s
+ * 		^				{ 
+ * 		^				uint8_t username[64];
+ * 		^				uint8_t password[128];
+ * 		^				} rsi_eap_credentials_t;
+ * 		^				username: username to be used in enterprise
+ * 		^				password: password for a given username.
+ * 		RSI_WPA_WPA2_MIXED	|	PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes
+ * 		RSI_WPA_PMK		|	PMK string, should be 32 bytes in length
+ * 		RSI_WPA2_PMK		|	PMK string, should be 32 bytes in length
+ * 		RSI_WPS_PIN		|	8-byte WPS PIN
+ * 		RSI_USE_GENERATED_WPSPIN|	NULL string indicate to use PIN generated using rsi_wps_generate_pin API
+ * 		RSI_WPS_PUSH_BUTTON	|	NULL string indicate to generate push button event
+ * 		RSI_WPA3            |   PSK string terminated with NULL. Length of PSK should be at least 8 and less than 64 bytes.
+ * @param[in]   join_response_handler - Called when the response for join has been received from the module. \n
+ *                                      Parameters involved are status, buffer, & length \n
+ * @param[out]  Status                - Response status. 
+ * @param[out]  Buffer                - Response buffer. On successful execution of the command.  \n GO_Status (1 byte, hex): 0x47 (ASCII "G") - If the module becomes a Group Owner (GO) after the GO
+ *                                      negotiation stage or becomes an Access Point. \n 0x43 (ASCII "C") - If the module does not become a GO after the GO negotiation stage or becomes a client (or station).
+ * @param[out]  length 		            -	Length of the response buffer.
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       The module gets a default IP of 192.168.100.76, if it becomes a Group Owner or Access Point in case of IPv4 and gets a default IP of 2001:db8:0:1:0:0:0:120 in case of IPv6.
+ * @note       To set various timeouts, user should change the following macros in rsi_wlan_config.h \n
+ *			       #define RSI_TIMEOUT_SUPPORT RSI_ENABLE. \n
+ *			       #define RSI_TIMEOUT_BIT_MAP 4. \n
+ *			       #define RSI_TIMEOUT_VALUE 300. \n
+ *
+ *        	   timeout_bitmap          |       Description	
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		         timeout_bitmap[0]     	 |	     Set timeout for association and authentication request.timeout_value : timeout value in ms(default 300ms).
+ * 		         timeout_bitmap[1]     	 |       Sets each channel active scan time in ms (default 100ms)
+ * 		         timeout_bitmap[2] 	     |       Used for WLAN keep alive timeout(default value is 30s)
+ * 		         timeout_bitmap[31-3]    |       Reserved
+ * @note	      To set Rejoin parameters, user should configure the following macros in rsi_wlan_config.h \n 
+ *        	      Macro                          |       Description	
+ * 		            :------------------------------|:--------------------------------------------------------------------------------------------------
+ *		            RSI_REJOIN_PARAMS_SUPPORT      | Enable to send rejoin parameters command during Wi-Fi client connection \n
+ *		            RSI_REJOIN_MAX_RETRY           | Number of maximum rejoin retries by module\n
+ *		            note                           | If Max retries is 0 , retries infinity times \n
+ *		            RSI_REJOIN_SCAN_INTERVAL       | Periodicity of rejoin attempt \n
+ *		            RSI_REJOIN_BEACON_MISSED_COUNT | Number of consecutive beacon misses after which modules goes to unconnected state \n
+ *		            RSI_REJOIN_FIRST_TIME_RETRY    | ENABLE  - Try to rejoin in the first attempt after join failure. \n
  *		                                             DISABLE - Try to rejoin based on maximum rejoin retries configured. \n
- *		When RSI_REJOIN_PARAMS_SUPPORT is enabled in the rsi_wlan_config.h, this rejoin frame will be sent to the firmware after scan done in the SAPI.
+ * @note	      When RSI_REJOIN_PARAMS_SUPPORT is enabled in the rsi_wlan_config.h, the rejoin frame will be sent to the firmware after the scan is done.
  * @note        This API internally handles following commands based on wlan_cb state and sends the next command and finally sends the join command. \n
- *                 •	Set mac address \n
- *                 •	Band \n
- *                 •	Timeout \n
- *                 •	Init \n
- *                 •	Set region \n
- *                 •	WMM parameters \n
- *                 •	Scan \n
- *                 •	EAP config \n
- *                 •	WMM PS parameters \n
- *                 •	WPS method \n
- *                 •	Set WEP keys \n
- *                 •	Host PSK \n
- *                 •	Rejoin params \n
- *                 •	Join \n
- *              For example, \n
- *              After calling rsi_wireless_init(), wlan_cb state is updated to opermode done state. So when we call this API, it will execute band, init, scan and join commands. \n
- *              After calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to band done state. So when we call this API, it will execute init, scan and join commands. \n
- *              After calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to scan done state. So when we call this API, it will execute join command directly. \n
- * @return      0 - Success \n 
- *              Non-Zero - Failure \n
- *              -2 - Invalid parameters \n
- *                -3 - Command given in wrong state \n
- *                -4 - Buffer not availableto serve the command
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ *              Set MAC address, Band, Timeout, Init, Set region, WMM parameters, Scan, EAP config, WMM PS parameters, WPS method, Set WEP keys, Host PSK, Rejoin params, Join \n
+ * @note        For example, \n
+ *              after calling rsi_wireless_init(), wlan_cb state is updated to OPERMODE_DONE state. So when we call this API, it will execute band, init, scan and join commands. \n
+ * @note        For example, \n
+ *              after calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to BAND_DONE state. So when we call this API, it will execute init, scan and join commands. \n
+ * @note        For example, \n
+ *              after calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to SCAN_DONE state. So when we call this API, it will execute join command directly.
  *
  */
 
@@ -2198,18 +2121,16 @@ int32_t rsi_wlan_connect_async(int8_t *ssid,
 
 /*==============================================*/
 /**
- * @brief        Get background scan results or stop bgscan. This is a blocking API.
- * @pre             \ref rsi_wlan_connect() API needs to be called before this API.
- * @param[in]	 cmd - Command given by user, to enable or disable bgscan
- *                   0 - disable bgscan
- *                   1 - enable bgscan
+ * @brief        Enable background scan and get the results or disable background scan. This is a blocking API.
+ * @param[in]	   cmd - Command given by user, to enable or disable bgscan. \n
+ *                     0 - disable bgscan, \n
+ *                     1 - enable bgscan
  * @param[out]   result - buffer to store bgscan results
  * @param[in]    length - Length of bgscan result buffer
  * @return       0  	  -  Success \n
- *               Non-Zero Value - Failure\n
- *               		-3 - Command given in wrong state \n
- *               		-4 - Buffer not availableto serve the command.
- * @note	Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return       Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc) \n
+ * @note         **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note	       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -2284,17 +2205,12 @@ int32_t rsi_wlan_bgscan_profile(uint8_t cmd, rsi_rsp_scan_t *result, uint32_t le
 }
 /*==============================================*/
 /**
- * @brief      Enable scan and roaming after connecting to the Access Point. This is a blocking API.
- * @pre        \ref rsi_wlan_connect() API needs to be called before this API.
+ * @brief      Enable scan and roaming after connecting the module to the access point. This is a blocking API.
  * @param[in]  Void
- * @return     0               -  Success \n
- *             Non-Zero  Value - Failure \n
- *             If return value is less than 0 \n
- *		         -3              - Command given in wrong state \n
- *		         -4              - Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- *             0x0006,0x0021,0x002C,0x004A,0x0025,0x0026 \n
- * @note	   	 Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return     0  	  -  Success \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffc,0x0006,0x0021,0x002C,0x004A,0x0025,0x0026) \n
+ * @note       **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note	     Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -2399,16 +2315,12 @@ int32_t rsi_wlan_execute_post_connect_cmds(void)
 
 /*==============================================*/
 /**
- * @brief       Start the WPS Push button in AP mode. Must be called after rsi_wlan_ap_start API once it has returned Success. This is a blocking API.
- * @pre         \ref rsi_wlan_ap_start() API needs to be called before this API.
- * @param[in]   ssid -SSID of the Access Point. SSID should be same as that of given in AP start API. Length of the SSID should be less than or equal to 32 bytes.
- * @return      0               - Success \n
- *              Non-Zero  Value - Failure \n
- *              If return value is less than 0 \n
- *		          -4              - Buffer not available to serve the command \n
- *              If return value is greater than 0 \n
- *              0x0021
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @brief       Start the WPS Push button in AP mode. This is a blocking API.
+ * @param[in]   ssid - SSID of the Access Point. SSID should be same as that of given in AP start API. Length of the SSID should be less than or equal to 32 bytes.
+ * @return      0  	  -  Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffc,0x0021) \n
+ * @note        **Precondition** - \ref rsi_wlan_ap_start() API needs to be called before this API.
+ * @note	      Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -2484,14 +2396,10 @@ int32_t rsi_wlan_wps_push_button_event(int8_t *ssid)
 
 /*==============================================*/
 /**
- * @brief        Application to provide feedback of Frequency error in KHz. This is a blocking API.
+ * @brief        Application to provide feedback of frequency error in KHz. This is a blocking API.
  * @param[in]    freq_offset_in_khz - Frequency deviation observed in KHz
- * @return       0          - Success \n
- *               Non zero Value - Failure \n
- *               0xFC - Frequency offset sent is zero \n
- *		           0xFB - Frequency offset specified goes beyond the upper limit or lower limit and indicates that frequency offset cannot be changed further. \n
- *        
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return       0          - Success \n   
+ * @note         Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
 {
@@ -2555,29 +2463,37 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
 /*==============================================*/
 /**
  * @brief             RF calibration process. This API will command the firmware to update the existing Flash/EFuse calibration data. This is a blocking API.
- * @pre    	\ref rsi_transmit_test_start(), \ref rsi_send_freq_offset() API needs to be called before this API.This API is relevant in PER mode only.
- * @param[in]         Target \n
- * 			0 - BURN_INTO_EFUSE (Burns calibration data to EFuse) \n
- * 			1 - BURN_INTO_FLASH (Burns calibration data to Flash) \n
- * @param[in]         Flags - Validate information \n
+ * @param[in]         Target - 0 - BURN_INTO_EFUSE (Burns calibration data to EFuse) \n
+ * 			                       1 - BURN_INTO_FLASH (Burns calibration data to Flash) \n
+ * @param[in]         Flags  - Validate information \n
  *                     Bit |	MACRO 		           |	Description
  *                     :---|:---------------------:|:---------------------------------------------------
- *                     0   |	BURN_GAIN_OFFSET     | 	1 - Update gain offset to calibration data \n	0 - Skip gain offset update
+ *                     0   |	RESERVED_0           |  Reserved
  *                     1   |	BURN_FREQ_OFFSET     |	1 - Update XO Ctune to calibration data \n	0 - Skip XO Ctune update
- *                     2   |	SW_XO_CTUNE_VALID    |	1 - Use XO Ctune provided as argument to update calibration data \n	0 - Use XO Ctune value as read from hardware register
- *                     3   |	BURN_XO_FAST_DISABLE |     Used to apply patch for cold temperature issue(host interface detection) observed on CC0/CC1 modules. \ref appendix
- *                     7-4 |                       |	Reserved
- * @param[in]         gain_offset - gain_offset as observed in dBm
+ *                     2   |	SW_XO_CTUNE_VALID    |	1 - Use XO Ctune provided as argument to update calibration data. \n	0 - Use XO Ctune value as read from hardware register
+ *                     3   |	BURN_XO_FAST_DISABLE |  Used to apply patch for cold temperature issue (host interface detection) observed on CC0/CC1 modules. \ref appendix
+ *                     4   |  BURN_GAIN_OFFSET_LOW |  1 - Update gain offset for low sub-band (2 GHz) \n	0 - Skip low sub-band gain-offset update
+ *                     5   |  BURN_GAIN_OFFSET_MID |  1 - Update gain offset for mid sub-band (2 GHz) \n	0 - Skip mid sub-band gain-offset update
+ *                     6   |  BURN_GAIN_OFFSET_HIGH|  1 - Update gain offset for high sub-band (2 GHz) \n	0 - Skip high sub-band gain-offset update
+ *                     31-4 |                      |	Reserved
+ * @param[in]         gain_offset_low - gain_offset as observed in dBm in channel-1
+ * @param[in]         gain_offset_mid - gain_offset as observed in dBm in channel-6
+ * @param[in]         gain_offset_high - gain_offset as observed in dBm in channel-11
  * @param[in]         xo_ctune - Allow user to directly update xo_ctune value to calibration data bypassing the freq offset loop,
- * 			valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. The range of xo_ctune is [0, 255], and the typical value is 80
- * @note              To recalibrate gain offset after it has been burnt to flash, the user is required to first reset gain offset and then follow the calibration flow. \n
- *                    e.g.: rsi_calib_write(BURN_INTO_FLASH,BURN_GAIN_OFFSET,0,0); // which resets gain offset \n
- *                    Recalibration is not possible if EFuse is being used instead of flash as calibration data storage            
+ * 			              valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. The range of xo_ctune is [0, 255], and the typical value is 80.            
  * @return            0			- Success \n
- *                    Non-Zero Value	- Failure
+ * @return            Non-Zero Value	- Failure
+ * @note              **Precondition** - \ref rsi_transmit_test_start(), \ref rsi_send_freq_offset() API needs to be called before this API. This API is relevant in PER mode only. 
+ * @note              For gain-offset calibration in 2.4 GHz, the user needs to calibrate gain-offset for low sub-band (channel-1), mid sub-band (channel-6), and high sub-band (channel-11) and input the three gain-offsets to this API and set the corresponding flags to validate it. \n
+ * @note              Recalibration is not possible if EFuse is being used instead of flash as calibration data storage
  */
 
-int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int32_t xo_ctune)
+int32_t rsi_calib_write(uint8_t target,
+                        uint32_t flags,
+                        int8_t gain_offset_low,
+                        int8_t gain_offset_mid,
+                        int8_t gain_offset_high,
+                        int8_t xo_ctune)
 {
   rsi_pkt_t *pkt;
   rsi_calib_write_t *calib_wr = NULL;
@@ -2617,7 +2533,9 @@ int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int3
     calib_wr->flags = flags;
 
     // Gain offset
-    calib_wr->gain_offset = gain_offset;
+    calib_wr->gain_offset[0] = gain_offset_low;
+    calib_wr->gain_offset[1] = gain_offset_mid;
+    calib_wr->gain_offset[2] = gain_offset_high;
 
     // Freq offset
     calib_wr->xo_ctune = xo_ctune;
@@ -2648,12 +2566,90 @@ int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int3
 }
 /*==============================================*/
 /**
+ * @brief             RF calibration process. This API reads the calibration data from the Flash/EFuse storage. This is a blocking API.
+ * @pre    	\ref rsi_wireless_init() needs to be called prior this API. 
+ * @param[in]         Target \n
+ * 			0 - READ_FROM_EFUSE (read calibration data from the EFuse) \n
+ * 			1 - READ_FROM_FLASH (read calibration data from the Flash) \n
+ * @param[out]         gain_offset_low - gain_offset in dBm that will be applied for transmissions in channel-1.
+ * @param[out]         gain_offset_mid - gain_offset in dBm that will be applied for transmissions in channel-6.
+ * @param[out]         gain_offset_high -gain_offset in dBm that will be applied for transmissions in channel-11.
+ * @param[out]         xo_ctune - xo_ctune value as read from the target memory. 
+ * @return            0			- Success \n
+ *                    Non-Zero Value	- Failure
+ */
+
+int32_t rsi_calib_read(uint8_t target, rsi_calib_read_t *calib_data)
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_CALIB_READ_ENTRY, WLAN, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    SL_PRINTF(SL_WLAN_CALIB_READ_COMMAND_GIVEN_IN_WRONG_STATE, WLAN, LOG_ERROR, "status: %4x", status);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_CALIB_READ_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Memset buffer
+    memset(&pkt->data, 0, 4);
+
+    // Target flash or efuse
+    pkt->data[0] = target;
+
+    // Attach the buffer given by user
+    wlan_cb->app_buffer = (uint8_t *)calib_data;
+
+    // Length of the buffer provided by user
+    wlan_cb->app_buffer_length = sizeof(rsi_calib_read_t);
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send WPS request command
+    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_CALIB_READ, pkt);
+
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_CALIB_READ_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_CALIB_READ_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_CALIB_READ_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
+  return status;
+}
+/*==============================================*/
+/**
  * @brief         Parse and convert the given value in ASCII to the datatype of a given length.. This is a non-blocking API.
- * @param[in]     address - Address
- * @param[in]     length - Length
- * @param[in]     value - Value
- * @return        0         - Success \n
- *                Non-Zero Value  - Failure
+ * @param[in]     address         - Address
+ * @param[in]     length          - Length
+ * @param[in]     value           - Value
+ * @return        0               - Success \n
+ * @return        Non-Zero Value  - Failure
  */
 int16_t rsi_parse(void *address, uint16_t length, uint8_t *value)
 {
@@ -2687,16 +2683,11 @@ int16_t rsi_parse(void *address, uint16_t length, uint8_t *value)
 /*==============================================*/
 /**
  * @brief      Generate WPS pin. This is a blocking API.
- * @pre        \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  wps_pin - 8-byte WPS pin generated by the device. This is the output parameter.
- * @param[in]  length  -  This is the length of the resulted buffer measured in bytes to hold WPS pin.
- * @param[out] 8-byte WPS pin
+ * @param[out] wps_pin - 8-byte WPS pin generated by the device.
+ * @param[in]  length  - This is the length of the resulted buffer measured in bytes to hold WPS pin.
  * @return     0               - Success \n
- *             Non-Zero  Value - Failure \n
- *             If return value is less than 0 \n
- *		         -4              - Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- *             0x0021,0x002C,0x0025,0x0037,0x0038 \n
+ * @return     Non-Zero  Value - Failure (**Possible Error Codes** - 0xfffffffc,0x0021,0x002C,0x0025,0x0037,0x0038) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
@@ -2774,11 +2765,11 @@ int32_t rsi_wlan_wps_generate_pin(uint8_t *wps_pin, uint16_t length)
 /*==============================================*/
 /**
  * @brief	    	Validate WPS pin entered. This is a blocking API.
- * @pre   	    \ref rsi_wlan_init() API needs to be called before this API.
  * @param[in]   wps_pin - 8-byte valid wps pin
  * @param[out]  Same WPS pin if command is successful
  * @return		  0 	          	- Success \n
- *				      Non-Zero Value  - Failure
+ * @return		  Non-Zero Value  - Failure
+ * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  */
 
 int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin)
@@ -2852,10 +2843,10 @@ int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin)
 /*==============================================*/
 /**
  * @brief       Get random bytes from the device. This is a blocking API.
- * @param[in]   result - Pointer to the buffer in which random data are copied from
+ * @param[in]   result - Pointer to the buffer in which random data are copied from.
  * @param[in]   length - Length of the random data required
- * @return      0         - Success \n
- *              Non-Zero Value  - Failure
+ * @return      0               - Success \n
+ * @return      Non-Zero Value  - Failure
  */
 
 int32_t rsi_get_random_bytes(uint8_t *result, uint32_t length)
@@ -2921,16 +2912,11 @@ int32_t rsi_get_random_bytes(uint8_t *result, uint32_t length)
 
 /*==============================================*/
 /**
- * @brief       Disconnect module from the connected access point. This is a blocking API.
- * @pre    		  \ref rsi_wlan_connect() API needs to be called before this API.
- * @return      Non-Zero Value  - Failure \n
- *              0               - Success \n
- *              If return value is less than 0 \n
- *	       	    -3              - Command given in wrong state \n
- *		          -4              - Buffer not availableto serve the command \n
- *	            If return value is greater than 0 \n
- *		          0x0006,0x0021,0x002C,0x004A,0x0025,0x0026 \n
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @brief       Disconnect the module from the connected access point. This is a blocking API.
+ * @return      0               - Success \n
+ *              Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffc,0x0006,0x0021,0x002C,0x004A,0x0025,0x0026)\n
+ * @note        **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -2992,16 +2978,12 @@ int32_t rsi_wlan_disconnect(void)
 
 /*==============================================*/
 /**
- * @brief      Disconnect the connected stations in AP mode. This is a blocking API.
- * @pre        \ref rsi_wlan_ap_start() API needs to be called before this API.
+ * @brief      Disconnect a connected station from the module in AP mode. This is a blocking API.
  * @param[in]  mac_address - Mac address (6 bytes) of the station to be disconnected.
  * @return     0               - Success \n
- *             Non-Zero Value  - Failure \n
- *             If return value is less than 0 \n
- *	           -4              - Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- *             0x0013, 0x0021, 0x002C, 0x0015 \n
- * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ *             Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffc,0x0013,0x0021,0x002C,0x0015)\n
+ * @note       **Precondition** - \ref rsi_wlan_ap_start() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -3081,26 +3063,25 @@ int32_t rsi_wlan_disconnect_stations(uint8_t *mac_address)
  * @fn             int32_t rsi_config_ipaddress(rsi_ip_version_t version, uint8_t mode, uint8_t *ip_addr,
  *                                           uint8_t *mask, uint8_t *gw, uint8_t *ipconfig_rsp,
  *                                            uint16_t length, uint8_t vap_id);
- * @brief           Configure the IP address to the module. This is a blocking API.
- *                  Send IPconfig command to configure IP address with input parameters (like ipversion, static mode/dhcp mode,vap_id)and return error in case of invalid parameters.
- * @pre            \ref rsi_wlan_connect() API needs to be called before this API.
- * @param[in]    version           - IP version to be used. RSI_IP_VERSION_4 (4) – to select IPv4,RSI_IP_VERSION_6 (6) – to select IPv6
+ * @brief        Configure the IP address to the module. This is a blocking API.
+ * @param[in]    version           - IP version to be used. RSI_IP_VERSION_4 (4) – to select IPv4, RSI_IP_VERSION_6 (6) – to select IPv6
  * @param[in]    mode              - 1 - DHCP mode ; 0 - static mode
  * @param[in]    ip_addr           - Pointer to IP address
+ *               IPv6 Address Description                             |   Indices in the ip_addr
+ *               :----------------------------------------------------|:-----------------------------------------------------------
+ *               Prefix Length                                        |   ip_addr[0]
+ *               Link Local Address (128 bits)                        |   ip_addr[1] to ip_addr[4]
+ *               Global Address (128 bits)                            |   ip_addr[5] to ip_addr[8]
+ *               Gateway Address (128 bits)                           |   ip_addr[9] to ip_addr[12]
  * @param[in]    mask              - Pointer to network mask
  * @param[in]    gw                - Pointer to gateway address
- * @param[in]    ipconfig_rsp     - Hold the IP configuration received using DHCP.
+ * @param[in]    ipconfig_rsp      - Hold the IP configuration received using DHCP.
  * @param[in]    length            - Length of ipconfig_rsp buffer
- * @param[in]    vap_id           - VAP id to differentiate between AP and station in concurrent mode. 0 – for station, 1 – for Access point
- * @return       **Success**      - RSI_SUCCESS \n
- *               **Failure**      - Non-Zero Value \n
- *
- *                **RSI_ERROR_INVALID_PARAM**                 - Invalid parameters\n
- *
- *                **RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE**   - Command given in wrong state \n
- *
- *                **RSI_ERROR_PKT_ALLOCATION_FAILURE**         - Buffer not available to serve the command
- * @note        Refer to Error Codes section for the description of other error codes  \ref error-codes.
+ * @param[in]    vap_id            - VAP id to differentiate between AP and station in concurrent mode. 0 – for station, 1 – for Access point
+ * @return       0                - Success \n
+ *               Non-Zero Value   - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note         **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note         Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_config_ipaddress(rsi_ip_version_t version,
@@ -3250,23 +3231,17 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
 /*==============================================*/
 /**
  * @brief      Write or erase certificate into module. This is a blocking API.
- * @pre          \ref rsi_wireless_init() API must be called before this API.
  * @param[in]  certificate_type   - Type of certificate
  * @param[in]  cert_inx 		      - Index of certificate
  * @param[in]  buffer 			      - Certificate content
  * @param[in]  certificate_length - Certificate length
  * @return     0                -  Success \n
- *             Non-Zero  Value - Failure \n
- *             If return value is less than 0 \n
- *             -2 Invalid Parameters \n
- *             -3 Command given in wrong state \n
- *		         -4 Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- *             0x0015,0x0021,0x0025,0x0026,0x002C 
+ * @return     Non-Zero  Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0015,0x0021,0x0025,0x0026,0x002C) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API must be called before this API.
  * @note 		   Index-based certificate loading is valid only for storing certificates on to RAM or flash but not both at the same time. \n
- * 				     Enable BIT(27) in tcp_ip_feature_bit_map to load SSl certificate into RAM. \n
- *				     Enable BIT(31) in tcp_ip_feature_bit_map and BIT (29) in ext_tcp_ip_feature_bit_map to open 3 SSL client sockets. \n
- *				     Three SSL client sockets feature supported only in WLAN mode.
+ * @note 		   Enable bit[27] in tcp_ip_feature_bit_map to load SSl certificate into RAM. \n
+ * @note 		   Enable bit[31] in tcp_ip_feature_bit_map and bit[29] in ext_tcp_ip_feature_bit_map to open 3 SSL client sockets. \n
+ * 				     Three SSL client sockets feature is supported only in WLAN mode.
  *
  *
  */
@@ -3493,28 +3468,24 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
 */
 /*==============================================*/
 /**
- * @brief      Load SSL/EAP certificate on WiSeConnect module. This is a blocking API.
- * @pre        \ref rsi_wireless_init() API must be called before this API.
+ * @brief      Load SSL/EAP certificate in the module. This is a blocking API.
  * @param[in]  certificate_type   - Type of certificate \n
  *                                  These are the certificate types: \n
- *                                  1: TLS client certificate \n
- *                                  2: FAST PAC file          \n
- *                                  3: SSL Client Certificate \n
- *                                  4: SSL Client Private Key \n
- *                                  5: SSL CA Certificate     \n
- *                                  6: SSL Server Certificate \n
- *                                  7: SSL Server Private Key \n
+ *                                  Value      |   Certificate type
+ *                                  |:---------|:----------------------
+ *                                  1          | TLS client certificate \n
+ *                                  2          | FAST PAC file          \n
+ *                                  3          | SSL Client Certificate \n
+ *                                  4          | SSL Client Private Key \n
+ *                                  5          | SSL CA Certificate     \n
+ *                                  6          | SSL Server Certificate \n
+ *                                  7          | SSL Server Private Key \n
  * @param[in]  buffer 			      - Pointer to a buffer which contains the certificate
  * @param[in]  certificate_length - Certificate length
  * @return     0               - Success \n
- *             Non-Zero  Value - Failure \n
- *             If return value is less than 0 \n
- *             -2 Invalid Parameters \n
- *             -3 Command given in wrong state \n
- *		         -4 Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- *             0x0015,0x0021,0x0025,0x0026,0x002C 
- * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return     Non-Zero  Value - Failure 	(**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0015,0x0021,0x0025,0x0026,0x002C) \n 
+ * @note       **Precondition** - \ref rsi_wireless_init() API must be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_wlan_set_certificate(uint8_t certificate_type, uint8_t *buffer, uint32_t certificate_length)
@@ -3529,11 +3500,10 @@ int32_t rsi_wlan_set_certificate(uint8_t certificate_type, uint8_t *buffer, uint
 */
 /*==============================================*/
 /**
- * @brief       Check the status (specific error code) of errors encountered during a call to a WLAN API or BSD sockets
- * 				      functions. User can call this API to check the error code.This is a non-blocking API.
+ * @brief       Check the error code encountered during a call to a WLAN API or BSD sockets functions. This is a non-blocking API.
  * @param[in]   Void
- * @return      Return the error code that previously occurred. If no error occurred, return 0.
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return      Returns the error code that previously occurred. If no error occurred, returns 0.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_wlan_get_status(void)
 {
@@ -3544,30 +3514,28 @@ int32_t rsi_wlan_get_status(void)
 /*==============================================*/
 /**
  * @brief     Get the required information based on the type of command. This is a blocking API.
- * @pre 		  \ref rsi_wireless_init () API needs to be called before this API.
- * 				    Return WLAN status
- * @param[in] cmd_type  -  Query command type: \n
- *                      	 1 : RSI_FW_VERSION \n
- *              		       2 : RSI_MAC_ADDRESS \n
- *              		       3 : RSI_RSSI \n
- *              		       4 : RSI_WLAN_INFO \n
- *              		       5 : RSI_CONNECTION_STATUS \n
- *              		       6 : RSI_STATIONS_INFO \n
- *              		       7 : RSI_SOCKETS_INFO \n
- *              		       8 : RSI_CFG_GET \n
- *                         9 : RSI_GET_WLAN_STAT
- * @param[in]  response    - Response of the requested command. This is an output parameter.
- * @param[in]  length      - Length of the response buffer in bytes to hold result.
+ * @param[in] cmd_type   -  Query command type: \n
+ *                         Value |	Command Type
+ *                         :---|:---------------------
+ *                      	 1 | RSI_FW_VERSION \n
+ *              		       2 | RSI_MAC_ADDRESS \n
+ *              		       3 | RSI_RSSI \n
+ *              		       4 | RSI_WLAN_INFO \n
+ *              		       5 | RSI_CONNECTION_STATUS \n
+ *              		       6 | RSI_STATIONS_INFO \n
+ *              		       7 | RSI_SOCKETS_INFO \n
+ *              		       8 | RSI_CFG_GET \n
+ *                         9 | RSI_GET_WLAN_STAT
+ * @param[out] response  - Response of the requested command.
+ * @param[in]  length     - Length of the response buffer in bytes to hold result.
  * @note	     RSI_WLAN_INFO is relevant in both station and AP mode. \n
- *				     RSI_SOCKETS_INFO is relevant in both station mode and AP mode. \n
- *				     RSI_STATIONS_INFO is relevant in AP mode \n
- *				     RSI_GET_WLAN_STATS is relevant in AP and Station mode
- * @return   	 Non-Zero Value  - Failure \n
- *                        0 	 - Success \n
- *				               -3    - Command given in wrong state \n
- *				               -4    - Buffer not availableto serve the command \n
- *				               -6    - Insufficient input buffer given
- * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @note	     RSI_SOCKETS_INFO is relevant in both station mode and AP mode. \n
+ * @note	     RSI_STATIONS_INFO is relevant in AP mode \n
+ * @note	     RSI_GET_WLAN_STATS is relevant in AP and Station mode
+ * @return   	 0 	             - Success 
+ * @return   	 Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffc,0xfffffffa) \n           
+ * @note       **Precondition** - \ref rsi_wireless_init () API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
@@ -3918,41 +3886,39 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
 /*==============================================*/
 /**
  * @brief       Request configuration based on the command type. This is a blocking API.
- * @pre   		  \ref rsi_wireless_init() API needs to be called before this API. \n
- *        		  For setting MAC address, call this API immediately after \n
- *		  		    \ref rsi_wireless_init() and before calling any other API. \n
- *		  		    \ref rsi_config_ipaddress() needs to be call for RSI_CFG_SAVE and RSI_CFG_STORE.
  * @param[in]   cmd_type  - 	Set command type:  : \n
- *                       	1 : RSI_SET_MAC_ADDRESS \n
- *                       	2 : RSI_MULTICAST_FILTER \n
- *                      	3 : RSI_JOIN_BSSID \n
- *                      	4 : RSI_CFG_SAVE  \n
- *                      	5 : RSI_CFG_STORE  \n
+ *                            Value |	Command Type
+ *                            :---|:---------------------:
+ *                       	    1 | RSI_SET_MAC_ADDRESS \n
+ *                       	    2 | RSI_MULTICAST_FILTER \n
+ *                      	    3 | RSI_JOIN_BSSID \n
+ *                      	    4 | RSI_CFG_SAVE  \n
+ *                      	    5 | RSI_CFG_STORE  \n
  * @param[in]  request    -   Request buffer
  * @param[in]  length     -   Length of the request buffer in bytes
  * 		         cmd type                |	Request structure	
- * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
+ * 		         :-----------------------|:--------------------------------------------------------------------------------------------------:
  * 	 	         RSI_SET_MAC_ADDRESS     |      uint8_t mac_address[6]
  * 	 	         RSI_MULTICAST_FILTER    |      typedef struct rsi_req_multicast_filter_info_s
- *	           ^        	             |    	{ uint8_t cmd_type;
- *	           ^        	             |    	  uint8_t mac_address[6];
- *	           ^                       |         }rsi_req_multicast_filter_info_t;
- *	           ^                       |      cmd_type are : \n
- *	           ^        	             |    	2 . RSI_MULTICAST_MAC_CLEAR_ALL (To clear all the bits in multicast bitmap) \n
- *	           ^        	             |    	3 . RSI_MULTICAST_MAC_SET_ALL (To set all the bits in multicast bitmap) \n
+ *	           ^        	                 	  { uint8_t cmd_type;
+ *	           ^        	                 	    uint8_t mac_address[6];
+ *	           ^                                }rsi_req_multicast_filter_info_t;
+ *	           ^                              cmd_type are : \n
+ *             ^                              1 . RSI_ MULTICAST_MAC_ADD_BIT (To set particular bit in multicast bitmap)
+ *	           ^        	                 	  2 . RSI_MULTICAST_MAC_CLEAR_BIT (To reset particular bit in multicast bitmap
+ *	           ^        	                 	  3 . RSI_MULTICAST_MAC_CLEAR_ALL (To clear all the bits in multicast bitmap) \n
+ *	           ^        	                 	  4 . RSI_MULTICAST_MAC_SET_ALL (To set all the bits in multicast bitmap) \n
  * 	 	         RSI_JOIN_BSSID          |      uint8_t join_bssid[6]
  * 	 	         RSI_CFG_SAVE            |      This cmd_type is used to save the parameters into non-volatile memory which are used either to join to an Access point (auto-join mode) or to create an Access point(auto-create mode).
  * 	 	         RSI_CFG_STORE           |      This cmd_type is used to give the configuration values which are supposed to be stored in the module's non-volatile memory and that are used in auto-join or auto-create modes. 
- *	           ^        	             |    	User configurations are stored in rsi_user_store_config_t structure. \n
+ *	           ^        	                  	User configurations are stored in rsi_user_store_config_t structure. \n
  * @return     0              -  Success \n
- *             Non-Zero	Value - Failure \n
- *	           If return value is less than 0 \n
- *             -2             - Invalid parameters \n
- *	           -3             - Command given in wrong state \n
- *	           -4             - Buffer not available to serve the command \n
- *             If return value is greater than 0 \n
- * 	           0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c
- * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ *             Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffc,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. \n
+ *        		  For setting MAC address, call this API immediately after \n
+ *		  		    \ref rsi_wireless_init() and before calling any other API. \n
+ *              \ref rsi_config_ipaddress() needs to be call for RSI_CFG_SAVE and RSI_CFG_STORE.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
@@ -4107,21 +4073,14 @@ int32_t rsi_wlan_set(rsi_wlan_set_cmd_t cmd_type, uint8_t *request, uint16_t len
 /*==============================================*/
 /**
  * @fn       int32_t rsi_wlan_buffer_config(void)
- * @brief    Configure the TX ,RX global buffers ratio. This is a blocking API.
- * @pre    	\ref rsi_wlan_buffer_config() API needs to be called after opermode command only
+ * @brief    Configure the TX and RX global buffers ratio. This is a blocking API.
  * @param[in]	dynamic_tx_pool	- Configure the dynamic tx ratio
  * @param[in]	dynamic_rx_pool	- Configure the dynamic rx ratio
  * @param[in]	dynamic_global_pool - Configure the dynamic global ratio
- * @return 
- * 		Non-Zero Value  - Failure \n
- *              0 		- Success \n
- *              -2 - Invalid parameters \n
- *		-3 - Command given in wrong state \n
- *		-4 - Buffer not availableto serve the command \n
- *		If return value is greater than zero : 0x0021
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes
- * 		Parameters given here are used internally by the API
- *
+ * @return    0 		- Success \n
+ * @return    Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0021) \n
+ * @note      **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. 
+ * @note      Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_wlan_buffer_config(void)
@@ -4193,12 +4152,11 @@ int32_t rsi_wlan_buffer_config(void)
 /*==============================================*/
 /**
  * @brief      Start the module in access point mode with the given configuration. This is a blocking API.
- * @pre           \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  ssid - SSID of the access point. Length of the SSID should be less than or equal to 32 bytes.
+ * @param[in]  ssid    - SSID of the access point. Length of the SSID should be less than or equal to 32 bytes.
  * @param[in]  channel - Channel number. Refer the following channels for the valid channel numbers supported: \n
- *                      2.4GHz Band Channel Mapping, 5GHz Band Channel Mapping \n
+ *                       2.4GHz Band Channel Mapping, 5GHz Band Channel Mapping \n
  *                      channel number 0 is to enable ACS feature
- *			####The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum####
+ *			###The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum###
  *			Channel numbers (2.4GHz)|	Center frequencies for 20MHz channel width 
  *			:----------------------:|:-----------------------------------------------:
  *			1			|	2412 
@@ -4215,7 +4173,7 @@ int32_t rsi_wlan_buffer_config(void)
  *			12		|	2467 
  *			13		|	2472 
  *			14		|	2484 
- * 	####The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum####
+ * 	  ###The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum###
  * 		Channel Numbers(5GHz) |	Center frequencies for 20MHz channel width 
  * 		:--------------------:|:------------------------------------------:
  *		36		      |5180 
@@ -4228,28 +4186,29 @@ int32_t rsi_wlan_buffer_config(void)
  *		157		      |5785 
  *		161		      |5805 
  *		165		      |5825 
- * @note	DFS channels are not supported in AP mode.
  * @param[in]  security_type - Type of the security modes on which an access point needs to be operated: \n
- *                         1 : RSI_OPEN \n
- *                         2 : RSI_WPA \n
- *                         3 : RSI_WPA2 \n
- *                         4 : RSI_WPA_WPA2_MIXED \n
- *                         5 : RSI_WPS_PUSH_BUTTON
- * @param[in]  encryption_mode - Type of the encryption mode:\n
- *                         0 : RSI_NONE \n
- *                         1 : RSI_TKIP \n
- *                         2 : RSI_CCMP
+ * 		                     Value |	Security type 
+ * 		                     :----:|:------------------------------------------:
+ *                         1     | RSI_OPEN \n
+ *                         2     | RSI_WPA \n
+ *                         3     | RSI_WPA2 \n
+ *                         4     | RSI_WPA_WPA2_MIXED \n
+ *                         5     | RSI_WPS_PUSH_BUTTON
+ * @param[in]  encryption_mode - Type of the encryption mode: \n
+ * 		                     Value |	Encryption mode 
+ * 		                     :----:|:------------------------------------------:
+ *                         0     | RSI_NONE \n
+ *                         1     | RSI_TKIP \n
+ *                         2     | RSI_CCMP
  * @param[in]  password - PSK to be used in security mode. \n
- *                      Minimum and maximum length of PSK is 8 bytes and 63 bytes respectively
+ *                        Minimum and maximum length of PSK is 8 bytes and 63 bytes respectively
  * @param[in]  beacon_interval - Beacon interval in ms. Allowed values are integers from 100 to 1000 which are multiples of 100.
- * @param[in]  dtim_period - DTIM period. Allowed values are integers between 1 and 255.
- *
- * @return     Non-Zero Value  - Failure \n
- *                    0         - Success\n
- *                -2 - Invalid parameters \n
- *                -3 - Command given in wrong state \n
- *                -4 - Buffer not availableto serve the command
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @param[in]  dtim_period     - DTIM period. Allowed values are integers between 1 and 255.
+ * @return     0               - Success \n
+ * @return     Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n      
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note	     DFS channels are not supported in AP mode.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
@@ -4638,43 +4597,37 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
 /**
  * @fn          int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_type,uint16_t listen_interval)
  * @brief       Set the power save profile in WLAN mode with listen interval-based wakeup. This is a blocking API.
- * @pre         \ref rsi_wireless_init() API needs to be called before this API. 
- * @param[in]   psp_mode
- * @param[in]   psp_type
- * 	          	parameter              |  Description	
+ * @param[in]   psp_mode      - PSP modes available are mentioned below
+ *              Parameter              |  Description	
  * 		          :----------------------|:--------------------------------------------------------------------------------------------------
- *              psp_mode               |   Following psp_mode is defined.
- *              ^                      |   Active(0) : In this mode, module is active and power save is disabled. \n
- *              ^                      |   RSI_SLEEP_MODE_1 (1): Connected sleep mode. \n
- *              ^                      |   In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
- *              ^                      |   RSI_SLEEP_MODE_2 (2): In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
- *              ^                      |   Therefore handshake is required before sending data to the module. \n
- * 		          ^                      |   RSI_SLEEP_MODE_8 (8): Deep sleep mode with ULP RAM RETENTION. \n
- *              ^                      |   RSI_SLEEP_MODE_10 (10): Deep sleep mode without ULP RAM RETENTION. \n
- * 		          ^                      |   In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
- * 		          psp_type               |   Follwing psp_type is defined.
- * 		          ^                      |   RSI_MAX_PSP (0): This psp_type will be used for max power saving. \n
- * 		          ^                      |   RSI_FAST_PSP (1): This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
- * 		          ^                      |   (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
- * 		          ^                      |   If there is no data for monitor interval of time then module will again enable power save. \n
- * 		          ^                      |   RSI_UAPSD (2): This psp_type is used to enable WMM power save.
- * 		          listen interval        |   Used to configure sleep duration in power save. \n
- * @note			  Valid only if BIT (7) in join_feature_bit_map is set. This value is given in time units (1024 microsecond). \n
- *							Used to configure sleep duration in power save and should be less than the listen interval configured by RSI_LISTEN_INTERVAL Macro in join command parameters in rsi_wlan_config.h file. \n
- * @note    		1. psp_type is only valid in psp_mode 1 and 2. \n
- * @note			  2. psp_type UAPSD is applicable only if WMM_PS is enabled in \ref rsi_wlan_config.h file. \n
- * @note			  3. In RSI_MAX_PSP mode, Few access points will not aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.
- * @note       4. For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
- * @note       5. For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
- * @note       6. For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based. \n
- * @note       7. For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file. \n 
+ *              Active(0)              |   In this mode, module is active and power save is disabled. \n
+ *              RSI_SLEEP_MODE_1 (1)   |   Connected sleep mode. \n
+ *              ^                          In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
+ *              RSI_SLEEP_MODE_2 (2)   |   In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
+ *              ^                          Therefore handshake is required before sending data to the module. \n
+ * 		          RSI_SLEEP_MODE_8 (8)   |   Deep sleep mode with ULP RAM RETENTION. In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
+ *              RSI_SLEEP_MODE_10 (10) |   Deep sleep mode without ULP RAM RETENTION. \n                  
+ * @param[in]   psp_type      - PSP types available are mentioned below
+ *              Parameter              |  Description	
+ * 		          :----------------------|:-------------------------------------------------------------------------------------------------- 	          	
+ * 		          RSI_MAX_PSP (0)        |   This psp_type will be used for max power saving. \n
+ * 		          RSI_FAST_PSP (1)       |   This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
+ * 		          ^                          (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
+ * 		          ^                          If there is no data for monitor interval of time then module will again enable power save. \n
+ * 		          RSI_UAPSD (2)          |   This psp_type is used to enable WMM power save.
+ * @param[in]   listen_interval        -   Used to configure sleep duration in power save and should be less than the listen interval configured by RSI_LISTEN_INTERVAL Macro in join command parameters in rsi_wlan_config.h file. \n 
+ *                                         Valid only if BIT (7) in join_feature_bit_map is set. This value is given in time units (1024 microsecond). \n
+ * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. 
+ * @note    		psp_type is only valid in psp_mode 1 and 2. \n
+ * @note			  psp_type: RSI_UAPSD is applicable only, if WMM_PS is enabled in rsi_wlan_config.h file. \n
+ * @note			  In RSI_MAX_PSP mode, Few access points will not aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.
+ * @note        For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
+ * @note        For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file. \n
+ * @note        For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based. \n
+ * @note        For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file. \n 
  * @return      0               - Success \n
- *              Non-Zero	Value - Failure \n
- *	            If return value is less than 0 \n
- *              -2              - Invalid parameters \n
- *	            -3              - Command given in wrong state \n
- *	            -4              - Buffer not available to serve the command \n
- *
+ *              Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_type, uint16_t listen_interval)
@@ -4699,40 +4652,39 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
 
 /*==============================================*/
 /**
- * @brief       Set the power save profile in WLAN mode. This is a blocking API.
- * @pre         \ref rsi_wireless_init() API needs to be called before this API. 
- * @param[in]   psp_mode
- * @param[in]   psp_type
- * 	          	parameter              |  Description	
+ * @brief       Set the power save profile in WLAN mode. This is a blocking API. 
+ * @param[in]   psp_mode      - PSP modes available are mentioned below
+ *              Parameter              |  Description	
  * 		          :----------------------|:--------------------------------------------------------------------------------------------------
- *              psp_mode               |   Following psp_mode is defined.
- *              ^                      |   Active(0) : In this mode, module is active and power save is disabled. \n
- *              ^                      |   RSI_SLEEP_MODE_1 (1): Connected sleep mode. \n
- *              ^                      |   In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
- *              ^                      |   RSI_SLEEP_MODE_2 (2): In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
- *              ^                      |   Therefore handshake is required before sending data to the module \n
- * 		          ^                      |   RSI_SLEEP_MODE_8 (8): Deep sleep mode with ULP RAM RETENTION. \n
- *              ^                      |   RSI_SLEEP_MODE_10 (10): Deep sleep mode without ULP RAM RETENTION. \n
- * 		          ^                      |   In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
- * 		          psp_type               |   Follwing psp_type is defined.
- * 		          ^                      |   RSI_MAX_PSP (0): This psp_type will be used for max power saving. \n
- * 		          ^                      |   RSI_FAST_PSP (1): This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
- * 		          ^                      |   (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
- * 		          ^                      |   If there is no data for monitor interval of time then module will again enable power save. \n
- * 		          ^                      |   RSI_UAPSD (2): This psp_type is used to enable WMM power save.
- *             #### Enhanced max psp ####
- *		         Enhanced max PSP is recommended. This essentially a MAX PSP mode but switches to Fast PSP mode if AP does not deliver data within 20ms for PS-Poll. \n
- *		         To enable this mode, follow procedure below: \n
- *             Add ENABLE_ENHANCED_MAX_PSP (BIT(26)) in RSI_CONFIG_FEATURE_BITMAP \n
+ *              Active(0)              |   In this mode, module is active and power save is disabled. \n
+ *              RSI_SLEEP_MODE_1 (1)   |   Connected sleep mode. \n
+ *              ^                          In this sleep mode, SoC will never turn off, therefore no handshake is required before sending data to the module. \n
+ *              RSI_SLEEP_MODE_2 (2)   |   In this sleep mode, SoC will go to LP/ULP (with/without RAM RETENTION) sleep based on the selected value set for RSI_SELECT_LP_OR_ULP_MODE in rsi_wlan_config.h. \n
+ *              ^                          Therefore handshake is required before sending data to the module. \n
+ * 		          RSI_SLEEP_MODE_8 (8)   |   Deep sleep mode with ULP RAM RETENTION. In deep sleep mode, module will turn off the SoC and a GPIO or Message based handshake is required before sending commands to the module. \n
+ *              RSI_SLEEP_MODE_10 (10) |   Deep sleep mode without ULP RAM RETENTION. \n                  
+ * @param[in]   psp_type      - PSP types available are mentioned below
+ *              Parameter              |  Description	
+ * 		          :----------------------|:-------------------------------------------------------------------------------------------------- 	          	
+ * 		          RSI_MAX_PSP (0)        |   This psp_type will be used for max power saving. \n
+ * 		          RSI_FAST_PSP (1)       |   This psp_type allows module to disable power save for any Tx / Rx packet for monitor interval of time \n
+ * 		          ^                          (monitor interval can be set by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file, default value is 50 ms). \n
+ * 		          ^                          If there is no data for monitor interval of time then module will again enable power save. \n
+ * 		          RSI_UAPSD (2)          |   This psp_type is used to enable WMM power save.
+ *             ### Enhanced max psp ###
+ *		         Enhanced max PSP is recommended. This is essentially a RSI_MAX_PSP but switches to RSI_FAST_PSP, if AP does not deliver data within 20ms for PS-Poll. \n
+ *		         To enable this mode, follow this procedure: \n
+ *             Add ENABLE_ENHANCED_MAX_PSP (BIT[26]) in RSI_CONFIG_FEATURE_BITMAP, \n
  *             Set psp_type to RSI_FAST_PSP (1) \n
- *             Configure Monitor interval by RSI_MONITOR_INTERVAL in rsi_wlan_config.h file. (default value is 50 ms) \n
- * @note	     1. psp_type is only valid in psp_mode 1 and 2. \n
- * @note	     2. psp_type UAPSD is applicable only if WMM_PS is enabled in rsi_wlan_config.h file. \n
- * @note       3. In RSI_MAX_PSP mode, Few Access points won't aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.\n
- * @note       4. For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
- * @note       5. For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
- * @note       6. For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based.\n
- * @note       7. For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file.\n 
+ * @note	     **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. 
+ * @note	     Configure the monitor interval using the RSI_MONITOR_INTERVAL macro in rsi_wlan_config.h file. (default value is 50 ms) \n
+ * @note	     psp_type is only valid in psp_mode 1 and 2. \n
+ * @note	     psp_type - UAPSD is applicable only if WMM_PS is enabled in rsi_wlan_config.h file. \n
+ * @note       In RSI_MAX_PSP mode, Few Access points won't aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.\n
+ * @note       For the power save mode 3, select RSI_SLEEP_MODE_2 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
+ * @note       For the power save mode 9, select RSI_SLEEP_MODE_8 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED in rsi_wlan_config.h file.\n
+ * @note       For the deep sleep without ram retention case, select RSI_SLEEP_MODE_10 in psp_mode and RSI_HAND_SHAKE_TYPE as MSG_BASED for msg_based or GPIO_BASED for gpio_based.\n
+ * @note       For LP sleep, select RSI_SLEEP_MODE_2 in psp_mode, select RSI_SELECT_LP_OR_ULP_MODE as RSI_LP_MODE and RSI_HAND_SHAKE_TYPE as MSG_BASED/GPIO_BASED in rsi_wlan_config.h file.\n 
  * @note	     Powersave handshake option: \n
  *					   - When sleep clock source is configured to '32KHz bypass clock on UULP_VBAT_GPIO_3', \n
  *						 use UULP_VBAT_GPIO_0 for SLEEP_IND_FROM_DEV \n
@@ -4741,16 +4693,16 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *						 use UULP_VBAT_GPIO_3 for SLEEP_IND_FROM_DEV \n
  *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P3'. \n
  *             EXT_FEAT_LOW_POWER_MODE is not supported for 1.3 version chipset(CHIP_VER_1P3).
- *            #### Power save modes description ####
- *	        + Power Save Mode 0\n
- *            In this mode, module is active and power save is disabled. It can be configured any time, while the module is configured in Power Save mode 2 or 8.\n
- *          + Power save Mode 1 \n
- *            Once the module is configured to power save mode 1, it wakes up periodically based upon the DTIM interval configured in connected AP. \n
+ *            ## Power save modes description ##
+ *	        + **Power Save Mode 0** \n
+ *            - In this mode, module is active and power save is disabled. It can be configured any time, while the module is configured in Power Save mode 2 or 8.\n
+ *          + **Power save Mode 1** \n
+ *            - Once the module is configured to power save mode 1, it wakes up periodically based upon the DTIM interval configured in connected AP. \n
  *            In power mode 1, only the RF of the module is in power save while SOC continues to work normally. \n
  *	       	  This command has to be given only when module is in connected state (with the AP). After having configured the module to power save mode, the Host can issue subsequent commands. \n
  *	       	  In power save mode 1 the module can receive data from host at any point of time but it can send/receive the data to/from remote terminal only when it is awake at DTIM intervals. \n
- *          + Power Save Mode 2 \n
- *            Once the module is configured to power save mode 2, it can be woken up either by the Host or periodically during its sleep-wakeup cycle. \n
+ *          + **Power Save Mode 2** \n
+ *            - Once the module is configured to power save mode 2, it can be woken up either by the Host or periodically during its sleep-wakeup cycle. \n
  *            Power Save mode 2 is GPIO based. \n
  *            In case of GPIO based mode, whenever host wants to send data to module, it gives wakeup request by asserting UULP GPIO #2. \n
  *		        After wakeup, if the module is ready for data transfer, it sends wakeup indication to host by asserting UULP GPIO #3 or UULP GPIO #0. \n
@@ -4758,15 +4710,15 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *            After the completion of data transfer, host can give sleep permission to module by de-asserting UULP GPIO #2. After recognizing sleep permission from host, \n
  *	       	  module gives confirmation to host by de-asserting UULP GPIO #3 or UULP GPIO #0 and again goes back to its sleep-wakeup cycle. \n
  *            Module can send received packets or responses to host at any instant of time. No handshake is required on Rx path. \n
- *          + Power Save mode 3  \n
- *            Power Mode 3 is message based power save. In Power Mode 3, both radio and SOC of RS9116-WiSeConnect are in power save mode. \n
+ *          + **Power Save mode 3**  \n
+ *            - Power Mode 3 is message based power save. In Power Mode 3, both radio and SOC of RS9116-WiSeConnect are in power save mode. \n
  *		        This mode is significant when module is in associated state with AP. Module wakes up periodically upon every DTIM and gives wakeup message ("WKP") to host. \n
  *		        Module can not be woken up asynchronously. Every time module intends to go to sleep it sends a sleep request message ("SLP") to the host and expects host to send the acknowledgement message ("ACK"). \n
  *		        Host either send acknowledgement ("ACK") or any other pending message. But once ACK is sent, Host should not send any other message unless next wakeup message from module is received. \n
  *            Module shall not go into complete power-save state, if ACK is not received from host for given sleep message. Module can send received packets or responses to host at any instant of time. \n
  *	       	  No handshake is required on Rx path. \n
- *          + Power Save mode 8  \n
- *		        In Power save mode 8, both RF and SOC of the module are in complete power save mode. This mode is significant only when module is in un-connected state. \n
+ *          + **Power Save mode 8**  \n
+ *		        - In Power save mode 8, both RF and SOC of the module are in complete power save mode. This mode is significant only when module is in un-connected state. \n
  *		        Power Save mode 8 can be GPIO based. \n
  *            In case of GPIO based, host can wakeup the module from power save by asserting UULP GPIO #2. \n
  *		        After wakeup, if the module is ready for data transfer, it sends wakeup indication to host by asserting UULP GPIO #3 or UULP GPIO #0. \n
@@ -4774,24 +4726,18 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *            After the completion of data transfer, host can give sleep permission to module by de-asserting UULP GPIO #2. After recognizing sleep permission from host,
  *	       	  module gives confirmation to host by de-asserting UULP GPIO #3 or UULP GPIO #0 and again goes back to its sleep-wakeup cycle. \n
  *            Module can send received packets or responses to host at any instant of time. No handshake is required on Rx path. \n
- *          + Power save mode 9  \n
- *		        In Power Mode 9 both Radio and SOC of RS9116-WiSeConnect are in complete power save mode. This mode is significant when module is not connected with any AP. \n
+ *          + **Power save mode 9**  \n
+ *		        - In Power Mode 9 both Radio and SOC of RS9116-WiSeConnect are in complete power save mode. This mode is significant when module is not connected with any AP. \n
  *		        Once power mode 9 command is given, the module sends ("SLP") request to host and wait for the ("ACK") from host and goes to sleep when ACK is given by host. Timer starts when power save command is issued and it can be configured by host using \ref rsi_wlan_set_sleep_timer API. \n
  *	          If host does not set any sleep time, then the timer is configured for 3sec by default. Upon wakeup module sends a wakeup message to the host and expects host to give ACK before \n
  *		        it goes into next sleep cycle. Host either send ACK or any other messages but once ACK is sent no other packet should be sent before receiving next wakeup message. \n
  *            When ulp_mode_enable is set to '2', after waking up from sleep, the module sends WKP FRM SLEEP message to host when RAM retention is not enabled. \n
- *		        After receiving WKP FRM SLEEP message, host needs to start giving commands from beginning (opermode) as module's state is not retained. \n
+ *		        After receiving WKP FRM SLEEP message, host needs to start giving commands from beginning as module's state is not retained. \n
  * @return    0               -  Success \n
- *            Non-Zero	Value - Failure \n
- *	          If return value is less than 0 \n
- *            -2              - Invalid parameters \n
- *	          -3              - Command given in wrong state \n
- *	          -4              - Buffer not available to serve the command \n
- *            If return value is greater than 0 \n
- * 	          0x0021,0x0025,0x002C,0xFFF8,0x0015,0x0026,0x0052
- * @note      If the user wants to enable power save in CoEx mode (WLAN + BT LE) mode - It is mandatory to enable WLAN power save along with BT LE power save. \n
- * @note      The device will enter into power save if and only if both protocol (WLAN, BLE) power save modes are enabled. \n
- * @note      Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ *            Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0021,0x0025,0x002C,0xFFF8,0x0015,0x0026,0x0052) \n
+ * @note      If the user wants to enable power save in CoEx mode (WLAN + BT LE) mode - It is mandatory to enable WLAN power save along with BT power save. \n
+ * @note      In CoEx mode, the device will enter into power save only if both protocol (WLAN, BLE) power save modes are enabled. \n
+ * @note      Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -4805,11 +4751,12 @@ int32_t rsi_wlan_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
 /*==============================================*/
 /**
  * @brief 	    Disable or enable the power save feature. This is a blocking API.
- * @pre      \ref rsi_wlan_power_save_profile() API needs to be called before this API.
- * @param[in]   psp_mode        - Power save mode
+ * @param[in]   psp_mode        -  Power save mode
  * @param[in]   psp_tye         -  Power save type
- * @return      Non-Zero Value  - Failure \n
- *              0 		          - Success \n
+ * @return      0 		          - Success \n
+ * @return      Non-Zero Value  - Failure \n 
+ * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        If RSI_SLEEP_MODE_10 is chosen as the sleep mode, commands should be recalled from driver_init() as this is without RAM retention.            
  *
  *
  */
@@ -4837,40 +4784,26 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
 /**
  * @brief      Start the transmit test. This is a blocking API. \n 
  *             This API is relevant in PER mode.
- * @pre        \ref rsi_wlan_radio_init() API needs to be called before this API.
- * @param[in]  power  - Set TX power in dbm. The valid values are from 2dbm to 18dbm for WiSeConnect module.
- * @note                1. User can configure the maximum power level allowed for the given frequncey in the configured region by providing 127 as power level \n
- * @note                2. User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
+ * @param[in]  power  - Set TX power in dbm. The valid values are from 2dBm to 18dBm. \n
+ * @note                User can configure the maximum power level allowed for the given frequncey in the configured region by providing 127 as power level \n
+ * @note                User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
  * @param[in]  rate   - Set transmit data rate
  * @param[in]  length - Configure length of the TX packet. \n
  *                      The valid values are in the range of 24 to 1500 bytes in the burst mode and range of 24 to 260 bytes in the continuous mode. 
- * @param[in]  mode   - 0- Burst Mode \n
- *                      1- Continuous Mode \n
- *                      2- Continuous wave Mode (non modulation) in DC mode \n
- *                      3- Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) \n
- *                      4- Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz) \n
- * Burst mode: DUT transmits a burst of packets with the given power, rate, length in the channel configured. \n
- *             The burst size will be determined by the <number of packets> and if its zero, then DUT keeps transmitting till a rsi_transmit_test_stop API is called. \n
- * 
- * Continuous Mode: The DUT transmits a unmodulated waveform continuously \n
- * 
- * Continuous Wave Mode (Non-Modulation) in DC Mode: The DUT transmits a spectrum only at the center frequency of the channel. \n
- *                                                   A basic signal with no modulation is that of a sine wave and is usually referred to as a continuous wave (CW) signal. \n
- *                                                   A basic signal source produces sine waves. Ideally, the sine wave is perfect. In the frequency domain, it is viewed as a single line at some specified frequency. \n
- *
- * Continuous Wave Mode (Non-Modulation) in single tone Mode (Center frequency -2.5MHz): The DUT transmits a spectrum that is generated at -2.5MHz from the center frequency of the channel selected. \n 
- *                                                                                       Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2409.5MHz \n
- *
- * Continuous Wave Mode (Non-Modulation) in single tone Mode (Center frequency +5MHz): The DUT transmits a spectrum that is generated at 5MHz from the center frequency of the channel selected. \n 
- *                                                                                     Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2417MHz. 
+ * @param[in]  mode   - Below mentioned are the available modes
+ *            Value     |       Parameter                                   |  Description	
+ * 		        :---------|:--------------------------------------------------|:-------------------------------------------------
+ *            0         |  Burst Mode                                       | DUT transmits a burst of packets with the given power, rate, length in the channel configured. 
+ *            ^                                                               The burst size will be determined by the <number of packets> and if its zero, then DUT keeps transmitting till a rsi_transmit_test_stop API is called.
+ *            1         |  Continuous Mode                                  | The DUT transmits a unmodulated waveform continuously
+ *            2         |  Continuous wave Mode (non modulation) in DC mode | The DUT transmits a spectrum only at the center frequency of the channel.
+ *            ^                                                               A basic signal with no modulation is that of a sine wave and is usually referred to as a continuous wave (CW) signal.
+ *            ^                                                               A basic signal source produces sine waves. Ideally, the sine wave is perfect. In the frequency domain, it is viewed as a single line at some specified frequency.
+ *            3         | Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) | The DUT transmits a spectrum that is generated at -2.5MHz from the center frequency of the channel selected.
+ *            ^                                                                                                  Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2409.5MHz
+ *            4         | Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz)   | The DUT transmits a spectrum that is generated at 5MHz from the center frequency of the channel selected.
+ *                                                                                                               Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2417MHz.                                                                                     
  * @param[in]  channel - Set the channel number in 2.4 GHz / 5GHz.
- * @note                 1. Rate flags can be added in rsi_wlan_common_config.h file \n
- *                          i.  BIT(6) - Immediate Transfer, set this bit to transfer packets immediately ignoring energy/traffic in channel \n
- * @note                 2. Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
- *                          i.  Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
- *                          ii. Stop Continuous mode \n 
- *                          iii Start Continuous Wave mode \n
- * @note                 3. If user wants to switch continuous wave mode, first need to stop the per mode and again need to give continous wave mode which user wants to switch. 
  *      ### Data Rates ###       
  *			Data rate(Mbps)	|	Value of rate 
  *			:--------------:|:-------------------:
@@ -4911,7 +4844,6 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *			12			|	2467 
  *			13			|	2472 
  *			14			|	2484 
- * @note	To start transmit test in 12,13,14 channels, configure set region parameters in rsi_wlan_config.h \n
  *    ###	The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum for 20MHz channel bandwidth. The channel numbers in 5 GHz range is from 36 to 165. ###
  * 		Channel Numbers(5GHz) |	Center frequencies for 20MHz channel width 
  * 		:--------------------:|:------------------------------------------:
@@ -4928,13 +4860,18 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *		157		      |5785 
  *		161		      |5805 
  *		165		      |5825 
- * @return      0 		- Success \n
- *              Non-Zero Value  - Failure \n
- *              If less than zero \n
- *				         -4 - Buffer not available to serve the command \n
- *				      If greater than zero \n
- *				         0x000A, 0x0021, 0x0025, 0x002C
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @note       **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @note       Rate flags can be added in rsi_wlan_common_config.h file. \n
+ *             In rate flags, BIT(6) - Immediate Transfer, set this bit to transfer packets immediately ignoring energy/traffic in channel \n
+ * @note       Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
+ *             - Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
+ *             - Stop Continuous mode \n 
+ *             - Start Continuous Wave mode \n
+ * @note       If user wants to switch continuous wave mode, first need to stop the transmit test and again need to give continous wave mode which user wants to switch. 
+ * @note	     In 2.4GHz, to start transmit test in 12,13,14 channels, configure set region parameters in rsi_wlan_config.h \n
+ * @return     0 		- Success \n
+ *             Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffa,0x000A, 0x0021, 0x0025, 0x002C) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -5056,20 +4993,14 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
 
 /*==============================================*/
 /**
- * @brief     Stops the transmit test. This is a blocking API.
- * @note      This API is relevant in PER mode. 
- * @pre       \ref rsi_wlan_radio_init() API needs to be called before this API.
- * @param[in]   void    
- * @return	0		Successful execution of the command
- * 		Non Zero Value	Failure \n
- * 				if return value is less than 0 \n
- * 				-4: Buffer not available to serve the command \n
- * 				If return value is greater than 0 \n
- * 				0x0021, 0x0025, 0x002C      
- * @note       1. User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
- * @note       2. Refer to Error Codes section for the description of the above error codes  \ref error-codes.
- *
- *
+ * @brief      Stops the transmit test. This is a blocking API. \n
+ *             This API is relevant in PER mode. 
+ * @param[in]  void    
+ * @return	   0		           - Success
+ * @return	   Non Zero Value - Failure (**Possible Error Codes** - 0xfffffffa,0x0021, 0x0025, 0x002C) \n    
+ * @note       **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @note       User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
+ * @note       Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  *
  */
 
@@ -5138,18 +5069,14 @@ int32_t rsi_transmit_test_stop(void)
 
 /*==============================================*/
 /**
- * @brief     Get the Transmit (TX) & Receive (RX) packets statistics.When this API is called by the host with  valid channel number,
+ * @brief     Get the Transmit (TX) and Receive (RX) packets statistics. When this API is called by the host with valid channel number,
  *            the module gives the statistics to the host for every 1 second asynchronously. If wlan_receive_stats_response_handler()
- *            is registered through rsi_wlan_register_callbacks(), it's a non blocking, otherwise, a blocking call
- * @pre       \ref rsi_wlan_radio_init() API needs to be called before this API.
- * @param[in] channel         - Valid channel number 2.4GHz or 5GHz          
+ *            is registered through rsi_wlan_register_callbacks(), it's a non blocking API, otherwise, a blocking API.
+ * @param[in] channel         - Valid channel number: 2.4GHz or 5GHz          
  * @return    0               - Success
- *            Non-Zero Value  - Failure \n
- *            If return value is less than 0 \n
- *            -4: Buffer not available to serve the command \n
- *            If return value is greater than 0 \n
- *            0x0021, 0x0025, 0x002c, 0x000A
- * @note      Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return    Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffa,0x0021, 0x0025, 0x002c, 0x000A) \n
+ * @note      **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @note      Refer to \ref error-codes for the description of above error codes.
  * 
  */
 
@@ -5223,17 +5150,13 @@ int32_t rsi_wlan_receive_stats_start(uint16_t channel)
 
 /*==============================================*/
 /**
- * @brief     Stop the Transmit (TX) & Receive(RX) packets statistics.
- *            if wlan_receive_stats_response_handler() is registered through rsi_wlan_register_callbacks(), it's non blocking, otherwise, a blocking call
- * @pre       \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in] Void
+ * @brief     Stop the Transmit (TX) & Receive(RX) packets statistics. \n
+ *            If wlan_receive_stats_response_handler() is registered through rsi_wlan_register_callbacks(), it's non blocking API, otherwise, a blocking API.
+ * @param[in] void
  * @return    0               - Success
- *            Non-Zero Value  - Failure \n
- *            If return value is less than 0 \n
- *            -4: Buffer not available to serve the command \n
- *            If return value is greater than 0 \n
- *            0x0021, 0x0025, 0x002c
- * @note      Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return    Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffa,0x0021, 0x0025, 0x002c) \n
+ * @note      **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @note      Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_wlan_receive_stats_stop(void)
@@ -5302,42 +5225,40 @@ int32_t rsi_wlan_receive_stats_stop(void)
   SL_PRINTF(SL_WLAN_RX_STATS_STOP_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
-
+/*! \cond RS9116 */
 /*==============================================*/
 /**
- * @brief       Start discovery in wi-fi direct mode.This is a non-blocking API.
- *              wlan_wfd_discovery_notify_handler() rsi_wlan_wfd_start_discovery() API is registered through rsi_wlan_register_callbacks(), its non blocking, otherwise blocking call.
- * @pre         \ref rsi_wireless_init() API needs to be called before this API.						
- * 	          	Parameter                                  |  Description
- * 	          	:------------------------------------------|:--------------------------------------------------------------------------------------------------
- *               go_intent                                 |   Determine whether the device is intended to form a GO (group owner) or work as a Wi-Fi Direct Peer node. \n
- *               ^                                         |   Value used in the GO negotiation process, when the module negotiates with another Wi-Fi Direct Node on who would become the Group Owner.\n
- *               ^                                         |   Valid range of values for this parameter is: 0 to 16. Higher the number, higher is the willingness of the module to become a GO. \n
- *               ^                                         |   After the module becomes a GO in Wi-Fi Direct mode, it appears as an Access Point to the client devices. \n
- *               ^                                         |   If the number is between 0 and 15, a GO negotiation takes place. If the value is 16, the module forms an Autonomous GO without negotiating with any other device.\n
- *               device_name                               |   Device name for the module. The maximum length of this field is 32 characters and the remaining bytes are filled with 0x00. \n
- *               ^                                         |   Another Wi-Fi Direct device would see this name when it scans for Wi-Fi Direct nodes.  \n
- *               channel                                   |   Operating channel number. The specified channel is used if the device becomes a GO or Autonomous GO \n
- *               ssid_post_fix                             |   Used to add a postfix to the SSID in Wi-Fi Direct GO mode and Autonomous GO mode.\n
- *               psk                                       |   Passphrase of a maximum length of 63 characters (a null character should be supplied to make it 64 bytes in the structure). \n
- *               ^                                         |   PSK used if the module becomes a GO owner. \n
- *               wlan_wfd_discovery_notify_handler         |   Asynchronous message sent from module to the host when module finds any Wi-Fi Direct node. \n
- *               ^                                         |   Parameters involved are status, buffer. & length
- *               status					                           |   Response status. If status is zero, it means that the wfd device response has some device information
- *               buffer    				                         |   Response buffer.
- *               Length                                    |   Response buffer length \n
- *               wlan_wfd_connection_request_notify_handler|   Asynchronous message sent from module to the host when module receives a connection request from any remote Wi-Fi Direct node.\n
- *               ^                                         |   Parameters involved are status, buffer, & length
- *               status 				                           |   Response status. If status is zero, it means that the connection request has come from some device.
- *               buffer 				                           |   Response buffer
- *               length 				                           |   Response buffer length
+ * @brief       Start discovery in Wi-Fi direct mode. \n
+ *              If wlan_wfd_discovery_notify_handler() is registered through rsi_wlan_register_callbacks(), its non blocking API, otherwise blocking API.						
+ * @param[in]	  go_intent                                  - Determine whether the device is intended to form a GO (group owner) or work as a Wi-Fi Direct Peer node. \n
+ *                                                           Value used in the GO negotiation process, when the module negotiates with another Wi-Fi Direct Node on who would become the Group Owner. \n
+ *                                                           Valid range of values for this parameter is: 0 to 16. Higher the number, higher is the willingness of the module to become a GO. \n
+ *                                                           After the module becomes a GO in Wi-Fi Direct mode, it appears as an Access Point to the client devices. \n
+ *                                                           If the number is between 0 and 15, a GO negotiation takes place. If the value is 16, the module forms an Autonomous GO without negotiating with any other device.
+ * @param[in]	  device_name                                - Device name for the module. The maximum length of this field is 32 characters and the remaining bytes are filled with 0x00. \n
+ *                                                           Another Wi-Fi Direct device would see this name when it scans for Wi-Fi Direct nodes.  \n 
+ * @param[in]	  channel                                    - Another Wi-Fi Direct device would see this name when it scans for Wi-Fi Direct nodes.  \n
+ * @param[in]	  ssid_post_fix                              - Used to add a postfix to the SSID in Wi-Fi Direct GO mode and Autonomous GO mode. \n
+ * @param[in]	  psk                                        - Passphrase of a maximum length of 63 characters (a null character should be supplied to make it 64 bytes in the structure). \n
+ *                                                           PSK used if the module becomes a GO owner. \n
+ * @param[in]	  wlan_wfd_discovery_notify_handler          - Asynchronous message sent from module to the host when module finds any Wi-Fi Direct node. \n
+ *                                                           Parameters involved are status, buffer & length.
+ *                                                           Parameter             |	Description 
+ * 		                                                       :--------------------:|:------------------------------------------:
+ *		                                                       status                |  Response status
+ *		                                                       buffer       		     |  Response buffer 
+ *		                                                       length       		     |  Response buffer length
+ * @param[in]	  wlan_wfd_connection_request_notify_handler - Asynchronous message sent from module to the host when module receives a connection request from any remote Wi-Fi Direct node. \n  
+ *                                                           Parameters involved are status, buffer & length.
+ *                                                           Parameter             |	Description 
+ * 		                                                       :--------------------:|:------------------------------------------:
+ *		                                                       status                |  Response status
+ *		                                                       buffer       		     |  Response buffer 
+ *		                                                       length       		     |  Response buffer length
  * @return      0  -  Success \n
- *              Non-Zero	Value - Failure \n
- *	            If return value is less than 0 \n	
- *	            -3 - Command given in wrong state \n
- *	            -4 - Buffer not available to serve the command \n
- *              If return value is greater than 0 \n
- * 	            0x001D, 0x0021, 0x002C, 0x0015
+ * @return      Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x001D, 0x0021, 0x002C, 0x0015) \n
+ * @pre         **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -5450,7 +5371,6 @@ int32_t rsi_wlan_wfd_start_discovery(
   SL_PRINTF(SL_WLAN_WFD_START_DISCOVERY_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
-
 /*==============================================*/
 /**
  * @brief       A join_response_handler() API that connects to the specified Wi-Fi-Direct device.This is a non-blocking API.
@@ -5557,7 +5477,7 @@ int32_t rsi_wlan_wfd_connect(int8_t *device_name,
   SL_PRINTF(SL_WLAN_WFD_CONNECT_ERROR_IN_SENDING_COMMAND, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
-
+/*! \endcond */
 /*==============================================*/
 /**
  * @brief      Send the raw data in TCP/IP bypass mode. This is a blocking API.
@@ -5681,8 +5601,8 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
     if (twt_req_params->wake_duration_unit > 1) {
       return RSI_ERROR_INVALID_PARAM;
     }
-    if (twt_req_params->un_announced_twt > 1 || twt_req_params->triggered_twt > 1
-        || twt_req_params->restrict_tx_outside_tsp > 1) {
+    if ((twt_req_params->un_announced_twt > 1) || (twt_req_params->triggered_twt > 1)
+        || (twt_req_params->restrict_tx_outside_tsp > 1)) {
       return RSI_ERROR_INVALID_PARAM;
     }
     if (twt_req_params->twt_retry_limit > 15) {
@@ -5692,6 +5612,12 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
       return RSI_ERROR_INVALID_PARAM;
     }
     if (twt_req_params->req_type > 2) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    if ((twt_req_params->req_type != 0)
+        && ((twt_req_params->wake_duration == 0) || (twt_req_params->wake_int_mantissa == 0)
+            || (((uint64_t)twt_req_params->wake_duration * (uint64_t)(twt_req_params->wake_duration_unit ? 1024 : 256))
+                > ((uint64_t)twt_req_params->wake_int_mantissa * ((uint64_t)1 << twt_req_params->wake_int_exp))))) {
       return RSI_ERROR_INVALID_PARAM;
     }
     if ((twt_req_params->twt_channel != 0) || (twt_req_params->twt_protection != 0)
@@ -5763,27 +5689,23 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
 /// @endcond
 /*==============================================*/
 /**
- * @brief       Send a ping request to the target IP address.
- *              If wlan_ping_response_handler() is registered through rsi_wlan_register_callbacks(), it's non blocking, otherwise, a blocking call
- * @pre           \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]   flags                      - BIT(0) RSI_IPV6 Set this bit to enable IPv6; by default, it is configured to IPv4
- * @param[in]   ip_address                 - Target IP address \n
- *						                              IPv4 address  4 Bytes hexa-decimal, \n
- *   					                              IPv6 address  16 Bytes hexa-decimal
+ * @brief       Send a ping request to the target IP address. \n
+ *              If wlan_ping_response_handler() is registered through rsi_wlan_register_callbacks(), it's non blocking API, otherwise, a blocking API.
+ * @param[in]   flags                      - BIT(0): RSI_IPV6 Set this bit to enable IPv6; by default, it is configured to IPv4
+ * @param[in]   ip_address                 - Target IP address. \n
+ *						                               IPv4 address: 4 Bytes hexa-decimal, \n
+ *   					                               IPv6 address: 16 Bytes hexa-decimal
  * @param[in]   size                       - Ping data size to send. Maximum supported is 300 bytes.
  * @param[in]   wlan_ping_response_handler - Called when ping response has been received from the module. \n
- *                                          Parameters involved are status, buffer, & length.
- * @param[out]	status			   - Response status
+ *                                           Parameters involved are status, buffer, & length.
+ * @param[out]	status			               - Response status
  * @param[out]  buffer                     - Response buffer
  * @param[out]  length                     - Length of the response buffer
  * @return      0                          -  Success \n
- *              Non-Zero	Value            - Failure \n
- *	            If return value is less than 0 \n
- *              -2                         - Invalid parameters \n
- *	            -4                         - Buffer not available to serve the command \n
- *              If return value is greater than 0 \n
- * 	            0x0015,0xBB21,0xBB4B,0xBB55
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      Non-Zero	Value            - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffa,0x0015,0xBB21,0xBB4B,0xBB55) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        The module can't receive ping packets whose length is more than 308 bytes.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
@@ -5890,10 +5812,10 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
 /**
  * @brief      Register auto-configuration response handler.. This is a non-blocking API.
  * @param[in]  rsi_auto_config_rsp_handler - Pointer to rsi_auto_config_rsp_handler
- * @param[out] status			   - Response status, 0 if success else failure.
- * @param[out] state			   - BIT(1) RSI_AUTO_CONFIG_FAILED 
- *                             BIT(2) RSI_AUTO_CONFIG_GOING_ON 
- *                             BIT(3) RSI_AUTO_CONFIG_DONE 
+ * @param[out] status			                 - Response status, 0 if success else failure.
+ * @param[out] state			                 - BIT(1) RSI_AUTO_CONFIG_FAILED. \n 
+ *                                           BIT(2) RSI_AUTO_CONFIG_GOING_ON. \n
+ *                                           BIT(3) RSI_AUTO_CONFIG_DONE 
  * @return     Void
  */
 
@@ -5907,24 +5829,24 @@ void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(ui
 
 /*==============================================*/
 /**
- * @note       This API is not supported in current release.
  * @brief      Add profile for auto configuration. This is a blocking API.
- * @pre        \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  type - profile type. Supported profile types are: \n
- *  							1.RSI_WLAN_PROFILE_AP, \n
- *							2.RSI_WLAN_PROFILE_CLIENT, \n
- *							3.RSI_WLAN_PROFILE_EAP, \n
- *							4.RSI_WLAN_PROFILE_P2P, \n
- *							5.RSI_WLAN_PROFILE_ALL
+ *  							    1.RSI_WLAN_PROFILE_AP, \n
+ *							      2.RSI_WLAN_PROFILE_CLIENT, \n
+ *							      3.RSI_WLAN_PROFILE_EAP, \n
+ *							      4.RSI_WLAN_PROFILE_P2P, \n
+ *							      5.RSI_WLAN_PROFILE_ALL
  * @param[in]  profile - Pointer to config profile and profile structure \n
- * 			ap_profile, \n
- * 			eap_client_profile_t, \n
- * 			client_profile_t, \n
- * 			p2p_profile_t, \n
- * 			rsi_config_profile_t
+ * 			                 ap_profile, \n
+ * 		                 	 eap_client_profile_t, \n
+ * 			                 client_profile_t, \n
+ * 			                 p2p_profile_t, \n
+ * 			                 rsi_config_profile_t
  * @return      0  -  Success \n
- *              Non-Zero Value - Failure \n
- *				-4 - Buffer not availableto serve the command
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffa) \n
+ * @note       **This API is not supported in current release.**
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -6018,19 +5940,19 @@ int32_t rsi_wlan_add_profile(uint32_t type, uint8_t *profile)
 /**
  * @brief      Get the current WLAN state.. This is a non-blocking API.
  * @param[in]  Void
- * @return     Return the current WLAN state. \n
+ * @return     Current WLAN state. \n
                WLAN states are as follows: \n
-               RSI_WLAN_STATE_NONE = 0, \n
-               RSI_WLAN_STATE_OPERMODE_DONE, \n
-               RSI_WLAN_STATE_BAND_DONE, \n
-               RSI_WLAN_STATE_INIT_DONE, \n
-               RSI_WLAN_STATE_SCAN_DONE, \n
-               RSI_WLAN_STATE_CONNECTED, \n
-               RSI_WLAN_STATE_IP_CONFIG_DONE, \n
-               RSI_WLAN_STATE_IPV6_CONFIG_DONE, \n
-               RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON, \n
-               RSI_WLAN_STATE_AUTO_CONFIG_DONE, \n
-               RSI_WLAN_STATE_AUTO_CONFIG_FAILED
+ * @return     RSI_WLAN_STATE_NONE = 0, \n
+ * @return     RSI_WLAN_STATE_OPERMODE_DONE, \n
+ * @return     RSI_WLAN_STATE_BAND_DONE, \n
+ * @return     RSI_WLAN_STATE_INIT_DONE, \n
+ * @return     RSI_WLAN_STATE_SCAN_DONE, \n
+ * @return     RSI_WLAN_STATE_CONNECTED, \n
+ * @return     RSI_WLAN_STATE_IP_CONFIG_DONE, \n
+ * @return     RSI_WLAN_STATE_IPV6_CONFIG_DONE, \n
+ * @return     RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON, \n
+ * @return     RSI_WLAN_STATE_AUTO_CONFIG_DONE, \n
+ * @return     RSI_WLAN_STATE_AUTO_CONFIG_FAILED
  *	       
  */
 
@@ -6043,24 +5965,26 @@ uint8_t rsi_wlan_get_state(void)
 
 /*==============================================*/
 /**
- * @note       This API is not supported in current release.
  * @brief      Get the stored config profile. This is a blocking API.
- * @pre  	     \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  type - Config profile type. \n
- *             Supported profile types are as follows: \n
- *  	    	   RSI_WLAN_PROFILE_AP, \n
- *		         RSI_WLAN_PROFILE_CLIENT, \n
- *		         RSI_WLAN_PROFILE_EAP, \n 
- *		         RSI_WLAN_PROFILE_P2P, \n 
- *		         RSI_WLAN_PROFILE_ALL 
+ * @param[in]  type           - Config profile type. \n
+ *                              Supported profile types are as follows: \n
+ *  	    	                    RSI_WLAN_PROFILE_AP, \n
+ *		                          RSI_WLAN_PROFILE_CLIENT, \n
+ *		                          RSI_WLAN_PROFILE_EAP, \n 
+ *		                          RSI_WLAN_PROFILE_P2P, \n 
+ *		                          RSI_WLAN_PROFILE_ALL 
  * @param[in]  profile_rsp    - Config profile response in the form of below structure: \n
- *             ap_profile     - eap_client_profile_t, client_profile_t, p2p_profile_t, rsi_config_profile_t
+ *                              ap_profile, \n
+ *                              eap_client_profile_t, \n
+ *                              client_profile_t, \n  
+ *                              p2p_profile_t, \n
+ *                              rsi_config_profile_t
  * @param[in]  length         - Length of the config profile response
  * @return     0              -  Success \n
- *             Non-Zero Value - Failure \n
- *             If return value is less than 0
- *		         -4             - Buffer not available to serve the command
- *
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffa) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note       **This API is not supported in current release.**
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, uint16_t length)
@@ -6134,11 +6058,10 @@ int32_t rsi_wlan_get_profile(uint32_t type, rsi_config_profile_t *profile_rsp, u
 /*==============================================*/
 /**
  * @brief      Fill the config profile based on the profile type.. This is a non-blocking API.
- * @pre          \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  Type           - Profile type
  * @param[in]  Profile_buffer - Pointer to profile buffer
- * @return      profile_buffer
- *
+ * @return     Profile buffer
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  */
 /// @private
 
@@ -6521,14 +6444,12 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
 
 /*==============================================*/
 /**
- * @note        This API is not supported in current release.
  * @brief       Delete stored configuration based on profile type. This is a blocking API.
- * @pre         \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]   type           - Profile type
  * @return    	0              - Success \n
- *              Non-Zero Value - Failure \n
- *              If return value is less than 0
- *	            -4             - Buffer not available to serve the command
+ * @return    	Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffa) \n
+ * @note        **This API is not supported in current release.**
+ * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  */
 
 int32_t rsi_wlan_delete_profile(uint32_t type)
@@ -6596,32 +6517,27 @@ int32_t rsi_wlan_delete_profile(uint32_t type)
 /*==============================================*/
 /**
  * @brief     Enable or disable auto-config with respect to profile. This is a blocking API.
- * @pre  \ref rsi_wlan_set() API needs to be called before this API.
- * @param[in] enable - 0 - Disable the auto configuration feature \n
- *                     1 - Enable the auto configuration feature on power up \n
- *                     2 - Enable the auto configuration for profile based.
- * @note	    Currently Profile based feature is not supported.
- * @param[in] type   - 0
- * <!-- @param[in] type   - Profile type \n
- * @note	    Possible profile types: \n
- *		        // Client profile \n
- *		        #define RSI_WLAN_PROFILE_CLIENT 0 \n
- *		        // P2P profile \n
- *		        #define RSI_WLAN_PROFILE_P2P 1 \n
- *		        // EAP profile \n
- *		        #define RSI_WLAN_PROFILE_EAP 2 \n
- *		        // AP profile \n
- *		        #define RSI_WLAN_PROFILE_AP 6 \n
- *		        // All profiles \n
- *		        #define RSI_WLAN_PROFILE_ALL 0xF -->
+ * @param[in] enable   - 0 - Disable the auto configuration feature. \n
+ *                       1 - Enable the auto configuration feature on power up. \n
+ *                       2 - Enable the auto configuration for profile based.
+ * @param[in] type   - Profile type \n
+ *			               Value    |	Parameter          | Macro 
+ *			               :-------:|:------------------:|:------------------------------------------------------
+ *                     0        | Client profile     | RSI_WLAN_PROFILE_CLIENT 
+ *                     1        | P2P profile        | RSI_WLAN_PROFILE_P2P 
+ *                     2        | EAP profile        | RSI_WLAN_PROFILE_EAP 
+ *                     6        | AP profile         | RSI_WLAN_PROFILE_AP 
+ *                     0xF      | All profiles       | RSI_WLAN_PROFILE_ALL 
  * @return   	0              -  Success \n
- *            Non-Zero Value - Failure \n
- *		        -4             - Buffer not available to serve the command
+ * @return   	Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffa) \n
+ * @note      **Precondition** - \ref rsi_wlan_set() API needs to be called before this API.
+ * @note	    Currently Profile based feature is not supported.
  * @note      If user tries to give any other command during autojoin, then user gets error 0x002C. \n
  *            To avoid this, user have to disable auto_join feature and give other commands.
  * @note      The parameters of the following APIs are saved when rsi_wlan_enable_auto_config() is called: \n
  *            rsi_wireless_init(), rsi_wlan_scan(), rsi_wlan_scan_with_bitmap_options(), rsi_wlan_connect(), \n
  *            rsi_config_ipaddress(), rsi_wireless_antenna(), rsi_wlan_bgscan_profile(), rsi_radio_caps(), rsi_wlan_ap_start
+ * @note      Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
@@ -6692,18 +6608,16 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
 /*==============================================*/
 /**
  * @brief   	  Generate PMK if PSK and SSID are provided. This is a blocking API.
- * @pre  		    \ref rsi_wlan_connect() API needs to be called before this API.
  * @param[in]   type   - Possible values of this field are 1, 2, and 3, but we only pass 3 for generation of PMK.
  * @param[in]   psk    - Expected parameters are pre-shared key(PSK) of the access point
  * @param[in]   ssid   - Contain the SSID of the access point, this field will be valid only if TYPE value is 3.
  * @param[in]   pmk    - PMK array
  * @param[in]   length - Length of PMK array
  * @param[out]  32-byte PMK
- * @return	    0              - Successful execution of the command. If TYPE value is 3. \n
- *              Non-Zero Value - Failure \n
- *              If return value is greater than 0 \n
- *              0x0021, 0x0025,0x0026,0x0028,0x002C,0x0039,0x003a, 0x003b
- * @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return	    0              - Success (If type value is 3) \n
+ * @return	    Non-Zero Value - Failure (**Possible Error Codes** - 0x0021,0x0025,0x0026,0x0028,0x002C,0x0039,0x003a,0x003b) \n
+ * @note 		    **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -6855,10 +6769,10 @@ int32_t rsi_wlan_11ax_config(uint8_t gi_ltf)
 /*==============================================*/
 /**
  * @brief     Configure the sleep timer mode of the module to go into sleep during power save operation. This is a blocking API.
- * @pre   	  Can be issued any time in case of power save mode 9 (MSG_BASED).
  * @param[in] sleep_time     - Sleep Time value in seconds. Minimum value is 1, and maximum value is 2100
- * @return    0              -  Success \n
- *            Non-Zero Value - Failure
+ * @return    0              - Success \n
+ * @return    Non-Zero Value - Failure
+ * @note   	  Can be issued any time in case of power save mode 8 with handshake type as MSG_BASED.
  *
  */
 int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
@@ -6924,12 +6838,8 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
 /*====================================================*/
 /**
  * @brief      Register the WLAN callback functions. This is a non-blocking API.
- * @param[in]  callback_id                       - Id of the callback function. Table below displays supported ids
- * @param[in]  void (*callback_handler_ptr)(void - Callback handler
- * @param[in]  status                            - Status of the asynchronous response
- * @param[in]  buffer                            - Payload of the asynchronous response
- * @param[in]  length                            - Length of the payload
- * 	           parameter callback ID                     |   Value	
+ * @param[in]  callback_id                       - ID of the callback function. Table below displays supported IDs
+ * 	           Parameter callback ID                     |   Value	
  *             :-----------------------------------------|:-----------------------------------------------------------
  * 	           RSI_JOIN_FAIL_CB	                         |   0
  * 		         RSI_IP_FAIL_CB                            |   1
@@ -6950,34 +6860,81 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  * 		         RSI_FLASH_WRITE_RESPONSE                  |   16
  * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |   17
  * 		         RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         |   18
- * @param[in]  (void*)callback_handler_ptr (uint16_t status,uint8_t *buffer, const uint32_t length) – Application callback handler to be registered \n
- * &nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb; **[param] status** - Status of the asynchronous response \n
- * &nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb; **[param] buffer** - Payload of the asynchronous response \n
- * &nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb;&nspb; **[param] length** - Length of the payload \n
- * @note                  Refer to Error Codes section for the description of the above error codes \ref error-codes
- *             #### Prototypes of the callback functions with given callback id ####
+ * @param[in]  callback_handler_ptr              - Callback handler
+ * @param[out] status                            - Status of the asynchronous response
+ * @param[out] buffer                            - Payload of the asynchronous response
+ * @param[out] length                            - Length of the payload
+ *             ### Prototypes of the callback functions with given callback id ###
  * 	           Callback id                               |   Function Description
  * 	           :-----------------------------------------|:-----------------------------------------------------------
- * 		         RSI_JOIN_FAIL_CB                          |   Called when asynchronous rejoin failure is received from the FW. Application should try to re-join to the AP. \n This is valid in both AP and STA mode \n This call back is triggered when module fails to connect to AP in STA mode or when AP creation fails. @pre  Need to call rsi_scan() API in STA mode, rsi_wlan_ap_start() API in AP mode. @param buffer   NULL\n @param status  Possible Error response codes - 0x0019,0x0045,0x0046,0x0047,0x0048,0x0049
- * 		         RSI_IP_FAIL_CB                            |   Called when asynchronous DHCP renewal failure is received from the FW. Application should retry IP configuration.  \n This is valid in both AP and STA mode \n This call back is triggered when module fails to renew the DHCP. @pre Need to call rsi_wlan_connect() API. @param buffer  NULL \n @param status  Possible Error response codes - 0xFF9C, 0xFF9D
- * 		         RSI_REMOTE_SOCKET_TERMINATE_CB            |   Called when asynchronous remote TCP socket closed is received from the FW. It is an indication given to application that the socket is terminated from remote. \n This is valid in both STA and AP mode \n This call back is triggered when remote socket is terminated or closed @pre  Need to connect to socket. @param buffer rsi_rsp_socket_close_t ( \ref rsi_rsp_socket_close_s) response structure is provided in callback   \n @param status  NA
- *             RSI_IP_CHANGE_NOTIFY_CB                   |   Called when asynchronous IP change notification is received from the FW. It is an indication given to application that the IP has been modified. \n This is valid only in STA mode \n This call back is triggered when AP changes the  ip address. @pre Need to call rsi_wlan_connect(),rsi_config_ipaddress() API. @param buffer NULL \n @param status  RSI_SUCCESS
- *             RSI_STATIONS_DISCONNECT_NOTIFY_CB         |   Called when asynchronous station disconnect notification is received from the FW in AP mode. It is an indication that the AP is disconnect. Application should retry to connect to the AP. \n This is valid when module acts as AP \n This call back is triggered when STA's are disconnected  @pre STA need to connect to the Accesspoint 9916. @param buffer mac address is provided in response structure   \n @param status  RSI_SUCCESS @param length 6
- *             RSI_STATIONS_CONNECT_NOTIFY_CB            |   Called when asynchronous station connect notification is received from the FW in AP mode. It is an indication that the application is connected to the AP \n This is valid when 9116 module acts as AP \n This call back is triggered when STA's are connected @pre  STA need to connect to the accesspoint 9116.  @param buffer mac address is provided in response structure \n @param status RSI_SUCCESS @param length 6
- *             RSI_WLAN_DATA_RECEIVE_NOTIFY_CB           |   Called when asynchronous data is received from the FW in TCP/IP bypass mode. \n This is valid in both AP and STA mode \n This call back is triggered when data is received in TCP/IP bypass mode @pre  Need to connect to socket. @param buffer raw data received \n @param status  RSI_SUCCESS
- * 		         RSI_WLAN_WFD_DISCOVERY_NOTIFY_CB          |   Called when wifi direct device discovery notification received from the FW. \n This is valid in WFD Mode only \n This call back is triggered when a PEER is discovered by the device @pre  Need to call  rsi_wireless_init() ,rsi_wlan_wfd_start_discovery API.  @param buffer  NULL \n @param status  RSI_SUCCESS
- *             RSI_WLAN_RECEIVE_STATS_RESPONSE_CB        |   Called when asynchronous receive statistics from the FW in per or end to end mode. \n This is valid in PER Mode only \n This call back is triggered when module wants to receive stats @pre  Need to call rsi_wlan_radio_init() API. @param buffer rsi_per_stats_rsp_t (\ref rsi_per_stats_rsp_s) response structure is provided in callback.  \n @param status  NA
- * 		         RSI_WLAN_WFD_CONNECTION_REQUEST_NOTIFY_CB |   Called when wi-fi direct connection request from the FW. \n This is valid in WFD Mode only \n This call back is triggered when there is a connection request from other Peer device @pre Need to rsi_wireless_init() ,rsi_wlan_wfd_start_discovery() API. @param buffer  device name \n @param status  RSI_SUCCESS @param length 32
- *             RSI_WLAN_SCAN_RESPONSE_HANDLER            |   Called when a response for scan request is received from the FW. It is an indication to host that the scan is success or failed. \n This is valid only STA mode \n This call back is triggered when module try to scan and receive response of all the available AP's @pre Need to call rsi_scan() API.  @param buffer NULL  \n @param status  **Success** - RSI_SUCCESS \n **Failure**  - 0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c
- * 		         RSI_WLAN_JOIN_RESPONSE_HANDLER		         |   Called when a response for join request is received from the FW. It is an indication to application that the Join to AP is success or failed. \n This is valid in STA mode \n This call back is triggered when STA is sucessfully connected  @pre  Need to call rsi_scan API.  @param buffer  NULL \n @param status  **Success** - RSI_SUCCESS\n **Failure** Possible Error response codes -0x0019, 0x0048,0x0045,0x0008
- *             RSI_WLAN_RAW_DATA_RECEIVE_HANDLER         |   Called when raw data packets are received from the FW. \n This is valid in both AP and STA mode \n This call back is triggered when raw data is received in TCP/IP bypass mode @pre Need to connect to socket.  @param buffer raw data  \n @param status  RSI_SUCCESS
- *             RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB         |   Called when a socket connection response comes to the host \n This is valid in both STA and AP mode \n This call back is registerd and triggered when socket connects @pre  Need to create socket. @param buffer rsi_rsp_socket_create_t ( \ref rsi_rsp_socket_create_s)   \n @param status  **Success** - RSI_SUCCESS\n **Failure**  - RSI_FAILURE
+ * 		         RSI_JOIN_FAIL_CB                          |   Called when asynchronous rejoin failure is received from the firmware. Application should try to re-join to the AP. This is valid in both AP and STA mode This callback is triggered when module fails to connect to AP in STA mode or when AP creation fails. \n
+ *             ^                                             @note  Need to call rsi_scan() API in STA mode, rsi_wlan_ap_start() API in AP mode. 
+ *             ^                                             @param buffer   NULL \n 
+ *             ^                                             @param status  Possible Error response codes - 0x0019,0x0045,0x0046,0x0047,0x0048,0x0049
+ * 		         RSI_IP_FAIL_CB                            |   Called when asynchronous DHCP renewal failure is received from the firmware. Application should retry IP configuration. This is valid in both AP and STA mode. This callback is triggered when module fails to renew the DHCP. 
+ *             ^                                             @note Need to call rsi_wlan_connect() API. 
+ *             ^                                             @param buffer  NULL \n 
+ *             ^                                             @param status  Possible Error response codes - 0xFF9C, 0xFF9D
+ * 		         RSI_REMOTE_SOCKET_TERMINATE_CB            |   Called when asynchronous remote TCP socket closed is received from the firmware. It is an indication given to application that the socket is terminated from remote. This is valid in both STA and AP mode. This callback is triggered when remote socket is terminated or closed 
+ *             ^                                             @note  Need to connect to socket. 
+ *             ^                                             @param buffer rsi_rsp_socket_close_t ( \ref rsi_rsp_socket_close_s) response structure is provided in callback   \n 
+ *             ^                                             @param status  NA
+ *             RSI_IP_CHANGE_NOTIFY_CB                   |   Called when asynchronous IP change notification is received from the firmware. It is an indication given to application that the IP has been modified. This is valid only in STA mode. This callback is triggered when AP changes the IP address. 
+ *             ^                                             @note Need to call rsi_wlan_connect(),rsi_config_ipaddress() API. 
+ *             ^                                             @param buffer  NULL \n 
+ *             ^                                             @param status  RSI_SUCCESS
+ *             RSI_STATIONS_DISCONNECT_NOTIFY_CB         |   Called when asynchronous station disconnect notification is received from the firmware in AP mode. It is an indication that the AP is disconnect. Application should retry to connect to the AP. This is valid when module acts as AP. This callback is triggered when stations are disconnected. 
+ *             ^                                             @note STA need to connect to the Accesspoint 9116. 
+ *             ^                                             @param buffer mac address is provided in response structure   \n 
+ *             ^                                             @param status Response status @param length 6
+ *             RSI_STATIONS_CONNECT_NOTIFY_CB            |   Called when asynchronous station connect notification is received from the firmware in AP mode. It is an indication that the application is connected to the AP. This is valid when 9116 module acts as AP. This callback is triggered when stations are connected. 
+ *             ^                                             @pre  STA need to connect to the accesspoint 9116.  
+ *             ^                                             @param buffer mac address is provided in response structure \n 
+ *             ^                                             @param status Response status 
+ *             ^                                             @param length 6
+ *             RSI_WLAN_DATA_RECEIVE_NOTIFY_CB           |   Called when asynchronous data is received from the firmware in TCP/IP bypass mode. This is valid in both AP and STA mode. This callback is triggered when data is received in TCP/IP bypass mode. 
+ *             ^                                             @pre  Need to connect to socket. 
+ *             ^                                             @param buffer raw data received \n 
+ *             ^                                             @param status  Response status
+ * 		         RSI_WLAN_WFD_DISCOVERY_NOTIFY_CB          |   Called when Wi-Fi direct device discovery notification received from the firmware. This is valid in Wi-Fi Direct Mode only. This callback is triggered when a peer is discovered by the device. 
+ *             ^                                             @pre  Need to call  rsi_wireless_init() ,rsi_wlan_wfd_start_discovery API.  
+ *             ^                                             @param buffer  NULL \n 
+ *             ^                                             @param status  Response status
+ *             RSI_WLAN_RECEIVE_STATS_RESPONSE_CB        |   Called when asynchronous receive statistics from the firmware in PER mode. This is valid in PER Mode only. This callback is triggered when module wants to receive statistics. 
+ *             ^                                             @pre  Need to call rsi_wlan_radio_init() API. 
+ *             ^                                             @param buffer rsi_per_stats_rsp_t (\ref rsi_per_stats_rsp_s) response structure is provided in callback.  \n 
+ *             ^                                             @param status  Response status
+ * 		         RSI_WLAN_WFD_CONNECTION_REQUEST_NOTIFY_CB |   Called when Wi-Fi direct connection request from the firmware. This is valid in Wi-Fi Direct Mode only. This call back is triggered when there is a connection request from other peer device. 
+ *             ^                                             @pre Need to rsi_wireless_init() ,rsi_wlan_wfd_start_discovery() API. 
+ *             ^                                             @param buffer  device name \n 
+ *             ^                                             @param status  Response status 
+ *             ^                                             @param length 32
+ *             RSI_WLAN_SCAN_RESPONSE_HANDLER            |   Called when a response for scan request is received from the firmware. It is an indication to host that the scan is success or failed. This is valid only STA mode. This callback is triggered when module try to scan and receive response of all the available AP's. 
+ *             ^                                             @pre Need to call rsi_scan() API.  
+ *             ^                                             @param buffer NULL  \n 
+ *             ^                                             @param status Response status. Possible error codes - 0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c
+ * 		         RSI_WLAN_JOIN_RESPONSE_HANDLER		         |   Called when a response for join request is received from the firmware. It is an indication to application that the join to AP is success or failed. This is valid in STA mode. This callback is triggered when station is successfully connected.  
+ *             ^                                             @pre  Need to call rsi_scan API.  
+ *             ^                                             @param buffer  NULL \n 
+ *             ^                                             @param status  Response status. Possible Error response codes -0x0019, 0x0048,0x0045,0x0008
+ *             RSI_WLAN_RAW_DATA_RECEIVE_HANDLER         |   Called when raw data packets are received from the firmware. This is valid in both AP and STA mode. This callback is triggered when raw data is received in TCP/IP bypass mode. 
+ *             ^                                             @pre Need to connect to socket.  
+ *             ^                                             @param buffer raw data  \n 
+ *             ^                                             @param status Response status.
+ *             RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB         |   Called when a socket connection response comes to the host. This is valid in both STA and AP mode. This callback is registered and triggered when socket connects. 
+ *             ^                                             @pre  Need to create socket. 
+ *             ^                                             @param buffer rsi_rsp_socket_create_t ( \ref rsi_rsp_socket_create_s)   \n 
+ *             ^                                             @param status Response status.
  *             RSI_WLAN_SERVER_CERT_RECEIVE_NOTIFY_CB    |   Reserved 
- *             RSI_WLAN_ASYNC_STATS                      |   Called when async response come from the FW to the host. Host can register this callback to get all the information regarding AP connectivity. @param buffer rsi_state_notification_t ( \ref rsi_state_notification_s) response structure is provided in callback   \n @param status NA
- * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |   Called when WLAN assertion is triggered from FW. It returns the assert value to the application @param buffer   NULL\n @param status   Assert Value
+ *             RSI_WLAN_ASYNC_STATS                      |   Called when asynchronous response comes from the firmware to the host. Host can register this callback to get all the information regarding AP connectivity.
+ *             ^                                             @param buffer rsi_state_notification_t ( \ref rsi_state_notification_s) response structure is provided in callback   \n 
+ *             ^                                             @param status Response status
+ * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |   Called when WLAN assertion is triggered from firmware. It returns the assert value to the application. 
+ *             ^                                             @param buffer   NULL \n 
+ *             ^                                             @param status   Assert Value
  *             RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         |   Reserved
  * 
- * #### RSI_WLAN_ASYNC_STATS ####
+ * ### RSI_WLAN_ASYNC_STATS ###
  * • Asychronous messages are used to indicate module state to host. Asynchronous message are enabled by setting bit 10 of the custom feature bitmap in opermode. \n
  * • In async messages time_stamp, state_code, reason_code, rsi_channel, rsi_rssi and rsi_bssid are logged. \n
  * - time_stamp (4 bytes)
@@ -7041,11 +6998,11 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  * 0x34 |FIPS Server Root CA Invalid Length         
  * 0x35 |FIPS Client Cert Invlaid Length            
  * 0x36 |FIPS Client Root CA Invalid Length         
- * 0x37 |Server Cert Invalid Length                 
- * 0x38 |Server Intermediate CA Invalid Length      
- * 0x39 |Server Root CA Invalid Length              
- * 0x3A |Client Cert Invalid Lenght                 
- * 0x3B |Client Root CA Invalid Length              
+ * 0x37 |Server Cert 4096-bit length support is not enabled                               
+|* 0x38 |Server Intermediate CA 4096-bit length support is not enabled  
+|* 0x39 |Server Root CA 4096-bit length support is not enabled      
+|* 0x3A |Client Cert 4096-bit length support is not enabled
+|* 0x3B |Client Root CA 4096-bit length support is not enabled                 
  * 0x3C |Server Cert Invalid Sign Alg               
  * 0x3D |Server Intermediate CA Invalid Sign Alg    
  * 0x3E |Server Root CA Invalid Sign Length         
@@ -7071,7 +7028,9 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  * 0x52 |Client Intermediate CA invalid Key Type    
  * 0x53 |Pem Error                                  
  *      - In addition to the above, reason code received in Deauthentication/Disassociation frame from AP  is added. This will set the MSB bit of reason_code. \n
- *      - If MSB bit is set in reason code, then mask it with 0x7f to get the acutal reason code received in Deauthentication/Disassociation frame.
+ *      - If MSB bit is set in reason code, then mask it with 0x7f to get the acutal reason code received in Deauthentication/Disassociation frame. \n
+ *      - In RS9116 Rev 1.4, above reason codes will come only in TCP/IP bypass mode. \n
+ *      - Pem Header Error(0x4D) or Pem Footer Error(0x4E) are only applicable if certificates are loaded individually. In case if certificates are loaded combinedly in a single file, only Pem Error(0x53) will be triggered for Header or Footer errors. \n
  */
 uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
                                      void (*callback_handler_ptr)(uint16_t status,
@@ -7158,10 +7117,14 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
 */
 /*==============================================*/
 /**
- * @brief	Set the socket configuration parameters. Using this command (optional) is highly recommended. Based on the socket
- * 		configuration, module will use available buffers effectively. \n
- * 		This is a blocking API.
- *
+ * @brief	    Set the socket configuration parameters. The configurations can be done using the Socket configuration in the rsi_wlan_config.h file. \n
+ *            Using this API is highly recommended. Based on the socket configuration, module will use available buffers effectively. \n
+ *            This is a blocking API.
+ * @param     void       
+ * @return    0              -  Success \n
+ * @return    Non-Zero Value - Failure 	(**Possible Error Codes** - 0x0021, 0x0025, 0x002C, 0xFF6D) \n
+ * @note      **Precondition** - \ref rsi_config_ipaddress() API and socket creation should be done before this API is called.
+ * @note      The following parameters are provided by user,
  *  Parameters                      |    Description
  *  :-------------------------------|:--------------------------------------------------------------------------------------------------
  *  total socket                    |    Desired total number of sockets to open
@@ -7172,29 +7135,21 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
  *  udp_tx_only_sockets             |    Desired total number of UDP sockets to open which are used only for data transmission
  *  udp_rx_only_sockets             |    Desired total number of UDP sockets to open which are used only for data reception
  *  tcp_rx_high_performance_sockets |    Desired total number of high performance TCP sockets to open. High performance sockets can be \n 
- *  ^                               |    allocated with more buffers based on the buffers availability. This option is valid only for TCP \n 
- *  ^                               |    data receive sockets. Socket can be opened as high performance by setting high performance bit in \n
- *  ^                               |    socket create command.
+ *  ^                                    allocated with more buffers based on the buffers availability. This option is valid only for TCP \n 
+ *  ^                                    data receive sockets. Socket can be opened as high performance by setting high performance bit in \n
+ *  ^                                    socket create command.
  *  tcp_rx_window_size_cap          |    Desired total to increase the TCP RX window size
  *  tcp_ack_window_div_factor       |    In case of high latency networks to configure the TCP ACK division factor with respective to the \n 
- *  ^                               |    window size; Increases the ACK frequency for asynchronous sockets \n
- *  ^                               |    Note: \n
- *  ^                               |    Default value is tcp_rx_window_size_cap.
- *
- * 
- * The following conditions must be met: \n
- *     total_sockets <= Maximum allowed sockets(10) \n
- *     (total_tcp_sockets + total_udp_sockets) <= total_sockets \n
- *     (total_tcp_tx_only_sockets + total_tcp_rx_only_sockets) <= total_tcp_sockets \n
- *     (total_udp_tx_only_sockets + total_udp_rx_only_sockets) <= total_udp_sockets \n
- *     total_tcp_rx_high_performance_sockets <= total_tcp_rx_only_sockets \n                                     
- *
- * @pre          Must be given after IP configuration command and before any socket creation.
- * @return    Zero           -  Success \n
- *            Non-Zero Value - Failure \n
- *                           If return value is greater than 0 \n
- *                          0x0021,0x0025,0x002C,0xFF6D \n
- * @note      Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ *  ^                                    window size; Increases the ACK frequency for asynchronous sockets \n
+ *  ^                                    Note: \n
+ *  ^                                    Default value is tcp_rx_window_size_cap.
+ * @note       The following conditions must be met: \n
+ * @note       total_sockets <= Maximum allowed sockets(10) \n
+ * @note       (total_tcp_sockets + total_udp_sockets) <= total_sockets \n
+ * @note       (total_tcp_tx_only_sockets + total_tcp_rx_only_sockets) <= total_tcp_sockets \n
+ * @note       (total_udp_tx_only_sockets + total_udp_rx_only_sockets) <= total_udp_sockets \n
+ * @note       total_tcp_rx_high_performance_sockets <= total_tcp_rx_only_sockets \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_socket_config(void)
 {
@@ -7286,11 +7241,11 @@ int32_t rsi_socket_config(void)
 
 /*==============================================*/
 /**
- * @brief      Register and Deregister WLAN radio.
- * @param[in]    enable - To register and Deregister WLAN radio
+ * @brief        Register and Deregister WLAN radio.
+ * @param[in]    enable - To register and deregister WLAN radio
  * @param[out]   RSI_SUCCESS
- * @return		0  -  Success \n
- *              Non-Zero Value - Failure
+ * @return		   0  -  Success \n
+ * @return		   Non-Zero Value - Failure
  *
  */
 /// @private
@@ -7362,20 +7317,12 @@ int32_t rsi_wlan_req_radio(uint8_t enable)
 /*==============================================*/
 /**
  * @brief       Deregister WLAN radio. This is a blocking API.
- * @pre 	      The application should be in radio init and unconnected state before calling this function.
- *			        \ref rsi_wlan_radio_deinit() API is called after \ref rsi_wlan_scan()
- * @param[out]  RSI_SUCCESS      
+ * @param[in]   void      
  * @return    	0              -  Success \n
- *              Non-Zero Value - Failure \n
- *              If the return value is greater than 0 \n
- *              0x0021- Command given in wrong state \n
- *              0x0101-WLAN radio is already deregistered
- *@note         1.If rsi_wlan_radio_deinit() API is called after rsi_wlan_scan().Need to  call rsi_wlan_scan() API again after the rsi_wlan_radio_init(). \n
- *              2.If rsi_wlan_radio_deinit() API is allowed before WLAN connected state only.\n
- *              3.Need to enable powersave before sending any command when the module is in deep sleep power save.
- *              #### Below APIs are allowed after rsi_wlan_radio_deinit() API ####
- *              3.Need to enable powersave before sending any command when the module is in deep sleep power save. \n
- *              Below APIs are allowed after rsi_wlan_radio_deinit() API \n
+ * @return    	Non-Zero Value - Failure (**Possible Error Codes** - 0x0021,0x0067) \n
+ * @note        If rsi_wlan_radio_deinit() API is called after rsi_wlan_scan(). Need to  call rsi_wlan_scan() API again after the rsi_wlan_radio_init(). \n
+ * @note        If rsi_wlan_radio_deinit() API is allowed before WLAN connected state only.\n
+ *              ### Below APIs are allowed after rsi_wlan_radio_deinit() API ###            
  *              1. \ref  rsi_wlan_radio_init()
  *              2. \ref rsi_wlan_power_save_profile() 
  *              3. \ref rsi_wlan_get() In this API only RSI_MAC_ADDRESS and RSI_CONNECTION_STATUS cmd_type are allowed.
@@ -7385,6 +7332,8 @@ int32_t rsi_wlan_req_radio(uint8_t enable)
  *              7. \ref  rsi_get_fw_version()
  *              8. \ref  rsi_common_debug_log()
  *              9. \ref  rsi_bt_power_save_profile()
+ * @note        **Precondition** -  The application should be in radio init and unconnected state before calling this function. \n
+ *              \ref rsi_wlan_radio_deinit() API is called after \ref rsi_wlan_scan()
  *
  */
 
@@ -7411,9 +7360,8 @@ int32_t rsi_wlan_radio_deinit(void)
  * @brief      Add the Apple defined IE elements to the beacon command request structure.
  * @param[in]  mfi_ie - Pointer to the IE element
  * @param[in]  ie_len - Length of the IE element
- * @return     0  -  Success \n
- *             Non-Zero Value - Failure \n
- *               -4 - Buffer not available to serve the command
+ * @return     0              -  Success \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffa)\n
  */
 /// @private
 int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
@@ -7485,23 +7433,17 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 */
 /*==============================================*/
 /**
- * @brief      Assign the user configurable channel gain values in different regions to the module from user.This method is used for overwriting default gain tables that are present in firmware. \n
- *             Customer can load all the three gain tables (i.e., 2.4GHz-20Mhz, 5GHz-20Mhz, 5GHz-40Mhz) one after other by changing band and bandwidth values. This is a blocking API.
-   @note       1. **This frame has to be used by customers who has done FCC/ETSI/TELEC/KCC certification with their own antenna.  All other customers should not use this. Inappropriate use of this frame may result in violation of FCC/ETSI/TELEC/KCC or any certifications and Silicon labs is not liable for that**\n
- * @note          Internally firmware maintains two tables : Worldwide table & Region based table. Worldwide table is populated by firmware with Max power values that chip can transmit that meets target specs like EVM. Region based table has default gain value set. \n
-               2. When certifying with user antenna, Region has to be set to Worldwide and sweep the power from 0 to 21dBm. Arrive at max power level that is passing certification especially band-edge. \n
-               3. These FCC/ETSI/TELEC/KCC Max power level should be loaded in end-to-end mode via WLAN User Gain table. This has to be called done every boot-up since this information is not saved inside flash. Region based user gain table sent by application is copied onto Region based table .SoC uses this table in FCC/ETSI/TELEC/KCC to limit power and not to violate allowed limits. \n
-                For Worldwide region firmware uses Worldwide table for Tx. For other regions(FCC/ETSI/TELEC/KCC), Firmware uses min value out of Worldwide & Region based table for Tx.  Also there will be part to part variation across chips and offsets are estimated during manufacturing flow which will be applied as correction factor during normal mode of operation. \n
- * @pre   	   \ref rsi_radio_init() API needs to be called before this API
- * @param[in]  band        -  0 ?  2.4GHz \n
- *					                  1 ? 5GHz \n
- *					                  2 ? Dual band (2.4 Ghz and 5 Ghz)
- * @param[in]  bandwidth   -  0 ? 20 MHz \n
- *                            1 ? 40 MHz
+ * @brief      Assign the user configurable channel gain values in different regions to the module from user. This API is used for overwriting default gain tables that are present in firmware. \n
+ *             You can load all the three gain tables (i.e., 2.4GHz-20Mhz, 5GHz-20Mhz, 5GHz-40Mhz) one after other by changing band and bandwidth values. This is a blocking API.
+ * @param[in]  band        -  0 : 2.4GHz \n
+ *					                  1 : 5GHz \n
+ *					                  2 : Dual band (2.4 Ghz and 5 Ghz)
+ * @param[in]  bandwidth   -  0 : 20 MHz \n
+ *                            1 : 40 MHz
  * @param[in]  payload     - Pass channel gain values for different regions in an given array format.
- * @param[in]  payload_len - Max payload length (table size) in 2.4GHz is 128 bytes \n
+ * @param[in]  payload_len - Max payload length (table size) in 2.4GHz is 128 bytes. \n
  *                           Max payload length (table size) in 5GHz is 64 bytes
- *             #### Gain Table Payload Format ####
+ *             ### Gain Table Payload Format ###
  *
  *                            1. Gain table Format for 2.4G Band: (Each entry of the table is 1 byte)
  *                               In 2Ghz, Max Gain/Power obtained from certification should be doubled and loaded.
@@ -7549,14 +7491,13 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                               <REGION NAME y>, <CHANNEL_CODE_5G>, 
  *                                               }; 
  *                            2. Supported Region names:
- *                                                    FCC, ETSI,TELEC, KCC 
+ *                                                    FCC, RED,TELEC  
  *                                                   The following are the regions and the values to be passed instead of macros in the example.
  *                                                   Region      |          Macro Value
  *                                                   ------------|--------------------
  *                                                   FCC         |            0
- *                                                   ETSI        |            1
+ *                                                   RED        |            1
  *                                                   TELEC       |            2
- *                                                   KCC         |            4
  *                            3. <CHANNEL_CODE_2G> is a 8 bit value which is encoded as:
  *                               If TX powers of all the channels are same, then use CHANNEL_CODE_2G as 17. In this case, mention channel number as 255.
  *                               Tf TX power is not same for all channels, then indicate CHANNEL_CODE_2G as no-of channels. And specify tx power values for all the channels indicated.
@@ -7573,7 +7514,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                f. If all the channels in a band 4 has same power values, specify the band number as 4 followed by power value.
  *
  *
- * #### Example payload formats ####
+ * ### Example payload formats ###
  *
  *                            Examples: 
  *                          For 2.4Ghz Band in 20Mhz bandwidth
@@ -7595,8 +7536,6 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                    13, 34,  12,  12,  
  *                                TELEC, 17, 
  *                                     255, 20,  16, 16, 
- *                                KCC, 17, 
- *                                     255, 26,  20, 20, 
  *                            }; //}}} 
  *
  *                          For 5Ghz band in 20Mhz bandwidth
@@ -7633,7 +7572,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                4, 6,  7, //band 4 
  *                             }; 
  *                                
- * ####Customers using Certified MARS antenna should use the gain table structures below:####
+ * ###Customers using Certified MARS antenna should use the gain table structures below:###
  *
  *                          For 2.4Ghz Band in 20Mhz bandwidth
  *                           {3,//NUM_OF_REGIONS
@@ -7654,8 +7593,6 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                   13, 28,  30,  30,
  *                               TELEC,0x11, //NA
  *                                    255, 20,  16, 16,
- *                               KCC, 0x11   //NA,
- *                                    255, 26,  20, 20
  *                           };
  *                            
  *                          For 5Ghz band in 20Mhz bandwidth
@@ -7692,16 +7629,20 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                              3, 6,  8, //band 3   
  *                              4, 6,  7, //band 4
  *                           };
- * @note		   1. Length of the payload should match with payload_len parameter value. \n
- * @note		   2. In 2.4Ghz band, 40Mhz is not supported
  * @return     0              -  Success \n
- *             Non-Zero	Value - Failure \n
- *	           If return value is less than 0 \n
- *             -2             - Invalid parameters \n
- *	           -3             - Command given in wrong state \n
- *             If return value is greater than 0 \n
- * 	           0x0021, 0x003E
- * @note       Refer to Error Codes section for above error codes \ref error-codes.
+ * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0x0021,0x003E) \n
+ * @note   	   **Precondition** - \ref rsi_radio_init() API needs to be called before this API
+ * @note		   Length of the payload should match with payload_len parameter value.
+ * @note		   40Mhz is not supported in both 2.4GHz and 5GHz
+ * @note       This API must be used by customers who has done FCC/RED/TELEC certification with their own antenna. Inappropriate use of this API may result in violation of FCC/RED/TELEC, or any certifications and Silicon labs is not liable for that.
+ * @note       Internally firmware maintains two gain tables: Worldwide table & Region based table. Worldwide table is populated by firmware with maximum power values that chip can transmit that meets target specifications like EVM. Region based table has default gain value set.
+ * @note       When certifying with your own antenna, region must be set to Worldwide and sweep the power from 0 to 21dBm. Arrive at maximum power level that is passing certification especially band-edge.
+ * @note       These FCC/RED/TELEC maximum power level should be loaded in end-to-end mode via WLAN User Gain table.
+ * @note       This API must be called after every boot-up since this information is not saved inside flash.
+ * @note       Region based user gain table sent by application is copied onto Region based table. SoC uses this table in FCC/RED/TELEC to limit power and not to violate allowed limits. For Worldwide region firmware uses Worldwide table for transmit. \n
+ *             For other regions (FCC/RED/TELEC), firmware uses minimum value of Worldwide and Region based table for transmit.
+ * @note       There will be part to part variation across chips and offsets are estimated during manufacturing flow which will be applied as correction factor during normal mode of operation.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *payload, uint16_t payload_len)
 {
@@ -7784,12 +7725,14 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
  * @pre   	  \ref rsi_wlan_scan() API needs to be called before this API.
  * @param[in] enable                                - Enable or disable CSI data retrieval. 
  * @param[in] periodicity                           - Periodicity of CSI data retrieval in microseconds.
+ * @param[in] num_of_mac_addr                       - Number of MAC addresses.
+ * @param[in] mac_addr                              - Pointer to a 2-D matrix containing the list of MAC addresses.
  * @param[in] rsi_wlan_csi_data_response_handler    - Called when CSI data has been received from the module.
  * @note      Callback implementation example - \n
  *            void rsi_wlan_csi_data_response_handler(uint16_t status, rsi_rsp_csi_data_t *payload, const uint32_t payload_length) \n
  * @param[out]	status               - Response status: 0 - Success, 0x21 - rsi_wlan_csi_config_async() called in wrong state 
  * @param[out]  payload              - Response buffer
- * @param[out]  payload_length       - Length of the response buffer. Payload length will be 224 bytes.
+ * @param[out]  payload_length       - Length of the response buffer. Payload length will be sizeof(rsi_rsp_csi_data_t) bytes.
  * @note      \ref rsi_rsp_csi_data_s : Structure type supposed to hold incoming CSI data
  * @return    0              - Success \n
  *            Non-Zero Value - Failure \n
@@ -7800,6 +7743,8 @@ int32_t rsi_wlan_update_gain_table(uint8_t band, uint8_t bandwidth, uint8_t *pay
  */
 int32_t rsi_wlan_csi_config_async(uint8_t enable,
                                   uint32_t periodicity,
+                                  uint8_t num_of_mac_addr,
+                                  uint8_t (*mac_addr)[6],
                                   void (*wlan_csi_data_response_handler)(uint16_t status,
                                                                          uint8_t *buffer,
                                                                          const uint32_t length))
@@ -7846,6 +7791,12 @@ int32_t rsi_wlan_csi_config_async(uint8_t enable,
 
     // Fill periodicity of receiving CSI data from module
     rsi_csi_config->periodicity = periodicity;
+
+    // Fill the number of mac addresses
+    rsi_csi_config->num_of_mac_addr = num_of_mac_addr;
+
+    // Copy the MAC addresses
+    memcpy(rsi_csi_config->mac_addresses, mac_addr, num_of_mac_addr * RSI_MAC_ADDR_LEN);
 
 #ifndef RSI_WLAN_SEM_BITMAP
     rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);

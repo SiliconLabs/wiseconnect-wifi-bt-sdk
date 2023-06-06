@@ -14,7 +14,7 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
+#ifdef POP3_ENABLE
 #include "rsi_driver.h"
 
 #include "rsi_pop3_client.h"
@@ -24,29 +24,25 @@
 */
 /*==============================================*/
 /**
- * @note        Currently API is not supported.
  * @brief       Create POP3 client session. This is a non-blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   flags                                 - Select the IP version. \n
- *                          BIT(0)                    – RSI_IPV6. Set this bit to enable IPv6, by default it is configured to IPv4
+ *                                                      BIT(0) – RSI_IPV6: Set this bit to enable IPv6, by default it is configured to IPv4
  * @param[in]   server_ip_address                     - POP3 server IP address
  * @param[in]   server_port_number                    - POP3 server TCP port
  * @param[in]   auth_type                             - Client authentication type
  * @param[in]   username                              - Username for authentication. It must be a NULL terminated string
  * @param[in]   password                              - Password for authentication. It must be a NULL terminated string
- * @param[in]  rsi_pop3_client_mail_response_handler  - Callback when asynchronous response comes for the session create. \n
+ * @param[in]   rsi_pop3_client_mail_response_handler - Callback when asynchronous response comes for the session create. \n
  *                                                      The callback parameters are: status,type, and buffer \n
- *@param[out]   status                                - Status code
- *@param[out]   type                                  - Sub-command type
- *@param[out]   buffer                                - Buffer pointer
- *@return       Zero                                  - Success \n
- *              Non-Zero Value                        -  If return value is less than 0 \n
- *                              -3                    : Command given in wrong state \n
- *                              -4                    : Buffer not available to serve the command \n
- * \n                             
- *                                                      If return value is greater than 0 \n
- *                                                      0x0021,0x0015,0xBB87,0xff74
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @param[out]  status                                - Status code
+ * @param[out]  type                                  - Sub-command type
+ * @param[out]  buffer                                - Buffer pointer
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0x0015,0xBB87,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
+ *
  */
 
 int32_t rsi_pop3_session_create_async(uint8_t flags,
@@ -161,18 +157,13 @@ int32_t rsi_pop3_session_create_async(uint8_t flags,
 
 /*==============================================*/
 /**
- * @note       Currently API is not supported.
- * @brief      Delete POP3 client session. This is a non-blocking API.
- * @pre        \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  Void
- * @return     Zero            -  Success \n
- *             Non-Zero Value  -  If return value is less than 0 \n
- *                                -3 : Command given in wrong state \n
- *                                -4 : Buffer not available to serve the command \n
- *\n                                
- *                                     If return value is greater than 0 \n
- *                                     0x0021,0xFF74,0xBB87
- * @note       Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @brief       Delete POP3 client session. This is a non-blocking API.
+ * @param[in]   Void
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_pop3_session_delete(void)
@@ -241,18 +232,13 @@ int32_t rsi_pop3_session_delete(void)
 
 /*==============================================*/
 /**
- * @note        Currently API is not supported.
- * @brief       Get mail stats. This is a non-blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief       Get POP3 client mail stats. This is a non-blocking API.
  * @param[in]   Void
- * @return      Zero              -  Success \n
- *              Non-Zero Value    -  If return value is less than 0 \n
- *                             -3 : Command given in wrong state \n
- *                             -4 : Buffer not available to serve the command \n
- *\n                             
- *                                  If return value is greater than 0 \n
- *                                  0x0021,0xFF74,0xBB87
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_pop3_get_mail_stats(void)
 {
@@ -322,18 +308,13 @@ int32_t rsi_pop3_get_mail_stats(void)
 
 /*==============================================*/
 /**
- * @note        Currently API is not supported. 
- * @brief       Get the size of the mail for the passed mail index. This is a blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief       Get the size of the mail for the passed mail index of the POP2 client. This is a blocking API.
  * @param[in]   mail_index       - Mail index to get the size of the mail
- * @return      Zero             - Success \n
- *              Non-Zero Value   - If return value is less than 0 \n
- *                            -3 : Command given in wrong state \n
- *                            -4 : Buffer not available to serve the command \n
- *\n                            
- *                                 If return value is greater than 0 \n
- *                                 0x0021,0xBB87,0xFF74,0xBBFF
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes. \n
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xBBFF,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *              
  */
 
@@ -419,18 +400,13 @@ int32_t rsi_pop3_get_mail_list(uint16_t mail_index)
 
 /*==============================================*/
 /**
- * @note          Currently API is not supported.
- * @brief         Retrieve mail content for the passed mail index. This is a non-blocking API.
- * @pre           \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief         Retrieve mail content for the passed mail index of POP3 client. This is a non-blocking API.
  * @param[in]     mail_index       - Mail index to get the mail content for the passed index
- * @return        Zero             - Success \n
- *                Non-Zero Value   - If return value is less than 0 \n
- *                              -3 : Command given in wrong state \n
- *                              -4 : Buffer not available to serve the command \n
- *\n                              
- *                                   If return value is greater than 0 \n
- *                                   0x0021,0xBB87,0xFF74,0xBBFF,0xBBC5
- * @note          Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xBBFF,0xBBC5,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_pop3_retrive_mail(uint16_t mail_index)
@@ -504,18 +480,13 @@ int32_t rsi_pop3_retrive_mail(uint16_t mail_index)
 
 /*==============================================*/
 /**
- * @note        Currently API is not supported.
- * @brief       Mark a mail as deleted for the passed mail index.This is a non-blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief       Mark a mail as deleted for the passed mail index of POP3 client.This is a non-blocking API.
  * @param[in]   mail_index       - Mail index to mark the mail as deleted
- * @return      Zero             - Success \n
- *              Non-Zero Value   - If return value is less than 0 \n
- *                            -3 : Command given in wrong state \n
- *                            -4 : Buffer not available to serve the command \n
- *\n                            
- *                                 If return value is greater than 0 \n
- *                                 0x0021,0xFF74,0xBB87,0xBBFF
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xBBFF,0xFF74) \n
+ * @note        **This API is not supported currently**
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_pop3_mark_mail(uint16_t mail_index)
@@ -588,18 +559,13 @@ int32_t rsi_pop3_mark_mail(uint16_t mail_index)
 
 /*==============================================*/
 /**
- * @note       Currently API is not supported.
- * @brief      Unmark all the marked (deleted) mails in the current session. This is a non-blocking API.
- * @pre        \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @brief      Unmark all the marked (deleted) mails of POP3 client in the current session. This is a non-blocking API.
  * @param[in]  void 
- * @return     Zero             -  Success \n
- *             Non-Zero Value   -  If return value is less than 0 \n
- *                           -3 : Command given in wrong state \n
- *                           -4 : Buffer not available to serve the command \n
- *\n                           
- *                                If return value is greater than 0 \n
- *                                0x0021,0xFF74,0xBB87	
- * @note       Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xFF74) \n
+ * @note       **This API is not supported currently**
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_pop3_unmark_mail(void)
@@ -669,18 +635,13 @@ int32_t rsi_pop3_unmark_mail(void)
 
 /*==============================================*/
 /**
- * @note        Currently API is not supported.
- * @brief        Get the POP3 server status. This is a non-blocking API.
- * @pre          \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]    void 
- * @return       Zero              -  Success \n
- *               Non-Zero Value    -  If return value is less than 0 \n
- *                              -3 : Command given in wrong state \n
- *                              -4 : Buffer not available to serve the command \n
- *\n                              
- *                                   If return value is greater than 0 \n
- *                                   0x0021,0xBB87,0xFF74
- * @note         Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @brief      Get the POP3 server status. This is a non-blocking API.
+ * @param[in]  void 
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa,0x0021,0xBB87,0xFF74) \n
+ * @note       **This API is not supported currently**
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_pop3_get_server_status(void)
@@ -747,3 +708,4 @@ int32_t rsi_pop3_get_server_status(void)
   return status;
 }
 /** @} */
+#endif

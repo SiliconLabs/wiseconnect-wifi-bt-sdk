@@ -33,7 +33,7 @@
     <properties key="template.projectFilePaths" value="examples/featured/aws_device_shadow/projects/aws_device_shadow-brd2204a-gg11.slsproj"/>
   </descriptors>
 
-  <descriptors label="Wi-Fi - Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
+  <descriptors label="Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
     
     <properties key="core.boardCompatibility" value="brd4180a"/>
     <properties key="core.partCompatibility" value="mcu.arm.efr32.mg21.*"/>
@@ -44,7 +44,7 @@
     <properties key="template.projectFilePaths" value="examples/featured/wlan_rf_test/projects/wlan_rf_test-brd4180a-mg21.slsproj"/>
   </descriptors>
 
-  <descriptors label="Wi-Fi - Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
+  <descriptors label="Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
     
     <properties key="core.boardCompatibility" value="brd4180b"/>
     <properties key="core.partCompatibility" value="mcu.arm.efr32.mg21.*"/>
@@ -55,7 +55,7 @@
     <properties key="template.projectFilePaths" value="examples/featured/wlan_rf_test/projects/wlan_rf_test-brd4180b-mg21.slsproj"/>
   </descriptors>
 
-  <descriptors label="Wi-Fi - Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
+  <descriptors label="Transmit Performance and Regulatory Testing" description="Configures the device in a transmit mode that is used for transmit performance and regulatory certification testing (FCC, ETSI, CE, etc.)">
     
     <properties key="core.boardCompatibility" value="brd2204a"/>
     <properties key="core.partCompatibility" value="mcu.arm.efm32.gg11.*"/>

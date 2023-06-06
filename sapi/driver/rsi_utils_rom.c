@@ -79,7 +79,7 @@ void ROM_WL_rsi_uint32_to_4bytes(global_cb_t *global_cb_p, uint8_t *dBuf, uint32
  * @brief           Convert a 2 byte array to uint16, first byte in array is LSB
  * @param[in]       global_cb_p - pointer to the common buffer
  * @param[in]       dBuf        - pointer to a buffer to get the data from
- * @return          converted data
+ * @return          Converted data
  */
 /// @private
 uint16_t ROM_WL_rsi_bytes2R_to_uint16(global_cb_t *global_cb_p, uint8_t *dBuf)
@@ -103,7 +103,7 @@ uint16_t ROM_WL_rsi_bytes2R_to_uint16(global_cb_t *global_cb_p, uint8_t *dBuf)
  * @brief        Convert a 4 byte array to uint32, first byte in array is LSB
  * @param[in]    global_cb_p - pointer to the common buffer
  * @param[in]    dBuf        - pointer to buffer to get the data from
- * @return       converted data
+ * @return       Converted data
  */
 /// @private
 uint32_t ROM_WL_rsi_bytes4R_to_uint32(global_cb_t *global_cb_p, uint8_t *dBuf)

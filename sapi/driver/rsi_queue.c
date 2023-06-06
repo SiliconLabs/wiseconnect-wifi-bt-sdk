@@ -66,7 +66,7 @@ void rsi_enqueue_pkt(rsi_queue_cb_t *queue, rsi_pkt_t *pkt)
  * @brief       Dequeue packet from queue
  * @param[in]   queue - queue pointer from which packet needs to be dequeued \n 
  * @return      Allocated pocket pointer - Success \n
- *              NULL                     - Failure
+ * @return      NULL                     - Failure
  *
  */
 /// @private
@@ -84,7 +84,7 @@ rsi_pkt_t *rsi_dequeue_pkt(rsi_queue_cb_t *queue)
  * @brief       Return packet pending count in queue
  * @param[in]   queue - pointer to queue  
  * @return      0                         - If queue masked \n
- *              Number of packets pending - If queue is not masked 
+ * @return      Number of packets pending - If queue is not masked 
  */
 /// @private
 uint32_t rsi_check_queue_status(rsi_queue_cb_t *queue)

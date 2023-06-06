@@ -48,7 +48,15 @@
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
 //! To set Extended custom feature select bit map
+#ifdef CHIP_9117
+#ifdef RSI_M4_INTERFACE
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP EXT_FEAT_SSL_VERSIONS_SUPPORT | EXT_FEAT_512K_M4SS_192K
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP EXT_FEAT_SSL_VERSIONS_SUPPORT | EXT_FEAT_704K_M4SS_0K
+#endif
+#else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP EXT_FEAT_SSL_VERSIONS_SUPPORT
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
@@ -329,7 +337,11 @@
 //! Power save command parameters
 /*=======================================================================*/
 //! set handshake type of power mode
+#ifdef RSI_M4_INTERFACE
+#define RSI_HAND_SHAKE_TYPE M4_BASED
+#else
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
+#endif
 
 //! 0 - LP, 1- ULP mode with RAM retention and 2 - ULP with Non RAM retention
 #define RSI_SELECT_LP_OR_ULP_MODE RSI_ULP_WITH_RAM_RET
@@ -618,5 +630,33 @@
 //! IP address of Gateway
 //! E.g: 0x010AA8C0 == 192.168.10.1
 #define RSI_CONFIG_P2P_GATEWAY_ADDRESS 0x010AA8C0
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
+#endif
 
 #endif

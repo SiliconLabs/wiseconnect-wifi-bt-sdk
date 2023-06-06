@@ -257,11 +257,17 @@ int32_t rsi_ble_ibeacon(void)
   }
 #endif
 #ifdef RSI_WITH_OS
-  //! SiLabs module intialisation
+#ifndef RSI_M4_INTERFACE
+
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -443,7 +449,14 @@ int main(void)
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
     return status;
   }
-
+#ifdef RSI_M4_INTERFACE
+  // Silicon labs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+#endif
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 

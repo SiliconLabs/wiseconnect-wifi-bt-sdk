@@ -252,7 +252,7 @@ The application can be configured to suit user requirements and development envi
 #define RSI_TCP_IP_BYPASS                 RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP        (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_FTP_CLIENT)
 #define RSI_CUSTOM_FEATURE_BIT_MAP        FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEAT_BIT_MAP       EXT_FEAT_256k_MODE
+#define RSI_EXT_CUSTOM_FEAT_BIT_MAP       RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM
 #define RSI_BAND                          RSI_BAND_2P4GHZ
 ```
 

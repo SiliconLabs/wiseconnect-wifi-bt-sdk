@@ -30,12 +30,12 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 /**
  * @fn         int32_t rsi_driver_send_data(uint32_t sockID, uint8_t *buffer, uint32_t length, struct rsi_sockaddr *destAddr)
  * @brief      Send data packet. This is a blocking API.
- * @param[in]  sockID   - socket descriptor on which data needs to be send
- * @param[in]  buffer   - pointer to data 
- * @param[in]  length   - data length
- * @param[in]  destAddr - pointer to destination socket details 
+ * @param[in]  sockID   - Socket descriptor on which data needs to be send
+ * @param[in]  buffer   - Pointer to data 
+ * @param[in]  length   - Data length
+ * @param[in]  destAddr - Pointer to destination socket details 
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Negative Value - Failure
  *
  *
  */
@@ -48,10 +48,10 @@ int32_t rsi_driver_send_data(uint32_t sockID, uint8_t *buffer, uint32_t length, 
 /*==============================================*/
 /**
  * @fn         int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt)
- * @brief      This API processes received data packet. This is a non-blocking API.
- * @param[in]  pkt - pointer to data packet  
+ * @brief      Process received data packet. This is a non-blocking API
+ * @param[in]  pkt - Pointer to data packet  
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Negative Value - Failure
  */
 /// @private
 int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt)
@@ -63,23 +63,22 @@ int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt)
 /**
  * @fn          int16_t rsi_nwk_register_callbacks(uint32_t callback_id,
  *                           void (*callback_handler_ptr)(uint8_t command_type, uint32_t status, const uint8_t *buffer, const uint32_t length))
- * @brief       Register the call backs. This is a non-blocking API.
- * @param[in]   callback_id          - This is the Id of the call back function \n
+ * @brief       Register the callback. This is a non-blocking API.
+ * @param[in]   callback_id          - This is the Id of the callback function. \n
  *                                      Following ids are supported: \n
- *                                      0-RSI_NWK_ERROR_CB \n
- *                                      1-RSI_WLAN_NWK_URL_REQ_CB \n
- *                                      2-RSI_WLAN_NWK_JSON_UPDATE_CB \n
- *                                      3-RSI_WLAN_NWK_FW_UPGRADE_CB \n
+ *                                      0-RSI_NWK_ERROR_CB, \n
+ *                                      1-RSI_WLAN_NWK_URL_REQ_CB, \n
+ *                                      2-RSI_WLAN_NWK_JSON_UPDATE_CB, \n
+ *                                      3-RSI_WLAN_NWK_FW_UPGRADE_CB, \n
  *                                      4-RSI_WLAN_NWK_JSON_EVENT_CB 
- * @param[in]   callback_handler_ptr - call back handler which needs to be registered for a given call back
- * @param[out]  status		     - This is the response status. For success it returns 0 and for failure it returns negative value. For possible error codes from FW refer to Error Codes section for the description of the above error codes \ref error-codes.
- * @param[out]  buffer		     - This is the response buffer.
- * @param[out]  length    	     - This is the length of the response buffer.
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]  status		           - Response status. 
+ * @param[out]  buffer		           - Response buffer.
+ * @param[out]  length    	         - Length of the response buffer.
  * @return      0                    - Success  \n
- *              Non-Zero Value       - Failure \n
- *                                     -3 Command given in wrong state \n 
- *                                     If call_back_id is greater than the maximum callbacks to register, returns 1                
- * #### prototypes of the call back functions ####
+ *              Non-Zero Value       - Failure (**Possible Error Codes** - 0xfffffffd) \n
+ *              1                    - If call_back_id is greater than the maximum callbacks to register                         
+ * ## prototypes of the callback functions ##
  * callback id                  |    Prototype                            | Description         |   Parameters
  * :----------------------------|:----------------------------------------|:--------------------|:-------------------------------------------------------------
  * RSI_NWK_ERROR_CB             | void (*nwk_error_call_back_handler)(uint8_t command_type, uint32_t status, const uint8_t *buffer, const uint32_t length); | This callback is used to Register join fail| command_type => command_type of the response\n status => status of the response\n buffer => payload of the response\n length => length of the payload
@@ -87,6 +86,7 @@ int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt)
  * RSI_WLAN_NWK_JSON_UPDATE_CB  | void (*rsi_json_object_update_handler)(uint8_t *file_name, uint8_t *json_object, uint32_t length, uint32_t status); | This callback is used to Register json update | file_name => File name \n json_object => Json object\n length: length of the json object\n status => status of the response
  * RSI_WLAN_NWK_FW_UPGRADE_CB   | void (*rsi_wireless_fw_upgrade_handler)(uint8_t type, uint32_t status); | This callback is used to Register wireless firmware upgrade | type => type of the handler\n status => status of the response
  * RSI_WLAN_NWK_JSON_EVENT_CB   | void (*rsi_json_object_event_handler)(uint32_t status, uint8_t *json_object_str, uint32_t length); | This callback is used to Register json update | status => status of the response\n json_object_str => json object string\n length => length of the string
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int16_t rsi_nwk_register_callbacks(
@@ -104,7 +104,7 @@ int16_t rsi_nwk_register_callbacks(
   }
   if (callback_id == RSI_NWK_ERROR_CB) // check for NULL or not
   {
-    // Register join fail call back handler
+    // Register join fail callback handler
     rsi_wlan_cb_non_rom->nwk_callbacks.nwk_error_call_back_handler = callback_handler_ptr;
   }
   SL_PRINTF(SL_NWK_REGISTER_CALLBACKS_EXIT, NETWORK, LOG_INFO);
@@ -119,16 +119,15 @@ int16_t rsi_nwk_register_callbacks(
 /**
  * @fn          int16_t rsi_wlan_nwk_register_json_update_cb(uint32_t callback_id,
  *                                void (*callback_handler_ptr)(uint8_t *filename, uint8_t *json_object, uint32_t length, uint32_t status))
- * @brief       Register the call backs.This is non blocking API.
- * @param[in]   callback_id          - call back number which needs to be registered
- * @param[in]   callback_handler_ptr - call back handler which needs to be registered for a given call back
- * @param[out]	filename	     - json object filename
- * @param[out]	json_object	     - json object data
- * @param[out]	length 		     - This is the length of the response buffer.
- * @param[out]	status		     - This is the response status.
+ * @brief       Register the callbacks. This is non blocking API.
+ * @param[in]   callback_id          - Callback ID which needs to be registered
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]	filename	           - json object filename
+ * @param[out]	json_object	         - json object data
+ * @param[out]	length 		           - Length of the response buffer.
+ * @param[out]	status		           - Response status.
  * @return      0              - Success \n
- *              Negative Value - Failure
- *
+ * @return      Negative Value - Failure
  * @note        Please refer to Error Codes section for the description of the above error codes  \ref error-codes.
  */
 
@@ -155,14 +154,14 @@ int16_t rsi_wlan_nwk_register_json_update_cb(
                                             void (*callback_handler_ptr)(uint32_t status,
                                                                          uint8_t *json_object,
                                                                          uint32_t length))
- * @brief       Register the event call backs.This is non blocking API.
- * @param[in]   callback_id          - call back number which needs to be registered
- * @param[in]   callback_handler_ptr - call back handler which needs to be registered for a given call back
- * @param[out]	status		     - This is the response status.
- * @param[out]	json_object	     - json object data 
- * @param[out]	length		     - This is the length of the response buffer.
+ * @brief       Register the event callbacks. This is non blocking API.
+ * @param[in]   callback_id          - Callback ID which needs to be registered
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]	status		           - Response status.
+ * @param[out]	json_object	         - json object data 
+ * @param[out]	length		           - Length of the response buffer.
  * @return      0              - Success \n
- *              Positive Value - Failure
+ * @return      Positive Value - Failure
  */
 
 int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
@@ -191,16 +190,16 @@ int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
                                                                           uint8_t *post_content_buffer,
                                                                           uint32_t post_content_length,
                                                                           uint32_t status))
- * @brief       Register webpage request callbacks.This is non blocking API.
- * @param[in]   callback_id          - call back number which needs to be registered
- * @param[in]   callback_handler_ptr - call back handler which needs to be registered for a given call back
- * @param[out]	type		     - command type 
- * @param[out]	url_name   	     - URL address of the domain
- * @param[out]	post_content_buffer  - This is the response buffer.
- * @param[out]	post_content_length  - This is the length of the response buffer.
- * @param[out]	status		     - This is the response status.
+ * @brief       Register webpage request callbacks. This is non blocking API.
+ * @param[in]   callback_id          - Callback ID which needs to be registered
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]	type		             - Command type 
+ * @param[out]	url_name   	         - URL address of the domain
+ * @param[out]	post_content_buffer  - Response buffer.
+ * @param[out]	post_content_length  - Length of the response buffer.
+ * @param[out]	status		           - Response status.
  * @return      0              - Success \n
- *              Positive Value - Failure
+ * @return      Positive Value - Failure
  */
 
 int16_t rsi_wlan_nwk_register_webpage_req_cb(uint32_t callback_id,
@@ -227,13 +226,13 @@ int16_t rsi_wlan_nwk_register_webpage_req_cb(uint32_t callback_id,
 /**
  * @fn          int16_t rsi_wlan_nwk_register_wireless_fw_upgrade_cb(uint32_t callback_id,
                                                      void (*callback_handler_ptr)(uint8_t type, uint32_t status))
- * @brief       Register wireless firmware upgrade callbacks.This is non blocking API.
- * @param[in]   callback_id          - call back number which needs to be registered
- * @param[in]   callback_handler_ptr - call back handler which needs to be registered for a given call back
- * @param[out]	type		          - command type 
- * @param[out]	status		          - This is the response status.
+ * @brief       Register wireless firmware upgrade callbacks. This is non blocking API.
+ * @param[in]   callback_id          - Callback ID which needs to be registered
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]	type		             - Command type 
+ * @param[out]	status		           - Response status.
  * @return      0                     - Success \n
- *              Positive Value        - Failure
+ * @return      Positive Value        - Failure
  */
 int16_t rsi_wlan_nwk_register_wireless_fw_upgrade_cb(uint32_t callback_id,
                                                      void (*callback_handler_ptr)(uint8_t type, uint32_t status))
@@ -246,7 +245,7 @@ int16_t rsi_wlan_nwk_register_wireless_fw_upgrade_cb(uint32_t callback_id,
     return RSI_ERROR_EXCEEDS_MAX_CALLBACKS;
   }
 
-  // Register wireless firmware upgrade call back handler
+  // Register wireless firmware upgrade callback handler
   rsi_wlan_cb_non_rom->nwk_callbacks.rsi_wireless_fw_upgrade_handler = callback_handler_ptr;
 
   return RSI_SUCCESS;
@@ -258,12 +257,11 @@ int16_t rsi_wlan_nwk_register_wireless_fw_upgrade_cb(uint32_t callback_id,
 /*==============================================*/
 /**
  * @fn          rsi_error_t rsi_wait_on_nwk_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms) 
- * @brief       Wireless library to acquire or wait for nwk semaphore.
+ * @brief       Wait for network semaphore
  * @param[in]   semaphore  - Semaphore handle pointer  
- * @param[in]   timeout_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0 then wait \n
-                             till acquire semaphore.
+ * @param[in]   timeout_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0 then wait till semaphore is acquired.
  * @return      0              - Success \n
- *              Negative Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 rsi_error_t rsi_wait_on_nwk_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms)
@@ -287,7 +285,7 @@ rsi_error_t rsi_wait_on_nwk_semaphore(rsi_semaphore_handle_t *semaphore, uint32_
  * @param[in]   void 
  * @return      0              - Success \n
  *              Non-Zero Value - Failure
- *
+ * @note        **Precondition** - This API should be called after \ref rsi_device_init()
  */
 
 int32_t rsi_wlan_get_nwk_status(void)
@@ -320,7 +318,7 @@ void rsi_wlan_set_nwk_status(int32_t status)
  * @param[in]  length   - data length
  * @param[in]  destAddr - pointer to destination socket details 
  * @return     0              - Success \n
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  *
  */
 /// @private
@@ -474,10 +472,10 @@ int32_t rsi_driver_send_data_non_rom(uint32_t sockID, uint8_t *buffer, uint32_t 
 /*==============================================*/
 /**
  * @fn         int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
- * @brief      Process data receive packet. 
+ * @brief      Process received data packet 
  * @param[in]  pkt - pointer to data packet  
  * @return     0              - Success \n
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  */
 
 int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
@@ -619,9 +617,9 @@ int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          void rsi_post_waiting_nwk_semaphore()
- * @brief       Posting of the network semaphores which are on wait
+ * @brief       Post the network semaphore which is on wait
  * @param[in]   void  
- * @return      void
+ * @return      Void
  */
 /// @private
 #ifndef RSI_NWK_SEM_BITMAP

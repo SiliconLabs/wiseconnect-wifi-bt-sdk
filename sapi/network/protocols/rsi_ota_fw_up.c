@@ -24,9 +24,8 @@
 /*==============================================*/
 /**
  * @brief       Create an OTAF client. Initialize the client with a given configuration. This is a non-blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   flags                      - Select the IP version. \n
- *                                 BIT(0)  – RSI_IPV6. Set this bit to enable IPv6 , by default it is configured to IPv4
+ *                                           BIT(0) – RSI_IPV6: Set this bit to enable IPv6 , by default it is configured to IPv4
  * @param[in]   server_ip                  - OTAF server IP address
  * @param[in]   server_port                - OTAF server port number
  * @param[in]   chunk_number               - Firmware content request chunk number
@@ -34,17 +33,14 @@
  * @param[in]   tcp_retry_count            - TCP retransmissions count
  * @param[in]   ota_fw_up_response_handler - Callback when asynchronous response is received from module for firmware update request.
  *                                           Callback parameters: status and chunk_number
- * @param[out]  status                     - Success - RSI_SUCCESS\n
- *                                           Failure - Negative value\n
- *                                           -3 : Command given in wrong state \n
- *                                           -4 : Buffer not available to serve the command
+ * @param[out]  status                     - Status code
  * @param[out]  chunk_number               - Chunk number of the firmware content
+ * @return      0                          - Success  \n
+ * @return      Negative Value             - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        For safe firmware upgrade via TCP server, \n
  *              it will take approx. 65 sec duration for upgrading the firmware of 1.5 MB file. 
- * @return      0                          - Success  \n
- *              Negative Value             - Failure \n
- *                          -3             - Command given in wrong state \n
- *                          -4             - Buffer not available to serve the command
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_ota_firmware_upgradation(uint8_t flags,

@@ -20,11 +20,11 @@
 */
 /*==============================================*/
 /**
- * @brief      Send RAW data to Module. This is a blocking API.
+ * @brief      Send raw data to the module. This is a blocking API.
  * @param[in]  buffer - Pointer to the buffer to send
  * @param[in]  length - Length of the buffer to send
  * @return     0              -  Success \n
- *             Negative Value -  Failure
+ * @return     Non-Zero Value -  Failure
  */
 
 #include "rsi_driver.h"

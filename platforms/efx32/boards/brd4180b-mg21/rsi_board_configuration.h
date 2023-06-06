@@ -18,21 +18,24 @@ typedef struct {
 #define SLEEP_CONFIRM_PIN   PIN(B, 1)
 #ifndef LOGGING_STATS
 #define WAKE_INDICATOR_PIN  PIN(B, 0)
-#endif
-#else
+#else   /* LOGGING_STATS */
+#define LOGGING_WAKE_INDICATOR_PIN  PIN(B, 0)
+#define LOGGING_STATS_PORT    gpioPortB
+#define LOGGING_STATS_PIN     00
+#endif  /* LOGGING_STATS */
+#else   /* EXP_BOARD */
 #define SLEEP_CONFIRM_PIN   PIN(B, 0)
-#ifndef LOGGING_STATS
+#ifndef LOGGING_STATS // 9116
 #define WAKE_INDICATOR_PIN  PIN(B, 1)
-#endif
-#endif
-#define RESET_PIN           PIN(D, 2)
-#define INTERRUPT_PIN       PIN(D, 3)
-
-#ifdef LOGGING_STATS
+#else   /* LOGGING_STATS // 9116 */
 #define LOGGING_WAKE_INDICATOR_PIN  PIN(B, 1)
 #define LOGGING_STATS_PORT    gpioPortB
 #define LOGGING_STATS_PIN     01
-#endif
+#endif  /* LOGGING_STATS // 9116 */
+#endif  /* EXP_BOARD */
+
+#define RESET_PIN           PIN(D, 2)
+#define INTERRUPT_PIN       PIN(D, 3)
 
 #define SPI_CLOCK_PIN PIN(C, 2)
 #define SPI_MOSI_PIN  PIN(C, 0)

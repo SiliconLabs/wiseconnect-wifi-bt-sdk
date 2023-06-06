@@ -97,6 +97,7 @@
 
 //! client socket id
 int32_t client_socket;
+extern uint8_t ble_connected;
 
 //! server and client ip addresses
 struct rsi_sockaddr_in server_addr, client_addr;
@@ -237,9 +238,19 @@ void rsi_wlan_app_task(void)
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
         }
+#if (ENABLE_POWER_SAVE)
+        status = rsi_wlan_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          break;
+        }
+        //no break
+        //fall through
+        status = rsi_wlan_filter_broadcast(5000, 1, 1);
+        if (status != RSI_SUCCESS) {
+          break;
+        }
+#endif
       }
-      //no break
-      //fall through
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
 
         //! Create socket
@@ -315,6 +326,17 @@ void rsi_wlan_app_task(void)
         } else {
 #ifdef RSI_WITH_OS
           rsi_semaphore_wait(&wlan_thread_sem, 0);
+#endif
+#if (RSI_M4_INTERFACE && ENABLE_POWER_SAVE)
+          if (ble_connected) {
+            //! if events are not received loop will be continued.
+            if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
+              P2P_STATUS_REG &= ~M4_wakeup_TA;
+              LOG_PRINT("\r\n M4 in Sleep\n", status);
+              rsi_ble_only_Trigger_M4_Sleep();
+              LOG_PRINT("\r\n M4 Wakeup\n", status);
+            }
+          }
 #endif
         }
       }

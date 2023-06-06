@@ -28,7 +28,7 @@
 #include <rsi_error.h>
 #include <rsi_wlan_defines.h>
 //#ifdef WISECONNECT
-#if (defined(__CC_ARM) || defined(WISECONNECT))
+#if (defined(__CC_ARM) || defined(WISECONNECT) || defined(RSI_M4_INTERFACE))
 #ifdef RSI_WLAN_API_ENABLE
 #include <rsi_wlan_config.h>
 #endif

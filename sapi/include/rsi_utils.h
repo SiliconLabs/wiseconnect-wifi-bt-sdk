@@ -65,7 +65,7 @@ int32_t rsi_atoi(const int8_t *str);
 void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress);
 void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress);
 uint64_t ip_to_reverse_hex(char *ip);
-
+uint8_t ascii_to_dec(uint8_t *num);
 int8_t rsi_ascii_hex2num(int8_t ascii_hex_in);
 int8_t rsi_char_hex2dec(int8_t *cBuf);
 int8_t hex_to_ascii(uint8_t hex_num);
@@ -73,4 +73,9 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
 int8_t asciihex_2_num(int8_t ascii_hex_in);
 int8_t rsi_charhex_2_dec(int8_t *cBuf);
 uint32_t rsi_ntohl(uint32_t a);
+#if defined(FLOAT_PRINT_BYPASS)
+void rsi_reverse(char *str, int len);
+int rsi_intToStr(int x, char str[], int d);
+void rsi_ftoa(char *res, float n, int afterpoint);
+#endif
 #endif

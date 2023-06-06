@@ -82,12 +82,57 @@ static uint8_t rsi_ble_app_data[100];
 static uint8_t rsi_ble_app_data_len;
 static uint8_t rsi_ble_att1_val_hndl;
 static uint16_t rsi_ble_att2_val_hndl;
+uint8_t wlan_radio_initialized = 0, ble_connected = 0;
+#if ENABLE_POWER_SAVE
+uint8_t power_save_given = 0;
+#endif
 
 extern void rsi_wlan_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t data_len);
 
 #ifdef RSI_WITH_OS
 extern rsi_semaphore_handle_t ble_thread_sem;
 #endif
+
+/*==============================================*/
+/**
+ * @fn         rsi_initiate_power_save
+ * @brief      send power save command to RS9116 module
+ *
+ * @param[out] none
+ * @return     status of commands, success-> 0, failure ->-1
+ * @section description
+ * This function sends command to keep module in power save
+ */
+int32_t rsi_initiate_power_save(void)
+{
+  int32_t status = RSI_SUCCESS;
+
+  //! enable wlan radio
+  if (!wlan_radio_initialized) {
+    status = rsi_wlan_radio_init();
+    if (status != RSI_SUCCESS) {
+      //LOG_PRINT("\n radio init failed,error = %ld\n", status);
+      return status;
+    } else {
+      wlan_radio_initialized = 1;
+    }
+  }
+  //! initiating power save in wlan mode
+  status = rsi_wlan_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    //LOG_PRINT("\r\n Failed in initiating power save\r\n");
+    return status;
+  }
+
+  status = rsi_bt_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    //LOG_PRINT("\r\n Failed in initiating power save\r\n");
+    return status;
+  }
+  LOG_PRINT("\r\nIn PowerSave\r\n");
+
+  return status;
+}
 
 /*==============================================*/
 /**
@@ -339,6 +384,7 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
   conn_event_to_app.dev_addr_type = resp_enh_conn->dev_addr_type;
   memcpy(conn_event_to_app.dev_addr, resp_enh_conn->dev_addr, RSI_DEV_ADDR_LEN);
   conn_event_to_app.status = resp_enh_conn->status;
+  ble_connected            = 1;
   rsi_ble_app_set_event(RSI_BLE_CONN_EVENT);
 }
 
@@ -354,6 +400,7 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
 static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 {
   memcpy(&conn_event_to_app, resp_conn, sizeof(rsi_ble_event_conn_status_t));
+  ble_connected = 1;
   rsi_ble_app_set_event(RSI_BLE_CONN_EVENT);
 }
 
@@ -371,6 +418,7 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
 {
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&disconn_event_to_app, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
+  ble_connected = 0;
   rsi_ble_app_set_event(RSI_BLE_DISCONN_EVENT);
 }
 
@@ -424,6 +472,7 @@ void rsi_wlan_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t data_le
 void rsi_ble_app_init(void)
 {
   uint8_t adv[31] = { 2, 1, 6 };
+  int32_t status  = 0;
 
   //!  initializing the application events map
   rsi_ble_app_init_events();
@@ -481,6 +530,22 @@ void rsi_ble_app_init(void)
 
   //! set device in advertising mode.
   rsi_ble_start_advertising();
+  LOG_PRINT("\r\n BLE advertising \r\n");
+
+#if ENABLE_POWER_SAVE
+
+  LOG_PRINT("\r\nInitiating PowerSave\r\n");
+  status = rsi_initiate_power_save();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+    return status;
+  }
+
+#ifdef RSI_M4_INTERFACE
+  P2P_STATUS_REG &= ~M4_wakeup_TA;
+  // LOG_PRINT("\n RSI_BLE_REQ_PWRMODE\n ");
+#endif
+#endif
 }
 
 /*==============================================*/
@@ -516,16 +581,35 @@ void rsi_ble_app_task(void)
     switch (event_id) {
       case RSI_BLE_CONN_EVENT: {
         //! event invokes when connection was completed
-
+        LOG_PRINT("\r\n BLE connected \r\n");
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_CONN_EVENT);
       } break;
 
       case RSI_BLE_DISCONN_EVENT: {
         //! event invokes when disconnection was completed
-
+        LOG_PRINT("\r\n BLE disconnected \r\n");
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_DISCONN_EVENT);
+#if ENABLE_POWER_SAVE
+        LOG_PRINT("\r\n Keep module in to active state \r\n");
+
+        //! initiating Active mode in BT mode
+        status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+          return status;
+        }
+
+        //! initiating Active mode in WLAN mode
+        status = rsi_wlan_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+          return status;
+        }
+        LOG_PRINT("\r\n Module in active state \r\n");
+#endif
+        LOG_PRINT("\r\n BLE advertising \r\n");
 
 //! set device in advertising mode.
 adv:
@@ -534,6 +618,14 @@ adv:
           LOG_PRINT("\r\nBLE Start Advertising Failed, Error Code : 0x%lX\r\n", status);
           goto adv;
         }
+#if ENABLE_POWER_SAVE
+        LOG_PRINT("\r\nInitiating PowerSave\r\n");
+        status = rsi_initiate_power_save();
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+          return status;
+        }
+#endif
       } break;
 
       case RSI_BLE_GATT_WRITE_EVENT: {

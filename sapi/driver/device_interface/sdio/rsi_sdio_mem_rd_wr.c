@@ -39,6 +39,13 @@
 */
 /*===========================================================================*/
 /**
+ * @brief       This API writes contents of dBuf buffer to the device memory address addr for the length len 
+ * @param[in]   addr            -  Device memory address. 
+ * @param[in]   len             -  Length of the buffer.
+ * @param[in]   dBuf            -  Data present in this buffer
+ * @return       0              -  Success \n
+ * @return       Non-Zero value -  Failure \n
+ *             
  */
 
 int16_t rsi_mem_wr(uint32_t addr, uint16_t len, uint8_t *dBuf)
@@ -73,7 +80,14 @@ int16_t rsi_mem_wr(uint32_t addr, uint16_t len, uint8_t *dBuf)
 
 /*===========================================================================*/
 /**
-  */
+ * @brief       This API reads the device memory contents present at the address addr into the dBuf buffer for the length len 
+ * @param[in]   addr             -  Device memory address. 
+ * @param[in]   len              -  Length of the buffer.
+ * @param[in]   dBuf             -  Destination buffer.
+ * @return       0               -  Success \n
+ * @return       Non-Zero value  -  Failure \n
+ *             
+ */
 int16_t rsi_mem_rd(uint32_t addr, uint16_t len, uint8_t *dBuf)
 {
   int16_t retval = RSI_SUCCESS;
@@ -96,6 +110,11 @@ int16_t rsi_mem_rd(uint32_t addr, uint16_t len, uint8_t *dBuf)
 
 /*==================================================*/
 /**
+ * @brief       This API reads the status register of the host interface layer to validate the interrupt received.
+ * @param[in]   int_status      -  Interrupt status. 
+ * @return      0               -  Success \n
+ * @return      Non-zero value  -  Failure (**Possible Error Codes** - 0xffffffd0, ) \n
+ * 
  */
 int16_t rsi_device_interrupt_status(uint8_t *int_status)
 {

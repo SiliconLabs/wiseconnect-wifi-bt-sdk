@@ -648,8 +648,10 @@ static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_addres
  */
 static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display)
 {
+  uint8_t passkey[BLE_PASSKEY_SIZE] = { 0 };
   memcpy(&smp_passkey_display_event, smp_passkey_display, sizeof(rsi_bt_event_smp_passkey_display_t));
-  LOG_PRINT("smp passkey disp : %s\n", smp_passkey_display_event.passkey);
+  memcpy(passkey, smp_passkey_display_event.passkey, BLE_PASSKEY_SIZE);
+  LOG_PRINT("\r\n smp passkey disp : %s \r\n", passkey);
   rsi_ble_app_set_event(RSI_BLE_EVENT_SMP_PASSKEY_DISPLAY);
 }
 
@@ -666,7 +668,7 @@ static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *re
 {
   //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(remote_dev_address);
-  LOG_PRINT("smp failed status: %u\n", status);
+  LOG_PRINT("smp failed status: %x\n", status);
   rsi_ble_app_set_event(RSI_BLE_EVENT_SMP_FAILED);
 }
 
@@ -841,11 +843,13 @@ static int32_t rsi_ble_add_char_val_att(rsi_ble_hid_info_t *p_hid_info,
   //! add attribute to the service
   status = rsi_ble_add_attribute(&new_att);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\n add attribute failed = %x \n", status);
     return status;
   }
 
   if (((config_bitmap & BIT(1)) == 1) || (data_len > 20)) {
     if (!p_hid_info) {
+      LOG_PRINT("\n HID INFO is not available \n");
       return RSI_FAILURE;
     }
     rsi_gatt_add_att_to_list(p_hid_info, handle, data_len, data, att_type_uuid.val.val32);
@@ -1331,11 +1335,13 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
   }
 #endif
 #ifdef RSI_WITH_OS
-  //! RS9116 initialization
+#ifndef RSI_M4_INTERFACE
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     return status;
   }
+#endif
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -1893,8 +1899,8 @@ void main_loop(void)
  */
 int main(void)
 {
-#ifdef RSI_WITH_OS
   int32_t status;
+#ifdef RSI_WITH_OS
   rsi_task_handle_t bt_task_handle = NULL;
 #endif
 
@@ -1917,7 +1923,14 @@ int main(void)
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
-
+#ifdef RSI_M4_INTERFACE
+  // Silicon labs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+#endif
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 

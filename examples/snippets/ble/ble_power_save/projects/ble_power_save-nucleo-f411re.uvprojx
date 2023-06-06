@@ -336,9 +336,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--C99 --reduce_paths</MiscControls>
-              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE RSI_WITH_OS </Define>
+              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE </Define>
               <Undefine></Undefine>
-              <IncludePath>../../../../../examples/snippets/ble/ble_power_save;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; ../../../../../third_party/freertos/include; ../../../../../third_party/freertos/portable; ../../../../../sapi/rtos/freertos_wrapper; platforms/stm32/boards/nucleo-f411re</IncludePath>
+              <IncludePath>../../../../../examples/snippets/ble/ble_power_save;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; platforms/stm32/boards/nucleo-f411re</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -779,25 +779,6 @@
 	             </File>
 	           </Files>
 	        
-	           <Files>
-	           
-	             <File>
-	                <FileName>sl_app_logging.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../sapi/logging/sl_app_logging.c</FilePath>
-	             </File>
-	             <File>
-	                <FileName>sl_fw_logging.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../sapi/logging/sl_fw_logging.c</FilePath>
-	             </File>
-	             <File>
-	                <FileName>firmware_logging_utils.c</FileName>
-	                <FileType>1</FileType>
-	                <FilePath>../../../../../utilities/advanced_logging/firmware_logging/firmware_logging_utils.c</FilePath>
-	             </File>
-	           </Files>
-	        
         </Group>
         
         
@@ -846,74 +827,6 @@
            </Files>
          </Group>
         
-        
-        <Group><GroupName>sapi/freertos</GroupName>
-           <Files>
-        
-             <File>
-                <FileName>rsi_os_wrapper.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../sapi/rtos/freertos_wrapper/rsi_os_wrapper.c</FilePath>
-             </File>
-             <File>
-                <FileName>port.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../sapi/rtos/freertos_wrapper/port.c</FilePath>
-             </File>
-             <File>
-                <FileName>portmacro.h</FileName>
-                <FileType>5</FileType>
-                <FilePath>../../../../../sapi/rtos/freertos_wrapper/portmacro.h</FilePath>
-             </File>
-           </Files>
-         </Group>
-        
-        <Group><GroupName>third_party/freertos</GroupName>
-           <Files>
-           
-             <File>
-                <FileName>croutine.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/croutine.c</FilePath>
-             </File>
-             <File>
-                <FileName>event_groups.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/event_groups.c</FilePath>
-             </File>
-             <File>
-                <FileName>list.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/list.c</FilePath>
-             </File>
-             <File>
-                <FileName>queue.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/queue.c</FilePath>
-             </File>
-             <File>
-                <FileName>stream_buffer.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/stream_buffer.c</FilePath>
-             </File>
-             <File>
-                <FileName>tasks.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/tasks.c</FilePath>
-             </File>
-             <File>
-                <FileName>timers.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/timers.c</FilePath>
-             </File>
-             <File>
-                <FileName>heap_4.c</FileName>
-                <FileType>1</FileType>
-                <FilePath>../../../../../third_party/freertos/portable/MemMang/heap_4.c</FilePath>
-             </File>
-            
-           </Files>
-         </Group>
       </Groups>
     </Target>
   </Targets>

@@ -37,15 +37,17 @@
 /*
   Global Variables
  */
+void rsi_sdio_hal_efm_deinit(void);
+
 /** @addtogroup DRIVER1
 * @{
 */
 /*=============================================*/
 /**
- * @brief        Initialize the wlan module's Slave SDIO interface.
+ * @brief        Initialize the RS9116 SDIO secondary device interface.
  * @param[in]    void
  * @return       0              - Success \n
- *               Non-Zero Value - Failure
+ * @return       Non-Zero Value - Failure
  */
 
 int16_t rsi_sdio_iface_init(void)
@@ -97,6 +99,11 @@ int16_t rsi_sdio_iface_init(void)
   SL_PRINTF(SL_SDIO_IFACE_INIT_EXIT_6, DRIVER, LOG_INFO, "retval: %d", retval);
   return retval;
 }
+
+/**
+ * @brief       This API deinitializes SDIO host interface.
+ * 
+ */
 
 void rsi_sdio_deinit(void)
 {

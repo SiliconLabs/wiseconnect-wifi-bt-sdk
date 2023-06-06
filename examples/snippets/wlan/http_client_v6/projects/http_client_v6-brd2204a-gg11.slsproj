@@ -33,6 +33,7 @@
   <folder name="http_client_v6" >
   	<file name="rsi_http_client_app.c" uri="examples/snippets/wlan/http_client_v6/rsi_http_client_app.c" />
   	
+  	<file name="index.txt" uri="examples/snippets/wlan/http_client_v6/index.txt" />
   	<file name="rsi_wlan_config.h" uri="examples/snippets/wlan/http_client_v6/rsi_wlan_config.h" />
   	
   </folder>
@@ -57,8 +58,6 @@
   <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
   <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
-  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
-  <folder name="utilities/advanced_logging/firmware_logging" uri="utilities/advanced_logging/firmware_logging" includeAllFiles="true" includeAllFolders="true"/>
   
 
   
@@ -124,6 +123,7 @@
   
    <macroDefinition name="RSI_WLAN_API_ENABLE" />
   
+   <macroDefinition name="EXECUTION_FROM_RAM" />
   
   
   <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.flags" value="-c -x assembler-with-cpp -mfloat-abi=softfp -mfpu=fpv4-sp-d16 "/>

@@ -40,6 +40,13 @@
 #include "rsi_os.h"
 #include "rsi_utils.h"
 #include "rsi_driver.h"
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
+#ifdef SLEEP_WAKEUP_LOGGING
+#include "sleep_wakeup_logging.h"
+#endif
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
 
@@ -88,9 +95,13 @@
 //! Runs scheduler for some delay and do not send any command
 #define RSI_DELAY 6000000
 
+#ifdef FW_LOGGING_ENABLE
+//! Memory length of driver updated for firmware logging
+#define GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
+#else
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
-
+#endif
 //! Wlan task priority
 #define RSI_WLAN_TASK_PRIORITY 1
 
@@ -114,9 +125,13 @@
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 uint32_t wifi_connections, wifi_disconnections, rejoin_failures;
-uint32_t raising_time, falling_time, initial_time;
 uint32_t buffer[BUFF_SIZE];
 int32_t client_socket;
+#ifdef SLEEP_WAKEUP_LOGGING
+extern uint32_t gpio_rise_timestamp, gpio_fall_timestamp, initial_time;
+extern uint32_t g_gpio_sleep_log;
+extern uint32_t g_gpio_wakeup_log;
+#endif
 struct rsi_sockaddr_in server_addr;
 int32_t status       = RSI_SUCCESS;
 int32_t packet_count = 0;
@@ -124,6 +139,21 @@ struct rsi_sockaddr_in client_addr;
 //! Event map for gpio application
 uint32_t rsi_gpio_app_event_map;
 uint64_t ip_to_reverse_hex(char *ip);
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//!    Firmware logging configurations
+/*=======================================================================*/
+//! Firmware logging task defines
+#define RSI_FW_TASK_STACK_SIZE (512 * 2)
+#define RSI_FW_TASK_PRIORITY   1
+//! Firmware logging variables
+extern rsi_semaphore_handle_t fw_log_app_sem;
+rsi_task_handle_t fw_log_task_handle = NULL;
+//! Firmware logging prototypes
+void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
+void sl_fw_log_task(void);
+void sl_sleepwakeup_log_task(void);
+#endif
 //! Enumeration for states in application
 typedef enum rsi_wlan_app_state_e {
   RSI_WLAN_INITIAL_STATE       = 0,
@@ -341,15 +371,15 @@ void rsi_wakeup_gpio_event_scheduler()
 void rsi_give_wakeup_indication()
 {
   if (rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
-    raising_time = rsi_hal_gettickcount();
-    if (raising_time && falling_time) {
-      LOG_PRINT("S %ld\n", (raising_time - falling_time));
+    gpio_rise_timestamp = rsi_hal_gettickcount();
+    if (gpio_rise_timestamp && gpio_fall_timestamp) {
+      g_gpio_sleep_log = RSI_TRUE;
     }
   }
   if (!rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
-    falling_time = rsi_hal_gettickcount();
-    if (raising_time && falling_time) {
-      LOG_PRINT("W %ld\n", (falling_time - raising_time));
+    gpio_fall_timestamp = rsi_hal_gettickcount();
+    if (gpio_rise_timestamp && gpio_fall_timestamp) {
+      g_gpio_wakeup_log = RSI_TRUE;
     }
   }
 }
@@ -375,7 +405,10 @@ int32_t rsi_wlan_tcp_logging_stats()
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
-
+#ifdef FW_LOGGING_ENABLE
+  //Fw log component level
+  sl_fw_log_level_t fw_component_log_level;
+#endif
   while (1) {
     switch (rsi_wlan_app_cb.state) {
       case RSI_WLAN_INITIAL_STATE: {
@@ -386,7 +419,34 @@ int32_t rsi_wlan_tcp_logging_stats()
           return status;
         }
         LOG_PRINT("\r\nWireless Initialization Success\r\n");
+#ifdef FW_LOGGING_ENABLE
+        //! Set log levels for firmware components
+        sl_set_fw_component_log_levels(&fw_component_log_level);
 
+        //! Configure firmware logging
+        status = sl_fw_log_configure(FW_LOG_ENABLE,
+                                     FW_TSF_GRANULARITY_US,
+                                     &fw_component_log_level,
+                                     FW_LOG_BUFFER_SIZE,
+                                     sl_fw_log_callback);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Firmware Logging Init Failed\r\n");
+        } else {
+          LOG_PRINT("\r\n Firmware Logging Init success\r\n");
+        }
+
+#ifdef RSI_WITH_OS
+        //! Create firmware logging semaphore
+        rsi_semaphore_create(&fw_log_app_sem, 0);
+        //! Create firmware logging task
+        rsi_task_create((rsi_task_function_t)sl_fw_log_task,
+                        (uint8_t *)"fw_log_task",
+                        RSI_FW_TASK_STACK_SIZE,
+                        NULL,
+                        RSI_FW_TASK_PRIORITY,
+                        &fw_log_task_handle);
+#endif
+#endif
         //! initialize wakeup gpio application events
         rsi_wakeup_gpio_app_init_events();
 

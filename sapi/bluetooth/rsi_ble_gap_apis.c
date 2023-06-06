@@ -548,6 +548,80 @@ int32_t rsi_ble_connect(uint8_t remote_dev_addr_type, int8_t *remote_dev_addr)
 
 /*==============================================*/
 /**
+ * @fn         int32_t rsi_ble_enhance_connect_with_params(void* ble_enhance_conn_params)
+ * @brief      Connect to the remote BLE device with the user configured parameters.
+ * @pre        Call \ref rsi_wireless_init() before calling this API.
+ * @param[in]  ble_enhance_conn_params - BLE enhance connection parameter structure: \n
+ *             dev_addr_type - Address type of the device to connect \n
+ *                             0 - Public Address \n
+ *                             1 - Random Address \n \n 
+ *             dev_addr - Address of the device to connect \n \n
+ *             filter_policy - Initiater filter policy is used to determine whether the Filter Accept List is used. \n
+ *                             0 - Filter Accept List is not used to determine which advertiser to connect to. \n
+ *                             1 - Filter Accept List is used to determine which advertiser to connect to. \n \n
+ *             own_addr_type - own address type \n \n
+ *             le_scan_interval - LE Scan Interval : N=0xXXXX \n
+ *                             It is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. \n
+ *                             Range: 0x0004 to 0x4000 \n
+ *                             Time = N * 0.625 msec \n
+ *                             Time Range: 2.5 msec to 10 . 24 seconds \n \n
+ *             le_scan_window - LE Scan Window : N=0xXXXX \n
+ *                           Amount of time for the duration of the LE scan. LE_Scan_Window must be less than or equal to LE_Scan_Interval \n
+ *                           Range: 0x0004 to 0x4000 \n
+ *                           Time = N * 0.625 msec \n
+ *                           Time Range: 2.5 msec to 10 . 24 seconds \n \n
+ *             conn_interval_min - Min Connection Interval : N=0xXXXX \n
+ *                                 Minimum value for the connection event interval, which must be greater than or equal to Conn_Interval_Max. \n
+ *                                 Range: 0x0006 to 0x0C80 \n
+ *                                 Time = N * 1.25 msec \n
+ *                                 Time Range: 7.5 msec to 4 seconds. \n
+ *                                 0x0000 - 0x0005 and 0x0C81 - 0xFFFF - Reserved for future use \n \n
+ *             conn_interval_max - Max Connection Interval : N=0xXXXX \n
+ *                                 Maximum value for the connection event interval, which must be greater than or equal to Conn_Interval_Min. \n
+ *                                 Range: 0x0006 to 0x0C80 \n
+ *                                 Time = N * 1.25 msec \n
+ *                                 Time Range: 7.5 msec to 4 seconds. \n
+ *                                 0x0000 - 0x0005 and 0x0C81 - 0xFFFF - Reserved for future use \n \n
+ *             conn_latency - Connection Latency : N = 0xXXXX \n
+ *                            Slave latency for the connection in number of connection events. \n
+ *                            Range: 0x0000 to 0x01F4 \n \n
+ *             supervision_tout - Supervision Timeout : N = 0xXXXX \n
+ *                                Supervision timeout for the LE Link. \n
+ *                                Range: 0x000A to 0x0C80 \n
+ *                                Time = N * 10 msec \n
+ *                                Time Range: 100 msec to 32 seconds \n
+ *                                0x0000 - 0x0009 and 0x0C81 - 0xFFFF - Reserved for future use \n \n
+ *             min_ce_length - Min Connection Event Length : N=0xXXXX \n
+ *                             The minimum length of connection event recommended for this LE connection. \n
+ *                             Range: 0x0000 to 0xFFFF \n
+ *                             Time = N * 0.625 msec \n \n
+ *             max_ce_length - Max Connection Event Length : N=0xXXXX \n
+ *                             The maximum length of connection event recommended for this LE connection. \n
+ *                             Range: 0x0000 to 0xFFFF \n
+ *                             Time = N * 0.625 msec \n \n
+ * @return     0 - Success \n
+ *             Non-Zero Value - Failure \n
+ *             If the return value is less than 0 \n
+ *             -4 - Buffer not available to serve the command \n
+ *             0x4E0C - Command disallowed \n
+ *             0x4046 - Invalid Arguments \n
+ * @note       Refer Error Codes section for above error codes \ref error-codes .
+ */
+
+int32_t rsi_ble_enhance_connect_with_params(void *ble_enhance_conn_params)
+{
+  rsi_ble_req_enhance_conn_t ble_enhance_conn = { 0 };
+
+  if (ble_enhance_conn_params != NULL) {
+    memcpy(&ble_enhance_conn,
+           (rsi_ble_req_enhance_conn_t *)ble_enhance_conn_params,
+           sizeof(rsi_ble_req_enhance_conn_t));
+  }
+  return rsi_bt_driver_send_cmd(RSI_BLE_REQ_CONN_ENHANCE, &ble_enhance_conn, NULL);
+}
+
+/*==============================================*/
+/**
  * @fn         int32_t rsi_ble_connect_cancel(int8_t *remote_dev_address)
  * @brief      Cancel the connection to the remote BLE device. This is a blocking API. \n
  *             A received event \ref rsi_ble_on_disconnect_t indicates disconnect complete.
@@ -767,6 +841,7 @@ int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capabil
  * @param[in]  remote_dev_address -  This is the remote device address
  * @param[in]  reason - This is the reason for SMP Pairing Failure \n
  *                            0x05 - Pairing Not Supported \n
+ *                            0x08 - Unspecified Reason \n
  *                            0x09 - Repeated Attempts \n
  * @return     0 - Success \n
  *             Non-Zero Value - Failure \n
@@ -1734,7 +1809,7 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, uin
  *              Default Value for BLE Tx Power Index is 31, The range for the BLE Tx Power Index is 1 to 75 (0, 32 indexes are invalid) \n
  *                      1 - 31    BLE - 0DBM Mode.  \n
  *                     33 - 63    BLE - 10DBM Mode. \n
- *                     64 - 75    BLE - HP Mode.    \n
+ *                     64 - 79    BLE - HP Mode.    \n
  *              Currently this API is supports only BLE LP mode . i.e. 1 to  63 BLE LP MODE \n
  *              #define RSI_BLE_PWR_INX_DBM  1  indicate tx_power in dBm \n
  *              tx_power in dBm (-8dBm to 15 dBm) \n
@@ -1787,7 +1862,7 @@ int32_t rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8
  *              Default Value for BLE Tx Power Index is 31, The range for the BLE Tx Power Index is 1 to 75 (0, 32 indexes are invalid) \n
  *                      1 - 31    BLE - 0DBM Mode.  \n
  *                     33 - 63    BLE - 10DBM Mode. \n
- *                     64 - 75    BLE - HP Mode.    \n
+ *                     64 - 79    BLE - HP Mode.    \n
  *              Currently this API is supports only BLE LP mode . i.e. 1 to  63 BLE LP MODE \n
  *              #define RSI_BLE_PWR_INX_DBM  1  indicate tx_power in dBm \n
  *              tx_power in dBm (-8dBm to 15 dBm) \n
@@ -1818,5 +1893,430 @@ int32_t rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t
                                 &prop_protocol_ble_bandedge_tx_power,
                                 NULL);
 }
+/** @addtogroup BT-LOW-ENERGY5
+* @{
+*/
 
+/*========================================================*/
+/**
+ * @fn			   int32_t rsi_ble_get_max_no_of_supp_adv_sets(uint8_t *resp)
+ * @brief		   request to the controller to know the maximum no.of supporting advertising sets
+ * @param[in]  none
+ * @param[out] resp - Number of Advertising sets supported ,filled by the controller. \n Possible values of Number of Advertising sets supported : 0x01 to 0xF0
+ * @return      0   =  success \n
+ *             !0   = failure \n
+ * @section    description 
+ * This function requests the controller to know the maximum no.of supporting advertising sets
+ * @note : The number of advertising sets that can be supported is not fixed and it can be configured through the Opermodes
+ */
+int32_t rsi_ble_get_max_no_of_supp_adv_sets(uint8_t *resp)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_GET_AE_MAX_NO_OF_ADV_SETS;
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, resp);
+}
+
+/*========================================================*/
+/**
+ * @fn			   int32_t rsi_ble_get_max_adv_data_len(uint8_t *resp)
+ * @brief		   request to the controller to know the maximum supporting advertising data length
+ * @param[in]  none
+ * @param[out] resp - filled by the controller \n 
+ *                    Possible values of Maximum Advertising Data Length : 0x001F to 0x0672 \n
+ * @return     0   =  success \n
+ *            !0   = failure \n
+ * @section description
+ * This function requests the controller to know the maximum supporting advertising data length
+ */
+int32_t rsi_ble_get_max_adv_data_len(uint8_t *resp)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_GET_AE_MAX_ADV_DATA_LEN;
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, resp);
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_ble_set_ae_set_random_address(uint8_t handle, uint8_t *rand_addr)
+ * @brief      sets the ae set random address
+ * @param[in]  handle  - Advertising_Handle : Used to identify an advertising set
+ * @param[in]  rand_addr - Random_Address  : Random device address , may be either of static address or Private address
+ * @return     0   =  success \n
+ *            !0   = failure \n
+ * @section description
+ * This function is used by the host to set the random device address specified by the Random_Address_parameter
+ */
+int32_t rsi_ble_set_ae_set_random_address(uint8_t handle, uint8_t *rand_addr)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_SET_RANDOM_ADDR;
+
+  ae_pdu.pdu_type.ae_random_address.adv_handle = handle;
+  memcpy(&ae_pdu.pdu_type.ae_random_address.addr, rand_addr, RSI_DEV_ADDR_LEN);
+
+  //! Send set ae set random address command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*========================================================*/
+/**
+ * @fn			    int32_t rsi_ble_set_ae_params(void *ble_ae_params, int8_t *sel_tx_pwr)
+ * @brief		    request the local device to set the extended advertising parameters
+ * @param[in]   ble_ae_params - Extended Advertising Parameters command data to be sent is filled in this
+ * @param[out]  sel_tx_power - Selected_TX_Power, selected output tx power, Its units are in dBm and Range : -127 to +20
+ * @ @return    0  =  success \n
+ *             !0  = failure \n
+ * @section description
+ * This function requests the local device to set Extended Advertising Parameters
+ */
+int32_t rsi_ble_set_ae_params(void *ble_ae_params, int8_t *sel_tx_pwr)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_PARAMS;
+  memcpy(&ae_pdu.pdu_type.ae_adv_params, (rsi_ble_ae_adv_params_t *)ble_ae_params, sizeof(rsi_ble_ae_adv_params_t));
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, sel_tx_pwr);
+}
+
+/*========================================================*/
+/**
+ * @fn			   int32_t rsi_ble_set_ae_data(void *ble_ae_data)
+ * @brief		   request the local device to set the AE advertiser data used in advertising PDUs
+ * @param[in]  ble_ae_data - Extended Advertising data to be sent is filled in this 
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function requests the local device to set the AE advertiser data used in advertising PDUs
+ * @note       Refer to Bluetooth spec 5.3 for possible combinations ae_adv/scanresp data can be set for .
+ */
+int32_t rsi_ble_set_ae_data(void *ble_ae_data)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_DATA;
+  memcpy(&ae_pdu.pdu_type.ae_adv_or_scn_rsp_data, (rsi_ble_ae_data_t *)ble_ae_data, sizeof(rsi_ble_ae_data_t));
+
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_start_ae_advertising(void *adv_enable)
+ * @brief      request the local device to enable or disable an advertising set using the advertising sets identified by the Advertising_Handle[i] parameter.
+ * @param[in]  adv_enable - data to be sent is filled in this
+ * @return      0  =  success \n
+ *             !0 = failure \n
+ * @section description
+ * This function requests the local device to enable or disable an advertising set using the advertising sets identified by the Advertising_Handle[i] parameter.
+ */
+int32_t rsi_ble_start_ae_advertising(void *adv_enable)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_ENABLE;
+  memcpy(&ae_pdu.pdu_type.ae_adv_enable, (rsi_ble_ae_adv_enable_t *)adv_enable, sizeof(rsi_ble_ae_adv_enable_t));
+
+  //! Send start ae advertise command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_app_adv_set_clear_or_remove(uint8_t type, uint8_t handle)
+ * @brief      request the local device to clear or remove the advertising sets based on the type specified
+ * @param[in]  type - Specifies whether to remove or clear the advertising sets.
+ *             {1}  - clear
+ *             {2}  - remove
+ * @param[in]  handle - Advertising_Handle - Used to identify an Advertising set. Possible Values : 0x00 to 0xEF
+ * @return     0  =  success \n
+ *            !0 = failure \n
+ * @section description
+ * This function requests the local device to clear or remove an advertising set from the controller based on the type specified
+ */
+int32_t rsi_ble_app_adv_set_clear_or_remove(uint8_t type, uint8_t handle)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode                                 = RSI_BLE_ADV_SET_CLEAR_OR_REMOVE;
+  ae_pdu.pdu_type.ae_adv_set_clear_or_remove.type       = type;
+  ae_pdu.pdu_type.ae_adv_set_clear_or_remove.adv_handle = handle;
+
+  //! Send adv set (clear/remove) command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_app_set_periodic_ae_params(void *periodic_adv_params)
+ * @brief      request the local device to set periodic advertising params
+ * @param[in]  periodic_adv_params - Parameters for Periodic Advertising to be filled here.
+ * @return      0  =  success \n
+ *             !0 = failure \n
+ * @section description
+ * This function is used by the host to set the parameters for periodic advertising
+ */
+int32_t rsi_ble_app_set_periodic_ae_params(void *periodic_adv_params)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_PERIODIC_ADV_PARAMS;
+  memcpy(&ae_pdu.pdu_type.ae_periodic_adv_params,
+         (rsi_ble_ae_periodic_adv_params_t *)periodic_adv_params,
+         sizeof(rsi_ble_ae_periodic_adv_params_t));
+
+  //! Send ae periodic adv params set command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_app_set_periodic_ae_enable(uint8_t enable, uint8_t handle)
+ * @brief      request the Controller to enable or disable the periodic advertising
+ * @param[in]  enable - Enable, BIT map for Enable \n
+ * 
+ *                0      -  Enable Periodic Advertising  \n               
+ *                1      -  Include the ADI field in AUX_SYNC_IND PDUs \n
+ *   
+ *             handle - Advertising_Handle - Used to Identify an Advertsing Set \n
+ * @return      0  =  success \n
+ *             !0 = failure \n
+ * @section description
+ * This function requests the Controller to enable or disable the periodic advertising for the advertising set specified by the Advertising_Handle parameter
+ */
+int32_t rsi_ble_app_set_periodic_ae_enable(uint8_t enable, uint8_t handle)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode                             = RSI_BLE_SET_AE_PERIODIC_ADV_ENABLE;
+  ae_pdu.pdu_type.ae_periodic_adv_enable.enable     = enable;
+  ae_pdu.pdu_type.ae_periodic_adv_enable.adv_handle = handle;
+
+  //! Send ae periodic adv enable command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_ae_set_scan_params(void *ae_scan_params)
+ * @brief      sets the extended scan parameters to be used on the advertising physical channels.
+ * @param[in]  ae_scan_params - Extended scan Parameters data would be filled here
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function sets the extended scan parameters to be used on the advertising physical channels.
+ */
+int32_t rsi_ble_ae_set_scan_params(void *ae_scan_params)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_SCAN_PARAMS;
+  memcpy(&ae_pdu.pdu_type.ae_scan_params,
+         (rsi_ble_ae_set_scan_params_t *)ae_scan_params,
+         sizeof(rsi_ble_ae_set_scan_params_t));
+
+  //! Send ae set scan params command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_ae_set_scan_enable(void *ae_scan_enable)
+ * @brief      request the local device to enable or disable scanning for both legacy and extended advertising PDUs
+ * @param[in]  ae_scan_enable - Extended Scan Enable command Parameters would be filled here 
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function requests the local device to  enable or disable scanning for both legacy and extended advertising PDUs 
+ */
+int32_t rsi_ble_ae_set_scan_enable(void *ae_scan_enable)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_SCAN_ENABLE;
+  memcpy(&ae_pdu.pdu_type.ae_scan_enable,
+         (rsi_ble_ae_set_scan_enable_t *)ae_scan_enable,
+         sizeof(rsi_ble_ae_set_scan_enable_t));
+
+  //! Send start ae  scanning command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_ble_ae_set_periodic_sync
+ * @brief      used to synchronize with a periodic advertising train from an advertiser and begin receiving periodic advertising packets.
+ * @param[in]  type - Specifies whether to create/terminate/cancel the periodic advertising sync \n
+ *              {1} - CREATE_SYNC \n
+ *              {2} - CREATE_SYNC_CANCEL \n
+ *              (3) - TERMINATE_SYNC \n
+ * @param[in]  periodic_sync_data - Periodic Advertising Create Sync Command Parameters filled here \n
+ * @return      0  =  success \n
+ *             !0 = failure \n
+ * @section description
+ * This function used to synchronize with a periodic advertising train from an advertiser and begin receiving periodic advertising packets. It performs action based on the type specified
+ */
+int32_t rsi_ble_ae_set_periodic_sync(uint8_t type, void *periodic_sync_data)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_SET_AE_PERIODIC_SYNC;
+
+  ae_pdu.pdu_type.ae_periodic_sync.type = type;
+
+  if (type == BLE_AE_PERIODIC_SYNC_CREATE) {
+
+    memcpy(&ae_pdu.pdu_type.ae_periodic_sync.sync_type.create_sync,
+           (rsi_ble_ae_set_periodic_adv_create_sync_t *)periodic_sync_data,
+           sizeof(rsi_ble_ae_set_periodic_adv_create_sync_t));
+
+    LOG_PRINT("size of create struct is %d \n ", sizeof(rsi_ble_ae_set_periodic_adv_create_sync_t));
+  } else if (type == BLE_AE_PERIODIC_SYNC_TERMINATE) {
+
+    memcpy(&ae_pdu.pdu_type.ae_periodic_sync.sync_type.terminate_sync,
+           (rsi_ble_ae_set_periodic_adv_terminate_sync_t *)periodic_sync_data,
+           sizeof(rsi_ble_ae_set_periodic_adv_terminate_sync_t));
+    LOG_PRINT("size of terminate struct is %d \n ", sizeof(rsi_ble_ae_set_periodic_adv_create_sync_t));
+  } else if (type == BLE_AE_PERIODIC_SYNC_CREATE_CANCEL) {
+    //nothing to fo
+  }
+
+  //! Send periodic sync command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_ae_dev_to_periodic_list(void *dev_to_list)
+ * @brief      used to add,remove or clear the device to the periodic advertiser list
+ * @param[in]  dev_to_list - holds the data of the Device to be added to periodic Advertising list
+ * @return     0  =  success \n
+ *            !0 = failure \n
+ * @section description
+ * This function used to add,remove or clear the device to the periodic advertiser list
+ */
+int32_t rsi_ble_ae_dev_to_periodic_list(void *dev_to_list)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_AE_DEV_TO_PERIODIC_LIST;
+  memcpy(&ae_pdu.pdu_type.dev_to_periodic_list,
+         (rsi_ble_ae_dev_to_periodic_list_t *)dev_to_list,
+         sizeof(rsi_ble_ae_dev_to_periodic_list_t));
+
+  //! Send dev to periodic list cmd
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_ae_read_periodic_adv_list_size(uint8_t *resp)
+ * @brief      used to read the periodic advertiser list size
+ * @param[in]  none
+ * @param[out] resp - stores the value of total number of Periodic Advertiser list entries/ advertinsing list size filled by the controller
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function used to read the periodic advertiser list size
+ */
+int32_t rsi_ble_ae_read_periodic_adv_list_size(uint8_t *resp)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_AE_READ_PERIODIC_LIST_SIZE;
+  //! Send read periodic adv list size cmd
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, resp);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_extended_connect_with_params(void *ble_extended_conn_params)
+ * @brief      This command is used to create an ACL connection, with the local device in the Central role, to a connectable advertiser.
+ * @param[in]  ble_extended_conn_params, It holds the data of the Parameters required to connect with the peer device.
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function used to used to create an ACL connection, with the local device in the Central role, to a connectable advertiser.
+ */
+
+int32_t rsi_ble_extended_connect_with_params(void *ble_extended_conn_params)
+{
+  rsi_ble_ae_pdu_t ae_pdu = { 0 };
+
+  ae_pdu.cmd_sub_opcode = RSI_BLE_AE_EXTENDED_CREATE_CONNECT;
+  memcpy(&ae_pdu.pdu_type.extended_create_conn,
+         (rsi_ble_ae_extended_create_connect_t *)ble_extended_conn_params,
+         sizeof(rsi_ble_ae_extended_create_connect_t));
+
+  //! Send start ae  scanning command
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_AE, &ae_pdu, NULL);
+}
+
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_read_transmit_power(rsi_ble_tx_pwr_t *resp)
+ * @brief      used to read minimum and maximum transmit powers supported by the controller
+ * @param[in]  none
+ * @param[out] resp -  filled by the controller. Controller fills Minimum TX Power and Maximum TX power in this resp
+ *             Min_TX_Power : Units in dBm Ranges from -127 to +20 \n
+ *             Max_TX_Power : Units in dBm Ranges from -127 to +20 \n
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function used to read minimum and maximum transmit powers supported by the controller
+ */
+
+int32_t rsi_ble_read_transmit_power(void *resp)
+{
+  //! Send read transmit power cmd
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_READ_TRANSMIT_POWER, NULL, (rsi_ble_tx_pwr_t *)resp);
+}
+
+/*==============================================*/
+/**
+ * @fn          int32_t rsi_ble_read_rf_path_compensation(rsi_ble_query_rf_path_comp_t *resp)
+ * @brief       used to read rf path compensation value parameters used in the Tx power level and RSSI calculation
+ * @param[in]   none
+ * @param[out]  resp - filled by the controller. Controller fills RF_TX_Path_compensation_Value and RF_RX_Path_compensation_Value \n
+ *              RF_TX_Path_compensation_Value - units in 0.1dB , Range :  -128.0 dB (0xFB00) to 128.0 dB (0x0500) \n
+ *              RF_RX_Path_compensation_Value - units in 0.1dB , Range :  -128.0 dB (0xFB00) to 128.0 dB (0x0500) \n
+ * @return      0  =  success \n
+ *             !0  = failure \n
+ * @section description
+ * This function used to read rf path compensation value parameters used in the Tx power level and RSSI calculation
+ * */
+int32_t rsi_ble_read_rf_path_compensation(void *resp)
+{
+
+  //! Send read rf path compensation cmd
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_READ_RF_PATH_COMP, NULL, (rsi_ble_query_rf_path_comp_t *)resp);
+}
+/*==============================================*/
+/**
+ * @fn         int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_path_value)
+ * @brief      used to indicate the RF path gain or loss between the RF transceiver and the antenna contributed by intermediate components
+ * @param[in]  tx_path_value - RF_TX_Path_Compensation_Value, rx_path_value - RF_RX_Path_Compensation_Value \n
+ *             A positive value means a net RF path gain and a negative value means a net RF path loss \n
+ *             RF_TX_Path_compensation_Value : units in 0.1dB , Range :  -128.0 dB (0xFB00) to 128.0 dB (0x0500) \n
+ *             RF_RX_Path_compensation_Value : units in 0.1dB , Range :  -128.0 dB (0xFB00) to 128.0 dB (0x0500) \n
+ * @return     0  =  success \n
+ *            !0  = failure \n
+ * @section description
+ * This function used to indicate the RF path gain or loss between the RF transceiver and the antenna contributed by intermediate components. 
+ * */
+int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_path_value)
+{
+  rsi_ble_write_rf_path_comp_t rf_path_comp = { 0 };
+
+  rf_path_comp.tx_path_value = tx_path_value;
+  rf_path_comp.rx_path_value = rx_path_value;
+  //! Send write rf path compensation cmd
+  return rsi_bt_driver_send_cmd(RSI_BLE_CMD_WRITE_RF_PATH_COMP, &rf_path_comp, NULL);
+}
+/** @} */
 #endif

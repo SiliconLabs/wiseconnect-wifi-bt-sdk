@@ -114,6 +114,12 @@
 
 // To enable EAP-LEAP mode
 #define FEAT_EAP_LEAP_IN_COEX BIT(8)
+
+// To hide sensitive information (PSK, PMK, EAP credentials)
+#define FEAT_HIDE_PSK_CREDENTIALS BIT(9)
+
+//To enable high SSL streaming throughput
+#define SSL_HIGH_STREAMING_BIT BIT(10)
 /*=========================================================================*/
 
 // BT feature bit map
@@ -418,34 +424,64 @@
 // To enable http otaf support
 #define EXT_FEAT_HTTP_OTAF_SUPPORT BIT(18)
 
-#ifdef CHIP_9117
+#ifdef CHIP_9117B0
+
+#define EXT_FEAT_352K_M4SS_320K     0
+#define RAM_LEVEL_NWP_BASIC_MCU_ADV EXT_FEAT_352K_M4SS_320K
+
+// To enable 416K memory for TA
+#define EXT_FEAT_416K_M4SS_256K         BIT(21)
+#define RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM EXT_FEAT_416K_M4SS_256K
+
+// To enable 480K memory for TA
+#define EXT_FEAT_480K_M4SS_192K     BIT(20)
+#define RAM_LEVEL_NWP_ADV_MCU_BASIC EXT_FEAT_480K_M4SS_192K
+
+#ifndef RSI_M4_INTERFACE
+// To enable 672K memory for TA; only supported in WiSeConnect
+#define EXT_FEAT_672K_M4SS_0K      (BIT(20) | BIT(21))
+#define RAM_LEVEL_NWP_ALL_MCU_ZERO EXT_FEAT_672K_M4SS_0K
+#endif
+
+#elif (defined CHIP_9117)
+
+#define EXT_FEAT_256K_MODE              0
+#define RAM_LEVEL_NWP_BASIC_MCU_ADV     EXT_FEAT_256K_MODE
 
 // To enable 448K memory for TA
-#define EXT_FEAT_448K_M4SS_256K BIT(21)
+#define EXT_FEAT_448K_M4SS_256K         BIT(21)
+#define RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM EXT_FEAT_448K_M4SS_256K
+
 // To enable 512K memory for TA
-#define EXT_FEAT_512K_M4SS_192K BIT(20)
+#define EXT_FEAT_512K_M4SS_192K         BIT(20)
+#define RAM_LEVEL_NWP_ADV_MCU_BASIC     EXT_FEAT_512K_M4SS_192K
 
 #ifndef RSI_M4_INTERFACE
 // To enable 704K memory for TA; only supported in WiSeConnect
-#define EXT_FEAT_704K_M4SS_0K (BIT(20) | BIT(21))
+#define EXT_FEAT_704K_M4SS_0K      (BIT(20) | BIT(21))
+#define RAM_LEVEL_NWP_ALL_MCU_ZERO EXT_FEAT_704K_M4SS_0K
 #endif
 
-#define EXT_FEAT_256K_MODE 0
 #else //defaults
 
-// To enable 320K memory for TA
-#define EXT_FEAT_320K_MODE BIT(20)
 // To enable 256K memory for TA
-#define EXT_FEAT_256K_MODE BIT(21)
+#define EXT_FEAT_256K_MODE              BIT(21)
+#define RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM EXT_FEAT_256K_MODE
+
+// To enable 320K memory for TA
+#define EXT_FEAT_320K_MODE              BIT(20)
+#define RAM_LEVEL_NWP_ADV_MCU_BASIC     EXT_FEAT_320K_MODE
+
 // To enable 384K memory for TA
-#define EXT_FEAT_384K_MODE (BIT(20) | BIT(21))
+#define EXT_FEAT_384K_MODE              (BIT(20) | BIT(21))
+#define RAM_LEVEL_NWP_ALL_MCU_ZERO      EXT_FEAT_384K_MODE
 
 #endif
 
 // To enable CRYSTAL for TA
 // For 9117 EVK set EXT_FEAT_XTAL_CLK_ENABLE to BIT(22)
 #ifdef CHIP_9117
-#ifdef BRD4325A
+#if ((defined BRD4325A) || (defined EXP_BOARD))
 #define EXT_FEAT_XTAL_CLK_ENABLE BIT(23)
 #else
 #define EXT_FEAT_XTAL_CLK_ENABLE BIT(22)
@@ -520,10 +556,11 @@
 
 /*=========================================================================*/
 // Feature enable paramters
-#define RSI_FEAT_FRAME_PREAMBLE_DUTY_CYCLE  BIT(0)
-#define RSI_FEAT_FRAME_DISABLE_DPD          BIT(3)
-#define RSI_FEAT_FRAME_LP_CHAIN             BIT(4)
-#define RSI_FEAT_FRAME_IN_PACKET_DUTY_CYCLE BIT(5)
+#define RSI_FEAT_FRAME_PREAMBLE_DUTY_CYCLE       BIT(0)
+#define RSI_FEAT_FRAME_PERMIT_UNDESTINED_PACKETS BIT(1)
+#define RSI_FEAT_FRAME_DISABLE_DPD               BIT(3)
+#define RSI_FEAT_FRAME_LP_CHAIN                  BIT(4)
+#define RSI_FEAT_FRAME_IN_PACKET_DUTY_CYCLE      BIT(5)
 /*=========================================================================*/
 
 // BAND COMMAND PARAMETERS OPTIONS
@@ -1670,10 +1707,24 @@ typedef struct rsi_rsp_csi_record_s {
 
 // Structure for incoming CSI data payload
 typedef struct rsi_rsp_csi_data_s {
+  /** Incoming MAC address in payload*/
+  uint8_t mac_address[6];
+  uint8_t reserved[2];
+  /** Incoming TSF of frame in payload*/
+  uint32_t tsf;
 #define CSI_MAX_NUM_RECORDS 56
-  /** Incoming CSI data payload. Refer to \ref rsi_rsp_csi_record_s*/
+  /** Incoming CSI data in payload. Refer to \ref rsi_rsp_csi_record_s*/
   rsi_rsp_csi_record_t rsi_rsp_csi_record[CSI_MAX_NUM_RECORDS];
 } rsi_rsp_csi_data_t;
+
+typedef struct rsi_calib_read_s {
+#define READ_FROM_EFUSE 0
+#define READ_FROM_FLASH 1
+  uint8_t target;
+  uint8_t reserved0[3];
+  int8_t gain_offset[3];
+  int8_t xo_ctune;
+} rsi_calib_read_t;
 
 /******************************************************
  * *                    Structures
@@ -1773,11 +1824,19 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
                                                                const uint8_t *buffer,
                                                                const uint16_t length));
 int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz);
-int32_t rsi_calib_write(uint8_t target, uint32_t flags, int8_t gain_offset, int32_t freq_offset);
+int32_t rsi_calib_read(uint8_t target, rsi_calib_read_t *calib_data);
+int32_t rsi_calib_write(uint8_t target,
+                        uint32_t flags,
+                        int8_t gain_offset_low,
+                        int8_t gain_offset_mid,
+                        int8_t gain_offset_high,
+                        int8_t xo_ctune);
 int16_t rsi_parse(void *address, uint16_t length, uint8_t *value);
 int32_t rsi_wlan_11ax_config(uint8_t gi_ltf);
 int32_t rsi_wlan_csi_config_async(uint8_t enable,
                                   uint32_t periodicity,
+                                  uint8_t num_of_mac_addr,
+                                  uint8_t (*mac_addr)[6],
                                   void (*wlan_csi_data_response_handler)(uint16_t status,
                                                                          uint8_t *buffer,
                                                                          const uint32_t length));

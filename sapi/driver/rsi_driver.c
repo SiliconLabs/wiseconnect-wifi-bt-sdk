@@ -28,7 +28,7 @@
  * @fn			void rsi_interrupt_handler(void)
  * @brief		Handle the interrupt coming from the module. 
  * @param[in]	void 
- * @return	    void 
+ * @return	  Void 
  */
 /// @private
 void rsi_interrupt_handler(void)
@@ -51,7 +51,7 @@ void rsi_interrupt_handler(void)
  * @fn			void rsi_mask_ta_interrupt(void)
  * @brief		Mask the TA interrupt. 
  * @param[in]	void 
- * @return	    void
+ * @return	    Void
  */
 /// @private
 void rsi_mask_ta_interrupt(void)
@@ -68,7 +68,7 @@ void rsi_mask_ta_interrupt(void)
  * @fn			void rsi_unmask_ta_interrupt(void)
  * @brief		Unmask the TA interrupt. 
  * @param[in]	void 
- * @return	    void
+ * @return	    Void
  */
 /// @private
 void rsi_unmask_ta_interrupt(void)

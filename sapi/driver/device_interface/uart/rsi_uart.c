@@ -53,11 +53,15 @@ rsi_linux_app_cb_t rsi_linux_app_cb;
 */
 /*==============================================*/
 /**
-*/
+ * @brief       Reads response for every command and data from the module.
+ * @param[in]   pkt_buffer - pointer to buffer to which packet has to read
+ * @return        0                - Success \n
+
+ */
 
 int16_t rsi_frame_read(uint8_t *pkt_buffer)
 {
-
+  // API to read packet via UART interface
   memcpy(pkt_buffer, uart_rev_buf + 4, desired_len);
 
   return 0;
@@ -65,13 +69,20 @@ int16_t rsi_frame_read(uint8_t *pkt_buffer)
 
 /*==============================================*/
 /**
+ * @brief       Process a command to the wlan module.
+  * @param[in]   uFrameDscFrame  -  Frame descriptor
+  * @param[in]   payloadparam    -  Pointer to the command payload parameter structure
+  * @param[in]   size_param      -  Size of the payload for the command
+  * @return       0              - SUCCESS \n
+  *             < 0              - FAILURE \n
   */
 int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam, uint16_t size_param)
 {
   int16_t retval = 0;
 
-  // API to write packet to UART interface
+  // API to send packet via UART interface
   retval = rsi_uart_send((uint8_t *)uFrameDscFrame, (size_param + RSI_FRAME_DESC_LEN));
+  UNUSED_PARAMETER(payloadparam); //This statement is added only to resolve compilation warnings, value is unchanged
   while (huart1.gState != HAL_UART_STATE_READY)
     ;
   while (huart1.TxXferCount != 0)
@@ -81,10 +92,10 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
 
 /*==============================================*/
 /**
- * @brief       Initialize the UART interface module.
+ * @brief       Initialize the UART interface of the module
  * @param[in]   void
  * @return      0              - Success \n
- *              Negative Value - Failure
+ *              Non-Zero Value - Failure
  */
 
 int32_t rsi_uart_init(void)
@@ -104,10 +115,9 @@ int32_t rsi_uart_init(void)
 
 /*==============================================*/
 /**
- * @brief       UART de-initialization
+ * @brief       De-initialize the UART interface of the module
  * @param[in]   void
  * @return      0              - Success \n
- *              Negative Value - Failure
  */
 
 int32_t rsi_uart_deinit(void)

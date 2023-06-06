@@ -155,8 +155,8 @@
 #ifndef BIN_FILE
 #define BIN_FILE 1
 #endif
-#ifndef ARRAY
-#define ARRAY 2
+#ifndef BT_ARRAY
+#define BT_ARRAY 2
 #endif
 #ifndef SD_BIN_FILE
 #define SD_BIN_FILE 3

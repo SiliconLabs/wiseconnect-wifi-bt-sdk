@@ -212,7 +212,7 @@ int32_t application(void)
   jsonStruct_t temperature_handler;
   jsonStruct_t window_actuator;
 #if defined(FLOAT_PRINT_BYPASS)
-  char *temperature1[9] = { 0 };
+  char temperature1[9] = { 0 };
 #endif
 #ifdef RSI_M4_INTERFACE
   uint32_t xtal_enable = 1;

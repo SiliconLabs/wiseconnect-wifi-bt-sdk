@@ -273,6 +273,38 @@ Using rsi_calib_write command the calibrated XO Ctune and calculated gain offset
    rsi_calib_write=<target>,<flags>,<gain_offset>,<xo_ctune>
    ```
 
+**Parameters**
+
+   | Parameter  | Description |                 |          |
+   | :---       | :---        | :---            | :---     |
+   | target     | Value       | Macro         | Description |
+   |            |   0         | BURN_INTO_EFUSE | Burns calibration data to EFuse |
+   |            |   1         | BURN_INTO_FLASH | Burns calibration data to Flash |
+   | flags      |  BIT        | Macro                  | Description |
+   |            |   0         |	                      |  Reserved for future use
+   |            |   1         |	BURN_FREQ_OFFSET      |	1 - Update XO Ctune to calibration data 
+   ||||	0 - Skip XO Ctune update
+   |            |   2         |	SW_XO_CTUNE_VALID     |	1 - Use XO Ctune provided as argument to update calibration data  
+   ||||	0 - Use XO Ctune value as read from hardware register
+   |            |   3         |	BURN_XO_FAST_DISABLE  |     Used to apply patch for cold temperature issue (host interface detection) observed on CC0/CC1 modules. \ref appendix
+   |            |   4         |  BURN_GAIN_OFFSET_LOW  | 1 - Update gain offset for low sub-band (2 GHz)  
+   ||||	0 - Skip low sub-band gain-offset update
+   |            |   5         |  BURN_GAIN_OFFSET_MID  | 1 - Update gain offset for mid sub-band (2 GHz)  
+   ||||	0 - Skip mid sub-band gain-offset update
+   |            |   6         |  BURN_GAIN_OFFSET_HIGH | 1 - Update gain offset for high sub-band (2 GHz)  
+   ||||	0 - Skip high sub-band gain-offset update
+   |            |   31-4      |                        |	Reserved for future use
+   |gain_offset_low | gain_offset as observed in dBm in channel-1 | |
+   |gain_offset_mid | gain_offset as observed in dBm in channel-6 | |
+   |gain_offset_high| gain_offset as observed in dBm in channel-11 | |
+   | xo_ctune   | This field allows user to directly update xo_ctune value to calibration data bypassing the freq offset loop, valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. |   | The range of xo_ctune is [0, 255], and the typical value is 80 |
+   |
+
+> **Note:** For RS9116 Rev 1.5, the user needs to calibrate gain-offset for low sub-band (channel-1), mid sub-band (channel-6), and high sub-band (channel-11) and input the three gain-offsets to this API and set the corresponding flags to validate it. However, for RS9116 Rev 1.4, the user needs to calibrate gain-offset for low sub-band (channel-1) only and input the three gain-offsets to this API with dummy values for mid and high gain offsets and set the flag for low gain offset only to validate it. \n
+
+> **Precondition:** 
+rsi_freq_offset command needs to be called before this command when xo ctune value from hardware register is to be used. 
+
 Gain offset can be calculated using the following equation :
 
    gain_offset = observed_power_level + cable_loss - configured_power_level
@@ -281,40 +313,20 @@ Example :
 
    gain_offset = 14.3 + 1.7 (assuming) - 18 = -2 dBm
 
-This command writes to Flash, gain offset as -2 dBm and XO Ctune value as it reads from hardware.
- 
-To update gain offset as -2 dBm and xo ctune as per the value in hardware register into flash use the command below.
+For 2 GHz band, the gain offset has to calibrated for three channels, viz. channel-1, channel-6, channel-11. After the three gain offsets are calculated these can be written to Flash using the `rsi_calib_write` command. the command to update gain offsets as -2, 2, 1 dBm for channel-1, channel-6, channel-11, and XO Ctune value as it reads from hardware is:
 
-   `rsi_calib_write=1,3,-2 <CR><LF>`
+   `rsi_calib_write=1,114,-2,2,1<CR><LF>`
 
 > NOTE : 
 > The gain_offset can be negative but not a floating value.
 > Once the frequency offset is corrected after multiple tries, rsi_calib_write commands has to be given once for all to write the values to flash.
 
-**Parameters**
+The application reads the updated calibration values for verification by using `rsi_calib_read` command and displays.
 
-   | Parameter  | Description |                 |          |
-   | :---       | :---        | :---            | :---     |
-   | target     | Value       | Macro         | Description |
-   |            |   0       | BURN_INTO_EFUSE | Burns calibration data to EFuse |
-   |            | 1       | BURN_INTO_FLASH | Burns calibration data to Flash |
-   | flags      |  BIT        | Macro         | Description |
-   |            | 0       | BURN_GAIN_OFFSET| 1 - Update gain offset to calibration data |
-   |            |             |                 | 0 - Skip gain offset update |
-   |            | 1       | BURN_FREQ_OFFSET| 1 - Update XO Ctune to calibration data |
-   |            |             |                 | 0 - Skip XO Ctune update |
-   |            | 2       | SW_XO_CTUNE_VALID | 1- Use XO Ctune provided as argument to update calibration data |
-   |            |             |                  | 0 -Use XO Ctune value as read from hardware register. |
-   |            | 7 -3      |                |   Reserved |
-   |gain_offset | gain offset as observed in dBm |    |     |  
-   | xo_ctune   | This field allows user to directly update xo_ctune value to calibration data bypassing the freq offset loop, valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. |   | The range of xo_ctune is [0, 255], and the typical value is 80 |
-
-**Precondition:**
-rsi_freq_offset command needs to be called before this command when xo ctune value from hardware register is to be used.
-
+![calib data](resources/readme/image_c11.png)
 
 ### Spectrum Analyzer Settings
-**Below are setting necessary to see Polar Graph Spectrum Analyzer settings**
+**Below are the necessary settings to see Polar Graph Spectrum Analyzer settings**
 1. Frequency channel → center frequency→ 2412MHz for channel1.
 
 2. SpanX scale → span→ 50MHz
@@ -323,7 +335,7 @@ rsi_freq_offset command needs to be called before this command when xo ctune val
 
 4. Trigger → RF Burst
 
-The frequency error section shows the amount of error that needs to be adjusted. Using freq_offset API and Calib_write API user should be able to adjust the frequency error.
+The frequency error section shows the error that needs to be adjusted. Using `rsi_freq_offset` and `rsi_calib_write` command user should be able to adjust the frequency error.
 
 
 ### Acronyms and Abbreviations

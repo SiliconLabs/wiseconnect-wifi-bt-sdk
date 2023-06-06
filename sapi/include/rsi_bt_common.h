@@ -72,6 +72,7 @@
 
 #define RSI_BT_STATE_NONE          0
 #define RSI_BT_STATE_OPERMODE_DONE 1
+#define LOWERNIBBLE                0x0F
 /******************************************************
  * *                    Constants
  * ******************************************************/

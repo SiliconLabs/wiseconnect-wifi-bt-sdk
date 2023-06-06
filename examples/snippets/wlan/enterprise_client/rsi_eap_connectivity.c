@@ -225,7 +225,9 @@ int32_t rsi_eap_connectivity()
     rsi_delay_ms(1000);
 
     do {
+#ifndef RSI_WITH_OS
       rsi_wireless_driver_task();
+#endif
     } while (!ping_rsp_received);
   }
 

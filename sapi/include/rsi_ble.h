@@ -31,13 +31,20 @@
 #define RSI_BLE_STATE_DSICONNECT 0x02
 #define RSI_BLE_MAX_REQ_LIST     0x05
 
+#define RSI_BLE_LEGACY_CMD_USED  (1 << 0)  //BIT(0)
+#define RSI_BLE_ADV_EXT_CMD_USED (1 << 1)  //BIT(1)
+#define RSI_BLE_CHECK_CMD        (1 << 15) //BIT(15)
+
 #define SI_LE_BUFFER_AVL         0
 #define SI_LE_BUFFER_FULL        1
 #define SI_LE_BUFFER_IN_PROGRESS 2
 
 #define BLE_VENDOR_RF_TYPE_CMD_OPCODE               0xFC14
 #define BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD 0xFC1B
-#define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS           1
+
+#define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS       1
+#define RSI_BLE_MAX_NUM_ADV_EXT_EVENT_CALLBACKS 0x08
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -45,6 +52,25 @@
 /******************************************************
  * *                   Enumerations
  * ******************************************************/
+// enumeration for BLE command request codes
+typedef enum RSI_BLE_CMD_AE_opcode_e {
+  RSI_BLE_GET_AE_MAX_NO_OF_ADV_SETS  = 0x0001,
+  RSI_BLE_GET_AE_MAX_ADV_DATA_LEN    = 0x0002,
+  RSI_BLE_SET_AE_SET_RANDOM_ADDR     = 0x0003,
+  RSI_BLE_SET_AE_PARAMS              = 0x0004,
+  RSI_BLE_SET_AE_DATA                = 0x0005,
+  RSI_BLE_SET_AE_ENABLE              = 0x006,
+  RSI_BLE_ADV_SET_CLEAR_OR_REMOVE    = 0x0007,
+  RSI_BLE_SET_AE_PERIODIC_ADV_PARAMS = 0x0008,
+  RSI_BLE_SET_AE_PERIODIC_ADV_ENABLE = 0x0009,
+  RSI_BLE_SET_AE_SCAN_PARAMS         = 0x000A,
+  RSI_BLE_SET_AE_SCAN_ENABLE         = 0x000B,
+  RSI_BLE_SET_AE_PERIODIC_SYNC       = 0x000C,
+  RSI_BLE_AE_DEV_TO_PERIODIC_LIST    = 0x000D,
+  RSI_BLE_AE_READ_PERIODIC_LIST_SIZE = 0x000E,
+  RSI_BLE_AE_EXTENDED_CREATE_CONNECT = 0x000F,
+
+} RSI_BLE_CMD_AE_opcode_t;
 
 // enumeration for BLE command request codes
 typedef enum rsi_ble_cmd_request_e {
@@ -136,6 +162,12 @@ typedef enum rsi_ble_cmd_request_e {
   RSI_PROP_PROTOCOL_CMD     = 0xE000,
   RSI_PROP_PROTOCOL_CMD_PER = 0xE001,
 #endif
+  RSI_BLE_CMD_AE                  = 0x0171,
+  RSI_BLE_CMD_READ_TRANSMIT_POWER = 0x0172,
+  RSI_BLE_CMD_READ_RF_PATH_COMP   = 0x0173,
+  RSI_BLE_CMD_WRITE_RF_PATH_COMP  = 0x0174,
+
+  RSI_BLE_REQ_CONN_ENHANCE = 0x1FFF, //Please add new cmd ids above this cmd id.
 } rsi_ble_cmd_request_t;
 
 // enumeration for BLE command response codes
@@ -229,6 +261,11 @@ typedef enum rsi_ble_cmd_resp_e {
   RSI_PROP_PROTOCOL_CMD_RSP     = 0xE000,
   RSI_PROP_PROTOCOL_CMD_RSP_PER = 0xE001,
 #endif
+
+  RSI_BLE_RSP_AE                  = 0x0171,
+  RSI_BLE_RSP_READ_TRANSMIT_POWER = 0x0172,
+  RSI_BLE_RSP_READ_RF_PATH_COMP   = 0x0173,
+  RSI_BLE_RSP_WRITE_RF_PATH_COMP  = 0x0174,
 } rsi_ble_cmd_resp_t;
 
 // enumeration for BLE command response codes
@@ -283,7 +320,16 @@ typedef enum rsi_ble_event_e {
   RSI_BLE_EVENT_CHIP_MEMORY_STATS           = 0x1530,
   RSI_BLE_EVENT_SC_METHOD                   = 0x1540,
   RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION    = 0x1541,
+  RSI_BLE_EVENT_CTKD                        = 0x1542,
   RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION   = 0x1543,
+  RSI_BLE_EVENT_AE_ADVERTISING_REPORT       = 0x1544,
+  RSI_BLE_EVENT_PER_ADV_SYNC_ESTBL          = 0x1545,
+  RSI_BLE_EVENT_PER_ADV_REPORT              = 0x1546,
+  RSI_BLE_EVENT_PER_ADV_SYNC_LOST           = 0x1547,
+  RSI_BLE_EVENT_SCAN_TIMEOUT                = 0x1548,
+  RSI_BLE_EVENT_ADV_SET_TERMINATED          = 0x1549,
+  RSI_BLE_EVENT_SCAN_REQ_RECVD              = 0x154a,
+
 } rsi_ble_event_t;
 
 typedef enum {
@@ -291,6 +337,18 @@ typedef enum {
   RSI_SMP_UNSPECIFIED_REASON    = 0x08,
   RSI_SMP_REPEATED_ATTEMPTS     = 0x09,
 } smp_failure_error;
+
+// enumerations for call back types
+typedef enum rsi_ble_callback_id_e {
+  RSI_BLE_ON_CTKD                                    = 1,
+  RSI_BLE_ON_ADV_EXT_ADVERTISE_REPORT_EVENT          = 2,
+  RSI_BLE_ON_ADV_EXT_PERIODIC_ADV_SYNC_ESTBL_EVENT   = 3,
+  RSI_BLE_ON_ADV_EXT_PERIODIC_ADVERTISE_REPORT_EVENT = 4,
+  RSI_BLE_ON_ADV_EXT_PERIODIC_ADV_SYNC_LOST_EVENT    = 5,
+  RSI_BLE_ON_ADV_EXT_SCAN_TIMEOUT_EVENT              = 6,
+  RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT  = 7,
+  RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT     = 8,
+} rsi_ble_callback_id_t;
 
 /********************************************************
  * *                 Structure Definitions
@@ -479,6 +537,33 @@ typedef struct rsi_ble_req_conn_s {
   //uint16, supervision timeout
   uint16_t supervision_tout;
 } rsi_ble_req_conn_t;
+
+typedef struct rsi_ble_req_enhance_conn_s {
+  //uint8, address type of the device to connect
+  uint8_t dev_addr_type;
+  //uint8[6], address of the device to connect
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  //uint8, filter policy
+  uint8_t filter_policy;
+  //uint8, own address type
+  uint8_t own_addr_type;
+  //uint16, scan interval
+  uint16_t le_scan_interval;
+  //uint16, scan window
+  uint16_t le_scan_window;
+  //uint16, minimum connection interval
+  uint16_t conn_interval_min;
+  //uint16, maximum connection interval
+  uint16_t conn_interval_max;
+  //uint16, connection latency
+  uint16_t conn_latency;
+  //uint16, supervision timeout
+  uint16_t supervision_tout;
+  //uint16, minimum connection event length
+  uint16_t min_ce_length;
+  //uint16, maximum connection event length
+  uint16_t max_ce_length;
+} rsi_ble_req_enhance_conn_t;
 
 //Disconnect command structure
 typedef struct rsi_ble_req_disconnect_s {
@@ -978,15 +1063,481 @@ typedef struct rsi_ble_vendor_rf_type_s {
 
 // rf type command structure
 typedef struct rsi_ble_mtu_exchange_s {
-  uint8_t dev_addr[6];
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   uint8_t req_mtu_size;
 } rsi_ble_mtu_exchange_t;
 
 // mtu exchange resp command structure
 typedef struct rsi_ble_mtu_exchange_resp_s {
-  uint8_t dev_addr[6];
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   uint8_t req_mtu_size;
 } rsi_ble_mtu_exchange_resp_t;
+
+typedef struct rsi_ble_ae_get_supported_no_of_adv_sets_s {
+  uint16_t reserved; //sets_cnt;
+} __attribute__((__packed__)) rsi_ble_ae_get_supported_no_of_adv_sets_t;
+
+typedef struct rsi_ble_ae_read_supported_max_adv_data_s {
+  uint16_t reserved; //max_adv_data_len;
+} __attribute__((__packed__)) rsi_ble_ae_read_supported_max_adv_data_t;
+
+// AE Set Random Address (cmd), cmd_ix =
+typedef struct rsi_ble_ae_set_random_address_s {
+  /** uint8_t Advertising_Handle, Used to identify an advertising set , Range : 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /** uint8[6] Random_Address , The Random Address may be of either Static Address or Private Address */
+  uint8_t addr[RSI_DEV_ADDR_LEN];
+} __attribute__((__packed__)) rsi_ble_ae_set_random_address_t;
+
+//! AE Advertising Params
+typedef struct ae_adv_params_s {
+  /** uint8_t, Advertising Handle,  Used to identify an Advertising set , Range : 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /**
+  *  uint16_t, Advertising Event Properties, inidicates the properties of Advertising Event
+ *    ---------------------------------------------------------------------------------------------------------
+ *   |       Bit Number    |                    Parameter Description                                          |
+ *   ----------------------|-----------------------------------------------------------------------------------
+ *   |      0              |                   Connectable Advertising                                         |
+ *   |      1              |                   Scannable Advertising                                           |  
+ *   |      2              |                   Direct Advertising                                              |
+ *   |      3              |  High Duty cycle Directed Connectable advertising (≤ 3.75 ms Advertising interval)|
+ *   |      4              |                 Use legacy advertising PDUs                                       |
+ *   |      5              |         Omit advertiser's address from all PDUs("anonymous advertising")          |
+ *   |      6              |         Include Tx Power in the extended header of at least one advertising PDU   |
+ * */
+  uint16_t adv_event_prop;
+  /** uint32_t, Primary Advertising Interval Minimum, Minimum advertising interval for undirected and low duty cycle directed advertising */
+  uint32_t primary_adv_intterval_min : 24;
+  /** uint32_t, Primary Advertising Interval Maximum, Maximum advertising interval for undirected and low duty cycle directed advertising
+   primary_adv_intterval_min <= primary_adv_intterval_max */
+  uint32_t primary_adv_intterval_max : 24;
+  /** uint8_t, Primary Advertising Channel Map, It specifies on which channel it shall advertise
+                    Bit Number          Parameter Description
+                       0                   Channel 37 shall be used
+                       1                   Channel 38 Shall be used
+                       2                   Channel 39 shall be used
+  */
+  uint8_t primary_adv_chnl_map;
+  /**
+     uint8_t, Own_Address_type,  Indicates the type of the Address
+                  0x00 - Public Device Address
+                  0x01 - Random Device Address
+                  0x02 - Controller generates the Resolvable Private Address based on the local 
+                         IRK from the resolving list. If the resolving list contains no matching 
+                         entry, use the public address
+                  0x03 - Controller generates the Resolvable Private Address based on the local 
+                         IRK from the resolving list. If the resolving list contains no matching 
+                         entry, use the random address from LE_Set_Advertising_Set_Random_Address
+  */
+  uint8_t own_addr_type;
+  /** uint8_t, Peer_Address_Type, Specifies Peer Address Type
+                  0x00 - Public Device Address or Public Identity Address
+                  0x01 - Random Device Address or Random (static) Identity Address
+  */
+  uint8_t peer_addr_type;
+  /** uint8[6], Peer_Device_Address, Address of the Peer_Address_Type */
+  uint8_t peer_dev_addr[RSI_DEV_ADDR_LEN];
+  /** uint8_t, Advertising_Filter_Policy
+              0x00 - Process scan and connection requests from all devices (i.e., the Filter Accept List is not in use)
+              0x01 - Process connection requests from all devices and scan requests only from devices that are in the Filter Accept List.
+              0x02 - Process scan requests from all devices and connection requests only from devices that are in the Filter Accept List. 
+              0x03 - Process scan and connection requests only from devices in the Filter Accept List.
+  */
+  uint8_t adv_filter_policy;
+  /** uint8_t Advertising_TX_Power, Advertising TX Power ranges from -127 to +20 and units are in dBm */
+  uint8_t adv_tx_power;
+  /** uint8_t Primary_Advertising_PHY, This  parameter specifies the PHY used for the periodic advertising.
+                 0x01 - Advertiser PHY is LE 1M
+                 0x03 - Advertiser PHY is LE Coded
+  */
+  uint8_t primary_adv_phy;
+  /** uint8_t Secondary_Advertising_Max_Skip
+                  0x00       AUX_ADV_IND shall be sent prior to the next advertising event
+               0x01 to 0xFF  Maximum advertising events the Controller can skip before sending the AUX_ADV_IND packets on the secondary advertising physical channel
+  */
+  uint8_t sec_adv_max_skip;
+  /** uint8_t Secondary_Advertising_PHY,  This  parameter specifies the PHY used for the periodic advertising.
+                 0x01 - Advertiser PHY is LE 1M
+                 0x02 - Advertiser PHY is LE 2M
+                 0x03 - Advertiser PHY is LE Coded
+  */
+  uint8_t sec_adv_phy;
+  /** uint8_t Advertising_Sid, Value of the Advertising SID subfield in the ADI field of the PDU, Range : 0x00 to 0x0F */
+  uint8_t adv_sid;
+  /** uint8_t Scan Request Notification Enable
+               0x00 Scan request notifications disabled
+               0x01 Scan request notifications enabled
+  */
+  uint8_t scan_req_notify_enable;
+
+} __attribute__((__packed__)) rsi_ble_ae_adv_params_t;
+
+// AE adv,scan_rsp and periodic data
+typedef struct rsi_ble_ae_data_s {
+
+#define AE_ADV_DATA      0x01
+#define AE_SCAN_RSP_DATA 0x02
+  /**  AE_ADV_DATA_TYPE           1   
+      AE_PERIODIC_ADV_DATA_TYPE  2 
+      AE_SCAN_RSP_DATA_TYPE      3   */
+  uint8_t type;
+  /** uint8_t Advertising Handle, used to identify an Advertising set, Ranges from 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /** uint8_t Operation
+     0x00 - Intermediate fragment of fragmented extended advertising data
+     0x01 - First fragment of fragmented extended advertising data
+     0x02 - Last fragment of fragmented extended advertising data
+     0x03 - Complete extended advertising data
+     0x04 - Unchanged data (just update the Advertising DID)
+  */
+  uint8_t operation;
+  /**
+    uint8_t Fragment_Preference, Specifies the controller on where to fragment the Host advertising Data
+              0x00 - The Controller may fragment all Host advertising data
+              0x01 - The Controller should not fragment or should minimize fragmentation of Host advertising data
+  */
+  uint8_t frag_pref;
+  /** uint8_t Data Length, Specifies Advertising_Data_Length , This parameter ranges from 0 to 251 */
+  uint8_t data_len;
+  /** uint8_t Data ,Specifies Advertising_Data. */
+  uint8_t data[0xC8]; //FIXME
+} __attribute__((__packed__)) rsi_ble_ae_data_t;
+
+//! AE Advertising enable
+typedef struct rsi_ble_ae_adv_enabel_s {
+  /** 
+      uint8_t Enable, This parameter specifies whether to disable or Enable Advertising
+               0x00 - Advertising is disabled
+               0x01 - Advertising is Enabled
+  */
+  uint8_t enable;
+  /**
+     uint8_t Num_of_Sets , Inidcates on how many Advertising sets to be disabled or enabled for Advertising
+              0x00         - Disable all advertising sets
+              0x01 to 0x3F - Number of advertising sets to enable or disable
+  */
+  uint8_t no_of_sets;
+  /** uint8_t Advertising_Handle, used to identify Advertising set, Ranges from 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /**
+     uint16_t Duration, specifies the duration to continue advertising
+      0x00 - No Advertising
+      0x0001 to 0xFFFF , Advertising Duration
+  */
+  uint16_t duration;
+  /** uint8_t Maximum Extended Advertising Events, It specifies the Maximum number of extended advertising events the Controller shall 
+     attempt to send prior to terminating the extended advertising */
+  uint8_t max_ae_events;
+} __attribute__((__packed__)) rsi_ble_ae_adv_enable_t;
+
+//AE adv set clear/remove
+typedef struct rsi_ble_ae_adv_set_clear_or_remove_s {
+  /** 
+     type - Specifies whether to remove or clear the advertising sets.
+      {1} - clear
+      {2} - remove
+  */
+  uint8_t type;
+  /** uint8_t Advertising_Handle, used to identify Advertising set, Ranges from 0x00 to 0xEF */
+  uint8_t adv_handle;
+} __attribute__((__packed__)) rsi_ble_ae_adv_set_clear_or_remove_t;
+
+//AE periodic adv params
+typedef struct ae_periodic_adv_params {
+  /** uint8_t, Advertising Handle , this parameter identifies the advertising set whose periodic advertising parameters are being configured
+  * Rang : 0x00 to 0xEF */
+  uint8_t adv_handle;
+  /** uint16_t, Minimum Interval,Minimum advertising interval for periodic advertising.Range: 0x0006 to 0xFFFF */
+  uint16_t min_interval;
+  /**uint16_t, Maximum Interval,Maximum advertising interval for periodic advertising.Range: 0x0006 to 0xFFFF */
+  uint16_t max_interval;
+  /** uint16_t, Periodic Advertising Properties, this parameter indicates which fields should be included in the advertising packet
+   *  Bit Number, 6: Include TxPower in the advertising PDU
+   *  All other Values - Reserved For future use */
+  uint16_t properties;
+} __attribute__((__packed__)) rsi_ble_ae_periodic_adv_params_t;
+
+//AE periodic adv enable
+typedef struct ae_periodic_adv_enable {
+  /** uint8_t, enable, If this parameter is set Periodic Advertising starts
+   *           0 - Enable Periodic Advertising
+   *           1 - Include the ADI field in AUX_SYNC_IND PDUs 
+*/
+  uint8_t enable;
+  /** uint8_t, Advertising Handle, Used to identify an advertising set
+   *  Range : 0x00 to 0xEF 
+*/
+  uint8_t adv_handle;
+} __attribute__((__packed__)) rsi_ble_ae_periodic_adv_enable_t;
+
+typedef struct ae_scan_params_s {
+  /** uint8_t, Scan Type, this parameter specifies the type of scan to perform
+   *              0x00 - Passive Scanning. No scan request PDUs shall be sent.
+   *              0x01 - Active Scanning. Scan request PDUs may be sent. 
+*/
+  uint8_t ScanType;
+  /** uint16_t, Scan Interval, this parameter is a recommendation from the Host on how frequently the Controller should scan 
+  *  Range : 0x0004 to 0xFFFF */
+  uint16_t ScanInterval;
+  /** uint16_t, Scan Window, this parameter is a recommendation from the Host on how long the Controller should scan
+ *   Range : 0x0004 to 0xFFFF */
+  uint16_t ScanWindow;
+} __attribute__((__packed__)) ae_scan_params_t;
+
+//AE set sacn params
+#define SUPPORTED_SCNNING_PHYS 2
+typedef struct rsi_ble_ae_set_scan_params_s {
+  /** unit8_t,The Own Address Type parameter indicates the type of address being used in the scan request packets
+  *            Value             Parameter Description
+  *             0x00             Public Device Address
+  *             0x01             Random Device Address
+  *             0x02        Controller generates the Resolvable Private Address based on the local IRK from the resolving list.
+  *                         If the resolving list contains no matching entry, then use the public address.
+  *             0x03        Controller generates the Resolvable Private Address based on the local IRK from the resolving list.
+  *                        If the resolving list contains no matching entry, then use the random address from LE_Set_Random_Address.
+  *    All other values           Reserved for future use
+  * 
+ */
+  uint8_t own_addr_type;
+  /** uint8_t, It is used to determine whether the Filter Accept List is used
+   *              
+   *                 0x00            Basic unfiltered scanning filter policy
+   *                 0x01            Basic filtered scanning filter policy
+   *                 0x02            Extended unfiltered scanning filter policy
+   *                 0x03            Extended filtered scanning filter policy
+   *           All other values      Reserved for future use
+    */
+  uint8_t scanning_filter_policy;
+  /** uint8_t, The Scanning_PHYs parameter indicates the PHY(s) on which the advertising packets should be
+   received on the primary advertising physical channel.
+  *
+  *           0             Scan advertisements on the LE 1M PHY
+  *           2             Scan advertisements on the LE Coded PHY
+  *     All other bits      Reserved for future use
+  */
+  uint8_t scanning_phys;
+  /** ScanParams is an array of variable of structure ae_scan_params_s */
+  ae_scan_params_t ScanParams[SUPPORTED_SCNNING_PHYS];
+} __attribute__((__packed__)) rsi_ble_ae_set_scan_params_t;
+
+//AE set scan enable
+typedef struct rsi_ble_ae_set_scan_enable_s {
+  /** uint8_t, Enable, this Parameter determines whether scanning is enabled or disabled
+ *          
+ *             0x00         Scanning disabled
+ *             0x01         Scanning enabled
+ *       All other values  Reserved for future use
+ */
+  uint8_t enable;
+  /** uint8_t, Filter duplicates, this parameter controls whether the Link Layer should filter out duplicate advertising reports  
+   *           to the Host or if the Link Layer should generate advertising reports for each packet received 
+   * 
+   *         0x00          Duplicate Filtering Disabled
+   *         0x01          Duplicate Filtering Enabled
+   *         0x02          Duplicate filtering enabled, reset for each scan period
+   *    All other Values   Reserved for future use
+ */
+  uint8_t filter_duplicates;
+  /** uint16_t, Duration, The duration of a scan period refers to the time spent scanning on both the primary and secondary advertising physical channels
+ *  Range : 0x0001 to 0xFFFF
+ */
+  uint16_t duration;
+  /** uint16_t, Period , Time interval from when the Controller started its last Scan_Duration until it begins the subsequent Scan_Duration
+ *  Range : 0x0001 to 0xFFFF
+*/
+  uint16_t period;
+} __attribute__((__packed__)) rsi_ble_ae_set_scan_enable_t;
+
+//#pragma pack(push, 1)
+typedef struct rsi_ble_ae_set_periodic_adv_create_sync_s {
+
+  uint8_t fil_policy;
+  /** uint8_t, Advertising SID subfield in the ADI field used to identify the Periodic Advertising .
+ *  Range : 0x00 to 0x0F, All other bits - Reserved for future use
+*/
+  uint8_t adv_sid;
+  /** uint8_t, Advertiser Address Type, this parameter indicates the type of address being used in the connection request packets 
+ *  
+ *              0x00          Public Device Address or Public Identity Address
+ *              0x01          Random Device Address or Random (static) Identity Address
+ *       All other values     Reserved for future use
+ */
+  uint8_t adv_addr_type;
+  /** uint8_t, Advertiser Address[6]*/
+  uint8_t adv_addr[RSI_DEV_ADDR_LEN];
+  /** uint16_t, Skip,The maximum number of periodic advertising events that can be skipped after a successful receive 
+ *  Range : 0x0000 to 0x01F3 */
+  uint16_t skip;
+  /** uint16_t, Sync Timeout, Synchronization timeout for the periodic advertising train 
+ *  Range : 0x000A to 0x4000 */
+  uint16_t sync_timeout;
+  uint8_t reserved;
+} __attribute__((__packed__)) rsi_ble_ae_set_periodic_adv_create_sync_t;
+
+typedef struct rsi_ble_ae_set_periodic_adv_terminate_sync_s {
+  /** uint16_t, Sync Handle, identifies the periodic Advertising Train
+ *  Range : 0x0000 to 0x0EFF*/
+  uint16_t sync_handle;
+} __attribute__((__packed__)) rsi_ble_ae_set_periodic_adv_terminate_sync_t;
+
+//AE set periodic sync(create/terminate or cancel) params
+typedef struct rsi_ble_ae_set_periodic_sync_s {
+
+#define BLE_AE_PERIODIC_SYNC_CREATE        0x01
+#define BLE_AE_PERIODIC_SYNC_CREATE_CANCEL 0x02
+#define BLE_AE_PERIODIC_SYNC_TERMINATE     0x03
+  uint8_t type;
+  union {
+    rsi_ble_ae_set_periodic_adv_create_sync_t create_sync;
+    rsi_ble_ae_set_periodic_adv_terminate_sync_t terminate_sync;
+  } __attribute__((__packed__)) sync_type;
+} __attribute__((__packed__)) rsi_ble_ae_set_periodic_sync_t;
+//#pragma pack(pop)
+// AE add/remove/clear dev to/from periodic adv list
+typedef struct rsi_ble_ae_dev_to_periodic_list_s {
+  /** uint8_t, Type
+ *          Type Values                    Description
+ *              1              Adding Device to Periodic Advertising list
+ *              2              Removing Device from Periodic Advertising list
+ *              3              Clearing Periodic Advertising List
+*/
+  uint8_t type;
+  /** uint8_t, Advertiser Address Type, this parameter indicates the type of address being used in the connection request packets 
+ *  
+ *              0x00          Public Device Address or Public Identity Address
+ *              0x01          Random Device Address or Random (static) Identity Address
+ *       All other values     Reserved for future use
+*/
+  uint8_t adv_addr_type;
+  /** uint8_t, Advertiser Address[6]*/
+  uint8_t adv_addr[RSI_DEV_ADDR_LEN];
+  /** uint8_t, Advertising_Sid, Value of the Advertising SID subfield in the ADI field of the PDU, Range : 0x00 to 0x0F*/
+  uint8_t adv_sid;
+} __attribute__((__packed__)) rsi_ble_ae_dev_to_periodic_list_t;
+
+typedef struct rsi_ble_initiation_params_s {
+  /** uint16_t, ScanInterval, It is the Time interval from when the Controller started its last scan until it begins the subsequent scan on the primary 
+ * advertising physical channel. Range : 0x0004 to 0xFFFF  */
+  uint16_t ScanInterval;
+  /** uint16_t, Scan Window parameter is a recommendation from the host on how long the controller should scan.
+ *  Range : 0x0004 to 0xFFFF */
+  uint16_t ScanWindow;
+  /** uint16_t, Connection interval minimum parameter defines the minimum allowed connection interval.
+ *  Range: 0x0006 to 0x0C80 */
+  uint16_t ConnIntervalMin;
+  /** uint16_t, Connection interval maximum parameter defines the maximum allowed connection interval. 
+ *  Range: 0x0006 to 0x0C80*/
+  uint16_t ConnIntervalMax;
+  /** uint16_t, Connection Latency or Maximum Latency parameter defines the maximum allowed Peripheral latency. 
+ *  Range: 0x0000 to 0x01F3 */
+  uint16_t ConnLatency;
+  /** uint16_t,Connection Timeout or Supervision Timeout parameter defines the link supervision timeout for the connection.
+  *  Range: 0x000A to 0x0C80*/
+  uint16_t ConnSTO; //SuperVisionTimeout
+  /** uint16_t,The Min CE Length parameter provide the Controller with the expected minimum length of the connection events. 
+  *  Range: 0x0000 to 0xFFFF */
+  uint16_t MinCELen;
+  /** uint16_t,The Max CE Length parameter provide the controller with the expected maximum length of the connection events.
+  *  Range: 0x0000 to 0xFFFF */
+  uint16_t MaxCELen;
+} __attribute__((__packed__)) rsi_ble_initiation_params_t;
+
+// AE extended create connect
+typedef struct rsi_ble_ae_extended_create_connect_s {
+  /** uint8_t, Initiator Filter Policy,It is used to determine whether the Filter Accept List is used  
+   *        Value                                      Parameter Descripton
+   *        0x00             Filter Accept List is not used to determine which advertiser to connect to Peer_Address_Type and Peer_Address shall be used.
+   *        0x01             Filter Accept List is used to determine which advertiser to connect to Peer_Address_Type and Peer_Address shall be ignored.
+   *   All other values      Reserved for future use
+  */
+  uint8_t initiator_filter_policy;
+  /** uint8_t, Own Address Type, this parameter indicates the type of address being used in the connection request packets 
+   * 
+   *  Value                                          Parameter Description
+   *  0x00                                           Public Device Address
+   *  0x01                                           Random Device Address
+   *  0x02                         Controller generates the Resolvable Private Address based on the local IRK from the resolving list. 
+   *                               If the resolving list contains no matching entry, then use the public address.
+   *  0x03                         Controller generates the Resolvable Private Address based on the local IRK from the resolving list. 
+   *                               If the resolving list contains no matching entry, then use the random address from the most recent successful 
+   *                               HCI_LE_Set_Random_Address command.
+   * All other values                               Reserved for future use   
+  */
+  uint8_t own_addr_type;
+  /** uint8_t, Remote Address Type or Peer Address Type, this paramater indicates the type of address used in the 
+  connectable advertisement sent by the peer 
+  *   Value                                          Parameter Description
+  *   0x00                           Public Device Address or Public Identity Address
+  *   0x01                         Random Device Address or Random (static) Identity Address
+  * All other values                              Reserved for future use
+  */
+  uint8_t remote_addr_type;
+  /** uint8_t, Remote Address or Peer Address, this parameter indicates the Peer’s Public Device Address, 
+  Random (static) Device Address, Non-Resolvable Private Address, or Resolvable Private Address depending on the Peer_Address_Type parameter */
+  uint8_t remote_addr[RSI_DEV_ADDR_LEN];
+  /** uint8_t, Initiating PHYs, this parameter indicates the PHY(s) on which the advertising packets should be received on the 
+   primary advertising physical channel and the PHYs for which connection parameters have been specifiedn
+   * 
+   *         Bit number                         Parameter Description
+   *            0                   Scan connectable advertisements on the LE 1M PHY. Connection parameters for the LE 1M PHY are provided.
+   *            1                  Connection parameters for the LE 2M PHY are provided. 
+   *            2                  Scan connectable advertisements on the LE Coded PHY. Connection parameters for the LE Coded PHY are provided.
+   *      All other bits                       Reserved for future use
+   */
+  uint8_t init_phys;
+  /** init_params is an array of Variable of Structure rsi_ble_initiation_params_s */
+  rsi_ble_initiation_params_t init_params[3];
+} __attribute__((__packed__)) rsi_ble_ae_extended_create_connect_t;
+
+// LE Read Transmit Power
+typedef struct rsi_ble_tx_pwr_s {
+  /** int8_t, Minimum TX Power, Range: -127 to +20 */
+  int8_t min_tx_pwr;
+  /** int8_t, Maximum TX Power, Range: -127 to +20 */
+  int8_t max_tx_pwr;
+} __attribute__((__packed__)) rsi_ble_tx_pwr_t;
+
+// Query Rf Path Compensation
+typedef struct rsi_ble_query_rf_path_comp_s {
+  /** int16_t, RF TX Path Compensation Value, Range: -128.0 dB (0xFB00) to 128.0 dB (0x0500) */
+  int16_t tx_path_value;
+  /** int16_t, RF RX Path Compensation Value, Range: -128.0 dB (0xFB00) to 128.0 dB (0x0500) */
+  int16_t rx_path_value;
+} __attribute__((__packed__)) rsi_ble_query_rf_path_comp_t;
+
+// write Rf Path Compensation
+typedef struct rsi_ble_write_rf_path_comp_s {
+  /** int16_t, RF TX Path Compensation Value, Range: -128.0 dB (0xFB00) to 128.0 dB (0x0500) */
+  int16_t tx_path_value;
+  /** int16_t, RF RX Path Compensation Value, Range: -128.0 dB (0xFB00) to 128.0 dB (0x0500)*/
+  int16_t rx_path_value;
+} __attribute__((__packed__)) rsi_ble_write_rf_path_comp_t;
+
+typedef struct rsi_ble_ae_pdu {
+  uint16_t cmd_sub_opcode;
+  union {
+    rsi_ble_ae_get_supported_no_of_adv_sets_t ae_supported_no_of_sets;
+    rsi_ble_ae_read_supported_max_adv_data_t ae_supported_max_data;
+    rsi_ble_ae_set_random_address_t ae_random_address;
+    rsi_ble_ae_adv_params_t ae_adv_params;
+    rsi_ble_ae_data_t ae_adv_or_scn_rsp_data;
+    rsi_ble_ae_adv_enable_t ae_adv_enable;
+    rsi_ble_ae_adv_set_clear_or_remove_t ae_adv_set_clear_or_remove;
+    rsi_ble_ae_periodic_adv_params_t ae_periodic_adv_params;
+    rsi_ble_ae_periodic_adv_enable_t ae_periodic_adv_enable;
+
+    rsi_ble_ae_set_scan_params_t ae_scan_params;
+    rsi_ble_ae_set_scan_enable_t ae_scan_enable;
+
+    rsi_ble_ae_set_periodic_sync_t ae_periodic_sync;
+    rsi_ble_ae_dev_to_periodic_list_t dev_to_periodic_list;
+
+    rsi_ble_ae_extended_create_connect_t extended_create_conn;
+
+    //uint8_t data[1];
+  } __attribute__((__packed__)) pdu_type;
+} __attribute__((__packed__)) rsi_ble_ae_pdu_t;
 
 // Driver BLE control block
 struct rsi_ble_cb_s {
@@ -1053,6 +1604,15 @@ struct rsi_ble_cb_s {
   rsi_ble_on_cbfc_rx_data_event_t ble_on_cbfc_rx_data_event;
   rsi_ble_on_cbfc_disconn_event_t ble_on_cbfc_disconn_event;
   chip_ble_buffers_stats_handler_t ble_on_chip_memory_status_event;
+
+  // AE events callbacks
+  rsi_ble_ae_report_complete_t ble_ae_report_complete_event;
+  rsi_ble_ae_per_adv_sync_estbl_t ble_ae_per_adv_sync_estbl_event;
+  rsi_ble_ae_per_adv_report_t ble_ae_per_adv_report_event;
+  rsi_ble_ae_per_adv_sync_lost_t ble_ae_per_adv_sync_lost_event;
+  rsi_ble_ae_scan_timeout_t ble_ae_scan_timeout_event;
+  rsi_ble_ae_adv_set_terminated_t ble_ae_adv_set_terminated_event;
+  rsi_ble_ae_scan_req_recvd_t ble_ae_scan_req_recvd_event;
 };
 
 /******************************************************

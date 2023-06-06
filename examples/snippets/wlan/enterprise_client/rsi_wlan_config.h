@@ -585,4 +585,32 @@ BIT[13-31] - Reserved
 //! E.g: 0x010AA8C0 == 192.168.10.1
 #define RSI_CONFIG_P2P_GATEWAY_ADDRESS 0x010AA8C0
 
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
+#endif
+
 #endif

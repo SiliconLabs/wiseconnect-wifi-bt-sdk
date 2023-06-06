@@ -31,10 +31,10 @@
 //! include file to refer data types
 #include "rsi_data_types.h"
 
-//! COMMON include file to refer wlan APIs
+//! COMMON include file to refer WLAN APIs
 #include "rsi_common_apis.h"
 
-//! WLAN include file to refer wlan APIs
+//! WLAN include file to refer WLAN APIs
 #include "rsi_wlan_apis.h"
 #include "rsi_wlan_non_rom.h"
 
@@ -53,7 +53,8 @@
 #include "rsi_os.h"
 #include "rsi_utils.h"
 #include "rsi_driver.h"
-//! configurattion Parameters
+
+//! Configuration Parameters
 
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
@@ -65,12 +66,12 @@
 #define SECURITY_TYPE RSI_WPA2
 
 //! Password
-#define PSK "1234567890"
+#define PSK "12345678"
 
-//! To provide the cmd type for wlan set
+//! To provide the CMD type for WLAN set
 #define CMD_TYPE RSI_JOIN_BSSID
 
-//! To configure the AP mac
+//! To configure the AP MAC
 #define AP_BSSID                       \
   {                                    \
     0x10, 0xfe, 0xed, 0xe9, 0xa9, 0x30 \
@@ -89,16 +90,13 @@
 #if !(DHCP_MODE)
 
 //! IP address of the module
-//! E.g: 0x650AA8C0 == 192.168.10.101
-#define DEVICE_IP "192.168.10.101" //0x650AA8C0
+#define DEVICE_IP "192.168.10.101"
 
 //! IP address of Gateway
-//! E.g: 0x010AA8C0 == 192.168.10.1
-#define GATEWAY "192.168.10.1" //0x010AA8C0
+#define GATEWAY "192.168.10.1"
 
-//! IP address of netmask
-//! E.g: 0x00FFFFFF == 255.255.255.0
-#define NETMASK "255.255.255.0" //0x00FFFFFF
+//! IP address of Netmask
+#define NETMASK "255.255.255.0"
 
 #endif
 
@@ -108,13 +106,13 @@
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
 
-//! Wlan task priority
+//! WLAN task priority
 #define RSI_WLAN_TASK_PRIORITY 1
 
 //! Wireless driver task priority
 #define RSI_DRIVER_TASK_PRIORITY 2
 
-//! Wlan task stack size
+//! WLAN task stack size
 #define RSI_WLAN_TASK_STACK_SIZE 500
 
 //! Wireless driver task stack size
@@ -127,16 +125,16 @@
 //! Type
 #define PMK_TYPE 3
 
-//!size of pmk
+//!size of PMK
 #define PMK_SIZE 32
 
 //! standard defines
-
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 volatile uint8_t ping_rsp_received;
 uint64_t ip_to_reverse_hex(char *ip);
 void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uint16_t length);
+
 #ifndef RSI_WITH_OS
 static void main_loop(void);
 #endif
@@ -150,6 +148,7 @@ int32_t rsi_station_ping_app()
   uint32_t remote_ip_addr = ip_to_reverse_hex(REMOTE_IP);
   uint16_t size           = PING_SIZE;
   int32_t packet_count    = 0;
+
 #if !(DHCP_MODE)
   uint32_t ip_addr      = ip_to_reverse_hex(DEVICE_IP);
   uint32_t network_mask = ip_to_reverse_hex(NETMASK);
@@ -157,20 +156,23 @@ int32_t rsi_station_ping_app()
 #else
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
+
 #if CONNECT_WITH_PMK
   uint8_t pmk[PMK_SIZE];
 #endif
+
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
+#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
 
-  //! SiLabs module intialisation
+  //! Silabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -178,6 +180,8 @@ int32_t rsi_station_ping_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
+
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -187,7 +191,8 @@ int32_t rsi_station_ping_app()
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
-  //! WC initialization
+
+  //! Wireless initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nWireless Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -196,7 +201,7 @@ int32_t rsi_station_ping_app()
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
 
-  //! enable debug log prints
+  //! Enable debug log prints
   status = rsi_common_debug_log(0, 15);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nEnable debug log prints Failed, Error Code : 0x%lX\r\n", status);
@@ -215,17 +220,17 @@ int32_t rsi_station_ping_app()
   }
 
 #if CONNECT_WITH_PMK
-  //! Generate pmk
+  //! Generate PMK
   status = rsi_wlan_pmk_generate(PMK_TYPE, (int8_t *)PSK, (int8_t *)SSID, pmk, PMK_SIZE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nGenerate pmk Failed, Error Code : 0x%lX\r\n", status);
+    LOG_PRINT("\r\nGenerate PMK Failed, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("\r\nGenerate pmk Success\r\n");
+    LOG_PRINT("\r\nGenerate PMK Success\r\n");
   }
 #endif
 
-  //!To set the wlan option
+  //!To set the WLAN option
   status = rsi_wlan_set(CMD_TYPE, join_bssid, 6);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nSet WLAN Option Failed, Error Code : 0x%lX\r\n", status);
@@ -294,6 +299,7 @@ int32_t rsi_station_ping_app()
 
   return 0;
 }
+
 #ifndef RSI_WITH_OS
 void main_loop(void)
 {
@@ -312,14 +318,29 @@ void main_loop(void)
   }
 }
 #endif
+
 int main()
 {
   int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
-
   rsi_task_handle_t wlan_task_handle = NULL;
+#endif
+#ifdef RSI_M4_INTERFACE
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
 
+  //! Silabs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
 #endif
 
 #ifdef RSI_WITH_OS
@@ -353,4 +374,9 @@ void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uin
   UNUSED_CONST_PARAMETER(buffer); //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   ping_rsp_received = 1;
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nPing Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\r\nPing Success\r\n");
+  }
 }

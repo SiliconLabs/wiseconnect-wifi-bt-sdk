@@ -212,6 +212,15 @@ int ConnectNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src_p
 
 	}
 
+	if(flags & RSI_SSL_ENABLE) {
+		uint8_t mask = ((BIT(2) | BIT(3)) >> 2);
+		uint32_t ssl_cert_bitmap = (flags >> 2) & mask;
+		status = rsi_setsockopt(n->my_socket, SOL_SOCKET, SO_CERT_INDEX, &ssl_cert_bitmap, sizeof(ssl_cert_bitmap));
+		if(status != RSI_SUCCESS) {
+		 return status;
+		}
+	}
+
 	if (n->my_socket == -1)
 	{
 		status = rsi_wlan_get_nwk_status();

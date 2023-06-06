@@ -35,7 +35,7 @@
  * @param[in]  total_size  - size of pool to create 
  * @param[in]  pkt_size    - size of each packet in pool
  * @return     0              - Success \n
- *             Negative value - Failure 
+ * @return     Negative value - Failure 
  */
 /// @private
 int32_t ROM_WL_rsi_pkt_pool_init(global_cb_t *global_cb_p,
@@ -108,8 +108,8 @@ int32_t ROM_WL_rsi_pkt_pool_init(global_cb_t *global_cb_p,
  * @brief       Allocate packet from a given packet pool 
  * @param[in]   global_cb_p - pointer to the global control block
  * @param[in]   pool_cb  	- packet pool pointer from which packet needs to be allocated 
- * @return		Allocated packet pointer if Success  \n
- *              NULL - If allocation fails 
+ * @return		  Allocated packet pointer - Success  \n
+ * @return		  NULL - Failure 
  *              
  */
 /// @private
@@ -161,7 +161,7 @@ rsi_pkt_t *ROM_WL_rsi_pkt_alloc_non_blocking(global_cb_t *global_cb_p, rsi_pkt_p
  * @param[in]  pool_cb 	   - packet pool pointer from which packet needs to be allocated 
  * @param[in]  pkt    	   - packet pointer which needs to be freed
  * @return	   0              - Success \n
- *             Negative Value - Failure
+ * @return	   Non-Zero Value - Failure
  */
 /// @private
 int32_t ROM_WL_rsi_pkt_free_non_blocking(global_cb_t *global_cb_p, rsi_pkt_pool_t *pool_cb, rsi_pkt_t *pkt)
@@ -202,8 +202,8 @@ int32_t ROM_WL_rsi_pkt_free_non_blocking(global_cb_t *global_cb_p, rsi_pkt_pool_
  * @brief       Allocate packet from a given packet pool 
  * @param[in]   global_cb_p - pointer to the global control block
  * @param[in]   pool_cb 	- packet pool pointer from which packet needs to be allocated 
- * @return		Allocated packet pointer if Success  \n
- *              NULL - If allocation fails 
+ * @return		  Allocated packet pointer - Success  \n
+ * @return		  NULL - Failure 
  *              
  */
 /// @private
@@ -254,7 +254,7 @@ rsi_pkt_t *ROM_WL_rsi_pkt_alloc(global_cb_t *global_cb_p, rsi_pkt_pool_t *pool_c
  * @param[in]  pool_cb 		- packet pool to which packet needs to be freed 
  * @param[in]  pkt    		- packet pointer which needs to be freed
  * @return	   0              - Success \n
- *             Negative Value - Failure 
+ * @return	   Non-Zero Value - Failure 
  */
 /// @private
 int32_t ROM_WL_rsi_pkt_free(global_cb_t *global_cb_p, rsi_pkt_pool_t *pool_cb, rsi_pkt_t *pkt)
@@ -292,10 +292,10 @@ int32_t ROM_WL_rsi_pkt_free(global_cb_t *global_cb_p, rsi_pkt_pool_t *pool_cb, r
 /*==============================================*/
 /**
  * @fn         uint32_t ROM_WL_rsi_is_pkt_available(global_cb_t *global_cb_p,rsi_pkt_pool_t *pool_cb)
- * @brief      Return number of avaiable packets in pool
+ * @brief      Number of available packets in pool
  * @param[in]  global_cb_p - pointer to the global control block
  * @param[in]  pool_cb 	   - pool pointer to check available pakcets count 
- * @return 	   Number of packet in pool
+ * @return 	   Number of packets in pool
  */
 /// @private
 uint32_t ROM_WL_rsi_is_pkt_available(global_cb_t *global_cb_p, rsi_pkt_pool_t *pool_cb)

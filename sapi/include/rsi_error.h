@@ -86,6 +86,8 @@ typedef enum rsi_error_e {
   RSI_ERROR_BLE_DEV_BUF_IS_IN_PROGRESS      = -51,
   RSI_ERROR_SET_REGION_NOT_ENABLED          = -52,
   RSI_ERROR_BLE_INVALID_CALLBACK_CNT        = -53,
+  RSI_ERROR_BLE_ADV_EXT_COMMAND_NOT_ALLOWED = -54,
+  RSI_ERROR_BLE_LEGACY_COMMAND_NOT_ALLOWED  = -55,
 } rsi_error_t;
 
 /******************************************************

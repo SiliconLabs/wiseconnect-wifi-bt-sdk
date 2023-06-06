@@ -152,7 +152,7 @@ def run_on(port):
 
 if __name__ == "__main__":
     if(len(sys.argv) < 2):
-        print("Usage: put-server.py <port #>")
+        print("Usage:  python simple_http_server.py <port #>")
         sys.exit()
     ports = [int(arg) for arg in sys.argv[1:]]
     for port_number in ports:

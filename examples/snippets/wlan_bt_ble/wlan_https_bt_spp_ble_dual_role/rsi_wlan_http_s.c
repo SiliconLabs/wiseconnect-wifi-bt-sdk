@@ -396,7 +396,9 @@ int32_t rsi_wlan_app_task(void)
             return status;
           }
           LOG_PRINT("\r\n closing the socket\r\n");
+#ifdef RSI_WITH_OS
           rsi_os_task_delay(50);
+#endif
 #if !CONTINUOUS_HTTP_DOWNLOAD
           stop_download = 1;
           break;

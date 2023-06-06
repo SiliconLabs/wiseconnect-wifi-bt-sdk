@@ -42,12 +42,11 @@
  * @param[in]  username                   - Username for server Authentication
  * @param[in]  password                   - Password for server Authentication
  * @param[in]  http_otaf_response_handler - Callback is called when asynchronous response is received from module for HTTP firmware update request \n
- * @param[out] status                     - Status code represent
- *                                          RSI_SUCCESS                : Firmware update success
- *                                          oOther expected error codes : BBED,BB40,BB38,BBD2,FF74,FFF4
+ * @param[out] status                     - Status code
  * @param[out] buffer                     - NULL
  * @return      0                         - Success \n
- *              Negative value            - Failure
+ * @return     Non-Zero value            - Failure (**Possible Error Codes** - BBED,BB40,BB38,BBD2,FF74,FFF4) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_http_fw_update(uint8_t flags,
@@ -81,7 +80,8 @@ int32_t rsi_http_fw_update(uint8_t flags,
 /*==============================================*/
 /**
  * @brief      Post the HTTP data for the requested URL to HTTP server. This is a non-blocking API.
- * @param[in]  type             -  0 - HTTPGET \n 1 - HTTPPOST
+ * @param[in]  type             -  0 - HTTPGET \n 
+ *                              -  1 - HTTPPOST \n
  * @param[in]  flags            -  Select version and security:\n
  * 
  *   Flags |     Macro       |          Description
@@ -97,20 +97,17 @@ int32_t rsi_http_fw_update(uint8_t flags,
  * @param[in]  port             - Port number, default : 80 - HTTP, 443 - HTTPS
  * @param[in]  resource         - URL string for requested resource
  * @param[in]  host_name        - Post name
- * @param[in]  extended_header  - Extender header if present, after each header member append \r\c \n
+ * @param[in]  extended_header  - Extender header if present, after each header member append  \r\c \n
  * @param[in]  username         - Username for server Authentication
  * @param[in]  password         - Password for server Authentication
  * @param[in]  post_data        - HTTP data to be posted to server
  * @param[in]  post_data_length - HTTP data length to be posted to server
- * @param[in]  callback         - callback is called when asynchronous response is received from module for HTTP firmware update request
+ * @param[in]  callback         - Callback is called when asynchronous response is received from module for HTTP firmware update request
  * @param[out] buffer           - NULL
  * @param[out] status           - This is the status response from module. This returns failure upon an internal error only.
- * @return      0               - Success  \n
- *              Negative Value  - Failure \n
- *              -2              - Invalid parameters \n
- *              -3              - Command given in wrong state \n
- *              -4              - Buffer not available to serve command
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              -  Success  \n
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_http_otaf_async(uint8_t type,
                             uint8_t flags,

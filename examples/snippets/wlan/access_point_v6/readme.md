@@ -1,4 +1,4 @@
-# Access Point
+# Access Point (IPv6)
 
 ## 1. Purpose / Scope
 
@@ -18,7 +18,7 @@ Before running the application, the user will need the following things to setup
   - [STM32F411 Nucleo](https://st.com/)
 * Windows PC (Remote PC) with iperf application
 
-![Setup Diagram for Access Point Start Example](resources/readme/image83.png)
+![Setup Diagram for Access Point Start Example](resources/readme/apv6setup.png)
 
 ### 2.2 Software Requirements
 
@@ -82,13 +82,13 @@ The application can be configured to suit user requirements and development envi
 SSID refers to the name of the Access point to be created.
 
 ```c
-#define SSID                                 "SILABS_AP"
+#define SSID "SILABS_AP"
 ```
 
 CHANNEL_NO refers to the channel in which AP would be started
 
 ```c
-#define CHANNEL_NO                           11
+#define CHANNEL_NO 11
 ```
 
 SECURITY_TYPE refers type of security. Access point supports Open, WPA, WPA2 securities.
@@ -102,7 +102,7 @@ SECURITY_TYPE refers type of security. Access point supports Open, WPA, WPA2 sec
    - RSI_WPA2 - For WPA2 security mode
 
 ```c
-#define SECURITY_TYPE                        RSI_WPA2
+#define SECURITY_TYPE RSI_WPA2
 ```
 
 ENCRYPTION_TYPE refers to the type of Encryption method. Access point supports OPEN, TKIP, CCMP encryption methods.
@@ -116,49 +116,49 @@ Valid configurations are:
    - RSI_NONE - For open encryption
 
 ```c
-#define ENCRYPTION_TYPE                      RSI_CCMP
+#define ENCRYPTION_TYPE RSI_CCMP
 ```
 
 PSK refers to the secret key if the Access point to be configured in WPA/WPA2 security modes.
 
 ```c
-#define PSK                      "1234567890"            
+#define PSK "1234567890"            
 ```
 
 BEACON_INTERVAL refers to the time delay between two consecutive beacons in milliseconds. Allowed values are integers from 100 to 1000 which are multiples of 100.
 
 ```c
-#define BEACON_INTERVAL                      100
+#define BEACON_INTERVAL 100
 ```
 
 DTIM_INTERVAL refers DTIM interval of the Access Point. Allowed values are from 1 to 255.
 
 ```c
-#define DTIM_INTERVAL                        4
+#define DTIM_INTERVAL 4
 ```
 
 DEVICE_PORT port refers TCP server port number
 
 ```c
-#define DEVICE_PORT                          5001
+#define DEVICE_PORT 5001
 ```
 
 NUMEBR_OF_PACKETS refers how many packets to receive from remote TCP client.
 
 ```c
-#define NUMBER_OF_PACKETS                    1000
+#define NUMBER_OF_PACKETS 1000
 ```
 
 GLOBAL_BUFF_LEN refers the memory length for driver
 
 ```c
-#define GLOBAL_BUFF_LEN                      15000
+#define GLOBAL_BUFF_LEN 15000
 ```
 
 RECV_BUFFER_SIZE refers receive data length
 
 ```c
-#define RECV_BUFFER_SIZE                      1000
+#define RECV_BUFFER_SIZE 1000
 ```
 **Note!**
 > If the user wants to configure the STA IP address through DHCP then set DHCP_MODE to "1" and skip configuring the following DEVICE_IP6, and GATEWAY6 macros Otherwise set the DHCP_MODE macro to "0" and configure the following DEVICE_IP6 and GATEWAY6 macros.
@@ -169,26 +169,27 @@ IPv6 address to be configured to the device
    Example: To configure "2001:db8:0:1::121" as IP address, update the macro DEVICE_IP6 as below
 
 ```c
-#define DEVICE_IP6                            "2001:db8:0:1::121"
+#define DEVICE_IP6 "2001:db8:0:1::121"
 ```
 
-IP address of the gateway should also be in long format and in little endian byte order
+IP address of the gateway.
 
    Example: To configure "2001:db8:0:1::121" as Gateway, update the macro GATEWAY6 as below
 
 ```c
-#define GATEWAY6                              "2001:db8:0:1::121"
+#define GATEWAY6 "2001:db8:0:1::121"
 ```
 
 ### 4.2 Open rsi_wlan_config.h file. User can also modify the below parameters as per their needs and requirements.
 
 
 ```c
-#define CONCURRENT_MODE                      RSI_DISABLE
-#define RSI_FEATURE_BIT_MAP                  FEAT_SECURITY_PSK
-#define RSI_TCP_IP_BYPASS                    RSI_DISABLE
-#define RSI_TCP_IP_FEATURE_BIT_MAP           (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6 | TCP_IP_FEAT_DHCPV6_SERVER)
-#define RSI_BAND                             RSI_BAND_2P4GHZ
+#define CONCURRENT_MODE     RSI_DISABLE
+#define RSI_FEATURE_BIT_MAP FEAT_SECURITY_PSK
+#define RSI_TCP_IP_BYPASS   RSI_DISABLE
+#define RSI_TCP_IP_FEATURE_BIT_MAP \
+  (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6 | TCP_IP_FEAT_DHCPV6_SERVER)
+#define RSI_BAND RSI_BAND_2P4GHZ
 ```
 
 ## 5. Testing the Application

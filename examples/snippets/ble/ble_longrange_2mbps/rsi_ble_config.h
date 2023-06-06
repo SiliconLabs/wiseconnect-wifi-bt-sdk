@@ -41,10 +41,9 @@
 /* Number of BLE notifications */
 #define RSI_BLE_NUM_CONN_EVENTS 4
 #else
-#define RSI_BLE_MAX_NBR_ATT_REC  80
-#define RSI_BLE_MAX_NBR_ATT_SERV 10
+#define RSI_BLE_MAX_NBR_ATT_REC 80
 /* Number of BLE notifications */
-#define RSI_BLE_NUM_CONN_EVENTS  20
+#define RSI_BLE_NUM_CONN_EVENTS 20
 #endif
 
 #define RSI_BLE_MAX_NBR_SLAVES    3
@@ -59,6 +58,32 @@
 #define RSI_BLE_NUM_REC_BYTES 0x40
 
 #define RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST 0
+
+#define BLE_1MBPS 0x01
+
+#define BLE_2MBPS 0x02
+
+#define LONG_RANGE 0x01
+
+/*Coded PHY data rates*/
+
+#define BLE_500KBPS_CODED_PHY 0x01
+
+#define BLE_500_KBPS 0x01
+
+#define BLE_125_KBPS 0x02
+
+#define BLE_CODED_TX_PHY 0x04
+
+#define BLE_CODED_RX_PHY 0x04
+
+/*Uncode 2Mbps PHY data rates*/
+
+#define BLE_2MBPS_TX_PHY 0x02
+
+#define BLE_2MBPS_RX_PHY 0x02
+
+#define BLE_2MBPS_CODED_PHY 0x00
 
 /*=======================================================================*/
 //! Advertising command parameters
@@ -192,7 +217,8 @@
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
 #ifdef CHIP_9117
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC)
 #else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #endif

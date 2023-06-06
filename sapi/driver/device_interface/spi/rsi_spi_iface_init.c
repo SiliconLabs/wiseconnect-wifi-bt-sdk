@@ -44,11 +44,10 @@
 */
 /*=============================================*/
 /**
- * @brief       Initialize the wlan module�s Slave SPI interface.
+ * @brief       Initialize the SPI secondary device interface of the module
  * @param[in]   void
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  */
 
 int16_t rsi_spi_iface_init(void)
@@ -91,9 +90,9 @@ int16_t rsi_spi_iface_init(void)
 
 /*=============================================*/
 /**
- * @brief               Initialize the with modules Slave SPI interface on ulp wakeup.
+ * @brief               Initialize the SPI secondary device interface of the module on ULP wakeup
  * @param[in]           void
- * @return              void
+ * @return              Void
  */
 void rsi_ulp_wakeup_init(void)
 {

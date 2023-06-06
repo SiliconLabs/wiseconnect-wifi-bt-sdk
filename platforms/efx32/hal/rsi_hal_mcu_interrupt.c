@@ -26,6 +26,9 @@
 typedef void (* UserIntCallBack_t)(void);
 UserIntCallBack_t call_back, gpio_callback;
 uint8_t current_pin_set, prev_pin_set;
+#ifdef EXP_BOARD
+uint8_t even_current_pin_set, even_prev_pin_set;
+#endif
 
 /**************************************************************************//**
  * @brief
@@ -37,6 +40,7 @@ void GPIO_ODD_IRQHandler(void)
     (*call_back)();
 
   GPIO_IntClear(0xAAAA);
+#ifndef EXP_BOARD
 #ifdef LOGGING_STATS
   current_pin_set = GPIO_PinInGet(LOGGING_STATS_PORT , LOGGING_STATS_PIN);
   if(prev_pin_set!= current_pin_set)
@@ -50,7 +54,32 @@ void GPIO_ODD_IRQHandler(void)
     }
   prev_pin_set = current_pin_set;
 #endif
+#endif
 }
+
+/**************************************************************************//**
+ * @brief
+ *    GPIO interrupt handler.
+ *****************************************************************************/
+#ifdef EXP_BOARD
+void GPIO_EVEN_IRQHandler(void)
+{
+  GPIO_IntClear(0xDDDD);
+#ifdef LOGGING_STATS
+  even_current_pin_set = GPIO_PinInGet(LOGGING_STATS_PORT , LOGGING_STATS_PIN);
+  if(even_prev_pin_set!= even_current_pin_set)
+    {
+      NVIC_DisableIRQ(GPIO_EVEN_IRQn);
+      NVIC_SetPriority(GPIO_EVEN_IRQn, 5);
+      if(gpio_callback!=NULL)
+         (*gpio_callback)();
+      GPIO_IntClear(0xDDDD);
+      NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+    }
+  even_prev_pin_set = even_current_pin_set;
+#endif
+}
+#endif
 
 /*===================================================*/
 /**

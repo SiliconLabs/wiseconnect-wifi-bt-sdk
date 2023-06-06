@@ -47,11 +47,11 @@ int8_t is_power_of_two(int8_t x)
 */
 /*==============================================*/
 /**
- * @brief       Check for the bit set in the bitmap. This is a non-blocking API.
- * @param[in]   fd             - Socket id
+ * @brief       Check for the bit for the file descriptor FD in the file descriptor set rsi_fd_set. This is a non-blocking API.
+ * @param[in]   fd             - Socket ID
  * @param[in]   fds_p          - Pointer to the rsi_fd_set_s structure
  * @return      Positive Value - Success \n
- *              Zero           - Failure
+ * @return      0              - Failure
  *              
  */
 
@@ -87,10 +87,10 @@ void rsi_set_fd(uint32_t fd, struct rsi_fd_set_s *fds_p)
 */
 /*==============================================*/
 /**
- * @brief       Clear the bit in the bitmap. This is a non-blocking API.
- * @param[in]   fd    - Socket id
+ * @brief       Clear the bit for the file descriptor FD in the file descriptor set rsi_fd_set. This is a non-blocking API.
+ * @param[in]   fd    - Socket ID
  * @param[in]   fds_p - Pointer to the rsi_fd_set_s structure
- * @return 		Void
+ * @return 		  Void
  */
 
 void rsi_fd_clr(uint32_t fd, struct rsi_fd_set_s *fds_p)
@@ -107,28 +107,28 @@ void rsi_fd_clr(uint32_t fd, struct rsi_fd_set_s *fds_p)
 /*==============================================*/
 /**
  * @brief      Create a socket and register a callback that will be used by the driver to forward
- * 			   the received packets asynchronously to the application (on packet reception) without waiting for recv API call. This is a non-blocking API.
- * @pre    \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  protocolFamily - Protocol family to select IPv4 or IPv6 \n
+ * 			       the received packets asynchronously to the application (on packet reception) without waiting for \ref rsi_recv() API call. 
+ *             This is a non-blocking API.
+ * @param[in]  protocolFamily - Protocol family to select IPv4 or IPv6. \n
  *                              AF_INET (2) : Select IPv4 \n
  *                              AF_INET6 (3) : Select IPv6
- * @param[in]  type           - Select socket type UDP or TCP \n
+ * @param[in]  type           - Select socket type UDP or TCP. \n
  *                              SOCK_STREAM (1) : Select TCP \n
  *                              SOCK_DGRM (2) : Select UDP
  * @param[in]  protocol       - 0: Non SSL sockets \n
  *                              1: SSL sockets \n
- *                              BIT(5) Must be enabled to select the certificate index \n
- *                              0<<12 for index 0 \n
+ *                              BIT(5) - Must be enabled to select the certificate index \n
+ *                              0<<12 for index 0, \n
  *                              1<<12 for index 1 \n
  *                              Note: Certificates must be loaded in to RAM to select the certificate index feature.
  * @param[in]  callback       - Callback function to read data asynchronously from socket \n
  * @param[out] sock_no        - Application socket number \n
  * @param[out] buffer         - Pointer to buffer that holds data \n
  * @param[out] length         - Length of the buffer
- * @return     Succes         - RSI_SUCCESS \n
- *             Failure        - Negative Value\n
- *                              Possible error codes : 0xFFF8, 0xFF80, 0xFF6D, 0xFF85, 0xBB33, 0xBB22 
- *@note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xFFF8, 0xFF80, 0xFF6D, 0xFF85, 0xBB33, 0xBB22) \n 
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_socket_async(int32_t protocolFamily,
@@ -146,26 +146,22 @@ int32_t rsi_socket_async(int32_t protocolFamily,
 */
 /*==============================================*/
 /**
- * @brief       Create and return a socket instance, also referred to as an endpoint of communication. This is a non-blocking API.
- * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]   protocolFamily - Protocol family to select IPv4 or IPv6 \n
+ * @brief       Create and return a socket instance. This is a non-blocking API.
+ * @param[in]   protocolFamily - Protocol family to select IPv4 or IPv6. \n
  *                               AF_INET (2): Select IPv4 \n
  *                               AF_INET6 (3): Select IPv6
- * @param[in]   type           - Select socket type UDP or TCP \n
+ * @param[in]   type           - Select socket type UDP or TCP. \n
  *                               SOCK_STREAM (1): Select  TCP\n
  *                               TCP SOCK_DGRM (2): Select UDP
- * @param[in]  protocol        - 0: Non SSL sockets \n
+ * @param[in]   protocol       - 0: Non SSL sockets \n
  *                               1: SSL sockets \n
- *                               BIT(5) Must be enabled to select the certificate index \n
- *                               0<<12 for index 0 \n
+ *                               BIT(5) - Must be enabled to select the certificate index \n
+ *                               0<<12 for index 0, \n
  *                               1<<12 for index 1 \n
  *                               Note: Certificates must be loaded in to RAM to select the certificate index feature.
- * @return      **Success**    - Return sock_id of the created socket \n
- *              **Failure**    - Non-Zero value
- *
- *		   RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE - Command entered in wrong state
- *
- *		   RSI_SOCK_ERROR 			  - Error in creating socket
+ * @return      SOCK_ID              - Socket ID of the created socket \n
+ * @return      Negative value - Failure (**Possible Error Codes** - 0xfffffffd) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  *
  */
 
@@ -197,12 +193,12 @@ int32_t rsi_socket(int32_t protocolFamily, int32_t type, int32_t protocol)
 /*==============================================*/
 /**
  * @brief       Assign an address to a socket. This is a non-blocking API for TCP and a blocking API for UDP.
- * @pre         \ref rsi_socket() or \ref API needs to be called before this API.
  * @param[in]   sockID         - Socket descriptor ID
  * @param[in]   localAddress   - Address assigned to the socket. The format is compatible with BSD socket
  * @param[in]   addressLength  - Length of the address measured in bytes
- * @return		  Zero         - Success \n
- *              Negative Value - Failure
+ * @return		  0              - Success \n
+ * @return		  Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_socket() API needs to be called before this API.
  *               
  *
  *
@@ -220,14 +216,14 @@ int32_t rsi_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32_t addr
 */
 /*==============================================*/
 /**
- * @brief       Connect the socket to the specified remote address. This is a non-blocking API if socket_connect_response handler() is registered through rsi_wlan_register_callbacks(), otherwise it is a blocking API.
- * @pre         \ref rsi_socket() or \ref  rsi_bind()  API needs to be called before this API.
+ * @brief       Connect the socket to the specified remote address. This is a non-blocking API, if socket_connect_response handler() is registered through rsi_wlan_register_callbacks(), otherwise it is a blocking API.
  * @param[in]   sockID         - Socket descriptor ID
  * @param[in]   remoteAddress  - Remote peer address. The format is compatible with BSD socket.
  * @param[in]   addressLength  - Length of the address in bytes
- * @return 		  Zero          - Success \n
- *              Negative Value - Failure
- *  @note       For asynchronous behaviour, user needs to register RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB callback id.
+ * @return 		  0              - Success \n
+ *              Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_socket()/ \ref  rsi_bind()  API needs to be called before this API.
+ * @note        For asynchronous behaviour, user need to register RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB callback ID.
  *
  */
 
@@ -244,13 +240,15 @@ int32_t rsi_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, int32_t 
 /*==============================================*/
 /**
  * @brief      Enable socket to listen for a remote connection request in passive mode. This is a blocking API.
- * @pre        \ref rsi_bind() API needs to be called before this API.
  * @param[in]  sockID         - Socket descriptor ID
- * @param[in]  backlog        - Maximum length to which the queue of pending connections can be held
- * @return     Zero           - Success \n
- *             Negative Value - Failure
- *
- *
+ * @param[in]  backlog        - Maximum length to which the queue of pending connections can be held. This argument is used when multiple client connections over the same server socket are required. \n
+ *                              If backlog parameter is issued, then rsi_accept or rsi_accept_async can accept those many client connections over the same server socket \n
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure
+ * @note       **Precondition** - \ref rsi_bind() API needs to be called before this API.
+ * @note       When using multiple client/server sockets, the following macros have to be updated in the wlan_config.h file, in TCP_IP_FEATURE_BIT_MAP - If TCP_IP_TOTAL_SOCKETS_x flag is used, then firmware allocates memory for x sockets. If TCP_IP_TOTAL_SOCKETS_x flag is not passed, then a default value of 10 sockets is used.
+ * @note       When using multiple client/server sockets, the following macros have to be updated in the rsi_user.h file, RSI_NUMBER_OF_LTCP_SOCKETS -> Number of server sockets and RSI_NUMBER_OF_SOCKETS -> Number of client sockets + Number of server sockets.
+ * @note       If multiple server sockets are created then the memory allocated for client sockets is to be shared across the multiple server sockets. If RSI_NUMBER_OF_LTCP_SOCKETS is 0 and RSI_NUMBER_OF_SOCKETS is x, y is server sockets and x-y client sockets can be created
  */
 
 int32_t rsi_listen(int32_t sockID, int32_t backlog)
@@ -261,13 +259,12 @@ int32_t rsi_listen(int32_t sockID, int32_t backlog)
 /*==============================================*/
 /**
  * @brief      Accept the connection request from the remote peer. This API extracts the connection request from the queue of pending connections on listening socket and accepts it.
- * @pre   \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  * @param[in]  sockID         - Socket descriptor ID
  * @param[in]  ClientAddress  - Remote peer address
  * @param[in]  addressLength  - Length of the address measured in bytes
- * @return 	   Zero           - Success \n
- *             Negative Value - Failure
- *
+ * @return 	   0              - Success \n
+ * @return 	   Non-Zero Value - Failure
+ * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  *
  */
 
@@ -505,12 +502,12 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
 /*==============================================*/
 /**
  * @brief      Accept the connection request from the remote peer. This API extracts the connection request from the queue of pending connections on listening socket and accepts it. This is a blocking API.
- * @pre        \ref rsi_listen()/ API needs to be called before this API.
  * @param[in]  sockID          - Socket descriptor
  * @param[in]  ClientAddress   - Remote peer address
  * @param[in]  addressLength   - Length of the address measured in bytes
- * @return 	   Zero            - Success \n
- *             Negative Value  - Failure
+ * @return 	   0               - Success \n
+ * @return 	   Non-Zero Value  - Failure
+ * @note       **Precondition** - \ref rsi_listen() API needs to be called before this API.
  *
  *
  */
@@ -529,9 +526,9 @@ int32_t rsi_accept(int32_t sockID, struct rsi_sockaddr *ClientAddress, int32_t *
  * @param[in]  flags            - Reserved
  * @param[in]  fromAddr         - Address of remote peer, from where current packet was received
  * @param[in]  fromAddrLen      - Pointer that contains remote peer address (fromAddr) length
- * @return     Positive Value   - Success, returns the number of bytes received successfully \n
- *             Negative Value   - Failure \n
- *             zero             - Socket close error
+ * @return     Number of bytes received successfully – Success
+ * @return     Negative value                        – Failure
+ * @return     0                                     – Socket close error
  */
 /// @private
 #ifdef RSI_PROCESS_MAX_RX_DATA
@@ -606,18 +603,16 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
 /*==============================================*/
 /**
  * @brief      Retrieve the received data from the remote peer on a given socket descriptor. This is a blocking API.
- * @pre   \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  * @param[in]  sockID         - Socket descriptor
  * @param[in]  buffer         - Pointer to buffer to hold receive data
  * @param[in]  buffersize     - Size of the buffer supplied
  * @param[in]  flags          - Reserved
  * @param[in]  fromAddr       - Address of remote peer, from where current packet was received
  * @param[in]  fromAddrLen    - Pointer that contains remote peer address (fromAddr) length
- * @return     Positive Value - Success, returns the number of bytes received successfully \n
- *             Negative Value - Failure \n
- *             zero           - Socket close error
- *             
- *
+ * @return     Number of bytes received successfully – Success
+ * @return     Negative value                        – Failure
+ * @return     0                                     – Socket close error
+ * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.             
  *
  */
 
@@ -658,17 +653,17 @@ int32_t rsi_recvfrom(int32_t sockID,
 /*==============================================*/
 /**
  * @brief      Retrieve the data from the remote peer on a specified socket. This is a blocking API.
- * @pre        For tcp_client \ref rsi_connect() API needs to be called before this API. \n
- *             For tcp_server \ref rsi_listen() and \ref rsi_connect()/ API needs to be called before this API. \n
- *             For udp_server \ref rsi_bind()  API needs to be called before this API. \n
- *             For udp_client \ref rsi_socket() or  \ref rsi_bind() API needs to be called before this API
  * @param[in]  sockID         - Socket descriptor ID
  * @param[in]  rcvBuffer      - Pointer to the buffer to hold the data received from the remote peer
  * @param[in]  bufferLength   - Length of the buffer
  * @param[in]  flags          - Reserved
- * @return     Positive Value - Success, returns the number of bytes received successfully \n
- *             Negative Value - Failure
- *             zero           - Socket close error         
+ * @return     Number of bytes received successfully – Success
+ * @return     Negative value                        – Failure
+ * @return     0                                     – Socket close error
+ * @note       **Precondition (TCP client)** - \ref rsi_connect() API needs to be called before this API.
+ * @note       **Precondition (TCP server)** - \ref rsi_listen() and \ref rsi_accept() API needs to be called before this API.
+ * @note       **Precondition (UDP server)** - \ref rsi_bind() API needs to be called before this API.
+ * @note       **Precondition (UDP client)** - \ref rsi_socket() or \ref rsi_bind() API needs to be called before this API        
  *
  *
  */
@@ -704,18 +699,20 @@ int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t 
 */
 /*==============================================*/
 /**
- * @brief       This API sends data to the specified remote IP Address on the given socket. This is non-blocking API.
- * @pre         For tcp_client, \ref  rsi_connect() \n
- *              For tcp_server, \ref  rsi_listen() and  \ref  rsi_accept()/ API needs to be called before this API. \n
- *              For udp_server \ref rsi_bind()  API needs to be called before this API. \n
- *              For udp_client \ref rsi_socket() or  \ref rsi_bind() API needs to be called before this API
+ * @brief       Send data to the specified remote IP Address on the given socket. This is non-blocking API.
  * @param[in]   sockID         - Socket descriptor ID
  * @param[in]   msg            - Pointer to data buffer containing data to send to remote peer
  * @param[in]   msgLength      - Length of the buffer
  * @param[in]   flags          - Reserved
  * @param[in]   destAddr       - Address of the remote peer to send data
  * @param[in]   destAddrLen    - Length of the address in bytes
- * 
+ * @return     Number of bytes received successfully – Success
+ * @return     Negative value                        – Failure
+ * @return     0                                     – Socket close error
+ * @note       **Precondition (TCP client)** - \ref rsi_connect() API needs to be called before this API.
+ * @note       **Precondition (TCP server)** - \ref rsi_listen() and \ref rsi_accept() API needs to be called before this API.
+ * @note       **Precondition (UDP server)** - \ref rsi_bind() API needs to be called before this API.
+ * @note       **Precondition (UDP client)** - \ref rsi_socket() or \ref rsi_bind() API needs to be called before this API 
  * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
 
  | Protocol            | Maximum data chunk (bytes) |
@@ -726,9 +723,6 @@ int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t 
  | TCP-SSL/LTCP-SSL    | 1370                       |
  | Web socket over SSL | 1362                       |
  *
- * @return	    Positive Value - Success, returns the number of bytes sent successfully \n
- *              Negative Value - Failure \n
- *              zero           - Socket close error
  *
  */
 
@@ -750,16 +744,18 @@ int32_t rsi_sendto(int32_t sockID,
 */
 /*==============================================*/
 /**
- * @brief       This API sends the data to the specified remote IP Address on the given socket and receives the acknowledgement through the registered call back. This is non-blocking API.
- * @param[in]   sockID		               - Socket descriptor ID
- * @param[in]   msg 		               - Pointer to data buffer containing data to send to remote peer
- * @param[in]   msgLength	               - Length of data to send
- * @param[in]   flags 			       - Reserved
- * @param[in]   destAddr 		       - Address of the remote peer to send data
- * @param[in]   destAddrLen 		       - Length of the address in bytes
+ * @brief       Send the data to the specified remote IP Address on the given socket and receive the acknowledgement through the registered call back. This is non-blocking API
+ * @param[in]   sockID		                     - Socket descriptor ID
+ * @param[in]   msg 		                       - Pointer to data buffer containing data to send to remote peer
+ * @param[in]   msgLength	                     - Length of data to send
+ * @param[in]   flags 			                   - Reserved
+ * @param[in]   destAddr 		                   - Address of the remote peer to send data
+ * @param[in]   destAddrLen 		               - Length of the address in bytes
  * @param[in]   data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out]  length                         - Number of bytes transfered
- *
+ * @return      Number of bytes received successfully – Success
+ * @return      Negative value                        – Failure
+ * @return      0                                     – Socket close error
  * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
 
  | Protocol            | Maximum data chunk (bytes) |
@@ -770,10 +766,7 @@ int32_t rsi_sendto(int32_t sockID,
  | TCP-SSL/LTCP-SSL    | 1370                       |
  | Web socket over SSL | 1362                       |
  *
- * @return      Positive Value                 - Success, returns the number of bytes sent successfully \n
- *              Negative Value                 - Failure \n
- *              zero                           - Socket close error
- * @note The data_transfer_complete_handler callback handler is supported only for TCP Data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
+ * @note The data_transfer_complete_handler callback handler is supported only for TCP data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
  */
 /// @private
 int32_t rsi_sendto_async(int32_t sockID,
@@ -794,13 +787,15 @@ int32_t rsi_sendto_async(int32_t sockID,
 */
 /*==============================================*/
 /**
- * @brief    This API sends the data to the remote peer on the given socket. This is a non-blocking API. 
- * @pre    \ref rsi_connect()/ \ref rsi_accept() API needs to be called before this API.
- * @param[in]  sockID         - Socket descriptor ID
- * @param[in]  msg            - Pointer to the buffer containing data to send to the remote peer
- * @param[in]  msgLength      - Length of the buffer
- * @param[in]  flags          - Reserved
- * 
+ * @brief       Sends the data to the remote peer on the given socket. This is a non-blocking API. 
+ * @param[in]   sockID         - Socket descriptor ID
+ * @param[in]   msg            - Pointer to the buffer containing data to send to the remote peer
+ * @param[in]   msgLength      - Length of the buffer
+ * @param[in]   flags          - Reserved
+ * @return      Number of bytes received successfully – Success
+ * @return      Negative value                        – Failure
+ * @return      0                                     – Socket close error
+ * @note        **Precondition** - \ref rsi_connect()/ \ref rsi_accept() API needs to be called before this API.
  * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
 
  | Protocol            | Maximum data chunk (bytes) |
@@ -811,10 +806,6 @@ int32_t rsi_sendto_async(int32_t sockID,
  | TCP-SSL/LTCP-SSL    | 1370                       |
  | Web socket over SSL | 1362                       |
  * 
- * @return     Positive Value - Success, returns the number of bytes sent successfully \n
- *             Negative Value - Failure \n
- *             Zero Value     - Socket close error
- *
  *
  */
 
@@ -839,7 +830,7 @@ int32_t rsi_send(int32_t sockID, const int8_t *msg, int32_t msgLength, int32_t f
 /**
  * @brief      Reset all the socket related information
  * @param[in]  sockID - Socket descriptor ID
- * @return 		Void
+ * @return 		 Void
  *
  */
 
@@ -864,10 +855,8 @@ void rsi_reset_per_socket_info(int32_t sockID)
  * @param[in]  msg            - Pointer to data that needs to be sent to remote peer
  * @param[in]  msgLength      - Length of data to send
  * @param[in]  flags          - Reserved
- * 
- * 
- * @return     Zero           - Success \n
- *             Negative Value - Failure
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure
  *
  */
 
@@ -930,7 +919,7 @@ int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgL
 
 /*==============================================*/
 /**
- * @brief      Callback function used to send one chunk of data at a time
+ * @brief      Send one chunk of data at a time
  * @param[in]  sockID - Socket descriptor ID
  * @param[in]  length - Length of data to send
  * @return     Void
@@ -1017,17 +1006,17 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
 /*==============================================*/
 /**
  * @brief      Send large data on a given socket. This is a blocking API.
- * @param[in]  sockID		              - Socket descriptor ID
+ * @param[in]  sockID		                - Socket descriptor ID
  * @param[in]  msg 		                  - Pointer to data that needs to be sent to remote peer
  * @param[in]  msgLength	              - Length of data to send
- * @param[in]  flags		              - Reserved
+ * @param[in]  flags		                - Reserved
  * @param[in]  rsi_sock_data_tx_done_cb - Pointer to the callback function that will be called after one chunk of data transfer completion
  * @param[out] sockID                   - Application socket ID
  * @param[out] status                   - Status of the data transfer
  * @param[out] total_data_sent          - Total length of data sent
  * 
- *@return     Zero                     - Success, number of bytes sent successfully \n
- *             Negative Value           - Failure
+ * @return     0                        - Success \n
+ * @return     Non-Zero Value           - Failure
  *
  */
 
@@ -1110,9 +1099,9 @@ int32_t rsi_send_large_data_async(int32_t sockID,
 
 /*==============================================*/
 /**
- * @brief      Find which socket the data is pending, according to the event that is set from the map.
+ * @brief      Find on which socket the data is pending, according to the event that is set from the event map
  * @param[in]  event_map - Event map
- * @return     SockID    - Return the SockID from the event map
+ * @return     Socket ID from the event map
  *              
  */
 
@@ -1132,9 +1121,9 @@ uint32_t rsi_find_socket_data_pending(uint32_t event_map)
 
 /*==============================================*/
 /**
- * @brief       Retrieve the packet from protocol TX data pending queue and forward to the module.
+ * @brief       Retrieve the packet from TX data pending queue and forward to the module
  * @param[in]   Void
- * @return		Void
+ * @return		  Void
  *
  *
  */
@@ -1162,7 +1151,6 @@ void rsi_socket_event_handler(void)
 /*==============================================*/
 /**
  * @brief      Send data on a given socket asynchronously.
- * @pre  \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  * @param[in]  sockID                         - Socket descriptor ID
  * @param[in]  msg		                        - Pointer to the buffer containing data to send to the remote peer
  * @param[in]  msgLength 		                  - Length of the buffer
@@ -1170,8 +1158,11 @@ void rsi_socket_event_handler(void)
  * @param[in]  data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out] sockID                         - Socket Descriptor ID
  * @param[out] length                         - Number of bytes transfered
- * 
- *  @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+ * @return     Number of bytes received successfully – Success
+ * @return     Negative value                        – Failure
+ * @return     0                                     – Socket close error
+ * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
+ * @note       The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
 
  | Protocol            | Maximum data chunk (bytes) |
  |---------------------|----------------------------|
@@ -1180,11 +1171,7 @@ void rsi_socket_event_handler(void)
  | Web socket          | 1450                       |
  | TCP-SSL/LTCP-SSL    | 1370                       |
  | Web socket over SSL | 1362                       |
- * 
- * @return     Positive Value                 - Success, returns the number of bytes sent successfully \n
- *             Negative Value                 - Failure \n
- *             Zero Value                     - Socket close error
- * @note      The data_transfer_complete_handler callback handler is supported only for TCP Data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
+ * @note      The data_transfer_complete_handler callback handler is supported only for TCP data transfer. This handler is supported only when RSI_WLAN_RSP_TCP_ACK_INDICATION feature is enabled in socket_feature_bitmap.
  */
 /// @private
 int32_t rsi_send_async(int32_t sockID,
@@ -1204,13 +1191,13 @@ int32_t rsi_send_async(int32_t sockID,
 */
 /*==============================================*/
 /**
- * @brief       Closes the socket specified in a socket descriptor. This is a blocking API.
- * @pre  \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
+ * @brief       Closes the socket specified in the socket descriptor. This is a blocking API.
  * @param[in]   sockID - Socket descriptor ID
- * @param[in]   how - 0: Close the specified socket \n
- *                    1: Close all the sockets open on a specified socket's source port number
- * @return		0              - Success \n
- *              Negative Value - Failure
+ * @param[in]   how    - 0: Close the specified socket \n
+ *                       1: Close all the sockets open on a specified socket's source port number
+ * @return		  0              - Success \n
+ * @return		  Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  *
  */
 int32_t rsi_shutdown(int32_t sockID, int32_t how)
@@ -1225,10 +1212,10 @@ int32_t rsi_shutdown(int32_t sockID, int32_t how)
 */
 /*==============================================*/
 /**
- * @brief       Check the WLAN state
+ * @brief       Check if the WLAN is in IP Config state
  * @param[in]   type - Socket family type
- * @return	    0    - If in IP config state \n
- *              -20  - If not in IP config state
+ * @return	    0              - Success: IP config state \n
+ * @return	    Negative value - Failure: -20 (0xffffffec) - Not in IP config state
  *
  */
 /// @private
@@ -1260,10 +1247,10 @@ int32_t rsi_check_state(int32_t type)
 */
 /*==============================================*/
 /**
- * @brief       Get the application socket descriptor from module socket descriptor
+ * @brief       Get the application socket descriptor from module socket descriptor.
  * @param[in]   sock_id        - Module's socket descriptor ID
- * @return      Positive Value - Application index \n
- *              Negative Value - If index is not found
+ * @return      Positive Value - Success (Application socket descriptor) \n
+ * @return      Negative Value - Failure (If module’s socket descriptor is not found)
  *
  */
 /// @private
@@ -1294,8 +1281,8 @@ void rsi_clear_sockets(int32_t sockID)
  * @param[in]   extension_type -  Type of TLS extension
  * @param[in]   option_value   - TLS extension data
  * @param[in]   extension_len  - TLS extension data length
- * @return      Zero           - Success \n
- *              Negative Value - Failure
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure
  *
  *
  **/
@@ -1338,21 +1325,31 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  * @pre \ref rsi_setsockopt() API needs to be called after rsi_socket command only.
  * @param[in]    sockID       - Socket descriptor ID
  * @param[in]    level        - Set the socket option, take the socket level
- * @param[in]    option_name  - Provide the name of the ID \n
+ * @param[in]    option_name  - Provide the name of the ID. \n
  *                              1.SO_MAX_RETRY - Select TCP max retry count \n
  *                              2.SO_SOCK_VAP_ID - Select the VAP id \n
- *                              3.SO_TCP_KEEP_ALIVE-Configure the TCP keep alive initial time \n
+ *                              3.SO_TCP_KEEP_ALIVE - Configure the TCP keep alive initial time \n
  *                              4.SO_RCVBUF - Configure the application buffer for receiving server certificate \n
  *                              5.SO_SSL_ENABLE-Configure SSL socket \n
- *                              6.SO_HIGH_PERFORMANCE_SOCKET-Configure high performance socket
+ *                              6.SO_HIGH_PERFORMANCE_SOCKET-Configure high performance socket \n
+ *                              7.IP_TOS - Configure the type of service value [0-7]
+ *                                | TOS | Value	Description                                                         |
+ *                                |-----|---------------------------------------------------------------------------|
+ *                                |  0	| Best Effort                                                               |   
+ *                                |  1	| Priority                                                                  |
+ *                                |  2	| Immediate                                                                 |    
+ *                                |  3	| Flash-mainly used for voice signaling                                     |
+ *                                |  4	| Flash Override                                                            |    
+ *                                |  5	| Critical - mainly used for voice RTP (Real-time Tranlocal_port Protocol)  |
+ *                                |  6	| Internet                                                                  |       
+ *                                |  7	| Network                                                                   |
+ *
  * @param[in]    option_value - Value of the parameter
  * @param[in]    option_len   - Length of the parameter
- * @return       0 - Success  \n
- *				-2 - Invalid parameters \n
- *				-3 - Command given in wrong state \n
- *				-4 - Buffer not available to serve the command
- *
- * @note         Default window size is 2920 bytes. To modify window size, user need to configure HIGH_PERFORMANCE socket in \ref rsi_setsockopt()
+ * @return       0              - Success  \n
+ * @return       Non-Zero Value - Failure	(**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
+ * @note         **Precondition** - \ref rsi_socket() API needs to be called before this API.		
+ * @note         Default window size is 2920 bytes. To modify window size, user need to configure HIGH_PERFORMANCE socket as option_name in rsi_setsockopt() API
  * 
  */
 
@@ -1619,14 +1616,14 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 /*==============================================*/
 /**
  * @brief        Get the socket options. This is a non-blocking API.
- * @pre \ref rsi_getsockopt() API needs to be called after rsi_socket command only.
  * @param[in]    sockID         - Socket descriptor ID
  * @param[in]    level          - Set the socket option, take the socket level
  * @param[in]    option_name    - Provide the name of the ID
  * @param[in]    option_value   - Value of the parameter
  * @param[in]    option_len     - Length of the parameter
- * @return       Zero           - Success \n
- *               Negative Value - Failure
+ * @return       0              - Success \n
+ * @return       Non-Zero Value - Failure
+ * @note         **Precondition** - \ref rsi_socket() API needs to be called before this API.
  */
 
 int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *option_value, rsi_socklen_t option_len)
@@ -1694,27 +1691,27 @@ int rsi_getsockopt(int32_t sockID, int level, int option_name, const void *optio
 */
 /*==============================================*/
 /**
- * @brief       Select is a BSD API which allow a program to monitor multiple socket (file descriptors), waiting until one or more of 
- *              the sockets become ready to perform receive or send operation.If callback is NULL or not provided, it is a blocking API otherwise 
- *              it is a non-blocking API.
- * @pre         \ref rsi_accept()/ \ref rsi_connect() API's needs to be called before this API.  
- * @note        rsi_select() API needs to be called before \ref rsi_recv()/ \ref rsi_recvfrom()/ \ref rsi_send() API's.  
- * @param[in]    nfds           - The Highest-numbered file descriptor in any of the three sets, plus 1
+ * @brief       Monitor multiple socket (file descriptors), waiting until one or more of the sockets become ready to perform receive or send operation. 
+ *              If callback is NULL or not provided, it is a blocking API. \n
+ *              Otherwise, it is a non-blocking API
+ * @param[in]    nfds           - The highest-numbered file descriptor in any of the three sets, plus 1
  * @param[in]    readfds        - Socket descriptors to  watch to see if data become available for receive 
- * @param[in]    writefds       - Socket descriptors  to watch to see if space is available in socket to send data. 
+ * @param[in]    writefds       - Socket descriptors to watch to see if space is available in socket to send data. 
  * @param[in]    exceptfds      - Socket descriptors to watch for exception 
  * @param[in]    Timeout        - Timeout value to break the wait for select.
  *                                If both fields of the timeval structure are zero, then select() returns immediately.  
- *                                (This is useful for polling.)  If timeout is NULL (no  timeout),  rsi_select()  can  block  indefinitely. 
+ *                                (This is useful for polling). If timeout is NULL (no timeout), rsi_select() can block indefinitely. 
  * @param[in]    callback       - Callback called when asynchronous response reach the select request.
  * @param[out]   fd_read        - Pointer that holds bitmap for the select on read operation
  * @param[out]   fd_write       - Pointer that holds bitmap for the select on write operation
  * @param[out]   fd_except      - Pointer that holds bitmap for the select on exceptional operation
  * @param[out]   status         - Status code 
- * @return       Zero           - Time out \n
- *               Positive Value - Indicate total number of bits ready across all the descriptor sets \n
- *               Negative Value - Failure
- *  @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return       Positive Value - Indicate total number of bits ready across all the descriptor sets \n
+ * @return       0              - Time out \n \n
+ * @return       Negative Value - Failure
+ * @note         **Precondition** - \ref rsi_accept()/ \ref rsi_connect() API's needs to be called before this API. 
+ * @note         **Precondition** - This API needs to be called before \ref rsi_recv()/ \ref rsi_recvfrom()/ \ref rsi_send() API's.
+ * @note         Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_select(int32_t nfds,
@@ -1951,8 +1948,8 @@ int32_t rsi_select(int32_t nfds,
  * @brief       Calculate the buffers required.
  * @param[in]   type           - Type
  * @param[in]   length         - Length
- * @return      Zero           - Success \n
- *              Negative Value - Failure
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure
  *              
  *
  */
@@ -1972,17 +1969,21 @@ uint8_t calculate_buffers_required(uint8_t type, uint16_t length)
 */
 /*==============================================*/
 /**
- * @brief      Accept the connection request from the remote peer and register a callback that will be used by
- * 			       the driver to forward the received connection request asynchronously to the application. This is a non-blocking API.
+ * @brief       Accept the connection request from the remote peer and register a callback that will be used by
+ * 			        the driver to forward the received connection request asynchronously to the application. This is a non-blocking API.
  * @param[in]   sockID         - Socket descriptor ID
  * @param[in]   callback       - Callback function to indicate the socket parameters connected
  * @param[out]  sock_id        - Socket descriptor ID
  * @param[out]  dest_port      - Port number of remote peer
  * @param[out]  ip_addr        - Remote peer address
- * @param[out]  ip_version     - 4 if it is IPV4 connection,  6 if it is IPV6 connection
- * @return      Zero           - Success \n
- *              Negative Value - Failure
- *
+ * @param[out]  ip_version     - 4 - IPV4.  \n  6 - IPV6 
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure
+ * @note        When attempting to connect multiple clients to the server socket opened on module, i.e., when the backlog parameter is used in rsi_listen() API. rsi_accept_async() has to be called again for each of the client connections. \n
+ *              The API calling has to be repeated for the next client connection, only after the connection process of the previous client is complete.
+ * @note        When using multiple client/server sockets, the following macros have to be updated in the wlan_config.h file, in TCP_IP_FEATURE_BIT_MAP - If TCP_IP_TOTAL_SOCKETS_x flag is used, then firmware allocates memory for x sockets. If TCP_IP_TOTAL_SOCKETS_x flag is not passed, then a default value of 10 sockets is used.
+ * @note        When using multiple client/server sockets, the following macros have to be updated in the rsi_user.h file, RSI_NUMBER_OF_LTCP_SOCKETS -> Number of server sockets and RSI_NUMBER_OF_SOCKETS -> Number of client sockets + Number of server sockets.
+ * @note        If multiple server sockets are created then the memory allocated for client sockets is to be shared across the multiple server sockets. If RSI_NUMBER_OF_LTCP_SOCKETS is 0 and RSI_NUMBER_OF_SOCKETS is x, y is server sockets and x-y client sockets can be created
  */
 
 int32_t rsi_accept_async(int32_t sockID,
@@ -2144,10 +2145,10 @@ int32_t rsi_accept_async(int32_t sockID,
 
 /*==============================================*/
 /**
- * @brief       Get the application socket descriptor from available socket pool
+ * @brief       Get the application socket descriptor from source port
  * @param[in]   src_port       - Pointer to the socket source port
- * @return      Positive Value - Application index \n
- *              Negative Value - If index is not found
+ * @return      Positive Value - Application socket descriptor \n
+ * @return      Negative Value - If socket is not found
  *
  */
 /// @private
@@ -2177,11 +2178,11 @@ int32_t rsi_get_app_socket_descriptor(uint8_t *src_port)
 }
 /*==============================================*/
 /**
- * @brief       Function to get the primary socket ID from port number
+ * @brief       Get the socket ID from port number
  * @param[in]   src_port       - Socket source port number
  * @param[in]   dst_port       - Socket destination port number
  * @return      Positive Value - Socket descriptor \n
- *              Negative Value - If socket is not found
+ * @return      Negative Value - If socket is not found
  */
 /// @private
 int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
@@ -2210,7 +2211,7 @@ int32_t rsi_get_socket_id(uint32_t src_port, uint32_t dst_port)
  * @brief       Get the primary socket ID from port number
  * @param[in]   port_num       - Pointer to port number
  * @return      Positive Value - Socket descriptor \n
- *              Negative Value - If socket is not found
+ * @return      Negative Value - If socket is not found
  *
  */
 /// @private
@@ -2246,13 +2247,13 @@ int32_t rsi_get_primary_socket_id(uint8_t *port_num)
 */
 /*==============================================*/
 /**
- * @brief      Host indicate the status to module after validating the server certificate received from module. This is a non-blocking API.
- * @param[in]  valid     - Indicate whether the server certificate is valid or not \n
- *                           1 - Indicate that the server certificate is valid \n
+ * @brief      Validate the server certificate received from the module. This is a non-blocking API.
+ * @param[in]  valid     - Indicate whether the server certificate is valid or not. \n
+ *                           1 - Indicate that the server certificate is valid. \n
  *                           0 - Indicate that the server certificate is not valid
  * @param[in]  socket_id - Socket identifier
- * @return      0              - Success \n
- *              Negative Value - Failure
+ * @return     0              - Success \n
+ * @return     Negative Value - Failure
  */
 
 int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
@@ -2308,16 +2309,16 @@ int32_t rsi_certificate_valid(uint16_t valid, uint16_t socket_id)
 /*==============================================*/
 /**
  * @brief       Send socket create request to the module and receive the response asynchronously. This is a non-blocking API if socket_connect_response_handler is registered. \n
- * 		Otherwise it is a blocking API.
+ * 		          Otherwise it is a blocking API.
  * @param[in]   global_cb_p - Pointer to the global control block
  * @param[in]   sockID      - Socket descriptor ID
  * @param[in]   type        - Type of socket to create
  * @param[in]   backlog     - Number of backlogs for LTCP socket
  * @return      0              - Success \n
- *              Negative Value - Failure
+ * @return      Negative Value - Failure
+ * @note        **Precondition** - \ref rsi_connect() API needs to be called before this API.
  *
  */
-/// @private
 
 int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 {
@@ -2534,14 +2535,12 @@ int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog)
 /*==============================================*/
 /**
  * @brief       Update TCP window size from host. This is a blocking API.
- * @pre		\ref rsi_connect() API needs to be called before this API.
- * @param[in]   sockID - Socket descriptor ID
+ * @param[in]   sockID         - Socket descriptor ID
  * @param[in]   new_size_bytes - Window size to update in bytes
  * @return      Positive Value - Window size updated \n
  *              Negative Value - Failure
+ * @note    			**Precondition** - \ref rsi_connect() API needs to be called before this API.
  *             
- *
- *
  */
 
 int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
@@ -2640,14 +2639,14 @@ int32_t rsi_tcp_window_update(uint32_t sockID, uint32_t new_size_bytes)
 */
 /*==============================================*/
 /**
- * @brief       Get the primary socket ID based on source port number, destination port number, destination IP address, and the IP version. This is a non-blocking API.
+ * @brief       Get the socket descriptor based on source port number, destination port number, destination IP address, and the IP version. This is a non-blocking API.
  * @param[in]   src_port   - Pointer to source port number
  * @param[in]   dst_port   - Pointer to destination port number
  * @param[in]   ip_addr    - Pointer to destinaion IP address
  * @param[in]   ip_version - IP version either IPv4/IPv6
  * @param[in]   sockid     - Socket descriptor ID from firmware
  * @return      0              - Socket descriptor \n
- *              Negative Value - If socket is not found
+ * @return      Negative Value - If socket is not found
  *
  */
 /// @private
@@ -2738,27 +2737,25 @@ int32_t rsi_get_socket_descriptor(uint8_t *src_port,
 */
 /*==============================================*/
 /**
- * @brief      Create a socket and register a callback that will be used by the driver
- *          to forward the received packets asynchronously to the application (on packet reception) without waiting for recv API call. This is a non-blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  protocolFamily - Protocol family to select IPv4 or IPv6 \n
- *                               AF_INET (2) : Select IPv4 \n
+ * @brief      Create a socket and register a callback that will be used by the driver to forward the received packets asynchronously to the application (on packet reception) \n
+ *             without waiting for recv API (Add proper API here). This is a non-blocking API.
+ * @param[in]  protocolFamily - Protocol family to select IPv4 or IPv6. \n
+ *                               AF_INET (2) : Select IPv4, \n
  *                               AF_INET6 (3) : Select IPv6
- * @param[in]  type           - Select socket type UDP or TCP \n
- *                               SOCK_STREAM (1) : Select TCP \n
+ * @param[in]  type           - Select socket type UDP or TCP. \n
+ *                               SOCK_STREAM (1) : Select TCP, \n
  *                               SOCK_DGRM (2) : Select UDP
- * @param[in]  protocol       - 0: Non-SSL sockets, 1: SSL sockets \n
- *                               BIT(5) must be enabled to select the certificate index \n
- *                               0<<12 for index 0 \n
+ * @param[in]  protocol       - 0: Non-SSL sockets, 1: SSL sockets. \n
+ *                               BIT(5) must be enabled to select the certificate index, \n
+ *                               0<<12 for index 0, \n
  *                               1<<12 for index 1
  * @param[in]  callback       - Callback function to read data asynchronously from socket \n
  * @param[out] sock_no        - Application socket number
- * @param[out] buffer	      -	Pointer to buffer holding the data
+ * @param[out] buffer	        -	Pointer to buffer holding the data
  * @param[out] length 	      -	Length of the response buffer
  * @return     0              - Success \n
- *             Negative Value - Failure
- *
- *  @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return     Negative Value - Failure
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API. 
  */
 /// @private
 
@@ -2936,13 +2933,12 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
 }
 /*==============================================*/
 /**
- * @brief       Connect the socket to specified remote address. This is a non-blocking API if socket_connect_response handler() is registered through rsi_wlan_register_callbacks() otherwise it is a blocking API.
+ * @brief       Connect the socket to specific remote address. This is a non-blocking API, if socket_connect_response_handler() is registered through rsi_wlan_register_callbacks(). Otherwise it is a blocking API.
  * @param[in]   sockID        - Socket descriptor ID
  * @param[in]   remoteAddress - Remote peer address structure
  * @param[in]   addressLength - Remote peer address structrue length
-
- * @return		0              - Success \n
- *              Negative Value - Failure
+ * @return		  0              - Success \n
+ * @return		  Negative Value - Failure
  *               
  */
 /// @private
@@ -3067,19 +3063,16 @@ int32_t rsi_socket_connect(int32_t sockID, struct rsi_sockaddr *remoteAddress, i
 /*==============================================*/
 /**
  * @brief      Retrieve the received data from the remote peer on a given socket descriptor. This is a blocking API.
- * @pre  \ref rsi_socket() \ref rsi_socket_async() API needs to be called before this API.
  * @param[in]  sockID      - Socket descriptor ID
  * @param[out] buffer      - Pointer to buffer to hold receive data
  * @param[in]  buffersize  - Size of the buffer supplied
  * @param[in]  flags       - Reserved
  * @param[out] fromAddr    - Sddress of remote peer, from where current packet was received
  * @param[in]  fromAddrLen - Pointer that contains remote peer address (fromAddr) length
- * @return	
- *              Value 	    |	Description
- *           :-------------:|:--------------------------------------------
- * 	      Positive Value    |Number of bytes received successfully
- *             0            |Socket close error
- *            Negative Value|Failure
+ * @return	   Positive Value - Number of bytes received successfully
+ * @return	   0              - Socket close error
+ * @return	   Negative Value - Failure
+ * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.       
  *
  */
 /// @private
@@ -3360,7 +3353,7 @@ int32_t rsi_socket_recvfrom(int32_t sockID,
  * @param[in]  sockID  - Socket descriptor ID
  * @param[in]  backlog - Maximum number of pending connections requests
  * @return 	   0              - Success \n
- *             Negative Value - Failure
+ * @return 	   Negative Value - Failure
  *
  */
 /// @private
@@ -3453,16 +3446,16 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 
 /*==============================================*/
 /**
-* @brief       Close the socket specified in a socket descriptor. This is a blocking API.
- * @pre  \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
+ * @brief       Close the socket specified in a socket descriptor. This is a blocking API.
  * @param[in]   sockID : Socket descriptor ID
- * @param[in]   how      0: Close the specified socket \n
+ * @param[in]   how      0: Close the specified socket, \n
  *                       1: Close all the sockets open on a specified socket's source port number. \n
- * @note  	1. how = 1 is valid for passively open sockets (listen) with more than one backlogs specified. \n
- * 		2. If EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE (BIT(16)) in RSI_EXT_TCPIP_FEATURE_BITMAP is enabled, then to close LTCP socket, argument "how" should be 1. \n 
- * 		3. If EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE (BIT(16)) in RSI_EXT_TCPIP_FEATURE_BITMAP is enabled, though remote socket has terminated connection, socket is disconnected and deleted only if host issues rsi_shutdown().
- * @return		0              - Success \n
- *              Negative Value - Failure
+ * @return		  0              - Success \n
+ * @return		  Negative Value - Failure
+ * @note  	    **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
+ * @note  	    how = 1 is valid for passively open sockets (listen) with more than one backlogs specified. \n
+ * @note  	    If EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE (BIT(16)) in RSI_EXT_TCPIP_FEATURE_BITMAP is enabled, then to close LTCP socket, argument "how" should be 1. \n 
+ * @note  	    If EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE (BIT(16)) in RSI_EXT_TCPIP_FEATURE_BITMAP is enabled, though remote socket has terminated connection, socket is disconnected and deleted only, if host issues rsi_shutdown().
  *
  */
 /// @private
@@ -3603,10 +3596,10 @@ int32_t rsi_socket_shutdown(int32_t sockID, int32_t how)
 /**
  * @brief       Assign address to the socket. This is a non-blocking API for TCP and a blocking API for UDP.
  * @param[in]   sockID        - Socket descriptor ID
- * @param[in]   localAddress  - Address that needs to be assign
+ * @param[in]   localAddress  - Address that needs to be assigned
  * @param[in]   addressLength - Length of the socket address
- * @return		0              - Success \n
- *              Negative Value - Failure
+ * @return		  0              - Success \n
+ * @return		  Negative Value - Failure
  *
  *
  */
@@ -3757,12 +3750,12 @@ int32_t rsi_socket_bind(int32_t sockID, struct rsi_sockaddr *localAddress, int32
 }
 /*==============================================*/
 /**
- * @brief       Wireless Library to acquire or wait for NWK semaphore.
+ * @brief       Wait for network semaphore
  * @param[in]   semaphore  - Semaphore handle pointer
  * @param[in]   timeout_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0, then wait
  *              till semaphore is acquired.
  * @return      0              - Success \n
- *              Negative Value - Failure
+ * @return      Negative Value - Failure
  */
 /// @private
 
@@ -3788,10 +3781,10 @@ rsi_error_t rsi_wait_on_socket_semaphore(rsi_semaphore_handle_t *semaphore, uint
 */
 /*==============================================*/
 /**
- * @brief       Get the application socket descriptor from module socket descriptor. This is a non-blocking API.
+ * @brief       Get the application socket descriptor from module’s socket descriptor. This is a non-blocking API.
  * @param[in]   sock_id - Module's socket descriptor ID
- * @return		Positive Value - Application index \n
- *              Negative Value - If index is not found
+ * @return		  Positive Value - Application socket descriptor \n
+ * @return		  Negative Value - If socket is not found
  *
  */
 /// @private
@@ -3825,9 +3818,9 @@ int32_t rsi_application_socket_descriptor(int32_t sock_id)
 */
 /*==============================================*/
 /**
- * @brief       Return WLAN status. This is a non-blocking API.
+ * @brief       Get WLAN socket status. This is a non-blocking API
  * @param[in]   sockID - Application socket ID 
- * @return      WLAN status
+ * @return      WLAN socket status
  *
  */
 int32_t rsi_wlan_socket_get_status(int32_t sockID)
@@ -3857,8 +3850,8 @@ void rsi_wlan_socket_set_status(int32_t status, int32_t sockID)
 /**
  * @brief       Get the status of the socket specified in the select ID.
  * @param[in]   selectid       - Socket ID to get the status
- * @return      Zero           - Success \n
- *              Negative Value - Failure
+ * @return      0              - Success \n
+ * @return      Negative Value - Failure
  */
 int32_t rsi_select_get_status(int32_t selectid)
 {
@@ -3874,11 +3867,10 @@ int32_t rsi_select_get_status(int32_t selectid)
 /*==============================================*/
 /**
  * @brief       Set the status of the socket specified in the select ID.
- * @pre  \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  * @param[in]   status   - Status value to be set
  * @param[in]   selectid - Socket ID on which the status is set
  * @return      Void
- *
+ * @note        **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  */
 /// @private
 void rsi_select_set_status(int32_t status, int32_t selectid)
@@ -3899,8 +3891,9 @@ void rsi_select_set_status(int32_t status, int32_t selectid)
  * @param[in]  data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out] sockID                         - Socket Descriptor ID
  * @param[out] length                         - Number of bytes transfered
- *
- * @note        The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
+ * @return	   0                              - Success \n
+ * @return	   Negative Value                 - Failure
+ * @note       The following table lists the maximum individual chunk of data that can be sent over each supported protocol.
 
  | Protocol            | Maximum data chunk (bytes) |
  |---------------------|----------------------------|
@@ -3910,10 +3903,6 @@ void rsi_select_set_status(int32_t status, int32_t selectid)
  | TCP-SSL/LTCP-SSL    | 1370                       |
  | Web socket over SSL | 1362                       |
  * 
- * @return	Zero                           - Success \n
- *             Negative Value                 - Failure
- *
- *  @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
  */
 /// @private
 int32_t rsi_send_async_non_rom(int32_t sockID,
@@ -3994,11 +3983,9 @@ int32_t rsi_send_async_non_rom(int32_t sockID,
  * @param[in]   data_transfer_complete_handler - Pointer to callback function called after complete data transfer
  * @param[out]  sockID                         - Socket Descriptor ID
  * @param[out]  length                         - Number of bytes transfered
- * @return	Positive Value                 - Success, Returns the number of bytes sent successfully \n
- *              Negative Value                 - Failure \n
- *              zero                           - Socket close error
- *
- *  @note        Refer to Error Codes section for the description of the above error codes  \ref error-codes.
+ * @return	    Positive Value                 - Success, Number of bytes sent successfully \n
+ * @return	    Negative Value                 - Failure \n
+ * @return	    0                              - Socket close error
  *
  */
 /// @private
@@ -4281,7 +4268,7 @@ void rsi_clear_sockets_non_rom(int32_t sockID)
 */
 /*==============================================*/
 /**
- * @brief       Post on a socket semaphore
+ * @brief       Post a socket semaphore which is on wait
  * @param[in]   sockID - Socket descriptor ID
  * @return      Void
  *

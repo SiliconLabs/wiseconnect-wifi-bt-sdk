@@ -22,12 +22,12 @@
 */
 /*==============================================*/
 /**
- * @brief       According to command type, this API will send multicast group join or leave. This is a blocking API.
- * @param[in]   flags          -  Select version use BIT(0) : 0 - IPv4 , 1 - IPv6
+ * @brief       Send multicast group join or leave. This is a blocking API.
+ * @param[in]   flags          - Select IP version. \n BIT(0) : 0 - IPv4 , 1 - IPv6
  * @param[in]   ip_address     - Multicast IP address
  * @param[in]   command_type   - Type of commands: JOIN/LEAVE
- * @return      0              -  Success \n
- *              Negative value -  Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
  *
  */
 /// @private
@@ -111,16 +111,14 @@ static int32_t rsi_multicast(uint8_t flags, int8_t *ip_address, uint8_t command_
 /*==============================================*/
 /**
  * @brief       Join to a multicast group. This is a blocking API.
- * @pre         \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]   flags          - Select the IP version. \n
- *                     BIT(0)  – RSI_IPV6.Set this bit to enable IPv6. By default it is configured to IPv4.
+ *                               BIT(0): 0 - IPv4 , 1 - IPv6
  * @param[in]   ip_address     - IPv4/IPv6 address of multicast group.
- * @return	             0 - Success \n
- *              Negative Value - Failure \n
- *                          -3 - Command given in wrong state \n
- *                          -4 - Buffer not available to serve the command
- * @note       Device supports only one Multicast group. \n
- *             Must leave the previous group, if joining a new Multicast group
+ * @return	    0              - Success \n
+ * @return	    Negative Value - Failure 	(**Possible Error Codes** - 0xfffffffd, 0xfffffffc) \n
+ * @note       	**Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Device supports only one multicast group. It must leave the previous group, to join a new multicast group.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_multicast_join(uint8_t flags, int8_t *ip_address)
 {
@@ -142,18 +140,13 @@ int32_t rsi_multicast_join(uint8_t flags, int8_t *ip_address)
  * @brief       Leave the multicast group. This is a blocking API.
  * @pre         \ref rsi_config_ipaddress() API needs to be called before this API. 
  * @param[in]   flags          - Select the IP version. \n
- *                      BIT(0) – RSI_IPV6. Set this bit to enable IPv6. By default it is configured to IPv4.
+ *                               BIT(0) – RSI_IPV6. Set this bit to enable IPv6. By default it is configured to IPv4.
  * @param[in]   ip_address     - IPv4/IPv6 address of multicast group. 
  * @return      0              - Success \n
- *              Negative Value - Failure \n
- *              -3 - Command given in wrong state \n
- *              -4 - Buffer not available to serve the command \n 
- *
- *                               If return value is greater than 0 \n
- *                               0x0021,0x002C,0x0015,0xBB16,0xBB17
- * @note             Device supports only one Multicast group. \n
- *                   Must leave the previous group, if joining a new Multicast group
- *                   Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ *              Negative Value - Failure 	(**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0x0021,0x002C,0x0015,0xBB16,0xBB17) \n
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Device supports only one multicast group. It must leave the previous group, to join a new multicast group.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_multicast_leave(uint8_t flags, int8_t *ip_address)
 {

@@ -23,13 +23,13 @@
 */
 /*==============================================*/
 /**
- * @brief            Initialize the MDNSD service in WiSeConnect device.It creates MDNS daemon. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]        ip_version - Select the IP version. 4 – to select IPv4 \n 6 – to select IPv6
- * @param[in]        ttl        - Time to live in seconds for which service should be active
- * @param[in]        host_name  - Host name that is used as host name in Type A record.
+ * @brief       Initialize the MDNSD service in device. It creates MDNS daemon. This is a blocking API.
+ * @param[in]   ip_version - Select the IP version. 4 – to select IPv4, \n 6 – to select IPv6
+ * @param[in]   ttl        - Time to live in seconds for which service should be active
+ * @param[in]   host_name  - Host name that is used as host name in Type A record.
  * @return      0               - Success \n
- *              Negative value  - Failure
+ * @return      Negative value  - Failure
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  */
 int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name)
 {
@@ -122,18 +122,18 @@ int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name)
 #ifndef CHIP_9117
 /*==============================================*/
 /**
- * @brief      Add a service/start service discovery.This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API
+ * @brief      Add a MDNSD service/start service discovery. This is a blocking API.
  * @param[in]  port             - Port number on which service should be added.
  * @param[in]  ttl              - Time to live. This is time in seconds for which service should be active
- * @param[in]  more             - This byte should be set to '1' when there are more services to add \n
+ * @param[in]  more             - This byte should be set to '1' when there are more services to add. \n
  *                                 0 - This is last service, starts MDNS service. \n
  *                                 1 - Still more services will be added.
  * @param[in]  service_ptr_name - Name to be added in Type-PTR record
  * @param[in]  service_name     - Name to be added in Type-SRV record (service name)
  * @param[in]  service_text     - Text field to be added in Type-TXT record
  * @return      0               - Success \n
- *              Negative value  - Failure
+ * @return      Negative value  - Failure
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Currently, only one service registration is supported
  */
 
@@ -240,19 +240,16 @@ int32_t rsi_mdnsd_register_service(uint16_t port,
 
 /*==============================================*/
 /**
- * @brief      Add a service/start service discovery.This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API
+ * @brief      Add a MDNSD service/start service discovery. This is a blocking API.
  * @param[in]  port             - Port number on which service should be added.
  * @param[in]  ttl              - Time to live. This is time in seconds for which service should be active
- * @param[in]  more             - This byte should be set to '1' when there are more services to add \n
- *                                 0 - This is last service, starts MDNS service. \n
- *                                 1 - Still more services will be added.
  * @param[in]  type             - Name to be added in Type field
  * @param[in]  sub_type             - Name to be added in SubType field
  * @param[in]  service_name     - Name to be added in Type-SRV record (service name)
  * @param[in]  service_text     - Text field to be added in Type-TXT record
  * @return      0               - Success \n
- *              Negative value  - Failure
+ * @return      Negative value  - Failure
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Currently, only one service registration is supported
  */
 
@@ -368,10 +365,10 @@ int32_t rsi_mdnsd_register_service(uint16_t port,
 /*==============================================*/
 /**
  * @brief      Delete the MDNSD service. This is a blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  void  
- * @return     0              - Success \n
- *             Negative value - Failure
+ * @return     0               - Success \n
+ * @return     Negative value  - Failure
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  */
 
 int32_t rsi_mdnsd_deinit(void)

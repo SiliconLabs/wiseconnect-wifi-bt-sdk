@@ -23,16 +23,16 @@
 /**
  * @brief      Query the IP address of a given domain name. This is a blocking API.
  * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  ip_version               - IP version 4: IPv4 6: IPv6
+ * @param[in]  ip_version               - IP version. 4: IPv4, \n 6: IPv6
  * @param[in]  url_name                 - Pointer to the domain name to resolve IP address
- * @param[in]  primary_server_address   - IP address of the DNS server. This parameter is optional if module gets the DNS server address using DHCP. If DNS server address is obtained using DHCP, in that case this param should be NULL.
+ * @param[in]  primary_server_address   - IP address of the DNS server. This parameter is optional, if module gets the DNS server address using DHCP. If DNS server address is obtained using DHCP, in that case this parameter should be NULL.
  * @param[in]  secondary_server_address - IP address of the secondary  DNS server. In case of no secondary DNS server, IP is NULL.
- * @param[in]  dns_query_resp           - Pointer to hold DNS query results. This is an out parameter.
+ * @param[out] dns_query_resp          - Pointer to hold DNS query results. 
  * @param[in]  length                   - Length of the resultant buffer.
  * @return     0              -  Success \n
- *             Negative Value - Failure
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
- * @note        DNS mode is determined by the value of primary_server_address. If NULL, then DNS mode is set to DHCP (1), else it is set to Static IP Address (0).
+ * @return     Negative Value - Failure
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       DNS mode is determined by the value of primary_server_address. If NULL, then DNS mode is set to DHCP (1), else it is set to Static IP Address (0).
  */
 
 int32_t rsi_dns_req(uint8_t ip_version,
@@ -213,17 +213,16 @@ int32_t rsi_dns_req(uint8_t ip_version,
 */
 /*==============================================*/
 /**
- * @brief     Update the host name for a given host and zone name. This is non-blocking API.
- * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  ip_version             - IP version 4: IPv4 6: IPv6
+ * @brief      Update the host name for a given host and zone name. This is non-blocking API.
+ * @param[in]  ip_version             - IP version. 4: IPv4, 6: IPv6
  * @param[in]  zone_name              - Pointer to a zone name and to update host name
  * @param[in]  host_name              - HOST name of the domain
- * @param[in]  server_address         - IP address of the DNS server. This parameter is optional if module get DNS server address using DHCP.
+ * @param[in]  server_address         - IP address of the DNS server. This parameter is optional, if module gets DNS server address using DHCP.
  * @param[in]  ttl                    - Time to live value of the host name.
  * @param[in]  dns_update_rsp_handler - Callback function called by driver on reception of DNS update response.
  * @return     0              -  Success \n
- *             Negative Value - Failure
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     Negative Value - Failure
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  *
  */
 

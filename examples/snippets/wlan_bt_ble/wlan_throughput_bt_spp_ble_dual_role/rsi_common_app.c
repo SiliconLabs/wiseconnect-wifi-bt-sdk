@@ -399,6 +399,7 @@ void rsi_common_app_task(void)
     rsi_semaphore_create(&sync_coex_bt_sem, 0); //! This lock will be used from wlan task to be done.
     rsi_semaphore_create(&sync_coex_ble_sem, 0);
 #endif
+#ifdef RSI_WITH_OS
     status = rsi_task_create((rsi_task_function_t)(int32_t)rsi_wlan_app_task,
                              (uint8_t *)"wlan_task",
                              RSI_WLAN_APP_TASK_SIZE,
@@ -409,6 +410,7 @@ void rsi_common_app_task(void)
       LOG_PRINT("\r\n rsi_wlan_app_task failed to create \r\n");
       break;
     }
+#endif
 #endif
 
     //! create ble main task if ble protocol is selected
@@ -438,6 +440,7 @@ void rsi_common_app_task(void)
       return;
     }
 #endif
+#ifdef RSI_WITH_OS
     status = rsi_task_create((rsi_task_function_t)rsi_ble_main_app_task,
                              (uint8_t *)"ble_main_task",
                              RSI_BLE_APP_MAIN_TASK_SIZE,
@@ -449,12 +452,14 @@ void rsi_common_app_task(void)
       return;
     }
 #endif
+#endif
 
     //! create bt task if bt protocol is selected
 #if RSI_ENABLE_BT_TEST
     rsi_bt_running = 1;
     rsi_semaphore_create(&bt_app_sem, 0);
     rsi_semaphore_create(&bt_inquiry_sem, 0);
+#ifdef RSI_WITH_OS
     status = rsi_task_create((rsi_task_function_t)(int32_t)rsi_bt_spp_task,
                              (uint8_t *)"bt_spp_task",
                              RSI_BT_APP_TASK_SIZE,
@@ -465,6 +470,7 @@ void rsi_common_app_task(void)
       LOG_PRINT("\r\n rsi_bt_spp_task failed to create \r\n");
       return;
     }
+#endif
 #if WLAN_THROUGHPUT_TEST
     status = rsi_semaphore_create(&bt_wlan_throughput_sync_sem, 0);
     if (status != RSI_ERROR_NONE) {
@@ -475,7 +481,9 @@ void rsi_common_app_task(void)
 #endif
 #endif
     //! delete the task as initialization is completed
+#ifdef RSI_WITH_OS
     rsi_task_destroy(NULL);
+#endif
   }
 }
 

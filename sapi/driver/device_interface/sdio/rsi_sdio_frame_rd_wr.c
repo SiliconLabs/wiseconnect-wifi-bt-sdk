@@ -44,6 +44,11 @@
 */
 /*====================================================*/
 /**
+ * @brief       This API reads the frame from the host interface. 
+ * @param[in]   read_buff         - The frame contents read from the host interface are populated to this buffer. 
+ * @return       0                - Success \n
+ * @return       Non-Zero value   - Failure \n
+ *             
  */
 int16_t rsi_frame_read(uint8_t *read_buff)
 {
@@ -69,7 +74,13 @@ int16_t rsi_frame_read(uint8_t *read_buff)
 
 /*====================================================*/
 /**
- *
+ * @brief       This API writes the frame to the host interface. 
+ * @param[in]   uFrameDscFrame  -  16 bytes host descriptor. 
+ * @param[in]   payloadparam    -  buffer to the frame payload.
+ * @param[in]   size_param      -  size of the payload.
+ * @return       0              -  Success \n
+ * @return       Negative value -  Failure \n
+ *             
  */
 int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam, uint16_t size_param)
 {

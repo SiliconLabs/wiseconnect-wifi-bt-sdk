@@ -189,6 +189,8 @@ typedef enum rsi_bt_cmd_request_e {
 
   RSI_BT_REQ_HFP_AUDIODATA = 0x0049,
 
+  RSI_BT_LINK_POLICY_CONFIG = 0x004A,
+
   RSI_BT_REQ_LINKKEY_REPLY        = 0x0091,
   RSI_BT_REQ_PER_TX               = 0x0098,
   RSI_BT_REQ_PER_RX               = 0x0099,
@@ -752,6 +754,12 @@ typedef struct rsi_bt_req_set_ssp_mode_s {
   uint8_t pair_mode;
   uint8_t IO_capability;
 } rsi_bt_req_set_ssp_mode_t;
+
+//Link Policy Config
+typedef struct rsi_bt_cmd_link_policy_settings_s {
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  uint16_t link_policy_settings;
+} rsi_bt_cmd_link_policy_settings_t;
 
 //Set EIR data
 typedef struct rsi_bt_set_eir_data_s {

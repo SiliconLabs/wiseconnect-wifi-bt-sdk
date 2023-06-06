@@ -318,9 +318,9 @@ int32_t rsi_http_client_app()
 #if DHCP_MODE
   status = rsi_config_ipaddress(RSI_IP_VERSION, dhcp_mode, 0, 0, 0, (uint8_t *)ip_buff, sizeof(ip_buff), 0);
 #ifdef RSI_CONFIGURE_IPV6
-  rsi_inet_ntop6(&ip_buff[1], link_local_addr, sizeof(link_local_addr));
-  rsi_inet_ntop6(&ip_buff[5], &global_addr, sizeof(global_addr));
-  rsi_inet_ntop6(&ip_buff[9], &gateway6, sizeof(gateway6));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[1], (char *)link_local_addr, sizeof(link_local_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[5], (char *)global_addr, sizeof(global_addr));
+  rsi_inet_ntop6((const unsigned char *)&ip_buff[9], (char *)gateway6, sizeof(gateway6));
 #endif
 #else
 #ifdef RSI_CONFIGURE_IPV6

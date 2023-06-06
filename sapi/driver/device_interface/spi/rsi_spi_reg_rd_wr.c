@@ -43,11 +43,10 @@
 */
 /**
  * @brief       Read from a register in the module from the address specified.
- * @param[in]   regAddr - Address of spi register to read, addr is 6-bits, upper 2 bits must be cleared
+ * @param[in]   regAddr - Address of SPI register to read, address is 6-bits, upper 2 bits must be cleared
  * @param[in]   dBuf    - Pointer to the buffer of data to write, assumed to be at least 2 bytes long
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  *
  */
 int16_t rsi_reg_rd(uint8_t regAddr, uint8_t *dBuf)
@@ -87,11 +86,10 @@ int16_t rsi_reg_rd(uint8_t regAddr, uint8_t *dBuf)
 
 /**
  * @brief       Read from a register in the wlan module from the address specified.
- * @param[in]   regAddr - Address of spi register to read, addr is 6-bits, upper 2 bits must be cleared
+ * @param[in]   regAddr - Address of SPI register to read, address is 6-bits, upper 2 bits must be cleared
  * @param[in]   dBuf    - Pointer to the buffer of data to write, assumed to be at least 2 bytes long
- * @return     0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
  */
 int16_t rsi_reg_rd2(uint8_t regAddr, uint16_t *dBuf)
 {
@@ -131,11 +129,10 @@ int16_t rsi_reg_rd2(uint8_t regAddr, uint16_t *dBuf)
 
 /**
  * @brief       Write to a register in the module with an address specified.
- * @param[in]   regAddr - Address of spi register to be written
+ * @param[in]   regAddr - Address of SPI register to be written
  * @param[in]   dBuf    - Pointer to the buffer of data to write, assumed to be at least 2 bytes long
- * @return      0 - SUCCESS \n
- *              -1 - SPI busy / Timeout \n
- *              -2 - SPI Failure
+ * @return        0              - Success \n
+ * @return        Non-Zero value - Failure \n
 
  */
 

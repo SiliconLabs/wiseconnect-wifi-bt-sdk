@@ -57,4 +57,6 @@ The WiSeConnect SDK contains the following files and folders.
   |  +--usb_cdc                > Windows inf file for RS9116 usb_cdc port detection
   |  +--ble_provisioning_apps  > Bluetooth provisioning apps for Android and Windows
   |  +--advanced_logging       > It is used for advanced logging
+  |  +--ipv6_utils             > It is required to convert IPv6 canonical address format (deleting leading zeros, replacing Longest 0’s string with ::) to hexadecimal address format and vice versa.
+  |  +--feature_selection_tool > An application to check if the required features are feasible to fit in the static heap memory of RS9116.
 ```

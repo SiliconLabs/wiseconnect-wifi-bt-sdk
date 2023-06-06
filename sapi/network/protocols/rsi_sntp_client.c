@@ -28,7 +28,6 @@
 /**
  * @brief      Create SNTP client.
  *             This is a non-blocking API.
- * @pre   \ref rsi_config_ipaddress() API needs to be called before this API.
  * @param[in]  flags	- Select IP version and security \n
  * 
  *  Flags                  |          Description
@@ -39,23 +38,21 @@
  *    
  * @param[in]  server_ip                           - Server IP address
  * @param[in]  sntp_method                         - SNTP methods to use \n
- *                                                   1-For Broadcast Method, 2-For Unicast Method 
+ *                                                   1-For Broadcast method, 2-For Unicast method 
  * @param[in]  sntp_retry_count                    - Configures SNTP max retry count \n
  *                                                   The number of times the client request is retried when the server response is failed to receive. \n
  *                                                   For each retry, the client waits for 5 secs to receive server response before initiating next attempt. \n 
  *                                                   Need to set the value based on the network quality. \n
  *                                                   For ex: The value should be <= 5 for good network quality and > 10 for bad network quality.
  * @param[in]  sntp_client_create_response_handler - Callback function when asynchronous response comes for the request. \n
- *                                                   status: Expected error codes are : 0xBB0A, 0xFF5F, 0xBB0B, 0xBB15, 0xBB10\n
+ *                                                   status: Status code. Expected error codes are : 0xBB0A, 0xFF5F, 0xBB0B, 0xBB15, 0xBB10 \n
  *                                                   cmd_type: Command type \n
  *                                                   buffer: Buffer pointer
  * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *            -2 - Invalid parameters, call back not registered  \n
- *            -3 - Command given in wrong state \n
- *            -4 - Buffer not available to serve the command
- * @note        SNTP broadcast method is currently not supported. 
- * @note        Refer to Error Codes section for more error codes \ref error-codes.
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note       SNTP broadcast method is currently not supported. 
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -180,16 +177,13 @@ int32_t rsi_sntp_client_create_async(uint8_t flags,
 /*==============================================*/
 /**
  * @brief       Get the current time parameters (NTP epoch time).
- * 		This is a blocking API.
- * @pre   \ref rsi_sntp_client_create_async() API needs to be called before this API. 
+ *              This is a blocking API.
  * @param[in]   length        - Length of the buffer
  * @param[in]   sntp_time_rsp - Current time response
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *             -2             - Invalid parameters, callback not registered \n
- *             -3             - Command given in wrong state \n
- *             -4             - Buffer not available to serve the command 
- * @note        Refer to Error Codes section for more error codes \ref error-codes.
+ * @return      0              -  Success  \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_sntp_client_create_async() API needs to be called before this API. 
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
@@ -292,15 +286,12 @@ int32_t rsi_sntp_client_gettime(uint16_t length, uint8_t *sntp_time_rsp)
 /**
  * @brief       Get current time in time date format parameters.
  *              This is a blocking API.
- * @pre   \ref rsi_sntp_client_create_async() API needs to be called before this API.
  * @param[in]   length             - Length of the buffer
  * @param[in]   sntp_time_date_rsp - Current time and date response
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *            -2              - Invalid parameters, callback not registered \n
- *            -3              - Command given in wrong state \n
- *            -4              - Buffer not available to serve the command
- * @note      Refer to Error Codes section for more error codes \ref error-codes.
+ * @return      0              -  Success  \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_sntp_client_create_async() API needs to be called before this API. 
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rsp)
@@ -403,15 +394,12 @@ int32_t rsi_sntp_client_gettime_date(uint16_t length, uint8_t *sntp_time_date_rs
 /**
  * @brief       Get SNTP server info.
  *              This is a blocking API.
- * @pre   \ref rsi_sntp_client_create_async() API needs to be called before this API.
  * @param[in]   length               - Reponse buffer length
  * @param[in]   sntp_server_response - Pointer to the SNTP Reponse buffer
- *  @return     0              -  Success  \n
- *              Negative Value - Failure \n
- *              -2             - Invalid parameters, call back not registered \n
- *              -3             - Command given in wrong state \n
- *              -4             - Buffer not available to serve the command 
- *  @note       Refer to Error Codes section for more error codes \ref error-codes.
+ * @return      0              -  Success  \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_sntp_client_create_async() API needs to be called before this API. 
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_response)
@@ -515,14 +503,11 @@ int32_t rsi_sntp_client_server_info(uint16_t length, uint8_t *sntp_server_respon
 /**
  * @brief       Delete SNTP client.
  *              This is a non-blocking API.
- * @pre   \ref rsi_sntp_client_create_async() API needs to be called before this API.
  * @param[in]   Void
- * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *             -2             - Invalid parameters, callback not registered \n
- *             -3             - Command given in wrong state \n
- *             -4             - Buffer not available to serve the command
- * @note      Refer to Error Codes section for more error codes \ref error-codes.
+ * @return      0              -  Success  \n
+ * @return      Negative Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
+ * @note        **Precondition** - \ref rsi_sntp_client_create_async() API needs to be called before this API. 
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_sntp_client_delete_async(void)

@@ -315,7 +315,7 @@ int32_t rsi_http_otaf_app()
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
   uint8_t flags = FLAGS;
-
+#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -330,6 +330,7 @@ int32_t rsi_http_otaf_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   status = rsi_task_create(rsi_wireless_driver_task,
@@ -547,6 +548,7 @@ int32_t rsi_http_otaf_app()
 #endif
       } break;
       case RSI_WLAN_HTTP_OTA_WIRELESS_DEINT_STATE: {
+#ifndef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
         status = rsi_destroy_driver_task_and_driver_deinit(driver_task_handle);
         if (status != RSI_SUCCESS) {
@@ -555,10 +557,12 @@ int32_t rsi_http_otaf_app()
           LOG_PRINT("\r\nTask destroy and driver deinit success\r\n");
         }
 #endif
+#endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%1X\r\n", status);
         }
+#ifndef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
         // Task created for Driver task
         rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -567,6 +571,7 @@ int32_t rsi_http_otaf_app()
                         NULL,
                         RSI_DRIVER_TASK_PRIORITY,
                         &driver_task_handle);
+#endif
 #endif
 
 #ifdef RSI_M4_INTERFACE
@@ -605,7 +610,22 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
+#ifdef RSI_M4_INTERFACE
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
 
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+#endif
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task

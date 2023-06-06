@@ -169,11 +169,18 @@ int32_t rsi_ble_per(void)
 #endif
 #ifdef RSI_WITH_OS
   //! Silabs module intialisation
+#ifndef RSI_M4_INTERFACE
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n device init failed :%x \n", status);
     return status;
+  } else {
+    LOG_PRINT("\r\n device init success \n");
   }
-
+#endif
+  // rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM & M4 platforms
+#if ((defined EFM32GG11B820F2048GL192) || (defined RSI_M4_INTERFACE))
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -181,6 +188,7 @@ int32_t rsi_ble_per(void)
                   NULL,
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
+#endif
 #endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
@@ -381,7 +389,8 @@ int main(void)
 {
   int32_t status;
 #ifdef RSI_WITH_OS
-  rsi_task_handle_t bt_task_handle = NULL;
+  rsi_task_handle_t bt_task_handle     = NULL;
+  rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
 #ifndef RSI_WITH_OS
@@ -404,6 +413,17 @@ int main(void)
     return status;
   }
 
+#ifdef RSI_M4_INTERFACE
+  //! SiLabs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n device init failed : %x \n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\n device init success \n");
+  }
+#endif
+
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 
@@ -415,6 +435,17 @@ int main(void)
                   NULL,
                   RSI_BT_TASK_PRIORITY,
                   &bt_task_handle);
+
+  // rsi_wireless_driver_task is created in rsi_common_app_task for EFM & M4 platforms
+#if (!((defined EFM32GG11B820F2048GL192) || (defined RSI_M4_INTERFACE)))
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
+#endif
 
   //! OS TAsk Start the scheduler
   rsi_start_os_scheduler();

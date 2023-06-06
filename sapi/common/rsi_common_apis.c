@@ -46,15 +46,21 @@ extern rom_apis_t *rom_apis;
 extern void rom_init(void);
 int32_t rsi_driver_memory_estimate(void);
 
+/* For Remove sapi Wranings*/
+#if defined(RSI_SDIO_INTERFACE)
+void rsi_sdio_deinit(void);
+#endif
+
 /** @addtogroup COMMON 
 * @{
 */
 /*==============================================*/
 /**
- * @brief       Return common block status. This is a non-blocking API.
+ * @brief       Return the common control block status. This is a non-blocking API.
  * @param[in]   Void
  * @return      0              -  Success \n
- *              Non-Zero Value -  Failure
+ * @return      Non-Zero Value -  Failure
+ * @note        **Precondition** - \ref rsi_device_init() API should be called before this API
  */
 
 int32_t rsi_common_get_status(void)
@@ -64,10 +70,10 @@ int32_t rsi_common_get_status(void)
 
 /*==============================================*/
 /**
- * @brief       Set the common block status. This is a non-blocking API.
+ * @brief       Set the common control block status. This is a non-blocking API.
  * @param[in]   status         -    Status of common control block
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 
@@ -337,7 +343,6 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   rsi_queues_init(&rsi_driver_cb->bt_ble_stack_tx_q);
 
 #endif
-
 #if defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE) || defined(RSI_PROP_PROTOCOL_ENABLE)
   // Designate memory for bt_common_cb
   rsi_driver_cb->bt_global_cb = (rsi_bt_global_cb_t *)buffer;
@@ -361,7 +366,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
                   rsi_timer_expiry_interrupt_handler);
 #endif
 
-#if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_UART_INTERFACE))
   // Configure power save GPIOs
   rsi_powersave_gpio_init();
 #endif
@@ -401,15 +406,12 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 /*==============================================*/
 
 /**
- * @brief      Initialize WiSeConnect or Module features. This is a blocking API.
- *             RSI_SUCCESS return value indicates that the opermode and coex value were set successfully in the FW.
- *             In case of failure, appropriate error code is returned to the application. 
-               Apart from setting WLAN/Coex Operating mode, this API also configures other features based on selected Feature Bitmaps. 
-               In this API, configured feature bitmaps are internally processed and sent to firmware. These feature bitmaps are also called Opermode Command Parameters. 
-               Default configurations (for reference) are available in rsi_wlan_common_config.h. 
-               Based on the features required for a specific example, modify the rsi_wlan_config.h provided in the respective example folder.
-               For more information about these feature bitmaps, refer \ref SP18.
- * @pre        \ref rsi_driver_init() followed by \ref rsi_device_init() API needs to be called before this API. 
+ * @brief      Configure the  WLAN/Coex operating mode and also configures features based on bitmaps available in rsi_wlan_config.h. 
+ *             In case of failure, appropriate error code is returned to the application. Default configurations (for reference) are available in rsi_wlan_common_config.h. 
+ *             Based on the features required for a specific example, modify the rsi_wlan_config.h provided in the respective example folder. 
+ *             For more information about the bitmaps, refer \ref Opermode-Parameters
+ *             This is a blocking API.
+ * @pre        \ref rsi_device_init() API needs to be called before this API. 
  * @param[in]  opermode        -    WLAN Operating mode \n
  *			                        0 - Client mode \n
  *			                        2 - Enterprise security client mode \n
@@ -419,35 +421,20 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
  * @param[in]  coex_mode       -    Coexistence mode
  *                                  0 - WLAN only mode \n
  *                                  1 - WLAN \n
- *                                  4 - Bluetooth \n
  *                                  5 - WLAN + Bluetooth \n
- *                                  8 - Dual Mode (Bluetooth and BLE) \n
- *                                  9 - WLAN + Dual Mode \n
- *                                  12- BLE mode \n
+ *                                  9 - WLAN + Dual Mode (Bluetooth and BLE) \n
  *                                  13- WLAN + BLE \n
- *                                   
- * @note 			1. Opermode WiFi-Direct(1) mode is not supported.
- * @note 			2. Coex modes are supported only in 384K memory configuration.
- * @note			3. Coex mode 4(Bluetooth classic), 8 (Dual mode), and 12(BLE mode) are not supported.
- * @note			4. To achieve the same functionality, use coexmode 5, 9, and 13 respectively instead of coexmode 4, 8, and 12.
- * @note			5. To achieve power save functionality, trigger 'rsi_wlan_radio_init()' API after rsi_wireless_init() API and also issue
- * both WLAN and BT power save commands. \n
  *
- * @return      **Success** - RSI_SUCCESS  \n
- *              **Failure** - Non-Zero Value \n
+ * @note      **Precondition** - \ref rsi_device_init() API needs to be called before this API
+ * @note 			WLAN operating mode 1 - WiFi-Direct mode is not supported.
+ * @note 			Coex modes are supported only in 384K memory configuration.
+ * @note			Coex mode 4(Bluetooth classic), 8 (Dual mode), and 12(BLE mode) are not supported.
+ * @note			To achieve the same functionality, use coex mode 5, 9, and 13 respectively instead of coex mode 4, 8, and 12.
  *
- *                              `If return value is less than 0` \n
+ * @return      0              - Success  \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0x0021,0x0025,0xFF73,0x002C,0xFF6E,0xFF6F, 0xFF70,0xFFC5) \n
  *
- *	                         **RSI_ERROR_INVALID_PARAM** - Invalid parameters \n 
- *
- *				 **RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE** - Command given in wrong state \n
- *
- *				 **RSI_ERROR_PKT_ALLOCATION_FAILURE** - Buffer not available to serve the command \n
- *
- *				`Other expected error codes are :` \n
- *
- *				**0x0021,0x0025,0xFF73,0x002C,0xFF6E,0xFF6F, 0xFF70,0xFFC5**
- * @note        Refer to Error Codes section for the above error codes \ref error-codes.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
@@ -637,7 +624,6 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
  * @param[in]  uartflow_en  -    Enable or Disable UART hardware flow control \n
  *                               1/2 - Enable and Pin set to be used to for RTS/CTS purpose. \n
  *                               0   - Disable  \n
- *                               If uart_hw_flowcontrol_enable parameter is 0, uart flow control is disabled. \n
  *                               If the parameter is given as 1 or 2, then UART hardware flow control is enabled and Pin set to be used \n
  *                               If parameter is given as 1: Pin set used for RTS/CTS functionality is: \n
  *                                     UART_CTS:    GPIO - 11 \n
@@ -646,7 +632,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
  *                                     UART_CTS:    GPIO - 15 \n
  *                                     UART_RTS:    GPIO - 12 
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Non-Zero Value - Failure 
  * @note       Hardware flow control feature is not supported in Auto-Join/Auto-Create mode. \n
  *             In such a case, the feature has to be enabled separately.
  * 
@@ -708,12 +694,12 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
 #ifdef CHIP_9117
 /*==============================================*/
 /**
- * @brief      to write content on TA flash from M4. This is a blocking API.
+ * @brief      To write content on TA flash from M4. This is a blocking API.
  * @param[in]  wr_addr        - address at which data will be written on TA flash memory
  * @param[in]  write_data     - Input data
  * @param[in]  wr_data_len    - total length
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Non-Zero Value - Failure
  *
  *
  */
@@ -839,7 +825,7 @@ int32_t rsi_cmd_to_wr_comm_flash(uint32_t wr_addr, uint8_t *write_data, uint16_t
  * @param[in]  output_len  - Output length
  * @param[in]  output_data - Output data
  * @return     0              - Success \n
- *             Negative Value - Failure
+ * @return     Non-Zero Value - Failure
  *
  *
  */
@@ -921,19 +907,18 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
 */
 /*==============================================*/
 /**
- * @brief        Reset WiSeConnect module, load the firmware and restart the driver.This API should be called before
- *              \ref rsi_wireless_init API, if user wants to change  the previous configuration given through 
- *              \ref rsi_wireless_init. This is a blocking API.
+ * @brief        Resets the module to a state that was before execution of \ref rsi_wireless_init
+ *               To choose the new configuration(operating mode) rsi_wireless_init() API needs to be called after this API.
+ *               This is a blocking API.
  * @param[in]    Void
  * @return       0              - Success \n
- *               Negative Value - Failure \n
- *                         -2: Invalid parameters \n
- *                         -3: Command given in wrong state \n
- *                         -4: Buffer not available to serve the command 
- * @note        To restart RS9116W module from host, application needs to call \ref rsi_driver_deinit() followed by
- *              \ref rsi_driver_init() and \ref rsi_device_init(). For OS cases, additionally needs to call 
- *              \ref rsi_task_destroy(driver_task_handle) to delete the driver task before calling \ref rsi_driver_deinit() and should 
- *              create again after \ref rsi_device_init() using \ref rsi_task_create()
+ * @return       Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
+ * 
+ * @note        To restart the RS9116W module from the host, the application needs to call rsi_driver_deinit() 
+ *              followed by rsi_driver_init() and rsi_device_init(). 
+ *              For OS cases, additionally needs to call rsi_task_destroy(driver_task_handle) to delete the driver task before calling 
+ *              rsi_driver_deinit() and should create again, after rsi_device_init() using rsi_task_create()
+ * @note        Refer to \ref error-codes for the description of above error codes.      
  */
 
 int32_t rsi_wireless_deinit(void)
@@ -1040,19 +1025,15 @@ int32_t rsi_wireless_deinit(void)
 /*==============================================*/
 /**
  * @brief        Select antenna type on the device. This is a blocking API.
- * @pre 	 \ref rsi_wireless_antenna API must be given after \ref rsi_wlan_radio_init API.
  * @param[in]    type              -  0 : RF_OUT_2/Internal Antenna is selected \n
- * 				    	              1 : RF_OUT_1/uFL connector is selected.
+ * 				    	                      1 : RF_OUT_1/uFL connector is selected.
  * @param[in]    gain_2g           -  Currently not supported 
  * @param[in]    gain_5g           -  Currently not supported 
- * @note         Currently ignore the gain_2g, gain_5g values\n
  * @return       0                 -  Success \n
- *               Non-Zero Value    -  Failure \n
- *                                    If return value is less than 0 \n
- *                                    -4: Buffer not available to serve the command \n
- *                                    If return value is greater than 0 \n
- *                                    0x0025, 0x002C
- * @note        Refer to Error Codes section for the above error codes \ref error-codes.
+ * @return       Non-Zero Value    -  Failure (**Possible Error Codes** - 0xfffffffc, 0x0025, 0x002C) \n
+ *
+ * @note         **Precondition** - \ref rsi_wlan_radio_init API needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
@@ -1132,24 +1113,19 @@ int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g)
 }
 /*==============================================*/
 /**
- * @brief        Select internal or external RF type and clock frequency for user to pass
- *               Feature enables dynamically. This is a blocking API.
- * @pre           \ref rsi_wireless_init() API needs to be called before this API 
- * @param[in]    feature_enables - Feature enables
- * @note 	  BIT[0] - Enable Preamble duty cycling. \n
- * @note	  BIT[4] - Enable LP chain for stand-by associate mode. \n
- * @note	  BIT[5] - Enable hardware beacon drop during power save. \n
- * @note	  Remaining bits are reserved.
+ * @brief        Select internal or external RF type, clock frequency and to pass Feature enables dynamically. 
+ *               This is a blocking API.
+ * @param[in]    feature_enables - Feature enables \n
+ *                                 BIT[0] - Enable Preamble duty cycling. \n
+ *                                 BIT[4] - Enable LP chain for stand-by associate mode. \n
+ *                                 BIT[5] - Enable hardware beacon drop during power save. \n
+ *                                 Remaining bits are reserved.
+ *
  * @return       0              - Success \n 
- *               Negative Value - Failure 
- *                                 If return value is less than 0 \n
- *                                 -2 : Invalid parameters \n
- *                                 -3 : Command given in wrong state \n
- *                                 -4 : Buffer not available to serve the command \n
- *                                 If return value is greater than 0 \n
- *                                 0x0021, 0xFF74
- *               
- * @note Refer to Error Codes section for above error codes \ref error-codes.
+ * @return       Negative Value - Failure (**Possible Error Codes** -0xfffffffe, 0xfffffffd, 0xfffffffc, 0x0021, 0xFF74) \n
+ * 
+ * @note        	**Precondition** - \ref rsi_wireless_init() API needs to be called before this API.              
+ * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
 int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
@@ -1230,17 +1206,14 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
 }
 /*==============================================*/
 /**
- * @brief         Select internal or external RF type and clock frequency. This is a blocking API.
- * @pre           \ref rsi_wireless_init() API needs to be called before this API 
+ * @brief         Select internal or external RF type and clock frequency.  
+ *                This is a blocking API.
  * @return        0              - Success \n
- *                Non-Zero Value - Failure \n
+ * @return        Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0x0021, 0xFF74) \n
  *                                 If return value is less than 0 \n
- *                                 -2 : Invalid parameters \n
- *                                 -3 : Command given in wrong state \n
- *                                 -4 : Buffer not available to serve the command \n
- *                                 If return value is greater than 0 \n
- *                                 0x0021, 0xFF74
- * @note         Refer to Error Codes section for above error codes \ref error-codes.
+ *
+ * @note         **Precondition** - \ref rsi_wireless_init API needs to be called before this API.
+ * @note         Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_send_feature_frame(void)
@@ -1333,14 +1306,9 @@ int32_t rsi_send_feature_frame(void)
  * @param[in]   length         - Length of the response buffer in bytes to hold result.
  * @param[out]  response       - Response of the requested command.
  * @return      0              - Success \n
- *				Non-Zero Value - Failure \n
- *                               If return value is less than 0 \n
- *                               -3: Command given in wrong state \n
- *                               -4: Buffer not available to serve the command \n
- *                               -6: Insufficient input buffer given \n
- *                               If return value is greater than 0 \n
- *                               0x0021, 0x0025, 0x002c
- * @note       Refer to Error Codes section for above error codes \ref error-codes .
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0xfffffffa, 0x0021, 0x0025, 0x002c) \n
+ *
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
@@ -1420,20 +1388,29 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
 }
 /*==============================================*/
 /**
- * @fn          int32_t rsi_get_module_type(uint8_t *response, uint16_t length)
- * @brief       Get the module type
- * @pre         Need to call after the device initialization
- * @param[in]   length         - This is the length of the response buffer in bytes to hold result.
- * @param[out]  response       - This is the response of the requested command. This is an output parameter.
+ * @brief       Get module type. This is a blocking API.
+ * @pre         Need to call after the device initialization, \ref rsi_device_init API
+ * @param[out]  response       - Response of the requested command. \n
+ *              0 - B8 \n
+ *              1 - Q7 (QMS) \n
+ *              2 - Q7  + EXT FLASH  \n
+ *              3 - DB_T \n 
+ *              4 - SB \n
+ *              5 - M7DB (CC0) \n
+ *              6 - M4SB (B00) \n
+ *              7 - B6F \n
+ *              8 - B8SDB \n
+ *              9 - W2 \n
+ *              10 - WMS \n
  * @return      0              - Success \n
- *				Non-Zero Value - Failure \n
- *                               If return value is lesser than 0 \n
+ *        Non-Zero Value - Failure \n
+ *                               If return value is less than 0 \n
  *                               -3: Command given in wrong state \n
  *                               -4: Buffer not available to serve the command \n
  *                               -6: Insufficient input buffer given \n
  *                               If return value is greater than 0 \n
  *                               0x0021, 0x0025, 0x002c
- * @note       Refer Error Codes section for above error codes \ref SP16 .
+ * @note       Refer to Error Codes section for above error codes \ref error-codes .
  */
 
 int32_t rsi_get_module_type(uint8_t *response)
@@ -1522,21 +1499,26 @@ int32_t rsi_get_module_type(uint8_t *response)
  * @brief       Debug prints on UART interfaces 1 and 2. Host can get 5 types of debug prints based on
  *              the assertion level and assertion type. This is a blocking API.
  * @param[in]   assertion_type          - Assertion_type (Possible values 0 - 15) \n
- * 				                          0000 - LMAC core, 0001 - SME, 0010 - UMAC, 0100 - NETX, 1000 - Enables assertion indication and \n
- *				                          provides ram dump in critical assertion. \n
- * @param[in]   assertion_level         - Assertion_level (Possible values 0 - 15). value 1 is least value/only specific prints, 15 is the highest \n
- *				                          level/Enable all prints.  \n
- *				                          0000 - Assertion required, 0010 - Recoverable, 0100 - Information \n
+ *                                        0000 - LMAC core \n
+ *                                        0001 - SME \n
+ *                                        0010 - UMAC \n
+ *                                        0100 - NETX \n
+ *                                        1000 - Enables assertion indication and provides ram dump in critical assertion. \n
+ * @param[in]   assertion_level         - Assertion_level (Possible values 0 - 15) \n
+ *                                        1 is least value/only specific prints \n
+ *                                        15 is the highest level/Enable all prints.  \n
+ *				                                0000 - Assertion required \n
+ *                                        0010 - Recoverable \n
+ *                                        0100 - Information \n
  * @return      0                       - Success \n
- *				Non-Zero value          - Failure \n
- *				-2                      - Parameters invalid
- * @note        1. To minimize the debug prints host is supposed to give the same command with assertion type and assertion level as 0.
- *              2. Baud rate for UART 2 on host application side should be 460800.
- *              3. Enable few Feature bit map for getting debug logs on UART:
- *                 // To set custom feature select bit map
- *                 #define RSI_CUSTOM_FEATURE_BIT_MAP   FEAT_CUSTOM_FEAT_EXTENTION_VALID
- *                 // To set Extended custom feature select bit map   
- *                 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP    EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS
+ * @return      Non-Zero value          - Failure (**Possible Error Codes** - 0xfffffffe)\n
+ *
+ * @note        Refer to \ref error-codes for the description of above error codes.
+ * @note        To minimize the debug prints host is supposed to give the same API with assertion type and assertion level as 0.
+ * @note        Baud rate for UART 2 on host application side should be 460800.
+ * @note        Enable few feature bit maps for getting debug logs on UART: \n
+ *              (#define RSI_CUSTOM_FEATURE_BIT_MAP   FEAT_CUSTOM_FEAT_EXTENTION_VALID) and \n
+ *              (#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP    EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS)
  */
 
 int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
@@ -1617,10 +1599,9 @@ int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level)
  * @param[out]   mode               - Indicate BT enable or disable
  * @param[out]   bt_disabled_status - BT disabled status either success or failure to host
  * @return        0              - Success \n
- *                Negative Value - Failure
- *                0xFF - BT_ACTIVITY_PENDING
+ * @return        Non-Zero Value - Failure (**Possible Error Codes** - 0xFF) 
  *
- * @note         Refer Error Codes section for above error codes \ref error-codes .
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *bt_disabled_status))
@@ -1710,10 +1691,10 @@ int32_t rsi_switch_proto(uint8_t type, void (*callback)(uint16_t mode, uint8_t *
 /*==============================================*/
 /**
  *
- * @brief       Handle driver events. Called in application main loop for non-OS platforms. /n
- *              With OS, this API is blocking and with baremetal this API is non-blocking.
+ * @brief       Handles driver events. Called in application main loop for non-OS platforms. \n
+ *              With OS, this is a blocking API and without OS this API is a non-blocking API.
  * @param[in]   Void
- * @return      Void
+ * @return      None
  */
 
 void rsi_wireless_driver_task(void)
@@ -1730,14 +1711,15 @@ void rsi_wireless_driver_task(void)
 //======================================================
 /**
  *
- * @brief       De-Initialize driver components. Clear all the memory given for driver operations in \ref rsi_driver_init() API.
- * In OS case,  User need to take care of OS variables initialized in \ref rsi_driver_init(). This is a non-blocking API.
- * This API must be called by the thread/task/Master thread that it is not dependent on.
- * OS variables allocated/initialized in \ref rsi_driver_init() API.
- * @pre 		Need to call after the driver initialization
+ * @brief       De-Initialize driver components by clearing all the memory given for driver operations through rsi_driver_init() API. 
+ *              With OS case, you need to take care of OS variables initialized in rsi_driver_init(). 
+ *              This API must be called by the thread/task/master thread that it is not dependent on the OS variables allocated/initialized in rsi_driver_init() API. \n 
+ *              This is a non-blocking API.
  * @param[in]   Void
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
+ *
+ * @note        	**Precondition** - \ref rsi_driver_init API needs to be called before this API.
  */
 
 int32_t rsi_driver_deinit(void)
@@ -1980,10 +1962,10 @@ int32_t rsi_driver_deinit(void)
 /**
  *
  * @brief       In OS case, delete driver task before calling rsi_driver_deinit() API.
- * @pre         Need to call after the driver initialization
  * @param[in]   task_handle - Task handle/instance to be deleted
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
+ * @note        	**Precondition** - \ref rsi_driver_init API needs to be called before this API.
  */
 
 int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle)
@@ -2006,9 +1988,9 @@ int32_t rsi_destroy_driver_task_and_driver_deinit(rsi_task_handle_t *task_handle
 /*=============================================================================*/
 /**
  * @brief       Get current driver version. This is a non-blocking API.
- * @param[in]   Request - pointer to fill driver version
+ * @param[in]   Request - Pointer to fill driver version
  * @return      0              - Success \n
- * 				Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 int32_t rsi_driver_version(uint8_t *request)
 {
@@ -2024,17 +2006,17 @@ int32_t rsi_driver_version(uint8_t *request)
 /*==============================================*/
 /**
  * @brief       Set the host rtc timer. This is a blocking API.
- * @pre 		\ref rsi_wireless_init() API needs to be called before this API
  * @param[in]   timer          - Pointer to fill RTC time.
  *	  		                        second -->  seconds [0-59] \n
- *	 		                        minute -->  minutes [0-59] \n
+ *                                minute -->  minutes [0-59] \n
  *	  		                        hour   -->  hours since midnight [0-23] \n
  *	  		                        day    -->  day of the month [1-31] \n
  *	  		                        month  -->  months since January [0-11] \n
  *	  		                        year   -->  year since 1990. \n
- *	 		                        Weekday-->  Weekday from Sunday to Saturday [1-7]. \n
+ *                                Weekday-->  Weekday from Sunday to Saturday [1-7] \n
  * @return      0              - Success \n
- * 				Non-Zero Value - Failure \n
+ * @return      Non-Zero Value - Failure \n
+ * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API
  * @note        Hour is 24-hour format only (valid values are 0 to 23). Valid values for Month are 0 to 11 (January to December).
  */
 
@@ -2117,17 +2099,13 @@ int32_t rsi_set_rtc_timer(module_rtc_time_t *timer)
 //*==============================================*/
 /**
  * @brief       Get ram log on UART/UART2. This is a blocking API.
- * @pre 		\ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]   addr           - Address in RS9116 module
  * @param[in]   length         - Chunk length to read from RS9116 module
  * @return 		0              - Success \n
- *				Non-Zero Value - Failure \n
- *				                 If return value is less than 0  \n
- *				                 -2: Invalid parameters  \n
- *				                 -3: Command given in wrong state \n
- *				                 If return value is greater than 0 \n
- *								 0x0021,0x003E
- * @note       Refer to Error Codes section for above error codes \ref error-codes.
+ * @return 		Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0x0021, 0x003E) \n
+ *
+ * @note       \ref rsi_wireless_init() needs to be called before this API.
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
@@ -2216,7 +2194,7 @@ int32_t rsi_driver_memory_estimate(void)
  * @brief       De-register event handler for the given event. This is a non-blocking API.
  * @param[out]  event_num     - Event number
  * @return      0             - Success \n
- *              Non-Zero Value- Failure \n
+ * @return      Non-Zero Value- Failure \n
  */
 void rsi_uregister_events_callbacks(void (*callback_handler_ptr)(uint32_t event_num))
 {
@@ -2232,7 +2210,7 @@ void rsi_uregister_events_callbacks(void (*callback_handler_ptr)(uint32_t event_
  * @param[out]  status   - Status
  * @param[out]  cmd_type - Command
  * @return      0        - Success \n
- *              Non-Zero - Failure \n
+ * @return      Non-Zero - Failure \n
  */
 void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int32_t status, uint32_t cmd_type))
 {
@@ -2251,18 +2229,20 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
  * @pre         \ref rsi_set_rtc_timer() API needs to be called before this API.
  *              Also this API needs to be called only after \ref rsi_wlan_scan() API or \ref rsi_wlan_radio_init() API.
  * @param[out]  response       - Response of the requested command. \n
- * @note	Response parameters: \n
- *	  		second -->  Current real time clock seconds. \n
- *	 		minute -->  Current real time clock minute. \n
- *	  		hour   -->  Current real time clock hour. \n
- *	  		day    -->  Current real time clock day. \n
- *	  		month  -->  Current real time clock month. \n
- *	  		year   -->  Current real time clock year. \n
- *	 		Weekday-->  Current real time clock Weekday. \n
+ *                               Response parameters: \n
+ *                               second -->  Current real time clock seconds. \n
+ *                               minute -->  Current real time clock minute. \n
+ *                               hour   -->  Current real time clock hour. \n
+ *                               day    -->  Current real time clock day. \n
+ *                               month  -->  Current real time clock month. \n
+ *                               year   -->  Current real time clock year. \n
+ *                               weekday-->  Current real time clock Weekday. \n
  * @return     0              - Success \n
- *             Non-Zero Value - Failure \n
- *                              0x0021, 0x0025
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0x0021, 0x0025) \n                             
+ * @note       **Precondition** - \ref rsi_set_rtc_timer() API needs to be called before this API. \n 
+ *             rsi_wlan_scan() API or rsi_wlan_radio_init() API needs to be called before this API.
  * @note       Hour is 24-hour format only (valid values are 0 to 23). Valid values for Month are 0 to 11 (January to December).
+ * @note        Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
@@ -2335,10 +2315,10 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
 /**
  * @fn                int32_t rsi_set_config( uint32_t code, uint8_t value)
  * @brief             Configure XO Ctune value from host
- * @param[in]         Code - XO_CTUNE_FROM_HOST
+ * @param[in]         Code  - XO_CTUNE_FROM_HOST
  * @param[in]         value - Value to be configured
  * @return            0 		- Success \n
- *                    Non-Zero Value  - Failure
+ * @return            Non-Zero Value  - Failure
  */
 
 int32_t rsi_set_config(uint32_t code, uint8_t value)
@@ -2408,7 +2388,7 @@ int32_t rsi_set_config(uint32_t code, uint8_t value)
  * @brief       Trigger an assert. This is a blocking API.
  * @param[in]   Void
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 
 int32_t rsi_assert(void)
@@ -2468,7 +2448,7 @@ int32_t rsi_assert(void)
 
 //*==============================================*/
 /**
- * @brief      Configure TA GPIOs using Command from host.This is a non-blocking API.
+ * @brief      Configure TA GPIOs from host. This is a non-blocking API.
  * @param[in]  gpio_type     - GPIO types :  \n 
  *                             0 - TA_GPIO   \n
  *                             1 - ULP_GPIO  \n
@@ -2477,20 +2457,25 @@ int32_t rsi_assert(void)
  *                             Valid values  0 - 63, if gpio_type is TA_GPIO. \n
  *                             Valid values  0 - 15, if gpio_type is ULP_GPIO. \n
  *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
- * @param[in]  configuration - BIT[4]     -  1 - Input mode  \n
- *                                           0 - Output mode \n
- *                             BIT[0 - 1] : Drive strength \n
+ * @param[in]  configuration - BIT[0 - 1] : Drive strength \n
  *                                          0 - 2mA  \n
  *                                          1 - 4mA  \n
  *                                          2 - 8mA  \n
  *                                          3 - 12mA \n
- *                             BIT[6 - 7] : \n
- *                             0 - Hi-Z     \n
- *                             1 - Pull-up  \n 
- *                             2 - Pull-down \n
+ *                             BIT[2]     : Reserved \n
+ *                             BIT[3]     : Reserved \n
+ *                             BIT[4]     : I/O mode \n
+ *                                          1 - Input mode  \n
+ *                                          0 - Output mode \n
+ *                             BIT[5]     : Reserved \n
+ *                             BIT[6 - 7] : Type \n
+ *                                          0 - Hi-Z     \n
+ *                                          1 - Pull-up  \n 
+ *                                          2 - Pull-down \n
  * @return 	   0              - Success \n
- *             Non-Zero Value - Failure
- * @note       It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
+ * @return 	   Non-Zero Value - Failure
+ * @note       It is not recommended to configure ULP_GPIO_6 as it is used for WoW feature
+ * @note       You need to define the CONFIGURE_GPIO_FROM_HOST to enable this API
  */
 
 int32_t rsi_gpio_pininit(uint8_t gpio_type, uint8_t pin_num, uint8_t configuration)
@@ -2551,7 +2536,7 @@ int32_t rsi_gpio_pininit(uint8_t gpio_type, uint8_t pin_num, uint8_t configurati
 
 //*==============================================*/
 /**
- * @brief       Drive the Module GPIOs high or low using command from host. This is a non-blocking API.
+ * @brief       Drive the module GPIOs high or low from host. This is a non-blocking API.
  * @param[in]  gpio_type     - GPIO types :  \n 
  *                             0 - TA_GPIO   \n
  *                             1 - ULP_GPIO  \n
@@ -2560,12 +2545,13 @@ int32_t rsi_gpio_pininit(uint8_t gpio_type, uint8_t pin_num, uint8_t configurati
  *                             Valid values  0 - 63, if gpio_type is TA_GPIO. \n
  *                             Valid values  0 - 15, if gpio_type is ULP_GPIO. \n
  *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
- *@param[in]    value        - Value to be driven on GPIO \n
- *                                1 - Drive high \n
- *                                0 - Drive Low  \n
- *@return 	    0              -  Success \n
- *              Non-Zero Value -  Failure	
- * @note        It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
+ * @param[in]    value        - Value to be driven on GPIO \n
+ *                             1 - High \n
+ *                             0 - Low  \n
+ * @return 	    0              -  Success \n
+ * @return 	    Non-Zero Value -  Failure	
+ * @note        It is not recommended to configure ULP_GPIO_6 as it is used for WoW feature
+ * @note        You need to define the CONFIGURE_GPIO_FROM_HOST to enable this API
  */
 
 int32_t rsi_gpio_writepin(uint8_t gpio_type, uint8_t pin_num, uint8_t value)
@@ -2625,7 +2611,7 @@ int32_t rsi_gpio_writepin(uint8_t gpio_type, uint8_t pin_num, uint8_t value)
 
 //*==============================================*/
 /**
- * @brief       Read status of TA GPIOs using Command from host. This is a non-blocking API.
+ * @brief      Read status of TA GPIOs from host. This is a non-blocking API.
  * @param[in]  gpio_type     - GPIO types :  \n 
  *                             0 - TA_GPIO   \n
  *                             1 - ULP_GPIO  \n
@@ -2636,8 +2622,9 @@ int32_t rsi_gpio_writepin(uint8_t gpio_type, uint8_t pin_num, uint8_t value)
  *                             Valid values  0 and 2, if gpio_type is UULP_GPIO. \n
  * @param[in]   gpio_value   - Address of variable to store the value
  * @return 		  0              - Success \n 
- *				      Non-Zero Value - Failure        
- * @note        It is not recommended to configure ULP_GPIO6 as it is used for WOWLAN feature.
+ * @return      Non-Zero Value - Failure        
+ * @note        It is not recommended to configure ULP_GPIO_6 as it is used for WoW feature.
+ * @note        You need to define the CONFIGURE_GPIO_FROM_HOST to enable this API.
  */
 
 int32_t rsi_gpio_readpin(uint8_t gpio_type, uint8_t pin_num, uint8_t *gpio_value)
@@ -2701,13 +2688,14 @@ int32_t rsi_gpio_readpin(uint8_t gpio_type, uint8_t pin_num, uint8_t *gpio_value
 
 //*==============================================*/
 /**
- * @brief       Read status of NWP GPIOs using Command from host. This is a non-blocking API.
- * @param[in]   gpio_num   -  GPIO Number : Valid values  0 - 15 for ULP \n
- *              GPIO Number : Valid values  0 - 63 for SOC \n
- *				GPIO Number : Valid values  0 - 3 for UULP 
- * @return 		0  - status of NWP GPIO is LOW \n 
- *                      1  - status of NWP GPIO is HIGH \n
- *		        < 0  Non-Zero Value - Failure        
+ * @brief       Read status of NWP GPIOs from host. This is a non-blocking API.
+ * @param[in]   gpio_num   -  GPIO Number : \n
+ *                            Valid values  0 - 15 for ULP \n
+ *                            Valid values  0 - 63 for SOC \n
+ *				                    Valid values  0 - 3 for UULP \n
+ * @return 		0  - Status of NWP GPIO is LOW \n 
+ * @return 		1  - status of NWP GPIO is HIGH \n
+ * @return 		Non-Zero Value (< 0) - Failure        
  */
 
 int32_t rsi_gpio_read(uint8_t gpio_num)
@@ -2737,15 +2725,17 @@ int32_t rsi_gpio_read(uint8_t gpio_num)
 
 //*==============================================*/
 /**
- *@brief        Drive the NWP GPIOs high or low using command from host. This is a non-blocking API.
- *@param[in]   	gpio_num       - GPIO Number : Valid values  0 - 15 for ULP \n
- *              GPIO Number : Valid values  0 - 63 for SOC \n
- *				GPIO Number : Valid values  0 - 3 for UULP
+ *@brief        Drive the NWP GPIOs from host. This is a non-blocking API.
+ *@param[in]   	gpio_num       - GPIO Number : \n
+ *                               Valid values  0 - 15 for ULP \n
+ *                               Valid values  0 - 63 for SOC \n
+ *                               Valid values  0 - 3 for UULP \n
  *@param[in]    write          -  Value to be driven on GPIO \n
- *                                0x10 - Drive high \n
- *                                0 - Drive Low  \n
+ *                                1 - High \n
+ *                                0 - Low  \n
  *@return 	     0              -  Success \n
- *                   Non-Zero Value -  Failure	
+ *@return        Non-Zero Value -  Failure	
+ *@note          You need to define the CONFIGURE_GPIO_FROM_HOST to enable this API
  */
 int32_t rsi_gpio_write(uint8_t gpio_num, uint8_t write)
 {
@@ -2769,9 +2759,9 @@ int32_t rsi_gpio_write(uint8_t gpio_num, uint8_t write)
  */
 int32_t rsi_set_region(void)
 {
-  rsi_pkt_t *pkt;
-  int32_t status         = RSI_SUCCESS;
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+  rsi_pkt_t *pkt __attribute__((unused));
+  int32_t status                                 = RSI_SUCCESS;
+  rsi_wlan_cb_t *wlan_cb __attribute__((unused)) = rsi_driver_cb->wlan_cb;
 #if RSI_SET_REGION_SUPPORT
   // allocate command buffer  from common pool
   pkt = rsi_pkt_alloc(&rsi_driver_cb->common_cb->common_tx_pool);

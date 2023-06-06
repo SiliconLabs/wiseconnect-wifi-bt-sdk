@@ -60,7 +60,15 @@
 #endif
 
 #ifdef RSI_M4_INTERFACE
-#define IVT_OFFSET_ADDR        0x8212000  /*<! Application IVT location !>*/
+#ifdef COMMON_FLASH_EN
+#ifdef CHIP_9117_B0
+#define IVT_OFFSET_ADDR 0x81C2000 /*<!Application IVT location VTOR offset>        */
+#else
+#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
+#endif
+#else
+#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
+#endif
 #define WKP_RAM_USAGE_LOCATION 0x24061000 /*<! Bootloader RAM usage location !>*/
 
 #define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
@@ -127,6 +135,7 @@ rsi_semaphore_handle_t ble_slave_conn_sem;
 rsi_semaphore_handle_t ble_main_task_sem;
 static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
+volatile uint32_t msp_value, psp_value, control_reg_val, pendsv_pri, systic_pri;
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
@@ -145,6 +154,44 @@ static uint32_t ble_app_event_map1;
 /*==============================================*/
 #ifdef RSI_M4_INTERFACE
 /**
+  * @fn           void RSI_Save_Context(void)
+  * @brief        This function is to save Stack pointer value and Control registers.
+  *
+  */
+void RSI_Save_Context(void)
+{
+  msp_value       = __get_MSP();
+  psp_value       = __get_PSP();
+  control_reg_val = __get_CONTROL();
+}
+
+/**
+  * @fn           void RSI_Restore_Context(void)
+  * @brief        This function is to Restore Stack pointer value and Control registers.
+  *
+  */
+STATIC INLINE void RSI_Restore_Context(void)
+{
+  __set_CONTROL(control_reg_val);
+  __set_PSP(psp_value);
+  __set_MSP(msp_value);
+  /* Make PendSV and SysTick the lowest priority interrupts. */
+  portNVIC_SHPR3_REG |= portNVIC_PENDSV_PRI;
+  portNVIC_SHPR3_REG |= portNVIC_SYSTICK_PRI;
+}
+void IRQ026_Handler()
+{
+  volatile uint32_t wakeUpSrc = 0;
+
+  /*Get the wake up source */
+  wakeUpSrc = RSI_PS_GetWkpUpStatus();
+
+  /*Clear interrupt */
+  RSI_PS_ClrWkpUpStatus(NPSS_TO_MCU_WIRELESS_INTR);
+
+  return;
+}
+/**
  * @fn         rsi_ble_only_Trigger_M4_Sleep
  * @brief      Keeps the M4 In the Sleep 
  * @param[in]  none
@@ -157,7 +204,8 @@ void rsi_ble_only_Trigger_M4_Sleep(void)
 {
   /* Configure Wakeup-Source */
   RSI_PS_SetWkpSources(WIRELESS_BASED_WAKEUP);
-
+  /* sets the priority of an Wireless wakeup interrupt. */
+  NVIC_SetPriority(WIRELESS_WAKEUP_IRQHandler, WIRELESS_WAKEUP_IRQ_PRI);
   NVIC_EnableIRQ(WIRELESS_WAKEUP_IRQHandler);
 
 #ifndef FLASH_BASED_EXECUTION_ENABLE
@@ -185,6 +233,10 @@ void rsi_ble_only_Trigger_M4_Sleep(void)
 #ifdef COMMON_FLASH_EN
   M4SS_P2P_INTR_SET_REG &= ~BIT(3);
 #endif
+#ifdef RSI_WITH_OS
+  /* Save Stack pointer value and Control registers */
+  RSI_Save_Context();
+#endif
   /* Configure RAM Usage and Retention Size */
   //  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
   RSI_PS_SetRamRetention(M4ULP_RAM16K_RETENTION_MODE_EN | ULPSS_RAM_RETENTION_MODE_EN | M4ULP_RAM_RETENTION_MODE_EN
@@ -196,7 +248,14 @@ void rsi_ble_only_Trigger_M4_Sleep(void)
                            (uint32_t)RSI_PS_RestoreCpuContext,
                            IVT_OFFSET_ADDR,
                            RSI_WAKEUP_FROM_FLASH_MODE);
-
+#endif
+#ifdef RSI_WITH_OS
+  /* Restore Stack pointer value and Control registers */
+  RSI_Restore_Context();
+  /* Enable M4_TA interrupt */
+  rsi_m4_ta_interrupt_init();
+  /*  Setup the systick timer */
+  vPortSetupTimerInterrupt();
 #endif
 #ifdef DEBUG_UART
   fpuInit();
@@ -341,7 +400,7 @@ static int32_t rsi_ble_app_get_event(void)
     }
   }
 
-  return (-1);
+  return RSI_FAILURE;
 }
 
 /*==============================================*/
@@ -486,7 +545,7 @@ int32_t rsi_ble_app_task(void)
   int32_t temp_event_map  = 0;
   int32_t temp_event_map1 = 0;
 
-#if ((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
+#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
   uint8_t adv[31] = { 2, 1, 6 };
 #endif
 #ifdef RSI_WITH_OS
@@ -510,15 +569,10 @@ int32_t rsi_ble_app_task(void)
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#ifdef COMMON_FLASH_EN
-  NWPAON_MEM_HOST_ACCESS_CTRL_CLEAR_1                                           = (BIT(24) | BIT(25));
-  BATT_FF->M4SS_TASS_CTRL_SET_REG_b.M4SS_CTRL_TASS_AON_PWRGATE_EN               = 1;
-  BATT_FF->M4SS_TASS_CTRL_SET_REG_b.M4SS_CTRL_TASS_AON_DISABLE_ISOLATION_BYPASS = 1;
-  M4SS_TASS_CTRL_CLR_REG                                                        = BIT(2);
-#endif
 #endif
 #ifdef RSI_WITH_OS
-  //! Silabs module initialisation
+#ifndef RSI_M4_INTERFACE
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -526,7 +580,7 @@ int32_t rsi_ble_app_task(void)
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-
+#endif
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -538,9 +592,10 @@ int32_t rsi_ble_app_task(void)
 
 #ifdef RSI_M4_INTERFACE
 
-  RSI_PS_FlashLdoEnable();
+  //RSI_PS_FlashLdoEnable();
   /* MCU Hardware Configuration for Low-Power Applications */
   RSI_WISEMCU_HardwareSetup();
+  LOG_PRINT("\r\nRSI_WISEMCU_HardwareSetup Success\r\n");
 
 #endif
 
@@ -616,7 +671,7 @@ int32_t rsi_ble_app_task(void)
 
   rsi_semaphore_create(&ble_slave_conn_sem, 0);
 
-#if ((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
+#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
   //! prepare advertise data //local/device name
   adv[3] = strlen(RSI_BLE_LOCAL_NAME) + 1;
   adv[4] = 9;
@@ -635,7 +690,7 @@ int32_t rsi_ble_app_task(void)
   SET_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE);
 #endif
 
-#if ((BLE_ROLE == MASTER_MODE1) || (BLE_ROLE == DUAL_MODE))
+#if ((BLE_ROLE == MASTER_ROLE) || (BLE_ROLE == DUAL_ROLE))
   //! start scanning
   LOG_PRINT("\n Start scanning \n");
   status = rsi_ble_start_scanning();
@@ -671,13 +726,17 @@ int32_t rsi_ble_app_task(void)
     //! checking for received events
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
-      //! if events are not received loop will be continued.
-      rsi_semaphore_wait(&ble_main_task_sem, 0);
+
 #ifdef RSI_M4_INTERFACE
       //! if events are not received loop will be continued.
       if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
         P2P_STATUS_REG &= ~M4_wakeup_TA;
         rsi_ble_only_Trigger_M4_Sleep();
+      }
+#else
+      {
+        //! if events are not received loop will be continued.
+        rsi_semaphore_wait(&ble_main_task_sem, 0);
       }
 #endif
       continue;
@@ -735,7 +794,7 @@ int32_t rsi_ble_app_task(void)
         LOG_PRINT("\n In disconnect event............ \n ");
         //! clear the disconnected event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
-
+#ifdef ENABLE_POWER_SAVE
         LOG_PRINT("\n keep module in to active state \n");
 
         //! initiating Active mode in BT mode
@@ -751,8 +810,9 @@ int32_t rsi_ble_app_task(void)
           LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
           return status;
         }
-        if (((BLE_ROLE == SLAVE_MODE) || (BLE_ROLE == DUAL_MODE))
-            && (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE)))) {
+#endif
+#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
+        if (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE))) {
           //! set device in advertising mode.
           LOG_PRINT("\n Start advertising \n");
 adv:
@@ -763,10 +823,11 @@ adv:
           }
           SET_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE);
         }
-        if (((BLE_ROLE == MASTER_MODE1) || (BLE_ROLE == DUAL_MODE))
-            && (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE)))) {
+#endif
+#if (((BLE_ROLE == MASTER_ROLE) || (BLE_ROLE == DUAL_ROLE)))
+        if (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE))) {
           device_found = 0;
-          //! set device in scanning mode.
+          //! set device in  scanning mode.
           LOG_PRINT("\n Start scanning \n");
 scan:
           status = rsi_ble_start_scanning();
@@ -776,6 +837,8 @@ scan:
           }
           SET_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE);
         }
+#endif
+#ifdef ENABLE_POWER_SAVE
         LOG_PRINT("\n keep module in to power save \n");
         status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
@@ -789,6 +852,7 @@ scan:
           return status;
         }
         LOG_PRINT("\n Module is in power save \n");
+#endif
       } break;
     }
   }
@@ -846,7 +910,16 @@ int main(void)
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
     return status;
   }
-
+#ifdef RSI_M4_INTERFACE
+  // Silicon labs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
+#endif
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 

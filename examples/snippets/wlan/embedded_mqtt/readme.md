@@ -272,7 +272,7 @@ IP address of the network mask should also be in long format and in little endia
 #define RSI_TCP_IP_BYPASS                          RSI_DISABLE
 #define RSI_TCP_IP_FEATURE_BIT_MAP                 (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSLTCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
 #define RSI_CUSTOM_FEATURE_BIT_MAP                 EXT_FEAT_CUSTOM_FEAT_EXTENTION_VALID
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP             EXT_FEAT_256k_MODE
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP             RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM
 #define RSI_EXT_TCPIP_FEATURE_BITMAP               EXT_EMB_MQTT_ENABLE
 #define RSI_BAND                                   RSI_BAND_2P4GHZ
 ```

@@ -142,8 +142,9 @@ int32_t wlan_throughput_task(void *paramaters)
         LOG_PRINT("\r\nUDP TX started, conn%d\r\n", wlan_thrput_conf->thread_id);
 
         //! allocate memory for tx buffer
+#ifdef RSI_WITH_OS
         send_buf = (int8_t *)rsi_malloc(buff_size * sizeof(int8_t));
-
+#endif
         for (i = 0; i < buff_size; i++) {
           send_buf[i] = i;
         }
@@ -158,7 +159,9 @@ int32_t wlan_throughput_task(void *paramaters)
           if (status < 0) {
             status = rsi_wlan_get_status();
             rsi_shutdown(client_socket, 0);
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("\r\nFailed to send data to UDP Server, Error Code : 0x%lX, conn%d\r\n",
                       status,
                       wlan_thrput_conf->thread_id);
@@ -185,7 +188,9 @@ int32_t wlan_throughput_task(void *paramaters)
             pkt_cnt        = 0;
             tt_start       = rsi_hal_gettickcount();
 #else
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("\r\nUDP TX completed, conn%d\r\n", wlan_thrput_conf->thread_id);
             rsi_mutex_lock(&thrput_compute_mutex);
             //! Measure throughput
@@ -194,7 +199,9 @@ int32_t wlan_throughput_task(void *paramaters)
             //! wlan measurement is completed, release the sem
             rsi_semaphore_post(&wlan_thrghput_measurement_compl);
             //! delete the task
+#ifdef RSI_WITH_OS
             rsi_task_destroy(NULL);
+#endif
 #endif
           }
         }
@@ -252,7 +259,9 @@ int32_t wlan_throughput_task(void *paramaters)
         //! wlan measurement is completed, release the sem
         rsi_semaphore_post(&wlan_thrghput_measurement_compl);
         //! delete the task
+#ifdef RSI_WITH_OS
         rsi_task_destroy(NULL);
+#endif
 #else
         //! allocate memory for rx buffer
         recv_buffer = (int8_t *)rsi_malloc(buff_size * sizeof(int8_t));
@@ -354,8 +363,9 @@ int32_t wlan_throughput_task(void *paramaters)
         LOG_PRINT("\r\nTCP TX started, conn%d\r\n", wlan_thrput_conf->thread_id);
 
         //! allocate memory for tx buffer
+#ifdef RSI_WITH_OS
         send_buf = (int8_t *)rsi_malloc(buff_size * sizeof(int8_t));
-
+#endif
         for (i = 0; i < buff_size; i++) {
           send_buf[i] = i;
         }
@@ -369,7 +379,9 @@ int32_t wlan_throughput_task(void *paramaters)
           if (status < 0) {
             status = rsi_wlan_get_status();
             rsi_shutdown(client_socket, 0);
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("\r\nFailed to Send data to TCP Server, Error Code : 0x%lX, conn%d \r\n",
                       status,
                       wlan_thrput_conf->thread_id);
@@ -397,7 +409,9 @@ int32_t wlan_throughput_task(void *paramaters)
             tt_start = rsi_hal_gettickcount();
 #else
             rsi_shutdown(client_socket, 0);
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("\r\nTCP TX completed, conn%d\r\n", wlan_thrput_conf->thread_id);
             rsi_mutex_lock(&thrput_compute_mutex);
             //! Measure throughput
@@ -406,7 +420,9 @@ int32_t wlan_throughput_task(void *paramaters)
             //! wlan measurement is completed, release the sem
             rsi_semaphore_post(&wlan_thrghput_measurement_compl);
             //! delete the task
+#ifdef RSI_WITH_OS
             rsi_task_destroy(NULL);
+#endif
 #endif
           }
 #endif
@@ -515,11 +531,14 @@ int32_t wlan_throughput_task(void *paramaters)
         //! wlan measurement is completed, release the sem
         rsi_semaphore_post(&wlan_thrghput_measurement_compl);
         //! delete the task
+#ifdef RSI_WITH_OS
         rsi_task_destroy(NULL);
+#endif
 #else
         //! allocate memory for rx buffer
+#ifdef RSI_WITH_OS
         recv_buffer = (int8_t *)rsi_malloc(buff_size * sizeof(int8_t));
-
+#endif
         while (1) {
           recv_size = buff_size;
           //! take the current time
@@ -534,7 +553,9 @@ int32_t wlan_throughput_task(void *paramaters)
                 continue;
               }
               LOG_PRINT("\r\nTCP Recv Failed, Error code : 0x%X\r\n", status);
+#ifdef RSI_WITH_OS
               rsi_free(recv_buffer);
+#endif
               rsi_shutdown(server_socket, 0);
               return status;
             }
@@ -551,7 +572,9 @@ int32_t wlan_throughput_task(void *paramaters)
               //! Measure throughput
               measure_throughput(total_bytes_rx, tt_start, tt_end);
               rsi_mutex_unlock(&thrput_compute_mutex);
+#ifdef RSI_WITH_OS
               rsi_free(recv_buffer);
+#endif
               //! reset to initial value
               total_bytes_rx = 0;
               tt_start = rsi_hal_gettickcount();
@@ -620,8 +643,9 @@ int32_t wlan_throughput_task(void *paramaters)
         LOG_PRINT("\r\nSSL TX started, conn%d\r\n", wlan_thrput_conf->thread_id);
 
         //! allocate memory for tx buffer
+#ifdef RSI_WITH_OS
         send_buf = (int8_t *)rsi_malloc(buff_size * sizeof(int8_t));
-
+#endif
         for (i = 0; i < buff_size; i++) {
           send_buf[i] = i;
         }
@@ -633,7 +657,9 @@ int32_t wlan_throughput_task(void *paramaters)
           if (status < 0) {
             status = rsi_wlan_get_status();
             rsi_shutdown(client_socket, 0);
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("\r\nFailed to Send data to SSL Server, Error Code : 0x%lx\r\n, conn%d",
                       status,
                       wlan_thrput_conf->thread_id);
@@ -661,7 +687,9 @@ int32_t wlan_throughput_task(void *paramaters)
             t_end = rsi_hal_gettickcount();
             total_bytes_tx = pkt_cnt * buff_size;
             rsi_shutdown(client_socket, 0);
+#ifdef RSI_WITH_OS
             rsi_free(send_buf);
+#endif
             LOG_PRINT("SSL client closed\n");
             LOG_PRINT("\r\nSSL TX completed, conn%d\r\n", wlan_thrput_conf->thread_id);
             rsi_mutex_lock(&thrput_compute_mutex);
@@ -672,7 +700,9 @@ int32_t wlan_throughput_task(void *paramaters)
             //! wlan measurement is completed, release the sem
             rsi_semaphore_post(&wlan_thrghput_measurement_compl);
             //! delete the task
+#ifdef RSI_WITH_OS
             rsi_task_destroy(NULL);
+#endif
           }
 #endif
         }
@@ -791,7 +821,9 @@ int32_t wlan_throughput_task(void *paramaters)
         //! wlan measurement is completed, release the sem
         rsi_semaphore_post(&wlan_thrghput_measurement_compl);
         //! delete the task
+#ifdef RSI_WITH_OS
         rsi_task_destroy(NULL);
+#endif
         break;
       }
     }

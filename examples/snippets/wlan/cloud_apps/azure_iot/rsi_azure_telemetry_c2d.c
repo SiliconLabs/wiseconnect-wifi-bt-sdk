@@ -60,10 +60,11 @@
 #ifdef SAMPLE_HTTP
 #include "iothubtransporthttp.h"
 #endif
+#define STRINGS_C_SPRINTF_BUFFER_SIZE 512
 
 // Certificate includes
-#include "azure_client_certificate.pem.crt.h"
-#include "azure_client_private_key.pem.key.h"
+#include "azure_client_cert.pem.h"
+#include "azure_client_key.pem.h"
 #include "azure_baltimore_ca.pem.h"
 
 #define GLOBAL_BUFF_LEN 8000
@@ -470,18 +471,28 @@ int rsi_azure_client_app(void)
     return status;
   }
 
+  status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, NULL, 0);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT, NULL, 0);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT_PRIVATE_KEY, NULL, 0);
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
   status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, azure_baltimore_ca, (sizeof(azure_baltimore_ca) - 1));
   if (status != RSI_SUCCESS) {
     return status;
   }
-  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT, azure_client_certificate, (sizeof(azure_client_certificate) - 1));
+  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT, azure_client_cert, (sizeof(azure_client_cert) - 1));
   if (status != RSI_SUCCESS) {
     return status;
   }
 
-  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT_PRIVATE_KEY,
-                                    azure_client_private_key,
-                                    (sizeof(azure_client_private_key) - 1));
+  status = rsi_wlan_set_certificate(RSI_SSL_CLIENT_PRIVATE_KEY, azure_client_key, (sizeof(azure_client_key) - 1));
   if (status != RSI_SUCCESS) {
     return status;
   }

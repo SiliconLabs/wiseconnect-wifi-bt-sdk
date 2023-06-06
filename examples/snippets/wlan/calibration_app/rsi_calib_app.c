@@ -124,9 +124,9 @@ void rsi_calib_display_usage(void)
 {
   LOG_PRINT("Usage\r\n");
   LOG_PRINT("rsi_freq_offset=<freq_offset>\r\n");
-  LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset>\r\n");
+  LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset_low>,<gain_offset_mid>,<gain_offset_high>\r\n");
   LOG_PRINT("OR\r\n");
-  LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset>,<xo_ctune>\r\n");
+  LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset_low>,<gain_offset_mid>,<gain_offset_high>,<xo_ctune>\r\n");
   LOG_PRINT("\r\n");
 }
 
@@ -296,7 +296,7 @@ void rsi_calib_host_cmd_event_handler(void)
   uint8_t num_params = 0;
   uint8_t target;
   uint8_t flags;
-  int8_t gain_offset;
+  int8_t gain_offset[3];
   int8_t xo_ctune     = 80;
   int32_t status      = 0;
   int32_t freq_offset = 0;
@@ -332,19 +332,39 @@ void rsi_calib_host_cmd_event_handler(void)
               num_params++;
             }
             if (calib_host_cmd_buf[offset] != '\0') {
-              offset += rsi_parse(&gain_offset, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              offset += rsi_parse(&gain_offset[0], RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&gain_offset[1], RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&gain_offset[2], RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
               num_params++;
             }
             if (calib_host_cmd_buf[offset] != '\0') {
               offset += rsi_parse(&xo_ctune, RSI_PARSE_4_BYTES, &calib_host_cmd_buf[offset]);
               num_params++;
             }
-            if (num_params >= 3) {
-              status = rsi_calib_write(target, flags, gain_offset, xo_ctune);
+            if (num_params >= 5) {
+              status = rsi_calib_write(target, flags, gain_offset[0], gain_offset[1], gain_offset[2], xo_ctune);
               if (status == RSI_SUCCESS) {
                 LOG_PRINT("Ok\r\n");
               } else {
                 LOG_PRINT("Error %lx\r\n", status);
+              }
+              rsi_calib_read_t calib_data;
+              status = rsi_calib_read(target, &calib_data);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("target %d, xoctune %x, gains %d %d %d\r\n",
+                          calib_data.target,
+                          calib_data.xo_ctune,
+                          calib_data.gain_offset[0],
+                          calib_data.gain_offset[1],
+                          calib_data.gain_offset[2]);
+              } else {
+                LOG_PRINT("calib read Error %lx\r\n", status);
               }
               //! exit loop
               goto exit;

@@ -310,6 +310,10 @@ Driver task should have the highest priority among all threads
 #define RSI_DRIVER_TASK_PRIORITY                 4
 ```
 
+#### NOTE:
+
+- If the user wants to run the application with power_save, then **ENABLE_POWER_SAVE** macro should be enabled in rsi_ble_config.h file and continue with building and executing the application.
+
 ## 5. Testing the Application
 
 Follow the below steps for the successful execution of the application.

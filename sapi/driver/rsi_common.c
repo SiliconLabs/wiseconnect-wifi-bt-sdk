@@ -39,7 +39,7 @@ extern rsi_socket_select_info_t *rsi_socket_select_info;
  * @brief      Initialize common control block structure
  * @param[in]  common_cb - pointer to common cb structure 
  * @return     0              - Success \n 
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  */
 /// @private
 int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb)
@@ -102,11 +102,11 @@ int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
- * @brief       Fill commands and places into wlan TX queue
+ * @brief       Fill commands and packets into WLAN TX queue.
  * @param[in]   cmd - type of the command to send 
  * @param[in]   pkt - pointer of packet to send
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *
  */
 /// @private
@@ -211,6 +211,10 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
         rsi_opermode->ble_ext_feature_bit_map[2] |=
           (RSI_BLE_DISABLE_CODED_PHY_FROM_HOST << 1);                            //Disable Coded PHY from app
         rsi_opermode->ble_ext_feature_bit_map[2] |= (BLE_CP_BUFF_SIZE_512 << 2); // BIT 18 for BLE 512 Buff
+        rsi_opermode->ble_ext_feature_bit_map[2] |=
+          (RSI_BLE_ENABLE_ADV_EXTN << 3); // BIT 19 for enabling advertising extensions
+        rsi_opermode->ble_ext_feature_bit_map[2] |=
+          (RSI_BLE_AE_MAX_ADV_SETS << 4); // ble_custom_ext_feature_bit_map[20:23] for max AE adv sets
 #if BLE_SIMPLE_GATT
         rsi_opermode->ble_ext_feature_bit_map[1] |= (1 << 5);
 #endif
@@ -418,10 +422,10 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
- * @brief       Process commands related to common block
+ * @brief       Process commands received to common block
  * @param[in]   pkt - pointer to common block packet 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure 
+ * @return      Non-Zero Value - Failure 
  */
 /// @private
 int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
@@ -895,9 +899,9 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
 /*=================================================*/
 /**
  * @fn          void rsi_handle_slp_wkp(uint8_t frame_type)
- * @brief       Handle sleep and wakeup.
+ * @brief       Handle sleep and wakeup frames.
  * @param[in]   frame_type - Frame type
- * @return      void
+ * @return      Void
  */
 /// @private
 void rsi_handle_slp_wkp(uint8_t frame_type)
@@ -957,10 +961,10 @@ void rsi_handle_slp_wkp(uint8_t frame_type)
 /*====================================================*/
 /**
  * @fn        int8_t rsi_req_wakeup(void)
- * @brief     Set wakeup GPIO high and wait for wakeup confirmation pin to get set.
+ * @brief     Set wakeup GPIO high
  * @param[in] void 
  * @return    0              - Success \n 
- *            Non-Zero Value - Failure
+ * @return    Non-Zero Value - Failure
  */
 
 int8_t rsi_req_wakeup(void)
@@ -1013,10 +1017,10 @@ int8_t rsi_req_wakeup(void)
 /*====================================================*/
 /**
  * @fn         int8_t rsi_wait4wakeup(void)
- * @brief      Set wakeup GPIO high and waits for wakeup confirmation pin to get set.
+ * @brief      Waits for wakeup confirmation pin to be set
  * @param[in]  void
  * @return     0              - Success \n
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  */
 /// @private
 int8_t rsi_wait4wakeup(void)
@@ -1071,9 +1075,9 @@ int8_t rsi_wait4wakeup(void)
 /*====================================================*/
 /**
  * @fn        void rsi_allow_sleep(void)
- * @brief     Set wakeup GPIO low .
+ * @brief     Set wakeup GPIO low.
  * @param[in] void 
- * @return    void 
+ * @return    Void 
  */
 /// @private
 void rsi_allow_sleep(void)
@@ -1095,7 +1099,7 @@ void rsi_allow_sleep(void)
  * @fn        void rsi_powersave_gpio_init(void)
  * @brief     Initialize GPIOs used in power save .
  * @param[in] void 
- * @return    void
+ * @return    Void
  */
 /// @private
 void rsi_powersave_gpio_init(void)
@@ -1118,7 +1122,7 @@ void rsi_powersave_gpio_init(void)
  * @fn          void rsi_common_packet_transfer_done(rsi_pkt_t *pkt)
  * @brief       Handle packet transfer completion which has an asyncronous response.
  * @param[in]   pkt - pointer to packet 
- * @return      void
+ * @return      Void
  */
 /// @private
 void rsi_common_packet_transfer_done(rsi_pkt_t *pkt)
@@ -1131,10 +1135,10 @@ void rsi_common_packet_transfer_done(rsi_pkt_t *pkt)
 /*====================================================*/
 /**
  * @fn          int32_t rsi_sleep_mode_decision(rsi_common_cb_t *rsi_common_cb)
- * @brief       A handler which decides the power mode to program and change 
+ * @brief       Decides the power mode to program 
  * @param[in]   rsi_common_cb - pointer to the common control block
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 int32_t rsi_sleep_mode_decision(rsi_common_cb_t *rsi_common_cb)
@@ -1229,11 +1233,11 @@ int32_t rsi_sleep_mode_decision(rsi_common_cb_t *rsi_common_cb)
 /*====================================================*/
 /**
  * @fn          int32_t rsi_send_ps_mode_to_module(uint8_t selected_ps_mode, uint8_t selected_ps_type)
- * @brief       Send the power save command to module  
+ * @brief       Send the power save mode and type to module  
  * @param[in]   selected_ps_mode - Select power save mode
  * @param[in]   selected_ps_type - Select power save type 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 int32_t rsi_send_ps_mode_to_module(uint8_t selected_ps_mode, uint8_t selected_ps_type)
@@ -1352,12 +1356,12 @@ int32_t rsi_send_ps_mode_to_module(uint8_t selected_ps_mode, uint8_t selected_ps
 /*==============================================*/
 /**
  * @fn          rsi_error_t rsi_wait_on_common_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms ) 
- * @brief       Wireless library to acquire or wait for common semaphore.
+ * @brief       Wait for common semaphore
  * @param[in]   semaphore  - Semaphore handle pointer  
  * @param[in]   timeout_ms - Maximum time to wait to acquire semaphore. If timeout_ms is 0 then wait
                 till acquire semaphore.
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 rsi_error_t rsi_wait_on_common_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms)
@@ -1377,16 +1381,16 @@ rsi_error_t rsi_wait_on_common_semaphore(rsi_semaphore_handle_t *semaphore, uint
 /*==============================================*/
 /**
  * @fn          int32_t rsi_check_and_update_cmd_state(uint8_t cmd_type,uint8_t cmd_state)
- * @brief       This API is used by wireless library to check and update the command state to progress state.
+ * @brief       Check and update the command state
  * @param[in]   cmd_type - Command type \n
- *              1 - COMMON_CMD \n
- *              2 - WLAN_CMD \n
- *              3 - NWK_CMD 
+ *                         1 - COMMON_CMD \n
+ *                         2 - WLAN_CMD \n
+ *                         3 - NWK_CMD 
  * @param[in]   cmd_state - command state \n
- *              1 - IN_USE \n
- *              2 - ALLOW 
+ *                          1 - IN_USE \n
+ *                          2 - ALLOW 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 int32_t rsi_check_and_update_cmd_state(uint8_t cmd_type, uint8_t cmd_state)
@@ -1465,9 +1469,9 @@ int32_t rsi_check_and_update_cmd_state(uint8_t cmd_type, uint8_t cmd_state)
 /*==============================================*/
 /**
  * @fn          void rsi_post_waiting_common_semaphore(void)
- * @brief       releases all the common semaphores which are on semaphore wait 
+ * @brief       Release all the common semaphores which are on semaphore wait 
  * @param[in]   void  
- * @return      void
+ * @return      Void
  *
  *
  */
@@ -1501,9 +1505,9 @@ void rsi_post_waiting_common_semaphore(void)
 /*==============================================*/
 /**
  * @fn          void rsi_post_waiting_bt_semaphore(void)
- * @brief       Releases the all bt ,prop_protocol ,ble semaphores
+ * @brief       Release all the BT, BLE protocol semaphores
  * @param[in]   void  
- * @return      void
+ * @return      Void
  *
  *
  */
@@ -1561,10 +1565,10 @@ void rsi_post_waiting_bt_semaphore(void)
 /*=============================================================================*/
 /**
  * @fn          int32_t rsi_release_waiting_semaphore(void)
- * @brief       Releases all common ,wlan and nwk semaphores which are on waiting 
+ * @brief       Releases all common ,WLAN and network semaphores which are semaphore wait 
  * @param[in]   void
  * @return      0              - Success \n 
- *              
+ * @return      Non-Zero Value - Failure             
  */
 /// @private
 int32_t rsi_release_waiting_semaphore(void)
@@ -1600,9 +1604,9 @@ int32_t rsi_release_waiting_semaphore(void)
 /*==============================================*/
 /**
  * @fn          void rsi_check_pkt_queue_and_dequeue(void)
- * @brief       Check the packet queues and dequeues the packet.
+ * @brief       Check the packet in queue and dequeue the packet
  * @param[in]   void 
- * @return      void
+ * @return      Void
  *
  */
 /// @private
@@ -1674,10 +1678,10 @@ void rsi_check_pkt_queue_and_dequeue(void)
 /*==============================================*/
 /**
  * @fn          void rsi_free_queue_pkt(uint8_t pkt_dequeued,rsi_pkt_t *pkt)
- * @brief       free the queued packet.
+ * @brief       Free the queued packet
  * @param[in]   pkt_dequeued - pkt to be free
  * @param[in]   pkt - pointer of the packet to be free
- * @return      void
+ * @return      Void
  *
  */
 void rsi_free_queue_pkt(uint8_t pkt_dequeued, rsi_pkt_t *pkt)
@@ -1712,10 +1716,10 @@ void rsi_free_queue_pkt(uint8_t pkt_dequeued, rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type)
- * @brief       Clear the event and gives timeout error
+ * @brief       Clears the event and gives timeout error
  * @param[in]   error - Error 
  * @param[in]   cmd_type - command type    
- * @return      void
+ * @return      Void
  */
 /// @private
 void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type)
@@ -1748,10 +1752,10 @@ void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type)
 /*==============================================*/
 /**
  * @fn          void rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *reponse)
- * @brief       Check the commands which are waiting for the response and sets the flag
- * @param[in]   buffer - Buffer 
- * @return      void 
- *
+ * @brief       Check the commands which are waiting for the response
+ * @param[in]   response - pointer to the command waiting for response 
+ * @return      0              - Success \n 
+ * @return      Non-Zero Value - Failure 
  *
  */
 int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response)

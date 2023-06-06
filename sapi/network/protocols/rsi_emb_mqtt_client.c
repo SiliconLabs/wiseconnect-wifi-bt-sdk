@@ -26,9 +26,9 @@
 /**
  * @brief     Create MQTT objects. TCP level connection happens in this API. This is a blocking API.
  * @pre  \ref rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]  server_ip           - MQTT broker IP address to connect
- * @param[in]  server_port         - Port number of MQTT broker
- * @param[in]  client_port         - Port number of MQTT client (local port)
+ * @param[in]  server_ip           - MQTT broker IP address to connect \n
+ * @param[in]  server_port         - Port number of MQTT broker \n
+ * @param[in]  client_port         - Port number of MQTT client (local port) \n
  * @param[in]  flags               - Network flags. Each bit in the flag has its own significance
  * 
  *  Flags                           |    Description
@@ -41,19 +41,13 @@
  *  ^                               |     0      - IPV4
  
  * @param[in]  keep_alive_interval - MQTT client keep alive interval
- * @param[in]  clientid            - client_id of MQTT_client which should be unique for different clients.
- * @param[in]  username            - user_name of the MQTT_client which is a credential for logging to MQTT_server as an authentication
- * @param[in]  password            - Password of the MQTT_client which is also credential for MQTT_server as an authentication
- * @return     Zero                - Success  \n
- *	           Negative Value      - Failure \n
- *				                           -2     - Invalid parameters \n
- *				                           -3     - Command given in wrong state \n
- *				                           -4     - Packet allocation failure \n
- *		                   		         -5     - Command not supported \n
- *				                           -32    - Network command in progress \n
- *				                           -44    - Parameter length exceeds maximum value
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
- * @note        MQTT is not supported when the module is operating in concurrent mode.
+ * @param[in]  clientid            - Client ID of MQTT client which should be unique for different clients.
+ * @param[in]  username            - User name of the MQTT client which is a credential for logging to MQTT server as an authentication
+ * @param[in]  password            - Password of the MQTT client which is also credential for MQTT server as an authentication
+ * @return     0                   - Success  \n
+ * @return     Negative Value      - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition**    - \ref rsi_config_ipaddress() API needs to be called before this API. 
+ * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
 
@@ -76,7 +70,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
 
   rsi_emb_mqtt_client_init_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_CLIENT_INIT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -210,8 +204,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
 */
 /*==============================================*/
 /**
- * @brief       Connect to MQTT Server/Broker. MQTT level connection happens in this API. This is a blocking API.
- * @pre         \ref rsi_emb_mqtt_client_init() API needs to be called before this API.
+ * @brief       Connect to MQTT Server/Broker. MQTT level connection happens in this API. This is a blocking API. 
  * @param[in]   mqtt_flags       - Network flags. Each bit in the flag has its own significance \n
  * 
  *  Flags                           |    Description
@@ -222,19 +215,16 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
  *  ^                               |     0      - Disable usrFlag
  * 
  * @param[in]   will_topic       - Will topic that the MQTT client wants the MQTT Server to publish when disconnected unexpectedly.
- * @param[in]   will_message_len -  Length of will_message
- * @param[in]   will_message     - Will message issued by the MQTT_Server for a broken client.
- * @note 	will_topic and will_message are not supported and should be NULL.
- * @return      Zero             - Success  \n
- *              Negative Value   - Failure \n
- *				                         -3     - Command given in wrong state \n
- *				                         -4     - Packet allocation failure \n
- *			                	         -5     - Command not supported \n
- *			                  	       -32    - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes. \n
- * @note        For connecting Embedded_MQTT(emb_mqtt) over SSL : \n Enable TCP_IP_FEAT_SSL in Opermode parameters as below \n 
- *                                                  #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT) \n
+ * @param[in]   will_message_len - Length of will message
+ * @param[in]   will_message     - Will message issued by the MQTT Server for a broken client.
+ * @return      0                - Success  \n
+ * @return      Negative Value   - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note 	      **Precondition** - \ref rsi_emb_mqtt_client_init() API needs to be called before this API.
+ * @note        will_topic and will_message are not supported and should be NULL.
+ * @note        For connecting Embedded MQTT over SSL : \n Enable TCP_IP_FEAT_SSL in Opermode parameters as here \n 
+ *                                                  #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT). \n
  *                                                  Load the related SSL Certificates in the module using rsi_wlan_set_certificate() API.
+ * @note        Refer to \ref error-codes for the description of above error codes. \n
  *
  */
 
@@ -255,7 +245,7 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
 
   rsi_emb_mqtt_connect_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_CONNECT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -331,18 +321,12 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
 /*==============================================*/
 /**
  * @brief      Publish the given message on the topic specified. This is a blocking API.
- * @pre   \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @param[in]  topic          - Topic string on which MQTT client wants to publish data
  * @param[in]  publish_msg    - Publish message
- * @return     Zero           -  Success  \n
- *             Negative Value - Failure \n
- *                              -5  - Command not supported \n
- *                              -2  - Invalid parameters \n
- *                              -3  - Command given in wrong state \n
- *                              -4  - Packet allocation failure \n
- *                              -44 - Parameter length exceeds maximum value \n
- *                              -32 - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              -  Success  \n
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 {
@@ -358,7 +342,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 
   uint16_t max_payload_size;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_PUBLISH_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -467,18 +451,12 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 /*==============================================*/
 /**
  * @brief      Subscribe to the topic specified. Thus, MQTT client will receive any data that is published on this topic. This is a blocking API.
- * @pre        \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @param[in]  qos   	        - Quality of service of message at MQTT protocol level. Valid values are 0, 1, 2.
  * @param[in]  topic 	        - Topic string on which MQTT client wants to subscribe.
- * @return     Zero           -  Success  \n
- *             Negative Value - Failure \n
- *                              -5  - Command not supported \n
- *                              -2  - Invalid parameters \n
- *                              -3  - Command given in wrong state \n
- *                              -4  - Packet allocation failure \n
- *                              -44 - Parameter length exceeds maximum value \n
- *                              -32 - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              -  Success  \n
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 {
@@ -492,7 +470,7 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 
   rsi_emb_mqtt_sub_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_SUBSCRIBE_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -576,17 +554,11 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 /*==============================================*/
 /**
  * @brief      Unsubscribe to the topic specified.Thus, MQTT client will not receive any data published on this topic. This is a blocking API.
- * @pre        \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @param[in]  topic 	        - Topic string to which MQTT client wants to unsubscribe.
- * @return     Zero           - Success  \n
- *             Negative Value - Failure \n
- *                         	    -5  - Command not supported \n
- *                         	    -2  - Invalid parameters \n
- *                        	    -3  - Command given in wrong state \n
- *                        	    -4  - Packet allocation failure \n
- *                        	    -44 - Parameter length exceeds maximum value \n
- *                       	      -32 - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0              - Success  \n
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
@@ -601,7 +573,7 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 
   rsi_emb_mqtt_unsub_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_UNSUBSCRIBE_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -684,15 +656,11 @@ int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)
 /*==============================================*/
 /**
  * @brief      Disconnect the client from MQTT Server/Broker. TCP and MQTT level disconnection take place here. This is a blocking API.
- * @pre        \ref rsi_emb_mqtt_connect()  API needs to be called before this API.
  * @param[in]  Void
- * @return     Zero             -  Success \n
- *             Negative Value   - Failure \n
- *                         	      -5  - Command not supported \n
- *                         	      -3  - Command given in wrong state \n
- *                         	      -4  - Packet allocation failure \n
- *                         	      -32 - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0                -  Success \n
+ * @return     Negative Value   - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition** -  \ref rsi_emb_mqtt_connect()  API needs to be called before this API.
+ * @note       Refer to Error Codes section for the description of the above error codes \ref error-codes.
  */
 
 int32_t rsi_emb_mqtt_disconnect()
@@ -707,7 +675,7 @@ int32_t rsi_emb_mqtt_disconnect()
 
   rsi_req_emb_mqtt_command_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_DISCONNECT_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -772,15 +740,11 @@ int32_t rsi_emb_mqtt_disconnect()
 /*==============================================*/
 /**
  * @brief      Delete MQTT clients profile configuration. TCP level disconnection happens here, if required. This is a blocking API.
- * @pre        \ref rsi_emb_mqtt_client_init() API needs to be called before this API, based on requirement.This API can also be issued after \ref rsi_emb_mqtt_disconnect() API.
  * @param[in]  Void
- * @return      Zero 	         -  Success  \n
- * 	   	        Negative Value - Failure \n
- *             			             -5  - Command not supported \n
- *             			             -3  - Command given in wrong state \n
- *             			             -4  - Packet allocation failure \n
- *             			             -32 - Network command in progress
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     0    	        -  Success  \n
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
+ * @note       **Precondition** - \ref rsi_emb_mqtt_client_init() API needs to be called before this API, based on requirement.This API can also be issued after \ref rsi_emb_mqtt_disconnect() API.
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_emb_mqtt_destroy()
@@ -794,7 +758,7 @@ int32_t rsi_emb_mqtt_destroy()
 
   rsi_req_emb_mqtt_command_t *mqtt_ops = NULL;
 
-  if (wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) {
+  if ((wlan_cb->opermode != RSI_WLAN_CLIENT_MODE) && (wlan_cb->opermode != RSI_WLAN_CONCURRENT_MODE)) {
     // Command not supported
     SL_PRINTF(SL_EMB_MQTT_DESTROY_COMMAND_NOT_SUPPORTED, NETWORK, LOG_ERROR);
     return RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -854,13 +818,13 @@ int32_t rsi_emb_mqtt_destroy()
 /*==============================================*/
 /**
  * @brief      Register callbacks for MQTT Asynchronous messages. This is a non-blocking API.
- * @param[in]  callback_id           - Callback id for MQTT responses
+ * @param[in]  callback_id           - Callback ID for MQTT responses
  * @param[in]  call_back_handler_ptr - Callback function pointer
- * @param[out] status                - Success - RSI_SUCCESS\n
+ * @param[out] status                - Success - RSI_SUCCESS. \n
  *                                     Failure - Possible error codes are : 0x0030, 0x0036, 0x0065, 0xBBF1, 0xBBF2, 0xBBF3, 0xFFF6
- * @param[out] buffer                - Pointer to buffer which hold data \n
+ * @param[out] buffer                - Pointer to buffer which holds data \n
  * @param[out] length                - Length of the buffer \n
- * @return     Status of the call_back_handler_ptr is returned
+ * @return     Status of the call_back_handler_ptr 
  */
 
 int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
@@ -897,9 +861,9 @@ int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
 }
 /*==============================================*/
 /**
- * @brief      Adjusted length of MQTT packet. This is a non-blocking API.
+ * @brief      Calculate length of MQTT packet. This is a non-blocking API.
  * @param[in]  rem_len 		      -  Length
- * @return     adjusted rem_len -  Success \n
+ * @return     Length of MQTT packet (adjusted rem_len)
  */
 /// @private
 int32_t rsi_cal_mqtt_packet_len(int32_t rem_len)

@@ -134,10 +134,7 @@ int32_t application()
   uint8_t recv_buffer[RECV_BUFFER_SIZE];
   uint32_t chunk = 1, fwup_chunk_length, recv_offset = 0, fwup_chunk_type;
 
-#ifdef RSI_WITH_OS
-  rsi_task_handle_t driver_task_handle = NULL;
-#endif
-
+#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -151,8 +148,10 @@ int32_t application()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
 
 #ifdef RSI_WITH_OS
+  rsi_task_handle_t driver_task_handle = NULL;
   // Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -339,6 +338,7 @@ int32_t application()
 
         LOG_PRINT("\r\nFirmware update complete\r\n");
 
+#ifndef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
         status = rsi_destroy_driver_task_and_driver_deinit(driver_task_handle);
         if (status != RSI_SUCCESS) {
@@ -347,6 +347,7 @@ int32_t application()
         } else {
           LOG_PRINT("\r\nTask destroy and driver deinit success\r\n");
         }
+#endif
 #endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
@@ -358,6 +359,7 @@ int32_t application()
         RSI_CLK_M4ssRefClkConfig(M4CLK, ULP_32MHZ_RC_CLK);
 #endif
 
+#ifndef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
         // Task created for Driver task
         rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -366,6 +368,7 @@ int32_t application()
                         NULL,
                         RSI_DRIVER_TASK_PRIORITY,
                         &driver_task_handle);
+#endif
 #endif
 
         status = rsi_wireless_init(0, 0);
@@ -387,6 +390,23 @@ int32_t application()
 // main function definition
 int main(void)
 {
+#ifdef RSI_M4_INTERFACE
+  int32_t status = RSI_SUCCESS;
+  // Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
+#endif
+
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;
 

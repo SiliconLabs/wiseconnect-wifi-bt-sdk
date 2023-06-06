@@ -461,3 +461,13 @@
 #ifndef RSI_BLE_MTU_EXCHANGE_FROM_HOST
 #define RSI_BLE_MTU_EXCHANGE_FROM_HOST 0
 #endif
+/*=======================================================================*/
+// Extended Advertising parameters
+/*=======================================================================*/
+#ifndef RSI_BLE_ENABLE_ADV_EXTN
+#define RSI_BLE_ENABLE_ADV_EXTN 0 // disabled by default
+#endif
+
+#ifndef RSI_BLE_AE_MAX_ADV_SETS
+#define RSI_BLE_AE_MAX_ADV_SETS 2 // default number of Advertising sets in extended advertising (Max value = 15)
+#endif

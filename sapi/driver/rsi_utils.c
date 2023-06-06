@@ -96,9 +96,9 @@ uint32_t rsi_bytes4R_to_uint32(uint8_t *dBuf)
 /*==============================================*/
 /**
  * @fn         int8_t rsi_ascii_hex2num(int8_t ascii_hex_in)
- * @brief      ASCII to hex conversion. 
- * @param[in]  ascii_hex_in - ASCII hex input 
- * @return     hex number 
+ * @brief      ASCII to HEX conversion. 
+ * @param[in]  ascii_hex_in - ASCII HEX input 
+ * @return     HEX number  
  */
 
 int8_t rsi_ascii_hex2num(int8_t ascii_hex_in)
@@ -115,8 +115,8 @@ int8_t rsi_ascii_hex2num(int8_t ascii_hex_in)
 /*=============================================================================*/
 /**
  * @fn          int8 rsi_char_hex2dec(int8_t *cBuf)
- * @brief       Convert given ASCII hex notation to decimal notation (used for mac address). 
- * @param[in]   cBuf - ASCII hex notation string 
+ * @brief       Convert given ASCII HEX notation to decimal notation (used for MAC address). 
+ * @param[in]   cBuf - ASCII HEX notation string 
  * @return      Integer Value
  */
 
@@ -133,10 +133,10 @@ int8_t rsi_char_hex2dec(int8_t *cBuf)
 /*=============================================================================*/
 /**
  * @fn             uint8_t *rsi_ascii_dev_address_to_6bytes_rev(uint8_t *hex_addr, int8_t *ascii_mac_address)
- * @brief          Convert notation MAC address to a 6-byte hex address.
+ * @brief          Convert notation MAC address to a 6-byte HEX address.
  * @param[in]      asciiMacFormatAddress - Source address to convert, must be a null terminated string.  
- * @param[out]     hex_addr              - Converted hex address is returned here.  
- * @return         Hex address 
+ * @param[out]     hex_addr              - Converted HEX address.   
+ * @return         HEX address 
  */
 
 uint8_t *rsi_ascii_dev_address_to_6bytes_rev(uint8_t *hex_addr, int8_t *ascii_mac_address)
@@ -169,8 +169,8 @@ uint8_t *rsi_ascii_dev_address_to_6bytes_rev(uint8_t *hex_addr, int8_t *ascii_ma
 /**
  * @fn          int8_t hex_to_ascii(uint8_t hex_num)
  * @brief       Hex to ascii conversion.
- * @param[in]   hex_num - hex number
- * @return      Ascii value for given hex value	
+ * @param[in]   hex_num - HEX number
+ * @return      Ascii value for given HEX value	
  */
 
 int8_t hex_to_ascii(uint8_t hex_num)
@@ -210,8 +210,8 @@ int8_t hex_to_ascii(uint8_t hex_num)
 /*=============================================================================*/
 /**
  * @fn              int8_t *rsi_6byte_dev_address_to_ascii(uint8_t *ascii_mac_address, uint8_t *hex_addr)
- * @brief           Convert given 6-byte hex address to ASCII Mac address.
- * @param[in]       hex_addr              - Hex address input.  
+ * @brief           Convert given 6-byte HEX address to ASCII Mac address.
+ * @param[in]       hex_addr              - HEX address input. 
  * @param[out]      asciiMacFormatAddress - Converted ASCII mac address is returned here. 
  * @return          Converted ASCII mac address 
  */
@@ -236,11 +236,11 @@ uint8_t *rsi_6byte_dev_address_to_ascii(uint8_t *ascii_mac_address, uint8_t *hex
 /*==============================================*/
 /**
  * @fn          uint8_t lmac_crc8_c(uint8_t crc8_din, uint8_t crc8_state, uint8_t end) 
- * @brief       Calculate crc for a given byte and accumulate crc.
- * @param[in]   crc8_din   -  crc byte input  
- * @param[in]   crc8_state - accumulated crc  
- * @param[in]   end        - last byte crc  
- * @return      crc value  
+ * @brief       Calculate CRC for a given byte and accumulate CRC.
+ * @param[in]   crc8_din   -  CRC byte input  
+ * @param[in]   crc8_state - accumulated CRC  
+ * @param[in]   end        - last byte CRC  
+ * @return      CRC value 
  *                 
  */
 ///@private
@@ -301,8 +301,8 @@ uint8_t lmac_crc8_c(uint8_t crc8_din, uint8_t crc8_state, uint8_t end)
 /*==============================================*/
 /**
  * @fn         uint8_t multicast_mac_hash(uint8_t *mac)
- * @brief      Calculate 6-bit hash value for given mac address. 
- * @param[in]  mac - pointer to mac address  
+ * @brief      Calculate 6-bit hash value for given MAC address 
+ * @param[in]  mac - pointer to MAC address    
  * @return     6-bit Hash value
  *                 
  */
@@ -333,11 +333,11 @@ uint8_t convert_lower_case_to_upper_case(uint8_t lwrcase)
 /*=========================================================================*/
 /**
  * @fn          void string2array(uint8_t *dst, uint8_t *src, uint32_t length)
- * @brief       Convert the given string to destination array. 
+ * @brief       Convert the given string to array. 
  * @param[in]   dst    -  Pointer to destination array  
  * @param[in]   src    - Pointer to source string  
  * @param[in]   length - Length of the string 
- * @return      void   
+ * @return      Void   
  */
 
 void string2array(uint8_t *dst, uint8_t *src, uint32_t length)
@@ -354,10 +354,10 @@ void string2array(uint8_t *dst, uint8_t *src, uint32_t length)
 /*=========================================================================*/
 /**
  * @fn         uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
- * @brief      Convert integer value into null-terminated string and stores the result in the array given by str parameter. 
+ * @brief      Convert integer value into null-terminated string and stores it. 
  * @param[in]  val - Value to be converted to a string  
  * @param[in]  str - Array in memory where to store the resulting null-terminated string  
- * @return     String 
+ * @return     Null-terminated string  
  */
 
 uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
@@ -390,7 +390,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
 /**
  * @fn          int32_t rsi_atoi(const int8_t *str)
  * @brief       Convert string to an integer. 
- * @param[in]   str - This is the string representation of an integral number 
+ * @param[in]   str - String to be converted to integer 
  * @return      Converted Integer  
  */
 int32_t rsi_atoi(const int8_t *str)
@@ -417,7 +417,7 @@ int32_t rsi_atoi(const int8_t *str)
  * @fn         int8_t asciihex_2_num(int8_t ascii_hex_in)
  * @brief      ASCII to hex conversion.
  * @param[in]  ascii_hex_in - ASCII hex input  
- * @return     hex num  
+ * @return     HEX number  
  */
 int8_t asciihex_2_num(int8_t ascii_hex_in)
 {
@@ -434,9 +434,9 @@ int8_t asciihex_2_num(int8_t ascii_hex_in)
 /*=============================================================================*/
 /**
  * @fn          int8_t rsi_charhex_2_dec(int8_t *cBuf)
- * @brief       Convert given ASCII hex notation to decimal notation (used for mac address). 
- * @param[in]   cBuf - ASCII hex notation string. 
- * @return      value in integer  
+ * @brief       Convert given ASCII HEX notation to decimal notation (used for mac address). 
+ * @param[in]   cBuf - ASCII HEX notation string. 
+ * @return      Integer value    
  */
 int8_t rsi_charhex_2_dec(int8_t *cBuf)
 {
@@ -451,10 +451,10 @@ int8_t rsi_charhex_2_dec(int8_t *cBuf)
 /*=============================================================================*/
 /**
  * @fn              void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress)
- * @brief           Convert notation MAC address to a 6-byte hex address. 
- * @param[in]       asciiMacFormatAddress - source address to convert, must be a null terminated string.  
- * @param[out]      hexAddr               - Converted hex address is returned here.
- * @return          void 
+ * @brief           Convert ASCII notation MAC address to a 6-byte HEX address. 
+ * @param[in]       asciiMacFormatAddress - Source address to convert, must be a null terminated string.  
+ * @param[out]      hexAddr               - Converted HEX address is returned here.
+ * @return          Void 
  */
 void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress)
 {
@@ -483,10 +483,10 @@ void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress)
 /*=============================================================================*/
 /**
  * @fn            void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress)
- * @brief         Convert notation network address to 4-byte hex address. 
- * @param[in]     asciiDotAddress - source address to convert, must be a null terminated string.
- * @param[out]    hexAddr         - Output value is passed back in the 4-byte Hex Address.
- * @return        void  
+ * @brief         Convert ASCII notation network address to 4-byte HEX address. 
+ * @param[in]     asciiDotAddress - Source address to convert, must be a null terminated string.
+ * @param[out]    hexAddr         - Output value is passed back in the 4-byte HEX Address.
+ * @return        Void  
  */
 void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress)
 {
@@ -525,9 +525,9 @@ void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress)
 /*=============================================================================*/
 /**
  * @fn         uint64_t ip_to_reverse_hex(char *ip)
- * @brief      Convert IP address to reverse Hex format.  
+ * @brief      Convert IP address to reverse HEX format.  
  * @param[in]  ip - IP address to convert. 
- * @return     IP address in reverse Hex format 
+ * @return     IP address in reverse HEX format  
  */
 uint64_t ip_to_reverse_hex(char *ip)
 {
@@ -559,5 +559,104 @@ uint32_t rsi_ntohl(uint32_t a)
 {
   return ((((a)&0xff000000) >> 24) | (((a)&0x00ff0000) >> 8) | (((a)&0x0000ff00) << 8) | (((a)&0x000000ff) << 24));
 }
+/*=============================================================================*/
+/**
+ * @fn         uint8_t ascii_to_dec(uint8_t *num)
+ * @brief      Convert ASCII to Decimal Value.  
+ * @param[in]  num - ASCII input
+ * @return     dec_val - value after conversion 
+ */
+uint8_t ascii_to_dec(uint8_t *num)
+{
+  uint8_t dec_val = 0, i = 0;
+  while (num[i] != '\0') {
+    dec_val = dec_val * 10 + (num[i] - '0');
+    i++;
+  }
+  return dec_val;
+}
+
+#if defined(FLOAT_PRINT_BYPASS)
+/*=============================================================================*/
+/**
+ * @fn         void rsi_reverse(char *str, int len)
+ * @brief      Reverses the given string.
+ * @param[in]  str - string to be reversed
+ * @param[in]  len - the length of the given string
+ * @return     void
+ */
+
+void rsi_reverse(char *str, int len)
+{
+  int i = 0, j = len - 1, temp;
+  while (i < j) {
+    temp   = str[i];
+    str[i] = str[j];
+    str[j] = temp;
+    i++;
+    j--;
+  }
+}
+
+/*=============================================================================*/
+/**
+ * @fn         int rsi_intToStr(int x, char str[], int d)
+ * @brief      converts the integer into a string.
+ * @param[in]  x - given interger to be made into a string
+ * @param[in]  str - the string that stores the final string corresponding to the integer
+ * @param[in]  d - the number of digits required in the output, should be less than 6. If d is more than the number of digits in x, then 0s are added at the beginning.
+ * @return     the lenght of the string
+ */
+int rsi_intToStr(int x, char str[], int d)
+{
+  int i = 0;
+  while (x) {
+    str[i++] = (x % 10) + '0';
+    x        = x / 10;
+  }
+
+  // If number of digits required is more, then
+  // add 0s at the beginning
+  while (i < d)
+    str[i++] = '0';
+
+  rsi_reverse(str, i);
+  str[i] = '\0';
+  return i;
+}
+
+/*=============================================================================*/
+/**
+ * @fn         int rsi_intToStr(int x, char str[], int d)
+ * @brief      Converts a floating-point/double number to a string.
+ * @param[in]  res - the string in which the result must be stored
+ * @param[in]  n - the float number that needs to be converted into a string
+ * @param[in]  afterpoint - the number of points after the decimal that needs to be printed, should be less than 6.
+ * @return     void
+ */
+void rsi_ftoa(char *res, float n, int afterpoint)
+{
+  float fpart;
+  // Extract integer part
+  int ipart = (int)n;
+
+  // Extract floating part
+  fpart = n - (float)ipart;
+
+  // convert integer part to string
+  int i = rsi_intToStr(ipart, res, 0);
+
+  // check for display option after point
+  if (afterpoint != 0) {
+    res[i]   = '.'; // add dot
+    int mult = 1;
+    for (int i = 0; i < afterpoint; i++)
+      mult *= 10;
+    fpart = fpart * mult; // supports 6 digits for now.
+
+    rsi_intToStr((int)fpart, res + i + 1, afterpoint);
+  }
+}
+#endif
 
 /** @} */

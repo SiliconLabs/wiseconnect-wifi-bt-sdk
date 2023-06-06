@@ -164,9 +164,9 @@ void rsi_clear_event(uint32_t event_num)
 /*====================================================*/
 /**
  * @fn          void rsi_mask_event(uint32_t event_num)
- * @brief       Mask an event specified using the event number.
+ * @brief       Mask the specified event
  * @param[in]   event_num - Event number to mask 
- * @return      void
+ * @return      Void
  */
 ///@private
 void rsi_mask_event(uint32_t event_num)
@@ -227,10 +227,10 @@ void rsi_unmask_event_from_isr(uint32_t event_num)
 /*====================================================*/
 /**
  * @fn          uint32_t rsi_find_event(uint32_t event_map)
- * @brief       Find the event which is set from the event map. 
+ * @brief       Find the event which is set 
  * @param[in]   event_map - Event map
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  */
 ///@private
 uint32_t rsi_find_event(uint32_t event_map)
@@ -245,11 +245,11 @@ uint32_t rsi_find_event(uint32_t event_map)
 /*====================================================*/
 /**
  * @fn          uint16_t rsi_register_event(uint32_t event_id, void (*event_handler_ptr)(void))
- * @brief       Register the event handler for the given event. 
+ * @brief       Register the given event 
  * @param[in]   event_id -  event number which needs to be registered 
  * @param[in]   event_handler_ptr - event handler which needs to be registered for a given event 
  * @return      0 - Success \n
- *              1 - Error
+ * @return      Non-Zero Value - Failure
  *
  */
 ///@private
@@ -267,7 +267,7 @@ uint16_t rsi_register_event(uint32_t event_id, void (*event_handler_ptr)(void))
  * @fn          void rsi_set_event_from_isr(uint32_t event_num)
  * @brief       Set the event from isr context. 
  * @param[in]   event_num - Event number to mask 
- * @return      void 
+ * @return      Void 
  *                
  */
 ///@private
@@ -287,7 +287,7 @@ void rsi_set_event_from_isr(uint32_t event_num)
  * @fn          void rsi_events_init(void)
  * @brief       Initialize the events. 
  * @param[in]   void 
- * @return      void
+ * @return      Void
  */
 ///@private
 void rsi_events_init(void)

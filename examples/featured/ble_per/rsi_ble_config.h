@@ -37,23 +37,25 @@
 #define RSI_OPERMODE_WLAN_BLE 13
 
 #ifdef RSI_M4_INTERFACE
-#define RSI_BLE_MAX_NBR_ATT_REC 20
+#define RSI_BLE_MAX_NBR_ATT_REC  20
+#define RSI_BLE_MAX_NBR_ATT_SERV 10
 /* Number of BLE notifications */
 #define RSI_BLE_NUM_CONN_EVENTS 4
+#define RSI_BLE_MAX_NBR_SLAVES  1
+#define RSI_BLE_MAX_NBR_MASTERS 1
 #else
 #define RSI_BLE_MAX_NBR_ATT_REC  80
 #define RSI_BLE_MAX_NBR_ATT_SERV 10
 /* Number of BLE notifications */
 #define RSI_BLE_NUM_CONN_EVENTS  20
+#define RSI_BLE_MAX_NBR_SLAVES   3
+#define RSI_BLE_MAX_NBR_MASTERS  1
 #endif
 
-#define RSI_BLE_MAX_NBR_SLAVES    3
-#define RSI_BLE_MAX_NBR_MASTERS   1
+#define RSI_BLE_MAX_NBR_ATT_SERV 10
+
 #define RSI_BLE_GATT_ASYNC_ENABLE 0
 #define RSI_BLE_GATT_INIT         0
-
-/* Number of BLE notifications */
-#define RSI_BLE_NUM_CONN_EVENTS 20
 
 /* Number of BLE GATT RECORD SIZE IN (n*16 BYTES), eg:(0x40*16)=1024 bytes */
 #define RSI_BLE_NUM_REC_BYTES 0x40
@@ -192,7 +194,8 @@
 
 #ifdef CHIP_9117
 //! To set Extended custom feature select bit map
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC)
 #else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)

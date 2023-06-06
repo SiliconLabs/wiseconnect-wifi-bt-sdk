@@ -115,9 +115,10 @@ sockets_SOURCES += $(RSI_SDK_PATH)/sapi/network/protocols/rsi_dns.c \
 ipv6_utils_SOURCES += $(RSI_SDK_PATH)/utilities/ipv6_utils/inet6.c \
  
 logging_SOURCES += $(RSI_SDK_PATH)/sapi/logging/sl_app_logging.c \
+                   $(RSI_SDK_PATH)/sapi/logging/sleep_wakeup_logging.c \
                    $(RSI_SDK_PATH)/sapi/logging/sl_fw_logging.c \
                    $(RSI_SDK_PATH)/utilities/advanced_logging/firmware_logging/firmware_logging_utils.c \
-                   
+      
 firmware_update_SOURCES += $(RSI_SDK_PATH)/sapi/network/protocols/rsi_firmware_upgradation.c
 
 

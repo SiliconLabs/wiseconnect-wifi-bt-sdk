@@ -41,13 +41,21 @@
 // TCP/IP feature select bitmap for selecting TCP/IP features
 #define RSI_TCP_IP_FEATURE_BIT_MAP                                                                    \
   (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_DNS_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_EXTENSION_VALID \
-   | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6)
+   | TCP_IP_FEAT_DHCPV6_CLIENT | TCP_IP_FEAT_IPV6 | TCP_IP_FEAT_ICMP)
 
 // To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP (FEAT_CUSTOM_FEAT_EXTENTION_VALID | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)
 
 // To set Extended custom feature select bit map
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_256K_MODE | EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS)
+#ifdef CHIP_9117
+#ifdef RSI_M4_INTERFACE
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP EXT_FEAT_512K_M4SS_192K
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP EXT_FEAT_704K_M4SS_0K
+#endif
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM | EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS)
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP EXT_TCP_IP_WINDOW_DIV
 
@@ -585,5 +593,33 @@
 // IP address of Gateway
 // E.g: 0x010AA8C0 == 192.168.10.1
 #define RSI_CONFIG_P2P_GATEWAY_ADDRESS 0x010AA8C0
+
+#ifdef FW_LOGGING_ENABLE
+/*=======================================================================*/
+//! Firmware Logging Parameters
+/*=======================================================================*/
+//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
+#define FW_LOG_ENABLE 1
+//! Set TSF Granularity for firmware logging in micro seconds
+#define FW_TSF_GRANULARITY_US 10
+//! Log level for COMMON component in firmware
+#define COMMON_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for CM_PM component in firmware
+#define CM_PM_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_LMAC component in firmware
+#define WLAN_LMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN_UMAC component in firmware
+#define WLAN_UMAC_LOG_LEVEL FW_LOG_INFO //FW_LOG_ERROR
+//! Log level for WLAN NETWORK STACK component in firmware
+#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE CONTROL component in firmware
+#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_ERROR
+//! Log level for BT BLE STACK component in firmware
+#define BT_BLE_STACK_LOG_LEVEL FW_LOG_ERROR
+//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
+#define FW_LOG_BUFFER_SIZE 2048
+//! Set queue size for firmware log messages
+#define FW_LOG_QUEUE_SIZE 2
+#endif
 
 #endif

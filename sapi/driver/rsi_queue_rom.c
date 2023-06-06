@@ -98,7 +98,7 @@ void ROM_WL_rsi_enqueue_pkt(global_cb_t *global_cb_p, rsi_queue_cb_t *queue, rsi
  * @param[in]   global_cb_p - pointer to the global control block
  * @param[in]   queue       - queue pointer from which packet needs to be dequeued 
  * @return      Allocated packet pointer - Success \n
- *              NULL                     - Failure
+ * @return      NULL                     - Failure
  */
 /// @private
 rsi_pkt_t *ROM_WL_rsi_dequeue_pkt(global_cb_t *global_cb_p, rsi_queue_cb_t *queue)
@@ -146,7 +146,7 @@ rsi_pkt_t *ROM_WL_rsi_dequeue_pkt(global_cb_t *global_cb_p, rsi_queue_cb_t *queu
  * @param[in]   global_cb_p - pointer to the global control block
  * @param[in]   queue       - pointer to queue  
  * @return      0                         - If queue masked \n
- *              Number of packets pending - If queue is not masked
+ * @return      Number of packets pending - If queue is not masked
  */
 /// @private
 uint32_t ROM_WL_rsi_check_queue_status(global_cb_t *global_cb_p, rsi_queue_cb_t *queue)
@@ -227,7 +227,7 @@ void ROM_WL_rsi_unblock_queue(global_cb_t *global_cb_p, rsi_queue_cb_t *queue)
 /*==============================================*/
 /**
  * @fn          void ROM_WL_rsi_enqueue_pkt_from_isr(global_cb_t *global_cb_p, rsi_queue_cb_t *queue,rsi_pkt_t *pkt)
- * @brief       Enqueue packet into queue
+ * @brief       Enqueue packet from ISR into queue
  * @param[in]   global_cb_p - pointer to the global control block
  * @param[in]   queue 		- pointer to queue cb
  * @param[in]   pkt 		- packet pointer which needs to be queued

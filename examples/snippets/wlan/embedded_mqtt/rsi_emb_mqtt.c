@@ -170,16 +170,13 @@ int32_t rsi_mqtt_client_app()
 
   rsi_mqtt_pubmsg_t publish_msg;
 
-#ifdef RSI_WITH_OS
-  rsi_task_handle_t driver_task_handle = NULL;
-#endif
-
+#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
-  //! SiLabs module intialisation
+  //! SiLabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
@@ -187,8 +184,9 @@ int32_t rsi_mqtt_client_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
+#endif
 #ifdef RSI_WITH_OS
-
+  rsi_task_handle_t driver_task_handle = NULL;
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -366,13 +364,25 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
-#ifdef RSI_WITH_OS
-  rsi_task_handle_t wlan_task_handle = NULL;
+#ifdef RSI_M4_INTERFACE
+  //! Driver initialization
+  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
+  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
+    return status;
+  }
+
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
 #endif
 
-  //! Unmask interrupts
-
 #ifdef RSI_WITH_OS
+  rsi_task_handle_t wlan_task_handle = NULL;
   //! OS case
   //! Task created for WLAN task
   rsi_task_create((rsi_task_function_t)(int32_t)rsi_mqtt_client_app,

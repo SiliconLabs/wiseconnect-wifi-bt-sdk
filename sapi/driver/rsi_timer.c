@@ -49,7 +49,7 @@ void rsi_timer_expiry_interrupt_handler(void)
 /*==============================================*/
 /**
  * @fn           uint32_t rsi_timer_read_counter()
- * @brief        Return the timer counter value. 
+ * @brief        Read the timer counter value 
  * @param[in]    void 
  * @return       Timer counter value in milliseconds 
  *
@@ -63,10 +63,10 @@ uint32_t rsi_timer_read_counter(void)
 /*==============================================*/
 /**
  * @fn            void rsi_init_timer(rsi_timer_instance_t *rsi_timer, uint32_t duration)
- * @brief         Initialize the timer instance with the expiry time.
+ * @brief         Initialize the timer instance
  * @param[in]     rsi_timer - timer instance 
  * @param[in]     duration  - duration in milli seconds  
- * @return        void 
+ * @return        Void 
  *
  */
 
@@ -79,10 +79,10 @@ void rsi_init_timer(rsi_timer_instance_t *rsi_timer, uint32_t duration)
 /*==============================================*/
 /**
  * @fn           int32_t rsi_timer_expired(rsi_timer_instance_t *timer)
- * @brief        Check whether the timer instance is expired or not.
+ * @brief        Check if the timer instance is expired
  * @param[in]    rsi_timer - timer instance 
  * @return       1 - if timer is expired \n 
- *               0 - if timer is not expired 
+ * @return       0 - if timer is not expired 
  *              
  */
 
@@ -99,8 +99,8 @@ int32_t rsi_timer_expired(rsi_timer_instance_t *timer)
  * @fn           uint32_t rsi_timer_left(rsi_timer_instance_t *timer)
  * @brief        Get the remaining time for timer expiry. 
  * @param[in]    rsi_timer - timer instance
- * @return       Positive value - time left to expire \n 
- *               0              - if timer is expired 
+ * @return       Positive value - Time left to expire \n 
+ * @return       0              - Timer is expired 
  *
  */
 

@@ -26,14 +26,13 @@
  * @brief      Enable DHCP user class. This is a non-blocking API.
  * @param[in]  mode - DHCP User Class mode \n
  *                    1- RFC Compatible mode \n
- *					  2- Windows Compatible mode
+ *                    2- Windows Compatible mode
  * @param[in]  count - DHCP User Class count
  * @param[in]  user_class_data - The first byte of this buffer is user class data length and then user class data follows 
+ * @param[in]  dhcp_usr_cls_rsp_handler - DHCP User Class response handler
  * @return     0              -  Success  \n
- *             Negative Value - Failure \n
- *                         -3 - Command given in wrong state \n
- *                         -4 - Buffer not available to serve the command 
- * @note        Refer to Error Codes section for the description of the above error codes \ref error-codes.
+ * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_dhcp_user_class(uint8_t mode,

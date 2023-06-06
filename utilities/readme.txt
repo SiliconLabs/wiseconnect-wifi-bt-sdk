@@ -29,4 +29,12 @@
    EXAMPLE:
    Canonical address format   - 2001:4367:2983:1236::9             
    Hexadecimal address format - 0x20014367, 0x29831236, 0x00000000, 0x00000009
+   
+6. Description of "feature_selection_tool" folder
+===========================================================================================================
+	RS9116_TCP_IP_Feature_Feasibility_vx.x.x.x.exe : An application to determine the static memory footprint in an RS9116 module to establish applications using either WiFi only or Wi-Fi plus Bluetooth/BLE capabilities and determine whether the desired Wi-Fi, Bluetooth Classic, Bluetooth LE and TCP/IP capabilities for a customer application can be fit within the static memory available in the RS9116 system of choice.
+	
+	USAGE:
+	Follow the instructions given in the "readme.md" file present in the folder for application usage.
+
                                 

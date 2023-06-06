@@ -26,26 +26,24 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 */
 /*==============================================*/
 /**
- * @brief        Create a web socket client. This is a blocking API.
- *               
- * @pre		\ref   rsi_config_ipaddress() API needs to be called before this API.
+ * @brief        Create a web socket client. This is a blocking API.	
  * @param[in]    flags                                   - Select IP version and security \n
- *                                                         BIT(0) - RSI_IPV6 Set this bit to enable IPv6 , by default it is configured to IPv4 \n
- *                                                         BIT(1) - RSI_SSL_ENABLE Set this bit to enable SSL feature \n
+ *                                                         BIT(0): RSI_IPV6 - Set this bit to enable IPv6, by default it is configured to IPv4 \n
+ *                                                         BIT(1): RSI_SSL_ENABLE - Set this bit to enable SSL feature \n
  * @param[in]    server_ip_addr                          - Web server IP address
  * @param[in]    server_port                             - Web server socket port
  * @param[in]    device_port                             - Local port
  * @param[in]    webs_resource_name                      - Web resource name
  * @param[in]    webs_host_name                          - Web host name
- * @param[in]    sockect_id                              - Socket id
+ * @param[in]    sockect_id                              - Socket ID
  * @param[in]    web_socket_data_receive_notify_callback - Callback when data packet is received on the created socket
  * @param[out]   sock_no                                 - Application socket ID
  * @param[out]   buffer                                  - Buffer pointer
  * @param[out]   length                                  - Length of data
- * @return       Zero                                    - Success \n
- *               Negative Value                          - Failure \n
- *                         -2                            - Invalid parameter \n
-*                          -4                            - Buffer not available to serve the command
+ * @return       0                                       - Success \n
+ * @return       Negative Value                          - Failure 	(**Possible Error Codes** - 0xfffffffe, 0xfffffffc) \n
+ * @note         **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note         Refer to \ref error-codes for the description of above error codes.
  */
 
 int32_t rsi_web_socket_create(int8_t flags,
@@ -336,15 +334,14 @@ int32_t rsi_web_socket_create(int8_t flags,
 
 /*==============================================*/
 /**
- * @brief       Send data from the web socket client. This is a non-blocking API.
- *              
- * @pre		\ref  rsi_config_ipaddress() API needs to be called before this API.
- * @param[in]   sockID     - Application socket id
- * @param[in]   opcode     - opcode (type of the packet to be included in web socket header).
+ * @brief       Send data from the web socket client. This is a non-blocking API.              
+ * @param[in]   sockID     - Application socket ID
+ * @param[in]   opcode     - Type of the packet to be included in web socket header
  * @param[in]   msg        - Data
  * @param[in]   msg_length - Data length
- * @return     0              -  Success \n
- *             Negative Value - Failure
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  */
 
 int32_t rsi_web_socket_send_async(int32_t sockID, uint8_t opcode, int8_t *msg, int32_t msg_length)
@@ -363,11 +360,10 @@ int32_t rsi_web_socket_send_async(int32_t sockID, uint8_t opcode, int8_t *msg, i
 /*==============================================*/
 /**
  * @brief       Close the web socket client. This is a non-blocking API.
- *               
- * @pre		\ref  rsi_config_ipaddress() API needs to be called before this API
- * @param[in]   sockID - Socket id of particular socket
- * @return     0              -  Success \n
- *             Negative Value - Failure
+ * @param[in]   sockID - Socket ID of particular socket
+ * @return      0              -  Success \n
+ * @return      Negative Value - Failure
+ * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API
  */
 int32_t rsi_web_socket_close(int32_t sockID)
 {

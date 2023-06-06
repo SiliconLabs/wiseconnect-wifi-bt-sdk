@@ -41,7 +41,7 @@ int process_scan_results(uint8_t *buf, uint16_t len, int8_t rssi, uint8_t channe
  * @brief      Initialize the WLAN control block structure. 
  * @param[in]  wlan_cb - Pointer to WLAN cb structure 
  * @return     0              - Success \n
- *             Non Zero Value - Failure 
+ * @return     Non Zero Value - Failure 
  */
 /// @private
 int8_t rsi_wlan_cb_init(rsi_wlan_cb_t *wlan_cb)
@@ -97,11 +97,11 @@ int8_t rsi_wlan_cb_init(rsi_wlan_cb_t *wlan_cb)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
- * @brief       Fills command info and places it into wlan TX queue
+ * @brief       Fill the command information and place it in the WLAN TX queue
  * @param[in]   cmd - Type of the command to send 
  * @param[in]   pkt - Pointer of the packet to send 
  * @return      0              - Success \n
- *              Non Zero Value - Failure             
+ * @return      Non Zero Value - Failure             
  *
  */
 
@@ -167,10 +167,12 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       cmd_type = multicast_filter->cmd_type;
 
       multicast_bitmap = (uint16_t)cmd_type;
+
       /* not supported
       if ((cmd_type == RSI_MULTICAST_MAC_ADD_BIT) || (cmd_type == RSI_MULTICAST_MAC_CLEAR_BIT)) {
         multicast_bitmap |= (multicast_mac_hash((uint8_t *)multicast_filter->mac_address) << 8);
       }*/
+
       // memset the pkt
       memset(&pkt->data, 0, 2);
 
@@ -236,6 +238,20 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
 
     } break;
     case RSI_WLAN_REQ_11AX_PARAMS: {
+      wlan_11ax_config_params_t *config = (wlan_11ax_config_params_t *)pkt->data;
+      config->guard_interval            = GUARD_INTERVAL;
+      config->nominal_pe                = NOMINAL_PE;
+      config->dcm_enable                = DCM_ENABLE;
+      config->ldpc_enable               = LDPC_ENABLE;
+      config->ng_cb_enable              = NG_CB_ENABLE;
+      config->ng_cb_values              = NG_CB_VALUES;
+      config->uora_enable               = UORA_ENABLE;
+      config->trigger_rsp_ind           = TRIGGER_RESP_IND;
+      config->ipps_valid_value          = IPPS_VALID_VALUE;
+      config->tx_only_on_ap_trig        = TX_ONLY_ON_AP_TRIG;
+      config->twt_support               = TWT_SUPPORT;
+      config->config_er_su              = CONFIG_ER_SU;
+
       // fill payload size
       payload_size = sizeof(wlan_11ax_config_params_t);
     } break;
@@ -672,8 +688,13 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
     case RSI_WLAN_REQ_CALIB_WRITE: {
       payload_size = sizeof(rsi_calib_write_t);
     } break;
+    case RSI_WLAN_REQ_CALIB_READ: {
+      payload_size = sizeof(rsi_calib_read_t);
+    } break;
     case RSI_WLAN_REQ_GET_CSI_DATA: {
-      payload_size = sizeof(rsi_csi_config_t);
+      rsi_csi_config_t *csi_config = (rsi_csi_config_t *)pkt->data;
+      payload_size                 = sizeof(rsi_csi_config_t) + (csi_config->num_of_mac_addr * RSI_MAC_ADDR_LEN)
+                     - RSI_MAC_ADDR_LEN; // -6 is for csi_config->mac_addresses
     } break;
     case RSI_WLAN_REQ_EMB_MQTT_CLIENT: {
       rsi_req_emb_mqtt_command_t *mqtt_cmd = (rsi_req_emb_mqtt_command_t *)pkt->data;
@@ -751,10 +772,10 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          uint8_t *rsi_extract_filename(uint8_t *json, uint8_t *buffer)
- * @brief       Extract filename out of the received json update data.
+ * @brief       Extract file name from the received JSON data
  * @param[in]   json   - json object data string 
  * @param[in]   buffer - contains file name 
- * @return      Returns file name extracted 
+ * @return      File name extracted 
  *
  *
  */
@@ -786,12 +807,12 @@ uint8_t *rsi_extract_filename(uint8_t *json, uint8_t *buffer)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
- * @brief       Process WLAN receive commands. 
+ * @brief       Process received WLAN commands. 
  * @param[in]   pkt - Pointer to received RX packet  
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *              
- * @note      Memory allocation for the pointer is from receive handler, after process it will be freed. 
+ * @note      Memory allocation for the pointer is from receive handler, after processing, it will be freed. 
  *
  */
 /// @private
@@ -2064,6 +2085,8 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
           rsi_semaphore_post(&rsi_wlan_cb->wlan_sem);
         }
       }
+
+      rsi_wlan_socket_set_status(status, rsi_wlan_cb_non_rom->rsi_uart_data_ack_check);
 #ifndef RSI_SEND_SEM_BITMAP
       rsi_driver_cb_non_rom->send_wait_bitmap &= ~BIT(0);
 #endif
@@ -2240,7 +2263,17 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
       if (rsi_wlan_cb_non_rom->callback_list.wlan_receive_csi_data_response_handler != NULL) {
         rsi_wlan_cb_non_rom->callback_list.wlan_receive_csi_data_response_handler(status, pkt->data, payload_length);
       }
-
+    } break;
+    case RSI_WLAN_RSP_CALIB_READ: {
+      if (status == RSI_SUCCESS) {
+        // check the length of application buffer and copy received
+        if (rsi_wlan_cb->app_buffer != NULL) {
+          copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? (payload_length)
+                                                                          : (rsi_wlan_cb->app_buffer_length);
+          memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
+          rsi_wlan_cb->app_buffer = NULL;
+        }
+      }
     } break;
 
     default:
@@ -2296,14 +2329,15 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_HT_CAPABILITIES) || (cmd_type == RSI_WLAN_REQ_SET_PROFILE)
              || (cmd_type == RSI_WLAN_REQ_CFG_SAVE) || (cmd_type == RSI_WLAN_REQ_TX_TEST_MODE)
              || (cmd_type == RSI_WLAN_REQ_GET_PROFILE) || (cmd_type == RSI_WLAN_REQ_FREQ_OFFSET)
-             || (cmd_type == RSI_WLAN_REQ_CALIB_WRITE) || (cmd_type == RSI_WLAN_REQ_DELETE_PROFILE)
-             || (cmd_type == RSI_WLAN_REQ_SET_SLEEP_TIMER) || (cmd_type == RSI_WLAN_REQ_FILTER_BCAST_PACKETS)
-             || (cmd_type == RSI_WLAN_REQ_AUTO_CONFIG_ENABLE) || (cmd_type == RSI_WLAN_REQ_SOCKET_CONFIG)
-             || (cmd_type == RSI_WLAN_RSP_IPCONFV6) || (cmd_type == RSI_WLAN_REQ_SET_REGION_AP)
-             || (cmd_type == RSI_WLAN_REQ_DYNAMIC_POOL) || (cmd_type == RSI_WLAN_REQ_GAIN_TABLE)
-             || (cmd_type == RSI_WLAN_REQ_RX_STATS) || (cmd_type == RSI_WLAN_REQ_RADIO)
-             || (cmd_type == RSI_WLAN_REQ_GET_STATS) || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS)
-             || (cmd_type == RSI_WLAN_REQ_TWT_PARAMS) || (cmd_type == RSI_WLAN_REQ_EXT_STATS)
+             || (cmd_type == RSI_WLAN_REQ_CALIB_WRITE) || (cmd_type == RSI_WLAN_REQ_CALIB_READ)
+             || (cmd_type == RSI_WLAN_REQ_DELETE_PROFILE) || (cmd_type == RSI_WLAN_REQ_SET_SLEEP_TIMER)
+             || (cmd_type == RSI_WLAN_REQ_FILTER_BCAST_PACKETS) || (cmd_type == RSI_WLAN_REQ_AUTO_CONFIG_ENABLE)
+             || (cmd_type == RSI_WLAN_REQ_SOCKET_CONFIG) || (cmd_type == RSI_WLAN_RSP_IPCONFV6)
+             || (cmd_type == RSI_WLAN_REQ_SET_REGION_AP) || (cmd_type == RSI_WLAN_REQ_DYNAMIC_POOL)
+             || (cmd_type == RSI_WLAN_REQ_GAIN_TABLE) || (cmd_type == RSI_WLAN_REQ_RX_STATS)
+             || (cmd_type == RSI_WLAN_REQ_RADIO) || (cmd_type == RSI_WLAN_REQ_GET_STATS)
+             || (cmd_type == RSI_WLAN_REQ_11AX_PARAMS) || (cmd_type == RSI_WLAN_REQ_TWT_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_EXT_STATS)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
 #endif
@@ -2338,14 +2372,12 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          int32_t rsi_wlan_radio_init(void)
- * @brief       This API initializes wlan radio parameters and WLAN supplicant parameters. This API returns the WLAN MAC address of the module to the host.
- * @pre         \ref rsi_wireless_init() API must be called before this \ref rsi_wlan_radio_init() API. 
+ * @brief       Initializes WLAN radio and supplicant parameters. 
  * @param[in]    void  
  * @return       0              - Success  \n
- *               Non-Zero Value - Failure \n
- *                                If return value is greater than 0 \n
- *                                0x0021- Command given in wrong state
- * @note        rsi_wlan_radio_init() is used if user wants to configure any other parameters which are supposed to be given before rsi_wlan_scan() or rsi_wlan_scan_async() API
+ * @return       Non-Zero Value - Failure (**Possible Error Codes** - 0x0021) \n
+ * @note         **Precondition** - \ref rsi_wireless_init() API must be called before this API.        
+ * @note         rsi_wlan_radio_init() is used if user wants to configure any other parameters, which are supposed to be given before rsi_wlan_scan() or rsi_wlan_scan_async() API
  */
 
 int32_t rsi_wlan_radio_init(void)
@@ -2613,20 +2645,15 @@ int32_t rsi_wlan_radio_init(void)
  * @fn          int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
                                   uint8_t filter_bcast_in_tim,
                                   uint8_t filter_bcast_tim_till_next_cmd)
- * @brief       Program the ignoring broad cast packet threshold levels when station is in powersave mode and is used to achieve low currents in standby associated mode. \n
-                This is blocking API.
+ * @brief       Program the ignore threshold levels of the broadcast packet when station is in power save and is used to achieve low current consumption in standby associated mode. 
+ *              This is blocking API
  * @param[in]   beacon_drop_threshold               - LMAC beacon drop threshold(ms): The amount of time that FW waits to receive full beacon.Default value is 5000ms. 
- * @param[in]   filter_bcast_in_tim                 - If this bit is set, then from the next dtim any broadcast data pending bit in TIM indicated will be ignored valid values: 0 - 1 
- * @param[in]   filter_bcast_tim_till_next_cmd      -  0 - filter_bcast_in_tim is valid till disconnect of the STA \n
- *                                                     1 - filter_bcast_in_tim is valid till next update by giving the same command 
- * @note        Validity of this bit is dependent on the  filter_bcast_tim_till_next_cmd
- * @return       0              - Success   \n
- *               Non-Zero Value - If return value is less than 0 \n
- *                              -2: Invalid parameters \n
- *                              -3: Command given in wrong state \n
- *                              -4: Buffer not available to serve the command \n
- *                               return value is greater than 0 \n
- *                               0x0021 
+ * @param[in]   filter_bcast_in_tim                 - If this bit is set, then from the next dtim any broadcast data pending bit in TIM indicated will be ignored valid values: 0 - 1 \n
+ *                                                    Validity of this bit is dependent on the  filter_bcast_tim_till_next_cmd.
+ * @param[in]   filter_bcast_tim_till_next_cmd      - 0 - filter_bcast_in_tim is valid till disconnect of the STA. \n
+ *                                                    1 - filter_bcast_in_tim is valid till next update by giving the same command. \n                                                              
+ * @return      0              - Success   \n
+ * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0x0021)  \n
  */
 int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
                                   uint8_t filter_bcast_in_tim,
@@ -2701,17 +2728,17 @@ int32_t rsi_wlan_filter_broadcast(uint16_t beacon_drop_threshold,
  * @brief      Get WLAN status. 
  * @param[in]  void  
  * @return     Wlan block status \n
- *             0 -  RSI_WLAN_STATE_NONE  \n
- *             1 -  RSI_WLAN_STATE_OPERMODE_DONE \n
- *             2 -  RSI_WLAN_STATE_BAND_DONE \n
- *             3 -  RSI_WLAN_STATE_INIT_DONE \n 
- *             4 -  RSI_WLAN_STATE_SCAN_DONE \n
- *             5 -  RSI_WLAN_STATE_CONNECTED \n 
- *             6 -  RSI_WLAN_STATE_IP_CONFIG_DONE \n
- *             7 -  RSI_WLAN_STATE_IPV6_CONFIG_DONE \n
- *             8 -  RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON \n
- *             9 -  RSI_WLAN_STATE_AUTO_CONFIG_DONE \n
- *             10-  RSI_WLAN_STATE_AUTO_CONFIG_FAILED 
+ * @return     0 -  RSI_WLAN_STATE_NONE  \n
+ * @return     1 -  RSI_WLAN_STATE_OPERMODE_DONE \n
+ * @return     2 -  RSI_WLAN_STATE_BAND_DONE \n
+ * @return     3 -  RSI_WLAN_STATE_INIT_DONE \n 
+ * @return     4 -  RSI_WLAN_STATE_SCAN_DONE \n
+ * @return     5 -  RSI_WLAN_STATE_CONNECTED \n 
+ * @return     6 -  RSI_WLAN_STATE_IP_CONFIG_DONE \n
+ * @return     7 -  RSI_WLAN_STATE_IPV6_CONFIG_DONE \n
+ * @return     8 -  RSI_WLAN_STATE_AUTO_CONFIG_GOING_ON \n
+ * @return     9 -  RSI_WLAN_STATE_AUTO_CONFIG_DONE \n
+ * @return     10-  RSI_WLAN_STATE_AUTO_CONFIG_FAILED 
  *
  *
  *
@@ -2742,7 +2769,7 @@ void rsi_wlan_set_status(int32_t status)
  * @brief       Post on a waiting semaphore. 
  * @param[in]   void  
  * @return      0	           -  Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *          
  */
 /// @private
@@ -2827,7 +2854,7 @@ int32_t rsi_post_waiting_semaphore(void)
  * @brief       Check if any socket command is in waiting state.
  * @param[in]   void  
  * @return      0 - No socket command is in waiting state \n
- *              1 - socket command is in waiting state 
+ * @return      1 - Socket command is in waiting state 
  *              
  */
 /// @private
@@ -2855,7 +2882,7 @@ int32_t rsi_wlan_check_waiting_socket_cmd(void)
  * @brief       Check if any WLAN command is in waiting state.
  * @param[in]   void  
  * @return      0	           -  Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *
  *
  */
@@ -2882,9 +2909,9 @@ int32_t rsi_wlan_check_waiting_wlan_cmd(void)
 /**
  * @fn         void rsi_wlan_process_raw_data(rsi_pkt_t *pkt)
  * @brief      Receive raw data packet from module. 
- * @param[in]  pkt - pointer to rx pkt
- * @note       Memory allocation for the pointer is from receive handler  ,after process it will be freed . 
- * @return     void
+ * @param[in]  pkt - pointer to RX pkt
+ * @return     Void
+ * @note       Memory allocation for the pointer is from receive handler ,after processing, it will be freed. 
  *
  *
  */
@@ -2976,10 +3003,10 @@ void rsi_wlan_packet_transfer_done(rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          void rsi_check_wlan_buffer_full(rsi_pkt_t *pkt)
- * @brief       Will clear TX packet, if TX buffer is full. 
+ * @brief       Clear TX packet, if TX buffer is full 
  * @param[in]   pkt - Buffer pointer 
  * @note        BUFFER_FULL_HANDLING macro should be enabled.
- * @return      void
+ * @return      Void
  *
  */
 /// @private
@@ -3047,11 +3074,11 @@ void rsi_check_common_buffer_full(rsi_pkt_t *pkt)
 /*==============================================*/
 /**
  * @fn          rsi_error_t rsi_wait_on_wlan_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms ) 
- * @brief       By wireless library to acquire or wait for wlan semaphore.
+ * @brief       Wait for WLAN semaphore
  * @param[in]   Semaphore  - Semaphore handle pointer 
  * @param[in]   timeout_ms - Maximum time to wait to acquire semaphore. \n If timeout_ms is 0, then wait till semaphore is acquired
  * @return      0              - Success \n
- *              Negative Value - failure
+ * @return      Non-Zero Value - Failure
  */
 /// @private
 rsi_error_t rsi_wait_on_wlan_semaphore(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms)
@@ -3072,9 +3099,9 @@ rsi_error_t rsi_wait_on_wlan_semaphore(rsi_semaphore_handle_t *semaphore, uint32
 /*==============================================*/
 /**
  * @fn          void rsi_update_wlan_cmd_state_to_free_state(void) 
- * @brief       By wireless library to update the WLAN command state to free state. 
+ * @brief       Update the WLAN command state to free state. 
  * @param[in]   void  
- * @return      void
+ * @return      Void
  *
  */
 
@@ -3086,10 +3113,9 @@ void rsi_update_wlan_cmd_state_to_free_state(void)
 /*==============================================*/
 /**
  * @fn          void rsi_update_wlan_cmd_state_to_progress_state(void)
- * @brief       By wireless library to update the wlan cmd state 
- *              to progress state.
+ * @brief       Update the WLAN command state to progress state
  * @param[in]  void  
- * @return     void
+ * @return     Void
  */
 /// @private
 void rsi_update_wlan_cmd_state_to_progress_state(void)
@@ -3102,7 +3128,7 @@ void rsi_update_wlan_cmd_state_to_progress_state(void)
  * @brief       Posts all waiting WLAN semaphores. This API is typically used to reset the semaphore states.
  * @param[in]   void  
  * @return      0	           -  Success \n
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
  *
  *
  */
@@ -3234,12 +3260,12 @@ static unsigned int get_akm_suites_info(const uint16_t akmcnt, const uint8_t *ie
  * @fn         int process_scan_results(uint8_t *buf, uint16_t len, int8_t rssi, uint8_t channel, uint16_t freq)
  * @brief      Process received beacons and probe responses. 
  * @param[in]  buf     - Received frame. 
- * @param[in]  len     - length of the buffer. 
+ * @param[in]  len     - Length of the buffer. 
  * @param[in]  rssi    - RSSI value 
  * @param[in]  channel - Channel in which the frame is received 
  * @param[in]  freq    - Frequency of the channel  
  * @return     0               - Success \n 
- *             Non-Zero Value  - failure
+ * @return     Non-Zero Value  - failure
  *              
  *
  *

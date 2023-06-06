@@ -1872,6 +1872,7 @@ void rsi_ble_main_app_task()
           if ((slave_conn_id < TOTAL_CONNECTIONS) && (slave_con_req_pending == 1)) {
             //! store the connection identifier in individual connection specific buffer
             rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[slave_task_instances].conn_id = slave_conn_id;
+#ifdef RSI_WITH_OS
             //! create task for processing new slave connection
             status = rsi_task_create((rsi_task_function_t)rsi_ble_task_on_conn,
                                      (uint8_t *)"ble_slave_task",
@@ -1886,6 +1887,7 @@ void rsi_ble_main_app_task()
               memset(&rsi_ble_conn_info[ble_conn_id].rsi_app_adv_reports_to_app, 0, sizeof(rsi_ble_event_adv_report_t));
               break;
             }
+#endif
             slave_task_instances++;
           } else {
             LOG_PRINT("in wrong state \r\n");
@@ -1910,7 +1912,7 @@ void rsi_ble_main_app_task()
               //! store the connection identifier in individual connection specific buffer
               rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances]
                 .conn_id = master_conn_id;
-
+#ifdef RSI_WITH_OS
               //! create task for processing new master connection
               status = rsi_task_create(
                 (rsi_task_function_t)rsi_ble_task_on_conn,
@@ -1926,6 +1928,7 @@ void rsi_ble_main_app_task()
                 memset(&rsi_ble_conn_info[ble_conn_id].conn_event_to_app, 0, sizeof(rsi_ble_event_conn_status_t));
                 break;
               }
+#endif
 
               //! clear the connection id as it is already used in creating task
               master_conn_id = 0xff;
@@ -1958,8 +1961,9 @@ void rsi_ble_main_app_task()
               //! store the connection identifier in individual connection specific buffer
               rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances]
                 .conn_id = master_conn_id;
-              //LOG_PRINT("free bytes remaining before connection1 - %ld \r\n",xPortGetFreeHeapSize());
-              //! create task for processing new master connection
+//LOG_PRINT("free bytes remaining before connection1 - %ld \r\n",xPortGetFreeHeapSize());
+//! create task for processing new master connection
+#ifdef RSI_WITH_OS
               status = rsi_task_create(
                 (rsi_task_function_t)rsi_ble_task_on_conn,
                 (uint8_t *)"ble_master_task",
@@ -1976,7 +1980,7 @@ void rsi_ble_main_app_task()
                        sizeof(rsi_ble_event_enhance_conn_status_t));
                 break;
               }
-
+#endif
               //! clear the connection id as it is already used in creating task
               master_conn_id = 0xff;
               master_task_instances++;

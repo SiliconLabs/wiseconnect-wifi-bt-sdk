@@ -42,18 +42,17 @@ extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 */
 /*==============================================*/
 /**
- * @brief       Power cycle the module and set the firmware image type to be loaded for WiSeConnect features. Initialize the module SPI. This is a blocking API.
- * @pre         \ref rsi_driver_init() must be called before this API
- * @param[in]   select_option - \ref LOAD_NWP_FW            	    : To load Firmware image \n
+ * @brief      Power cycle the module and set the firmware image type to be loaded. This is a blocking API.
+ * @param[in]   select_option - \ref LOAD_NWP_FW            	      : To load Firmware image \n
  *                              \ref LOAD_DEFAULT_NWP_FW_ACTIVE_LOW : To load active low Firmware image. \n
  *                              Active low firmware will generate active low interrupts to indicate that packets are pending on the \n
  *                              module, instead of the default active high. \n
- * @note        Add the ENABLE_POC_IN_TOGGLE macro in the preprocessor to enable toggling of the POC_IN pin if it is controlled by the host to reset the module. For STM32 and EFM32 hosts, pins have been configured to drive the POC_IN pin. For EFR32, a pin has to be configured by the user to drive the POC_IN pin. \n
- *              Configure the following macros used in rsi_bl_module_power_cycle() to set the delay between toggling the POC_IN pin and RESET pin - \n
- *              \ref CONFIG_DELAY_POCIN_RESET_PIN_CLEAR : Configurable delay between clearing the POC_IN and RESET pin. \n
- *              \ref CONFIG_DELAY_POCIN_RESET_PIN_SET   : Configurable delay between setting the POC_IN and RESET pin. \n
+ * @return      Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_driver_init() must be called before this API.
+ * @note        Add the ENABLE_POC_IN_TOGGLE macro in the preprocessor to enable toggling of the POC_IN pin if it is controlled by the host to power cycle the module. For STM32 and EFM32 hosts, pins have been configured to drive the POC_IN pin. For EFR32, a pin has to be configured by the user to drive the POC_IN pin.  
  * @return      **Success**  - RSI_SUCCESS \n
- *              **Failure**  - Non-Zero Value
+ * @return      **Failure**  - Non-Zero Value
+ * 
  */
 
 int32_t rsi_device_init(uint8_t select_option)
@@ -87,18 +86,18 @@ int32_t rsi_device_init(uint8_t select_option)
 #endif
   if (!(P2P_STATUS_REG & TA_is_active)) {
 #ifdef DEBUG_UART
-    DEBUGOUT("\n wakeup TA \n");
+    DEBUGOUT("\r\nM4 Indicate TA To Wakeup From Sleep\r\n");
 #endif
     P2P_STATUS_REG |= M4_wakeup_TA;
     skip_bootload_sequence = 1;
   }
 #ifdef DEBUG_UART
-  DEBUGOUT("\n Waiting for TA wakeup \n");
+  DEBUGOUT("\r\n Wait Until TA is Active  \r\n");
 #endif
   while (!(P2P_STATUS_REG & TA_is_active))
     ;
 #ifdef DEBUG_UART
-  DEBUGOUT("\n TA wokeup \n");
+  DEBUGOUT("\r\n TA is in Active Mode Now \r\n");
 #endif
 
   if (!skip_bootload_sequence) {
@@ -106,7 +105,7 @@ int32_t rsi_device_init(uint8_t select_option)
       retval = rsi_waitfor_boardready();
       if (retval == RSI_ERROR_IN_OS_OPERATION) {
 #ifdef DEBUG_UART
-        DEBUGOUT("\n Waiting for TA wakeup \n");
+        DEBUGOUT("\r\n Wait Until TA is Active \r\n");
 #endif
       }
       if ((retval < 0) && (retval != RSI_ERROR_WAITING_FOR_BOARD_READY) && (retval != RSI_ERROR_IN_OS_OPERATION)) {
@@ -191,6 +190,7 @@ int32_t rsi_device_init(uint8_t select_option)
     }
   }
 #endif
+#if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
 #if RSI_FAST_FW_UP
   status = rsi_set_fast_fw_up();
   if (status != RSI_SUCCESS) {
@@ -204,6 +204,7 @@ int32_t rsi_device_init(uint8_t select_option)
     return status;
   }
 #endif
+
   status = rsi_bl_select_option(select_option);
   if (status < 0) {
     SL_PRINTF(SL_DEVICE_INIT_BL_SELECT_OPTION_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
@@ -211,7 +212,7 @@ int32_t rsi_device_init(uint8_t select_option)
   }
 #endif
 #endif
-
+#endif
 #ifdef RSI_M4_INTERFACE
   rsi_m4_ta_interrupt_init();
   if (!(M4SS_P2P_INTR_SET_REG & RX_BUFFER_VALID)) {
@@ -232,11 +233,13 @@ int32_t rsi_device_init(uint8_t select_option)
   // Switch host clock to high frequency
   rsi_switch_to_high_clk_freq();
 #endif
+#if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
   // Configure interrupt
   rsi_hal_intr_config(rsi_interrupt_handler);
 
   // Unmask interrupts
   rsi_hal_intr_unmask();
+#endif
 #endif
   // Updating state
   rsi_driver_cb_non_rom->device_state = RSI_DEVICE_INIT_DONE;
@@ -246,11 +249,12 @@ int32_t rsi_device_init(uint8_t select_option)
 
 /*==============================================*/
 /**
- * @brief      De-Initialize the module and reset the module. Reset is driven to the module by asserting the RESET_PS pin for some duration and releasing it.
- *             Need to control the RESET_PS pin to reset the module.  This is a non-blocking API.
+ * @brief      De-Initialize the module and reset the module. \n
+ *             Reset is driven to the module by asserting the reset pin for some duration and releasing it. \n
+ *             This is a non-blocking API.
  * @param[in]  Void
  * @return     0              - Success  \n
- *             Non-Zero Value - Failure
+ * @return     Non-Zero Value - Failure
  */
 
 int32_t rsi_device_deinit(void)
@@ -340,10 +344,10 @@ int32_t rsi_device_deinit(void)
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
 /*==================================================*/
 /**
- * @brief       get the interrupt status.
- * @param[in]   
+ * @brief       Get the interrupt status.
+ * @param[in]   NA
  * @return      1 - when there is an interrupt \n
- *              0 - when there is no interrupt
+ * @return      0 - when there is no interrupt
 */
 
 uint8_t rsi_get_intr_status()

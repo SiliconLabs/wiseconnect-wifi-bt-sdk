@@ -323,6 +323,7 @@ void rsi_common_app_task(void)
     }
 // rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM platform
 #ifdef EFM32GG11B820F2048GL192
+#ifdef RSI_WITH_OS
     //! Task created for Driver task
     rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                     (uint8_t *)"driver_task",
@@ -330,6 +331,7 @@ void rsi_common_app_task(void)
                     NULL,
                     RSI_DRIVER_TASK_PRIORITY,
                     &driver_task_handle);
+#endif
 #endif
     //! WiSeConnect initialization
     status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_COEX_MODE);
@@ -405,6 +407,7 @@ void rsi_common_app_task(void)
     rsi_semaphore_create(&sync_coex_wlan_sem, 0);
 #endif
 #endif
+#ifdef RSI_WITH_OS
     status = rsi_task_create((rsi_task_function_t)(int32_t)rsi_wlan_app_task,
                              (uint8_t *)"wlan_task",
                              RSI_WLAN_APP_TASK_SIZE,
@@ -416,10 +419,12 @@ void rsi_common_app_task(void)
       break;
     }
 #endif
+#endif
 
     //! create ble main task if ble protocol is selected
 #if RSI_ENABLE_BLE_TEST
     rsi_ble_running = 1;
+#ifdef RSI_WITH_OS
     rsi_semaphore_create(&ble_main_task_sem, 0);
     rsi_semaphore_create(&ble_scan_sem, 0);
     if (RSI_BLE_MAX_NBR_SLAVES > 0) {
@@ -436,7 +441,8 @@ void rsi_common_app_task(void)
       return;
     }
 #endif
-
+#endif
+#ifdef RSI_WITH_OS
     //! create bt task if bt protocol is selected
 #if RSI_ENABLE_BT_TEST
     rsi_bt_running = 1;
@@ -458,6 +464,7 @@ void rsi_common_app_task(void)
 #endif
     //! delete the task as initialization is completed
     rsi_task_destroy(NULL);
+#endif
   }
 }
 

@@ -23,6 +23,9 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
+#define ENABLE_POWER_SAVE 0
+#define PSP_MODE          RSI_SLEEP_MODE_2
+#define PSP_TYPE          RSI_MAX_PSP
 
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 

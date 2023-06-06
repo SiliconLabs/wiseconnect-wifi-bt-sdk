@@ -83,7 +83,10 @@
 #define PF_INET  AF_INET
 #define PF_INET6 AF_INET6
 
-#define INADDR_ANY              0
+#ifndef INADDR_ANY
+#define INADDR_ANY 0
+#endif
+
 #define BSD_LOCAL_IF_INADDR_ANY 0xFFFFFFFF
 /* Define API error codes.  */
 
@@ -394,9 +397,9 @@ typedef enum rsi_socket_state_e {
 /******************************************************
  * *                    Structures
  * ******************************************************/
-typedef uint32_t rsi_time_t;
+typedef unsigned long rsi_time_t;
 
-typedef uint32_t rsi_suseconds_t;
+typedef unsigned long rsi_suseconds_t;
 
 typedef uint32_t rsi_socklen_t;
 
@@ -417,8 +420,13 @@ struct rsi_in6_addr {
   } _S6_un;
 };
 
-#define s6_addr   _S6_un._S6_u8
+#ifndef s6_addr
+#define s6_addr _S6_un._S6_u8
+#endif
+
+#ifndef s6_addr32
 #define s6_addr32 _S6_un._S6_u32
+#endif
 
 struct rsi_sockaddr_in6 {
   uint16_t sin6_family;          /* AF_INET6 */

@@ -34,10 +34,10 @@
 //! Remote Device Name to connect
 #define RSI_REMOTE_DEVICE_NAME "SLAVE"
 
-#define SLAVE_MODE   0
-#define MASTER_MODE1 1
-#define DUAL_MODE    2
-#define BLE_ROLE     SLAVE_MODE
+#define SLAVE_ROLE  0
+#define MASTER_ROLE 1
+#define DUAL_ROLE   2
+#define BLE_ROLE    SLAVE_ROLE
 
 #define SET_BIT1(state_map, pos) (state_map |= (1 << pos))
 #define CLR_BIT1(state_map, pos) (state_map &= (~(1 << pos)))
@@ -143,7 +143,8 @@
 
 #ifdef CHIP_9117
 //! To set Extended custom feature select bit map
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
+//! BLE_POWER_SAVE application will work on EXT_FEAT_384K_MODE memory.
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
@@ -165,6 +166,15 @@
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
 #endif
 
+/*=======================================================================*/
+//! OS priorty Parameters
+/*=======================================================================*/
+#ifdef RSI_M4_INTERFACE
+#define WIRELESS_WAKEUP_IRQ_PRI 8
+#define portNVIC_SHPR3_REG      (*((volatile uint32_t *)0xe000ed20))
+#define portNVIC_PENDSV_PRI     (((uint32_t)(0x3f << 4)) << 16UL)
+#define portNVIC_SYSTICK_PRI    (((uint32_t)(0x3f << 4)) << 24UL)
+#endif
 #include <rsi_ble_common_config.h>
 
 #endif

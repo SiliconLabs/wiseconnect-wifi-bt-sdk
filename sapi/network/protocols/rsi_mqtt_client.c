@@ -31,7 +31,6 @@
 /*==============================================*/
 /**
  * @brief      Allocate memory for the MQTT for a single client. Returns MQTT Client instance pointer, which is used for further MQTT client operations. This is non-blocking API.
- * @pre        \ref rsi_config_ipaddress() API needs to be called before this API
  * @param[in]  buffer     		        - Buffer pointer to allocate  memory for MQTT Client information
  * @param[in]  length     		        - Buffer length
  * @param[in]  server_ip  		        - IPv4 address of the MQTT broker
@@ -42,14 +41,15 @@
  *  Flags                         |    Description
  *  :-----------------------------|:--------------------------------------
  *  Bit(0) - Server IP version    |     1      - IPv6 \n
- *  ^                             |     0      - IPv4
+ *  ^                                   0      - IPv4
  *     
  * @param[in]  keep_alive_interval 	 - MQTT client keep alive interval \n
- *             				                 If there are no transactions between MQTT client and broker with in \n 
+ *             				                 If there are no transactions between MQTT client and broker within \n 
  *             				                 this time period, MQTT Broker disconnects the MQTT client \n
- *             				                 If 0 -> Server does not disconnect \n
- * @return     Positive Value        - Returns MQTT client information structure pointer \n
- *             NULL                  - In case of failure
+ *             				                 If 0, Server does not disconnect \n
+ * @return     Positive Value        - Success: Returns MQTT client information structure pointer \n
+ * @return     NULL                  - Failure
+ * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API
  *
  */
 
@@ -135,6 +135,8 @@ rsi_mqtt_client_info_t *rsi_mqtt_client_init(int8_t *buffer,
  *  ^                               |     0      - IPv4
  *  BIT(1) - SSL flag               |     1      - SSL Enable \n
  *  ^                               |     0      - SSL Disable
+ *  BIT(2)                          |     1      - SSL cert index 1
+ *  BIT(3)                          |     1      - SSL cert index 2
  * 
  * @param[in]   client_id 	   - clientID of the MQTT Client and should be unique for each device
  * @param[in]   username 	     - Username for the login credentials of MQTT server
@@ -235,11 +237,11 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
 */
 /*==============================================*/
 /**
- * @brief      Disconnect the client from MQTT broker. This is a blocking API.
- * @pre        \ref rsi_mqtt_connect() API needs to be called before this API 
+ * @brief      Disconnect the client from MQTT broker. This is a blocking API. 
  * @param[in]  rsi_mqtt_client - MQTT client information structure pointer that was returned in rsi_mqtt_client_init() API
- * @return      Zero           - Success \n
- *              Negative value - Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
+ * @note        **Precondition** - \ref rsi_mqtt_connect() API needs to be called before this API
  *              
  *
  *
@@ -265,15 +267,13 @@ int32_t rsi_mqtt_disconnect(rsi_mqtt_client_info_t *rsi_mqtt_client)
 /*==============================================*/
 /**
  * @brief      Publish the given message on the given topic. This is a blocking API.
- * @pre        \ref rsi_mqtt_connect() API needs to be called before this API
  * @param[in]  rsi_mqtt_client  - MQTT client info structure that was returned in rsi_mqtt_client_init() API
  * @param[in]  topic		        - String of topic
  * @param[in]  publish_msg 	    - Message to publish
- * @return     Zero             - Success \n
- *             Negative value 	- Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
+ * @note        **Precondition** - \ref rsi_mqtt_connect() API needs to be called before this API
  *             
- * 
- *
  */
 int32_t rsi_mqtt_publish(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic, MQTTMessage *publish_msg)
 {
@@ -296,15 +296,15 @@ int32_t rsi_mqtt_publish(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic,
 
 /*==============================================*/
 /**
- * @brief      Subscribe on the specified topic given.If any other client posts any message on the same topic, that message is received if MQTT client is subscribed to that topic.
+ * @brief      Subscribe on the specified topic given. If any other client posts any message on the same topic, that message is received, if MQTT client is subscribed to that topic.
  *             This is a non-blocking API.
- * @pre        \ref rsi_mqtt_connect() API needs to be called before this API
  * @param[in]  rsi_mqtt_client       - MQTT client structure info pointer that was returned in \ref rsi_mqtt_client_init() API
  * @param[in]  qos                   - Quality of service of the message
  * @param[in]  topic                 - Topic string
  * @param[in]  call_back_handler_ptr - Callback pointer to call when a message is received from MQTT broker
- * @return      Zero                 - Success \n
- *              Negative value       - Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
+ * @note        **Precondition** - \ref rsi_mqtt_connect() API needs to be called before this API
  */
 int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
                            uint8_t qos,
@@ -339,11 +339,11 @@ int32_t rsi_mqtt_subscribe(rsi_mqtt_client_info_t *rsi_mqtt_client,
 /**
  * @brief      Unsubscribe on the specified topic given. If unsubscribed, any messages on the topic is not received further
  *             This is a non-blocking API.
- * @pre        \ref rsi_mqtt_connect() API needs to be called before this API
  * @param[in]  rsi_mqtt_client - MQTT client instance that was returned in \ref rsi_mqtt_client_init() API
  * @param[in]  topic           - Topic string
- * @return     Zero            - Success \n
- *             Negative value  - Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
+ * @note        **Precondition** - \ref rsi_mqtt_connect() API needs to be called before this API
  */
 int32_t rsi_mqtt_unsubscribe(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *topic)
 {
@@ -363,11 +363,11 @@ int32_t rsi_mqtt_unsubscribe(rsi_mqtt_client_info_t *rsi_mqtt_client, int8_t *to
 /*==============================================*/
 /**
  * @brief      Wait for the MQTT messages to receive on the specific MQTT client. This is a non-blocking API.
- * @pre        \ref rsi_mqtt_connect() API needs to be called before this API
  * @param[in]  rsi_mqtt_client - MQTT client instance that was returned in \ref rsi_mqtt_client_init() API
  * @param[in]  time_out        - Time out in milliseconds.
- * @return     Zero            - Success \n
- *             Negative value  - Failure
+ * @return      0              - Success \n
+ * @return      Negative value - Failure
+ * @note        **Precondition** - \ref rsi_mqtt_connect() API needs to be called before this API
  */
 int32_t rsi_mqtt_poll_for_recv_data(rsi_mqtt_client_info_t *rsi_mqtt_client, int time_out)
 {
