@@ -45,7 +45,7 @@
 	 #define RSI_BLE_PWR_INX                               30
 	 #define RSI_BLE_PWR_SAVE_OPTIONS                      0
 
-   ```
+   ```text
    Note:
    rsi_bt_config.h, rsi_wlan_config.h and rsi_ble_config.h files are already set with the desired configuration in respective example folders user need not change for each example.
    ```

@@ -108,8 +108,10 @@ LE_PUBLIC_ADDRESS
 **Power save configuration**
 
    By default, The Application is configured without power save.
-	 
-	 #define ENABLE_POWER_SAVE 0
+
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 

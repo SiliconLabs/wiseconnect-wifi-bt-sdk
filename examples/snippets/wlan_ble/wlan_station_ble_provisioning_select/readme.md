@@ -20,9 +20,8 @@ Before running the application, the user will need the following things to setup
 - Wireless Access point
 - TCP client application running in Windows PC2 (This uses iperf application to open TCP client socket in remote PC)
 
-![Setup Diagram for socket select Example](resources/readme/image198.png)
-
-
+![Setup Diagram for WLAN station BLE Provisioning Select Example](resources/readme/provisioning_select.png)
+  
 ### 2.2 Software Requirements 
 
 - [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/) 
@@ -74,7 +73,7 @@ The Application is provided with the project folder containing Keil and Simplici
     - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan_ble/wlan_station_ble_provisioning_select/projects/wlan_station_ble_provisioning_select-brd4180b-mg21.slsproj`
     - User can find the Radio Board version as given below 
 
-![EFR Radio Boards](resources/readme/image198a.png) 
+![EFR Radio Boards](resources/readme/radio_boards.png) 
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
@@ -83,14 +82,22 @@ The Application is provided with the project folder containing Keil and Simplici
 ### 3.4 Bare Metal/RTOS Support 
 
 This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 
+  **Steps to configure project settings in Keil IDE**
+    - Open project in Keil IDE and click on 'Options for Target'
+    - Go to 'C/C++' tab and remove 'RSI_WITH_OS' macro present under Preprocessor Symbols
+    - Click on 'OK' button to save the settings
 
-**Steps to configure project settings in Simplicity Studio**
+![project settings in Keil IDE](resources/readme/image279a.png)
+
+  **Steps to configure project settings in Simplicity Studio**
     - Open project in Simplicity Studio
     - Right click on the project and choose 'Properties'
     - GO to 'C/C++ Build' | 'Settings' | 'GNU ARM C Compiler' | 'Symbols' and remove macro 'RSI_WITH_OS=1'
     - Click on 'Apply' and 'OK' to save the settings
 
+![project settings in Simplicity Studio](resources/readme/image279b.png) 
 
+![project settings in Simplicity Studio](resources/readme/image279c.png)
 ## 4. Application Configuration Parameters 
 
 The application can be configured to suit user requirements and development environment. Read through the following sections and make any changes needed. 
@@ -352,33 +359,33 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 1. Configure the Access point with internet connection in OPEN/WPA-PSK/WPA2-PSK mode to connect the RS9116W EVK in STA mode.
 2. Connect any serial console for prints.
-3. When RS9116W EVK enters BLE advertising mode, launch the Silicon Labs Connect App.
+3. When RS9116W EVK enters BLE advertising mode, launch the EFR Connect App.
 
-![BLE advertising mode]()
+![EFR Connect App](resources/readme/efr_app.png)
 
-4. Click on BLE Provisioning.
+4. Enable the Location services
 
-![BLE Provisioning]()
+![Location Enable](resources/readme/location_enable.png)
 
-5. Click on BLE_CONFIGURATOR.
+5. Click on Start Scanning
 
-![BLE Configurator]()
+![BLE Scan](resources/readme/start_scan.png)
 
-6. Once the BLE got the connected, list of available Access Points get displayed on the screen
+6. Once you scan you will find the module displayed
 
-![BLE Connected]()
+![BLE Connected](resources/readme/ble_configurator_connect.png)
 
-7. Connect to an Access Point, once the RS9116W EVK gets connected to AP, IP address of RS9116W EVK get displyed on the screen
+7. Connect to an module
 
-![Module displayed]()
+![Module displayed](resources/readme/connected.png)
 
-8. To disconnect from Access Point, click on connected AP and click on YES 
+8. Pass the appropriate commands and pass the ssid psk 
 
-![Disconnect from Access Point]()
+![Send Commands](resources/readme/send_command.png)
 
 9. Refer the below figure for console prints
 
-![Docklight Console logs]()
+![Docklight Console logs](resources/readme/docklight_console_logs.png)
    
 #### 5.3.2 Steps to be followed to verify WLAN Station BLE Provisioning with windows based Silicon Labs Connect App
 
@@ -391,37 +398,37 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
   
 4. Executing the application in the command prompt as stated in the above point will open the GUI (with the â€œBLE SCAN ONâ€� button).
 
-![Silicon labs connect GUI]()
+![Silicon labs connect GUI](resources/readme/image_ble_1.png)
    
 5. When click on the **BLE SCAN ON** button, all the RS9116 BLE Devices that are available nearby are displayed in the window.
    
-![BLE scan mode]()
+![BLE scan mode](resources/readme/image_ble_3.png)
    
    **Note:** - RS9116 BLE device will advertise with different names based on the application configuration.
  
 6. Once RS9116 BLE device displayed on the scanning list, initiate the connection by clicking a button on the available RS9116 BLE device.
 
-![BLE device displayed ]()
+![BLE device displayed ](resources/readme/image_ble_4.png)
    
 7. Once the BLE get connected, **Firmware version** and list of available Access Points get displayed on the screen.
 
-![BLE get connected]()
+![BLE get connected](resources/readme/image_ble_5.png)
    
 8. By clicking on one of the scanned APâ€™s, RS9116 will connect to that particular AP. If Access Point is secured it will ask the password as input but if that Access point as not secured, then directly connect to that Access Point.
 
-![Password pop-up for PSK]()
+![Password pop-up for PSK](resources/readme/image_ble_7.png)
    
 9. After successful connection, â€œIP & Mac addressâ€� of connected Access point get displayed.
 
-![Connected Access point IP and MAC]()
+![Connected Access point IP and MAC](resources/readme/image_ble_8.png)
   
 10. To disconnect from Access Point, click on connected AP.
 
 11. After successful disconnection of WLAN, pop-up comes like **WLAN GOT DISCONNECTED**. Click on the â€œokâ€�.
 
-![Connected Access point POCO C3]()
+![Connected Access point POCO C3](resources/readme/image_ble_9.png)
    
-![wlan disconnected]()
+![wlan disconnected](resources/readme/image_ble_10.png)
 
    **Note:**   For more information refer **Silabs_Connect_Windows_Application_User_Guide.pdf** in the path 
    `<SDK>/utilities/windows_ble_provisioning_app/`

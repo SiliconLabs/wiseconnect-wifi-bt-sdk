@@ -48,7 +48,7 @@ The WiSeConnect parts require that the host processor is connected to the WiSeCo
    **RSI_REMOTE_DEVICE_NAME** refers the name of remote device to which Silicon Labs device has to connect
 	 #define RSI_REMOTE_DEVICE_NAME                        "SILABS_DEV"
    
-   ```
+   ```text
    Note:
    Silicon Labs module can connect to remote device by referring either RSI_BLE_DEV_ADDR or RSI_REMOTE_DEVICE_NAME of the remote device.
    ```
@@ -130,6 +130,5 @@ The WiSeConnect parts require that the host processor is connected to the WiSeCo
 6. After connecting, mtu size will be updated. As per mtu size, write will be happen from Silicon Labs device
 7. In either role: If mtu size is of 100 bytes, module can read upto 98 bytes, write upto 97 bytes
 8. For the data more than 20 bytes, application has to store value and send using gatt_read_response function whenever remote device reads some handle's data.
-
-	 For read request event to be raised auth_read flag in rsi_ble_add_char_val_att function need to be set.
-	 Based on GATT_ROLE configurable macro, this application will be act as a GATT server or GATT client device.
+   For read request event to be raised auth_read flag in rsi_ble_add_char_val_att function need to be set.
+   Based on GATT_ROLE configurable macro, this application will be act as a GATT server or GATT client device.

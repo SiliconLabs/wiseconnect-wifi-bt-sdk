@@ -64,8 +64,8 @@ The Application is provided with the project folder containing Keil and Simplici
 ![EFR Radio Boards](resources/readme/image205a.png)
 
    - EFM32GG11 platform
-    - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
-      - Project path:`<SDK>/examples/snippets/wlan/tcp_logging_stats/projects/tcp_logging_stats-brd2204a-gg11.slsproj`
+     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
+     - Project path:`<SDK>/examples/snippets/wlan/tcp_logging_stats/projects/tcp_logging_stats-brd2204a-gg11.slsproj`
 
 
 ### 3.4 Bare Metal/RTOS Support 

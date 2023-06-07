@@ -18,8 +18,8 @@ Before running the application, the user will need the following things to setup
    - [STM32F411 Nucleo](https://st.com/)
 - BLE peripheral device
 	
-![figureSetup Diagram for Simple Central Example using RS9116 EVK](resources/AE_central.png) 
-![figureSetup Diagram for Simple Central Example using RS9116 ACX Expansion board](resources/AC1_AE_Cental.png) 
+![figureSetup Diagram for Simple Central Example using RS9116 EVK](./resources/ae_central.png) 
+![figureSetup Diagram for Simple Central Example using RS9116 ACX Expansion board](./resources/ac1_ae_central.png) 
    			
 ### 2.2 Software Requirements
 
@@ -62,7 +62,7 @@ The Application is provided with the project folder containing Keil and Simplici
 		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/_internal/Wireless_Examples/ble/ble_ae_central/projects/ble_ae_central-brd4180b-mg21.slsproj` 
         - User can find the Radio Board version as given below 
 
-![EFR Radio Boards](resources/readme/image23a.png)
+![EFR Radio Boards](resources/radio-board.png)
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
@@ -97,8 +97,10 @@ The application can be configured to suit your requirements and development envi
 **Power save configuration**
 
    By default, The Application is configured without power save.
-	 
-	 #define ENABLE_POWER_SAVE 0
+
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
@@ -128,41 +130,69 @@ Following are the non-configurable macros in the application.
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros,
 
 Initiating phys:
-    #define INITIATING_PHYS (PHY_1M | PHY_2M | PHY_LE_CODED)
 
+```c
+#define INITIATING_PHYS (PHY_1M | PHY_2M | PHY_LE_CODED)
+```
 Primary phy scan interval:
 
-    #define PRI_PHY_LE_SCAN_INTERVAL 0x100
+```c
+#define PRI_PHY_LE_SCAN_INTERVAL 0x100
+```
 Primary phy scan window:
 
-    #define PRI_PHY_LE_SCAN_WINDOW   0x50
+```c
+#define PRI_PHY_LE_SCAN_WINDOW   0x50
+```
+
 Secondary phy scan interval:
 
-    #define SEC_PHY_LE_SCAN_INTERVAL 0x100
+```c
+#define SEC_PHY_LE_SCAN_INTERVAL 0x100
+```
+
 Secondary phy scan window:
 
-    #define SEC_PHY_LE_SCAN_WINDOW   0x50
+```c
+#define SEC_PHY_LE_SCAN_WINDOW   0x50
+```
 
 Primary scan type :
 
-    #define PRI_PHY_BLE_SCAN_TYPE    SCAN_TYPE_ACTIVE
+```c
+#define PRI_PHY_BLE_SCAN_TYPE    SCAN_TYPE_ACTIVE
+```
 
 Secondary scan type:
 
-    #define SEC_PHY_BLE_SCAN_TYPE    SCAN_TYPE_ACTIVE
-Scan filter type :
+```c
+#define SEC_PHY_BLE_SCAN_TYPE    SCAN_TYPE_ACTIVE
+```
+	
+Scan filter type:
 
-    #define RSI_BLE_SCAN_FILTER_TYPE SCAN_FILTER_TYPE_ALL
+```c
+#define RSI_BLE_SCAN_FILTER_TYPE SCAN_FILTER_TYPE_ALL
+```
 
 Scan filter duplicates:
 
+```c
 #define BLE_SCAN_ENABLE_FILTER_DUP 0x00
+```
+
 Scan duration:
 
+```c
     #define BLE_SCAN_DUR               0x00
+```
+
 Scan period:
 
+```c
     #define BLE_SCAN_PERIOD            0x00
+```
+
 ```c
 #define RSI_BLE_PWR_INX                                30
 #define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
@@ -230,7 +260,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    
 4. After successful program execution the prints in docklight looks as shown below.   
      
-![Prints in docklight window](resources/ae_central_logs.png) 
+![Prints in docklight window](./resources/ae_central_logs.png) 
 
 ## Compressed Debug Logging
 

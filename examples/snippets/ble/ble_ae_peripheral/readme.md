@@ -18,7 +18,10 @@ Before running the application, the user will need the following things to setup
    - [STM32F411 Nucleo](https://st.com/)
 - BLE peripheral device
 	
-![figureSetup Diagram for Simple Central Example](resources/readme/images23.png) 
+![figureSetup Diagram for AE Peripheral Example using RS9116 EVK](./resources/ae_peripheral.png) 
+![figureSetup Diagram for AE Peripheral Example using RS9116 ACX Expansion board](./resources/ac1-ae-peripheral.png) 
+
+
    			
 ### 2.2 Software Requirements
 
@@ -61,7 +64,7 @@ The Application is provided with the project folder containing Keil and Simplici
 		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/_internal/Wireless_Examples/ble/ble_ae_peripheral/projects/ble_ae_peripheral-brd4180b-mg21.slsproj` 
         - User can find the Radio Board version as given below 
 
-![EFR Radio Boards](resources/AE_peripheral.png)
+![EFR Radio Boards](./resources/radio-board.png)
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
@@ -80,29 +83,36 @@ The application can be configured to suit your requirements and development envi
 **4.1.1** User must update the below parameters 
 
 Set below macro to enable second set of advertising
+```c
+#define ADV_SET2            1
+```
 
-      #define ADV_SET2            1
 The length of the advertising data needs to be filled in the following macro
-
-	       #define BLE_AE_ADV_DATA_LEN    0x19
+```c
+#define BLE_AE_ADV_DATA_LEN    0x19
+```
 
 Below mentioned macro needs to be populated with data 
-
-	       #define BLE_AE_ADV_DATA    "AE_PERIPHERAL_DATA_1"
+```c
+#define BLE_AE_ADV_DATA    "AE_PERIPHERAL_DATA_1"
+```
 
 Mention the address type of the device which needs to be whitelisted
-
-     #define RSI_BLE_WHITELIST_DEV_ADDR1_TYPE LE_RANDOM_ADDRESS
+```c
+#define RSI_BLE_WHITELIST_DEV_ADDR1_TYPE LE_RANDOM_ADDRESS
+```
 
 Fill the address of the device to be whitelisted in the below mentioned variable
-
-   ble_whitelist_addr1[6] = { 0xDA, 0x81, 0xE0, 0xB8, 0xB9, 0x42 };
+```c
+ble_whitelist_addr1[6] = { 0xDA, 0x81, 0xE0, 0xB8, 0xB9, 0x42 };
+```
 
 **Power save configuration**
 
    By default, The Application is configured without power save.
-	 
-	 #define ENABLE_POWER_SAVE 0
+```c
+#define ENABLE_POWER_SAVE 0
+```
 
    If user wants to run the application in power save, modify the below configuration. 
 	 
@@ -132,42 +142,55 @@ Following are the non-configurable macros in the application.
 **4.2** Open `rsi_ble_config.h` file and update/modify following macros,
 
 The minimum avertising interval:
+```c
+#define RSI_BLE_ADV_INT_MIN     0x020
+```
 
-     #define RSI_BLE_ADV_INT_MIN     0x020 
 The maximum advertising interval:
+```c
+#define RSI_BLE_ADV_INT_MAX     0x020 
+```
 
-     #define RSI_BLE_ADV_INT_MAX     0x020 
 Channel map selection:
+```c
+#define RSI_BLE_ADV_CHANNEL_MAP 0x07
+```
 
-     #define RSI_BLE_ADV_CHANNEL_MAP 0x07
-
- Maximum extended advertisingevents:
-
-     #define BLE_MAX_AE_EVNTS 0
+Maximum extended advertisingevents:
+```c
+#define BLE_MAX_AE_EVNTS 0
+```
 
 Extended advertising filter policy
+```c
+#define BLE_AE_ADV_FILTER_POLICY  0x00
+```
 
-     #define BLE_AE_ADV_FILTER_POLICY  0x00
 Extended advertising TX Power
-
-     #define BLE_AE_ADV_TX_PWR         0x7f
+```c
+#define BLE_AE_ADV_TX_PWR         0x7f
+```
 
 Secondary advertising max skip count:
+```c
+#define BLE_AE_SEC_ADV_MAX_SKIP   0x00
+```
 
-     #define BLE_AE_SEC_ADV_MAX_SKIP   0x00
 Advertising SID
-
-     #define BLE_AE_ADV_SID            0x00
+```c
+#define BLE_AE_ADV_SID            0x00
+```
 
 Event properties can be set by enabling the respective bits in the following macros
-
-     #define BLE_CONNECTABLE_ADV        (1 << 0)
-     #define BLE_SCANNABLE_ADV          (0 << 1)
-     #define BLE_LOW_DUTY_DIR_CONN_ADV  (0 << 2)
-     #define BLE_HIGH_DUTY_DIR_CONN_ADV (0 << 3)
-     #define BLE_LEGACY_ADV             (0 << 4)
-     #define BLE_ANONYMOUS_ADV          (0 << 5)
-     #define BLE_TX_WR_ADV              (0 << 6)
+```c
+#define BLE_CONNECTABLE_ADV        (1 << 0)
+#define BLE_SCANNABLE_ADV          (0 << 1)
+#define BLE_LOW_DUTY_DIR_CONN_ADV  (0 << 2)
+#define BLE_HIGH_DUTY_DIR_CONN_ADV (0 << 3)
+#define BLE_LEGACY_ADV             (0 << 4)
+#define BLE_ANONYMOUS_ADV          (0 << 5)
+#define BLE_TX_WR_ADV              (0 << 6)
+```
 ```c
 #define RSI_BLE_PWR_INX                                30
 #define RSI_BLE_PWR_SAVE_OPTIONS                       BLE_DISABLE_DUTY_CYCLING
