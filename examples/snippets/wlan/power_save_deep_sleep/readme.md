@@ -301,7 +301,7 @@ RSI_SELECT_LP_OR_ULP_MODE is used to select low power mode or ultra low power mo
 
    - RSI_ULP_WITH_RAM_RET : In this module will be in Ultra low power mode and it will remember the previous state after issuing power save mode command.
 
-   - RSI_ULP_WITHOUT_RAM_RET : In this module will be in Ultra low power mode and it will not remember the previous state after issuing power save mode command. After wakeup, module will give CARD READY indication and user has to issue commands from wireless initialization.  
+   - RSI_ULP_WITHOUT_RAM_RET : In this module will be in Ultra low power mode and it will not remember the previous state after issuing power save mode command. In order to wake the module up, the user needs to call wake up API (rsi_req_wakeup). Once the module wakes up, it gives CARD READY indication to the host and the user has to issue commands from wireless Initialization API (rsi_wireless_init).  
 
 ```c
 #define   RSI_SELECT_LP_OR_ULP_MODE        RSI_LP_MODE 

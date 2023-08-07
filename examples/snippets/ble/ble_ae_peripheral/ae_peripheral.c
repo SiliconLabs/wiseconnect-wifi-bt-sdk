@@ -44,7 +44,7 @@
 #define BLE_AE_ADV_DATA     "AE_PERIPHERAL_DATA_1"
 #define BLE_AE_ADV_DATA_LEN 0x19
 #define RSI_SEL_ANTENNA     RSI_SEL_INTERNAL_ANTENNA //RSI_SEL_EXTERNAL_ANTENNA
-#define RSI_SCAN_RESP_DATA  "REDPINE_AE_DEVICE"
+#define RSI_SCAN_RESP_DATA  "SILABS_AE_DEVICE"
 #define ADV_SET2            1
 
 #define REM_DEV_ADDR "00:00:00:00:00:00"
@@ -284,6 +284,7 @@ int32_t rsi_ble_peripheral(void)
   int32_t temp_event_map              = 0;
   uint8_t remote_dev_addr[18]         = { 0 };
   uint8_t rand_addr[RSI_DEV_ADDR_LEN] = { 0 };
+  uint8_t fmversion[20]               = { 0 };
   rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)rand_addr, (int8_t *)RSI_BLE_SET_RAND_ADDR);
   uint8_t data[BLE_AE_ADV_DATA_LEN] = { 0 };
   strncpy((char *)data, BLE_AE_ADV_DATA, BLE_AE_ADV_DATA_LEN);
@@ -337,6 +338,14 @@ int32_t rsi_ble_peripheral(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components
@@ -477,18 +486,10 @@ int32_t rsi_ble_peripheral(void)
   status                                             = rsi_ble_app_set_periodic_ae_params(&ae_periodic_param);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae Periodic adv data failed with 0x%lX\n", status);
+    LOG_PRINT("set ae Periodic adv params failed with 0x%lX\n", status);
     return status;
   } else {
-    LOG_PRINT("set ae periodic adv data success \n");
-  }
-
-  status = rsi_ble_app_set_periodic_ae_enable(1, 0);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae Periodic adv enable failed with 0x%lX\n", status);
-    return status;
-  } else {
-    LOG_PRINT("set ae periodic adv enable success \n");
+    LOG_PRINT("set ae periodic adv params success \n");
   }
 #endif
 
@@ -530,39 +531,6 @@ int32_t rsi_ble_peripheral(void)
     LOG_PRINT("set ae set random address successful \n");
   }
 
-  //ae advertising enable for set 1
-  rsi_ble_ae_adv_enable_t ble_ae_adv = { 0 };
-
-  ble_ae_adv.enable        = RSI_BLE_START_ADV;
-  ble_ae_adv.no_of_sets    = 1;
-  ble_ae_adv.adv_handle    = BLE_ADV_HNDL1;
-  ble_ae_adv.duration      = 0;
-  ble_ae_adv.max_ae_events = BLE_MAX_AE_EVNTS;
-
-  status = rsi_ble_start_ae_advertising(&ble_ae_adv);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
-    return status;
-  } else {
-    LOG_PRINT("set ae adv enable success \n");
-  }
-
-#if ADV_SET2
-  ble_ae_adv.enable        = RSI_BLE_START_ADV;
-  ble_ae_adv.no_of_sets    = 1;
-  ble_ae_adv.adv_handle    = 0x01;
-  ble_ae_adv.duration      = 0;
-  ble_ae_adv.max_ae_events = BLE_MAX_AE_EVNTS;
-
-  status = rsi_ble_start_ae_advertising(&ble_ae_adv);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
-    return status;
-  } else {
-    LOG_PRINT("set ae adv enable success \n");
-  }
-#endif
-
 #if PERIODIC_ADV_EN
   //setting periodic advertising data
   rsi_ble_ae_data_t ble_ae_data = { 0 };
@@ -582,7 +550,7 @@ int32_t rsi_ble_peripheral(void)
     LOG_PRINT("set periodic adv data success \n");
   }
 #else
-  //setting extended advertising data
+  //setting extended advertising data for set 1
   rsi_ble_ae_data_t ble_ae_data = { 0 };
 
   ble_ae_data.type       = BLE_AE_ADV_DATA_TYPE;
@@ -601,7 +569,7 @@ int32_t rsi_ble_peripheral(void)
     LOG_PRINT("set ae data success \n");
   }
 
-  //setting ae scan response data
+  //setting ae scan response data for set 1
   ble_ae_data.type       = BLE_AE_SCAN_RSP_DATA_TYPE;
   ble_ae_data.adv_handle = BLE_ADV_HNDL1;
   ble_ae_data.operation  = 0x00;
@@ -616,6 +584,32 @@ int32_t rsi_ble_peripheral(void)
     return status;
   } else {
     LOG_PRINT("set ae data success \n");
+  }
+#endif
+
+  // Setting ae advertising enable for set 1
+  rsi_ble_ae_adv_enable_t ble_ae_adv = { 0 };
+
+  ble_ae_adv.enable        = RSI_BLE_START_ADV;
+  ble_ae_adv.no_of_sets    = 1;
+  ble_ae_adv.adv_handle    = BLE_ADV_HNDL1;
+  ble_ae_adv.duration      = 0;
+  ble_ae_adv.max_ae_events = BLE_MAX_AE_EVNTS;
+
+  status = rsi_ble_start_ae_advertising(&ble_ae_adv);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
+    return status;
+  } else {
+    LOG_PRINT("set ae adv enable success \n");
+  }
+#if PERIODIC_ADV_EN
+  status = rsi_ble_app_set_periodic_ae_enable(1, 0);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("set ae Periodic adv enable failed with 0x%lX\n", status);
+    return status;
+  } else {
+    LOG_PRINT("set ae periodic adv enable success \n");
   }
 #endif
 #if ADV_SET2
@@ -652,6 +646,20 @@ int32_t rsi_ble_peripheral(void)
     return status;
   } else {
     LOG_PRINT("set ae data success \n");
+  }
+  // ae advertising enable for set 2
+  ble_ae_adv.enable        = RSI_BLE_START_ADV;
+  ble_ae_adv.no_of_sets    = 1;
+  ble_ae_adv.adv_handle    = 0x01;
+  ble_ae_adv.duration      = 0;
+  ble_ae_adv.max_ae_events = BLE_MAX_AE_EVNTS;
+
+  status = rsi_ble_start_ae_advertising(&ble_ae_adv);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
+    return status;
+  } else {
+    LOG_PRINT("set ae adv enable success \n");
   }
 #endif
 

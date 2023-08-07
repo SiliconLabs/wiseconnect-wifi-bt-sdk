@@ -44,7 +44,7 @@
 #ifdef RSI_M4_INTERFACE
 #include <rsi_board.h>
 #endif
-#if (RSI_AUDIO_DATA_SRC == BT_ARRAY)
+#if (RSI_AUDIO_DATA_SRC == ARRAY)
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO)
 #include "pcm_data_buff.h"
 #endif
@@ -62,10 +62,14 @@ uint8_t rsi_inq_resp_list[MAX_NO_OF_RESPONSES][RSI_DEV_ADDR_LEN] = { 0 };
 uint8_t rsi_inq_resp_list_name_length[MAX_NAME_LENGTH]           = { 0 };
 static uint8_t inq_resp_name_length_index;
 #endif
+#if BT_EIR_FRIENDLY_NAME_TEST
+rsi_bt_event_inquiry_response_t l_resp_event[10];
+#endif
 #endif
 #include "rsi_bt_sbc_codec.h"
 #include "rsi_bt_config.h"
 #include "rsi_common_config.h"
+#if (!BT_VUL_TEST)
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/
@@ -109,6 +113,9 @@ static uint8_t inq_resp_name_length_index;
 
 #define AVRCP_CAP_ID_COMPANY_ID       0x2
 #define AVRCP_CAP_ID_EVENTS_SUPPORTED 0x3
+
+#define AVRCP_INTERIM_RESPONSE 0x0F
+#define AVRCP_CHANGED_RESPONSE 0x0D
 
 #define SAMPLE_ARTIST_NAME "SAMPLE_ARTIST_NAME"
 #define SAMPLE_ALBUM_NAME  "SAMPLE_ALBUM_NAME"
@@ -196,6 +203,7 @@ uint8_t local_dev_role          = 0xff;
 volatile uint32_t aud_pkts_sent = 0;
 uint16_t NbrBytesReqd;
 uint8_t glbl_play_status = PLAYER_STATUS_PLAY;
+uint8_t abs_vol, abs_vol_per, playback_status;
 
 static uint32_t rsi_app_async_event_map  = 0;
 static uint32_t rsi_app_async_event_map2 = 0;
@@ -233,16 +241,16 @@ static rsi_bt_resp_get_local_name_t local_name = { 0 };
 
 uint8_t powersave_command_given = 0;
 #if RSI_BT_AVDTP_STATS
-#define AVDTP_STATS_ENABLE  1
-#define AVDTP_STATS_DISABLE 0
-#define AVDTP_STATS_UPDATE_RATE \
-  30000 //! This will be considered as millisec. Minimum Time will be fine tunes by running all the possible modes.
+#define AVDTP_STATS_ENABLE      1
+#define AVDTP_STATS_DISABLE     0
+#define AVDTP_STATS_UPDATE_RATE 15000 //! This will be considered as millisec. We can Experiment from 5sec to 30sec.
 #if BT_BR_EDR_ADAPTIVE
 uint16_t first_pkt_type;
 uint16_t second_pkt_type;
 uint16_t is_first_pkt_type_set  = 1;
 uint16_t is_second_pkt_type_set = 0;
-#define PACKET_ERROR_RATE_THRESHOLD 50 //! Range should be 0 to 100%, Considering 50% as threshold for now
+#define PACKET_ERROR_RATE_THRESHOLD \
+  14 //considering threshold as 14% as this is median PER for Airpods. Change this as per headset PER
 #endif
 rsi_bt_event_avdtp_stats_t avdtp_stats;
 uint32_t packet_error;
@@ -303,7 +311,7 @@ static uint8_t g_bufferRead[512];
 #if (RSI_BT_DUAL_PAIR_TEST == 1)
 uint8_t dual_pair_flag;
 #endif
-/* As per garmin requirment*/
+/* As per wearables requirment*/
 rsi_bt_a2dp_sbc_codec_cap_t audio_codec_cap = { SBC_CHANNEL_MODE_JOINT_STEREO,
                                                 SBC_SAMPLING_FREQ_44100,
                                                 SBC_ALLOCATION_LOUDNESS, //| SBC_ALLOCATION_SNR,
@@ -318,12 +326,7 @@ extern rsi_semaphore_handle_t bt_app_sem, bt_inquiry_sem;
 #if WLAN_SYNC_REQ
 extern rsi_semaphore_handle_t sync_coex_bt_sem;
 #endif
-#if WLAN_TRANSIENT_CASE
-extern rsi_semaphore_handle_t wlan_sync_coex_bt_sem;
-bool bt_thread_in_acceptor_connection = false, bt_thread_as_pagescan = false;
-extern uint32_t disable_factor_count;
-#endif
-extern bool rsi_ble_running, rsi_ant_running, rsi_wlan_running, powersave_cmd_given;
+extern bool rsi_ble_running, rsi_prop_protocol_running, rsi_wlan_running, powersave_cmd_given;
 extern rsi_mutex_handle_t power_cmd_mutex;
 /*=======================================================================*/
 //   ! EXTERN FUNCTIONS
@@ -726,6 +729,7 @@ void rsi_bt_app_on_unbond_status(uint16_t resp_status, rsi_bt_event_unbond_t *un
 void rsi_bt_app_on_disconn(uint16_t resp_status, rsi_bt_event_disconnect_t *bt_disconnected)
 {
   rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
+  app_state = 0;
   memcpy((int8_t *)remote_dev_addr, bt_disconnected->dev_addr, RSI_DEV_ADDR_LEN);
   LOG_PRINT("on disconn: bd addr %s, resp status 0x%x\r\n",
             rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, bt_disconnected->dev_addr),
@@ -840,7 +844,7 @@ void rsi_bt_app_on_a2dp_configure(uint16_t resp_status, rsi_bt_event_a2dp_config
 void rsi_bt_on_a2dp_more_data_req(uint16_t resp_status, rsi_bt_event_a2dp_more_data_req_t *a2dp_more_data_req)
 {
   if (resp_status == RSI_SUCCESS) {
-    if (app_state & (1 << A2DP_STREAM_START)) {
+    if (app_state & (1 << A2DP_STREAM_START) && (glbl_play_status == PLAYER_STATUS_PLAY)) {
       rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
       memcpy((int8_t *)remote_dev_addr, a2dp_more_data_req->dev_addr, RSI_DEV_ADDR_LEN);
       /* No. of SBC bytes required to receive more data request
@@ -919,6 +923,7 @@ void rsi_bt_app_on_a2dp_suspend(uint16_t resp_status, rsi_bt_event_a2dp_suspend_
 {
   //This statement is added only to resolve compilation warning  : [-Wunused-parameter] , value is unchanged
   UNUSED_PARAMETER(a2dp_suspend);
+  app_state &= ~(1 << A2DP_STREAM_START);
   if (resp_status == 0) {
     rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_SUSPEND);
   }
@@ -941,7 +946,7 @@ void rsi_bt_app_a2dp_pause()
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\n A2DP suspend req: bd addr %s, status err 0x%x\r\n", str_conn_bd_addr, status);
   } else {
-    app_state &= ~(1 << A2DP_STREAM_START);
+    //app_state &= ~(1 << A2DP_STREAM_START);
     rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO && !TA_BASED_ENCODER)
     rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_SBC_ENCODE);
@@ -973,8 +978,6 @@ void rsi_bt_app_a2dp_resume()
     if (dev_mode == 0x02) {
       rsi_bt_sniff_exit_mode(remote_dev_addr);
     }
-    app_state |= (1 << A2DP_STREAM_START);
-    rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
   }
 }
 
@@ -1176,13 +1179,19 @@ void rsi_bt_app_on_avrcp_vol_down(uint16_t resp_status, rsi_bt_event_avrcp_vol_d
 
 void rsi_bt_on_avrcp_notify_event(uint16_t resp_status, rsi_bt_event_avrcp_notify_t *p_notify)
 {
-  rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_NOTIFY);
-  memcpy(&avrcp_notify, p_notify, sizeof(rsi_bt_event_avrcp_notify_t));
-  memcpy(remote_dev_addr, p_notify->dev_addr, RSI_DEV_ADDR_LEN);
-  LOG_PRINT("on avrcp notify: bd addr %s, Event_ID: %d resp status 0x%x\r\n",
-            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, p_notify->dev_addr),
-            avrcp_notify.notify_val.eventid,
-            resp_status);
+  if (resp_status != 0) {
+    //Application needs to retry the same cmd again
+    LOG_PRINT("on avrcp register notification resp: resp_status 0x%x \n", resp_status);
+  } else {
+    rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_NOTIFY);
+    memcpy(&avrcp_notify, p_notify, sizeof(rsi_bt_event_avrcp_notify_t));
+    memcpy(remote_dev_addr, p_notify->dev_addr, RSI_DEV_ADDR_LEN);
+    LOG_PRINT("on avrcp register notification resp: bd addr %s, Event_ID: %d rtype: %d resp status 0x%x\r\n",
+              rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, p_notify->dev_addr),
+              avrcp_notify.notify_val.eventid,
+              avrcp_notify.notify_val.rtype,
+              resp_status);
+  }
 }
 /*==============================================*/
 /**
@@ -1350,21 +1359,26 @@ void rsi_bt_on_avrcp_reg_notify_event(uint8_t *bd_addr, uint8_t event_id)
   return;
 }
 
-uint8_t abs_vol;
-void rsi_bt_on_avrcp_set_abs_vol_event(rsi_bt_event_avrcp_set_abs_vol_t *p_abs_vol)
+void rsi_bt_on_avrcp_set_abs_vol_event(uint16_t resp_status, rsi_bt_event_avrcp_set_abs_vol_t *p_abs_vol)
 {
-  uint8_t abs_vol_per;
-  //rsi_bt_app_set_event (RSI_APP_EVENT_AVRCP_SET_ABS_VOL);
-  memcpy(remote_dev_addr, p_abs_vol->dev_addr, RSI_DEV_ADDR_LEN);
-  abs_vol = p_abs_vol->abs_vol;
-  /* The value 0x0 corresponds to 0%.
+  if (resp_status != 0) {
+    //Application needs to retry the same cmd again
+    LOG_PRINT("on avrcp set abs vol: resp_status 0x%x \n", resp_status);
+  } else {
+    if (p_abs_vol->remote_req_or_cmd_resp == 0) { //inform to the remote device that we accepted as resp
+                                                  //rsi_bt_app_set_event (RSI_APP_EVENT_AVRCP_SET_ABS_VOL);
+    }
+    memcpy(remote_dev_addr, p_abs_vol->dev_addr, RSI_DEV_ADDR_LEN);
+    abs_vol = p_abs_vol->abs_vol;
+    /* The value 0x0 corresponds to 0%.
 	 * The value 0x7F corresponds to 100%. */
-  abs_vol_per = (abs_vol * 100) / 0x7f;
+    abs_vol_per = (abs_vol * 100) / 0x7f;
 
-  LOG_PRINT("on avrcp set abs vol: bd addr %s, Vol %d%\r\n",
-            rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, p_abs_vol->dev_addr),
-            abs_vol_per);
-
+    LOG_PRINT("on avrcp set abs vol: bd addr %s, resp_status 0x%x Vol %d%\r\n",
+              rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, p_abs_vol->dev_addr),
+              resp_status,
+              abs_vol_per);
+  }
   return;
 }
 #if RSI_BT_MEMORY_STATS
@@ -1954,7 +1968,7 @@ reread:
 }
 #endif
 
-#elif (RSI_AUDIO_DATA_SRC == BT_ARRAY)
+#elif (RSI_AUDIO_DATA_SRC == ARRAY)
 
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO)
 #if (!TA_BASED_ENCODER)
@@ -2103,7 +2117,7 @@ int16_t send_audio_data(FILE *fp)
 
 #endif
 
-#elif (RSI_AUDIO_DATA_SRC == BT_ARRAY)
+#elif (RSI_AUDIO_DATA_SRC == ARRAY)
 
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO)
   static int16_t ix = 0;
@@ -2365,15 +2379,6 @@ int32_t rsi_bt_a2dp_source_sbc_codec(void)
     LOG_PRINT("\r\n set eir data filed, status =0x%x \n");
     return status;
   }
-#if (RSI_APP_AVDTP_ROLE != INITIATOR_ROLE)
-#if 0
-	//! start the discover mode
-	status = rsi_bt_start_discoverable();
-	if(status != RSI_SUCCESS)
-	{
-		return status;
-	}
-#endif
   //Adding Device Identification
   status = rsi_bt_add_device_id(RSI_DID_SPEC_ID,
                                 RSI_DID_VENDOR_ID,
@@ -2384,15 +2389,21 @@ int32_t rsi_bt_a2dp_source_sbc_codec(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
+#if (RSI_APP_AVDTP_ROLE != INITIATOR_ROLE)
+#if 0
+	//! start the discover mode
+	status = rsi_bt_start_discoverable();
+	if(status != RSI_SUCCESS)
+	{
+		return status;
+	}
+#endif
 
   //! start the connectability mode
   status = rsi_bt_set_connectable();
   if (status != RSI_SUCCESS) {
     return status;
   }
-#if WLAN_TRANSIENT_CASE
-  bt_thread_as_pagescan = true;
-#endif
 #else
   //! stop the discover mode
   status = rsi_bt_stop_discoverable();
@@ -2510,12 +2521,12 @@ int32_t rsi_bt_a2dp_source_sbc_codec(void)
 
 #if (RSI_APP_AVDTP_ROLE != ACCEPTOR_ROLE)
 #if INQUIRY_ENABLE
-  //! start bt inquiry after 5sec of ble and ant activities
-  if (rsi_ble_running || rsi_ant_running) {
+  //! start bt inquiry after 5sec of ble and prop_protocol activities
+  if (rsi_ble_running || rsi_prop_protocol_running) {
     rsi_semaphore_wait(&bt_inquiry_sem, 0);
 
     //! wait for 5sec before starting bt inquiry
-    rsi_delay_ms(5000);
+    rsi_os_task_delay(5000);
   }
 
   inq_responses_count = 0;
@@ -2538,12 +2549,14 @@ int32_t rsi_bt_a2dp_source_sbc_codec(void)
 #endif
 #endif
 #if INQUIRY_CONNECTION_SIMULTANEOUS
+  LOG_PRINT("\r\n Initiated Paging \r\n");
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
     rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
   }
 #endif
 #else
+  LOG_PRINT("\r\n Initiated Paging \r\n");
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
     rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
@@ -2619,7 +2632,7 @@ int32_t rsi_bt_app_task()
   }
   LOG_PRINT("\n in deepsleep mode \n");
   //! wait for 30sec
-  rsi_delay_ms(30000);
+  rsi_os_task_delay(30000);
 #endif
 #endif
 //! FIXME: Workaround
@@ -2656,7 +2669,7 @@ int32_t rsi_bt_app_task()
   //rsi_delay_ms(30000);
 #endif
 #if (TEST_CASE_1 || TEST_CASE_5 || TEST_CASE_4 || TEST_CASE_6)
-  rsi_delay_ms(10000);
+  rsi_os_task_delay(10000);
   //! disable the bt protocol
   status = rsi_switch_proto(0, switch_proto_async); //! Make sure without enable, disable call should not be there.
   if (status != RSI_SUCCESS) {
@@ -2666,7 +2679,7 @@ int32_t rsi_bt_app_task()
     LOG_PRINT("\r\n disable bt protocol triggered successfully \r\n");
   }
 #if TEST_CASE_4
-  rsi_delay_ms(10000);
+  rsi_os_task_delay(10000);
   if (!powersave_command_given) {
     LOG_PRINT("\n Triggering the Sleep:debug \n");
     status = rsi_bt_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
@@ -2684,7 +2697,7 @@ int32_t rsi_bt_app_task()
   //rsi_delay_ms(30000);
 #endif
 #if ENABLE_BACK_AFTER_10SEC
-  rsi_delay_ms(10000);
+  rsi_os_task_delay(10000);
   //! enable the bt protocol
   status = rsi_switch_proto(1, NULL);
   if (status != RSI_SUCCESS) {
@@ -2700,7 +2713,7 @@ int32_t rsi_bt_app_task()
   //! BT A2DP Initialization
   status = rsi_bt_a2dp_source_sbc_codec();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n bt_a2dp init failed \r\n");
+    LOG_PRINT("\r\n bt_a2dp init failed with status %x \r\n", status);
     return status;
   }
 #else
@@ -2708,53 +2721,16 @@ int32_t rsi_bt_app_task()
   //! BT A2DP Initialization
   status = rsi_bt_a2dp_source_sbc_codec();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n bt_a2dp init failed \r\n");
+    LOG_PRINT("\r\n bt_a2dp init failed with status %x \r\n", status);
     return status;
   }
 #endif
 #endif
+#if AFH_CLASSIFICATION
+  status = rsi_bt_vendor_set_afh_classification_intervals(AFH_MIN, AFH_MAX);
+#endif
   while (1) {
     //! Application main loop
-#if WLAN_TRANSIENT_CASE
-    if (disable_factor_count == DISABLE_ITER_COUNT) {
-      if (bt_thread_in_acceptor_connection == true) {
-
-        //! Trigger disconnect.
-        status = rsi_bt_avrcp_disconn(remote_dev_addr);
-
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n AVRCP Disconn Failed: %x\r\n", status);
-        } else {
-          LOG_PRINT("\r\n AVRCP Disconn Successful\r\n");
-        }
-
-        status = rsi_bt_a2dp_disconnect(remote_dev_addr);
-
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n A2DP Disconn Failed: %x\r\n", status);
-        } else {
-          LOG_PRINT("\r\n A2DP Disconn Successful\r\n");
-        }
-        status = rsi_bt_disconnect(remote_dev_addr);
-
-        //status = rsi_bt_disconnect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr,RSI_BT_REMOTE_BD_ADDR));
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n BT_Disconnect status: 0x%x \n", status);
-        } else {
-          LOG_PRINT("\r\n BT_Disconnect Successful \n");
-        }
-      } else if (bt_thread_as_pagescan == true) {
-        //! stop the connectability mode
-        status = rsi_bt_set_non_connectable();
-        if (status != RSI_SUCCESS) {
-          printf("bt acceptor pgscan disabled failed\n");
-          //return status;
-        }
-        printf("bt acceptor pgscan disabled\n");
-        rsi_semaphore_post(&wlan_sync_coex_bt_sem);
-      }
-    }
-#endif
     //! checking for received events
     temp_event_map = rsi_bt_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
@@ -2797,7 +2773,7 @@ int32_t rsi_bt_app_task()
         }
 #if RUN_TIME_BT_DISABLE
 #if (TEST_CASE_2 || TEST_CASE_7)
-        rsi_delay_ms(10000);
+        rsi_os_task_delay(10000);
 
         //! disable the bt protocol
         status = rsi_switch_proto(0, switch_proto_async);
@@ -2808,7 +2784,7 @@ int32_t rsi_bt_app_task()
           LOG_PRINT("\r\n disable bt protocol triggered successfully \r\n");
         }
 #if ENABLE_BACK_AFTER_10SEC
-        rsi_delay_ms(10000);
+        rsi_os_task_delay(10000);
         //! enable the bt protocol
         status = rsi_switch_proto(1, NULL);
         if (status != RSI_SUCCESS) {
@@ -2911,10 +2887,6 @@ int32_t rsi_bt_app_task()
           rsi_bt_set_local_device_role(remote_dev_addr, RSI_MASTER_ROLE, &local_dev_role);
         }
 #endif
-#if WLAN_TRANSIENT_CASE
-        bt_thread_in_acceptor_connection = true;
-        bt_thread_as_pagescan            = false;
-#endif
         //! clear the connected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_CONNECTED);
         if (app_state & (1 << CONNECTED)) {
@@ -2975,6 +2947,7 @@ int32_t rsi_bt_app_task()
           LOG_PRINT(" rsi_bt_linkkey_request_reply failed 0x%x\n", status);
         }
 #if 0
+        LOG_PRINT( "LINK_KEY: \n");
         for(int i = 0; i < RSI_LINK_KEY_LEN; i++) {
             LOG_PRINT( "0x%02x ", linkkey[i]);
         }
@@ -3001,9 +2974,19 @@ int32_t rsi_bt_app_task()
 
         //! clear the linkkey save event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_LINKKEY_SAVE);
-#if 0
-        for(int i = 0; i < RSI_LINK_KEY_LEN; i++) {
-            LOG_PRINT( "0x%02x ", linkkey[i]);
+        rsi_bt_event_user_linkkey_save_t peer_link;
+#if LINK_KEY_PRINT
+        memcpy(peer_link.dev_addr, remote_dev_addr, RSI_DEV_ADDR_LEN);
+        memcpy(peer_link.local_dev_addr, local_dev_addr, RSI_DEV_ADDR_LEN);
+        if (rsi_link_key_read(&peer_link)) {
+          memcpy(linkkey, peer_link.linkKey, RSI_LINK_KEY_LEN);
+        } else {
+          memset(linkkey, 0, RSI_LINK_KEY_LEN);
+        }
+
+        LOG_PRINT("SAVED_LINK_KEY: \n");
+        for (int i = 0; i < RSI_LINK_KEY_LEN; i++) {
+          LOG_PRINT("0x%02x ", linkkey[i]);
         }
         LOG_PRINT("\n");
 #endif
@@ -3063,18 +3046,6 @@ int32_t rsi_bt_app_task()
 
       case RSI_APP_EVENT_DISCONNECTED: {
         //! remote device disconnect event
-#if WLAN_TRANSIENT_CASE
-        //! clear the disconnected event.
-        rsi_bt_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
-        rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
-
-        rsi_semaphore_post(&wlan_sync_coex_bt_sem);
-
-        bt_thread_in_acceptor_connection = false;
-        //bt_thread_as_pagescan = true;
-        printf("bt acceptor disconnect done\n");
-        rsi_semaphore_wait(&sync_coex_bt_sem, 0);
-#endif
 #if (RSI_APP_AVDTP_ROLE == ACCEPTOR_ROLE)
         //! set the connectability mode
         LOG_PRINT("\r\nSetting Connectable Mode\n");
@@ -3114,6 +3085,7 @@ int32_t rsi_bt_app_task()
             status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR_2));
           }
 #else
+        LOG_PRINT("\r\n Initiated Paging \r\n");
         status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, RSI_BT_REMOTE_BD_ADDR));
 #endif
           if (status != RSI_SUCCESS) {
@@ -3200,8 +3172,14 @@ int32_t rsi_bt_app_task()
       case RSI_APP_EVENT_A2DP_OPEN: {
         //! a2dp open event
 
-        //! clear the a2dp open event.
-        rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_OPEN);
+        rsi_delay_ms(500);
+        if (!(app_state & (1 << AVRCP_CONNECTED))) {
+          LOG_PRINT("\nInitiating AVRCP Connection\n");
+          status = rsi_bt_avrcp_conn(remote_dev_addr);
+          if (status != RSI_SUCCESS) {
+            LOG_PRINT("\r\navrcp conn resp status 0x%04x\r\n", status);
+          }
+        }
 #if ((RSI_AUDIO_DATA_TYPE == PCM_AUDIO) || (RSI_AUDIO_DATA_TYPE == MP3_AUDIO))
         /* Get Config Command */
         rsi_bt_a2dp_get_config(remote_dev_addr, &sbc_resp_cap);
@@ -3220,12 +3198,14 @@ int32_t rsi_bt_app_task()
         set_sbc_cap.BlockLength = SBC_BLOCK_LENGTH_16;
         set_sbc_cap.MaxBitPool  = 35;
 
-        rsi_delay_ms(500);
+        rsi_delay_ms(300);
+        LOG_PRINT("\nInitiating Reconfig\n");
         status = rsi_bt_a2dp_set_config(remote_dev_addr, &set_sbc_cap, NULL);
         if (status == RSI_APP_ERR_A2DP_SBC_SAME_CODEC_PARAMS) {
           if (!(app_state & (1 << A2DP_STREAM_START))) {
 #if !(A2DP_BT_ONLY_CONNECTION)
-            rsi_delay_ms(1000);
+            rsi_delay_ms(300);
+            LOG_PRINT("\nInitiating A2DP Start\n");
             status = rsi_bt_a2dp_start(remote_dev_addr);
 #endif
             if (status != RSI_SUCCESS) {
@@ -3237,7 +3217,7 @@ int32_t rsi_bt_app_task()
 
         if (!(app_state & (1 << A2DP_STREAM_START))) {
 #if !(A2DP_BT_ONLY_CONNECTION)
-          rsi_delay_ms(1000);
+          rsi_delay_ms(300);
           status = rsi_bt_a2dp_start(remote_dev_addr);
 #endif
           if (status != RSI_SUCCESS) {
@@ -3245,9 +3225,16 @@ int32_t rsi_bt_app_task()
           }
         }
 #endif
+        //! clear the a2dp open event.
+        rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_OPEN);
       } break;
       case RSI_APP_EVENT_A2DP_START: {
         //! a2dp start event
+        if ((glbl_play_status != PLAYER_STATUS_PLAY) || (!(app_state & (1 << A2DP_STREAM_START)))) {
+          LOG_PRINT("global play status paused or app state changed to non-streaming state\r\n");
+          rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_START);
+          break;
+        }
 #if ((RSI_AUDIO_DATA_TYPE == PCM_AUDIO) || (RSI_AUDIO_DATA_TYPE == MP3_AUDIO))
         /* Get Config Command */
         rsi_bt_a2dp_get_config(remote_dev_addr, &sbc_resp_cap);
@@ -3306,6 +3293,7 @@ int32_t rsi_bt_app_task()
 #else
         rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
 #endif
+#if 0
         /* Skullcandy Ink'd headset is initiating AVRCP conn even after we initiate avrcp conn req, 
 					 Due to that, headset is not able to initiate play/pause events on time.
 					 So maintaining enough time for remote device to initiate AVRCP conn since as source we should initiate AVRCP with least priority*/
@@ -3320,6 +3308,7 @@ int32_t rsi_bt_app_task()
             }
           }
         }
+#endif
         LOG_PRINT("\r\nA2DP Send Audio\n");
 
         rsi_bt_app_clear_event(RSI_APP_EVENT_A2DP_START);
@@ -3401,7 +3390,19 @@ int32_t rsi_bt_app_task()
             } else {
               LOG_PRINT("\r\n BT_Disconnect Successful \n");
 
-              rsi_delay_ms(10000);
+              rsi_os_task_delay(10000);
+
+              //! disabling the power save before calling switch proto!
+              status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+              if (status != RSI_SUCCESS) {
+                LOG_PRINT("\r\n Failed in disabling power save\r\n");
+                return status;
+              }
+              status = rsi_wlan_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+              if (status != RSI_SUCCESS) {
+                LOG_PRINT("\r\n Failed in disabling power save\r\n");
+                return status;
+              }
               //! Disable BT here!
               //! disable the bt protocol
               status = rsi_switch_proto(0, switch_proto_async);
@@ -3414,7 +3415,7 @@ int32_t rsi_bt_app_task()
               }
               //! Wait some time and Enable back. and set the event.
 #if ENABLE_BACK_AFTER_10SEC
-              rsi_delay_ms(5000);
+              rsi_os_task_delay(5000);
               //! enable the bt protocol
               status = rsi_switch_proto(1, NULL);
               if (status != RSI_SUCCESS) {
@@ -3425,9 +3426,20 @@ int32_t rsi_bt_app_task()
                 bt_disable_triggered = 0;
                 //overflow_count = 0;
                 app_state = 0;
-                rsi_delay_ms(5000);
+                rsi_os_task_delay(5000);
                 //rsi_bt_app_set_event(RSI_APP_EVENT_DISCONNECTED);
 
+                //! enabling the power save before calling switch proto!
+                status = rsi_bt_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
+                if (status != RSI_SUCCESS) {
+                  LOG_PRINT("\r\n Failed in initiating power save\r\n");
+                  return status;
+                }
+                status = rsi_bt_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
+                if (status != RSI_SUCCESS) {
+                  LOG_PRINT("\r\n Failed in initiating power save\r\n");
+                  return status;
+                }
                 /* Re-Initializing A2DP */
                 status = rsi_bt_a2dp_init(&audio_codec_cap);
                 if (status != RSI_SUCCESS) {
@@ -3632,27 +3644,43 @@ int32_t rsi_bt_app_task()
       } break;
 
       case RSI_APP_EVENT_AVRCP_PAUSE: {
-        notify_val_t notify = { 0 };
-        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_PAUSE);
         LOG_PRINT("\r\n avrcp pause\r\n");
-        glbl_play_status = PLAYER_STATUS_PAUSE;
-        for (int i = 0; i < MAX_REG_EVENTS; i++) {
-          if ((app_reg_events != 0) && (app_event_id[i] == AVRCP_EVENT_PLAYBACK_STATUS_CHANGED)) {
-            notify.player_status = glbl_play_status;
-            rsi_bt_avrcp_notify(remote_dev_addr, 1, &notify);
-            app_event_id[i] = 0;
-            app_reg_events--;
-            break;
+        int pause_counter = 0;
+pause_retry:
+        pause_counter++;
+        if (app_state & (1 << A2DP_STREAM_START)) {
+          glbl_play_status    = PLAYER_STATUS_PAUSE;
+          notify_val_t notify = { 0 };
+          for (int i = 0; i < MAX_REG_EVENTS; i++) {
+            if ((app_reg_events != 0) && (app_event_id[i] == AVRCP_EVENT_PLAYBACK_STATUS_CHANGED)) {
+              notify.player_status = glbl_play_status;
+              rsi_bt_avrcp_notify(remote_dev_addr, 1, &notify);
+              app_event_id[i] = 0;
+              app_reg_events--;
+              break;
+            }
+          }
+#if !(A2DP_BT_ONLY_CONNECTION)
+          rsi_bt_app_a2dp_pause();
+#endif
+        } else {
+          //	LOG_PRINT("Already in pause state\n");
+          if ((app_state & (1 << CONNECTED)) || (pause_counter <= 100)) {
+            rsi_delay_ms(10);
+            goto pause_retry;
           }
         }
-        rsi_bt_app_a2dp_pause();
+        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_PAUSE);
       } break;
+
       case RSI_APP_EVENT_AVRCP_PLAY: {
-        notify_val_t notify = { 0 };
-        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_PLAY);
         LOG_PRINT("\r\n avrcp play\r\n");
-        if (!(app_state & (1 << A2DP_STREAM_START)) && (glbl_play_status == PLAYER_STATUS_PAUSE)) {
-          glbl_play_status = PLAYER_STATUS_PLAY;
+        int play_counter = 0;
+retry:
+        play_counter++;
+        if (!(app_state & (1 << A2DP_STREAM_START))) {
+          glbl_play_status    = PLAYER_STATUS_PLAY;
+          notify_val_t notify = { 0 };
           for (int i = 0; i < MAX_REG_EVENTS; i++) {
             if ((app_reg_events != 0) && (app_event_id[i] == AVRCP_EVENT_PLAYBACK_STATUS_CHANGED)) {
               notify.player_status = glbl_play_status;
@@ -3665,7 +3693,15 @@ int32_t rsi_bt_app_task()
 #if !(A2DP_BT_ONLY_CONNECTION)
           rsi_bt_app_a2dp_resume();
 #endif
+        } else {
+
+          // LOG_PRINT("Already in play state\n");
+          if ((app_state & (1 << CONNECTED)) || (play_counter <= 100)) {
+            rsi_delay_ms(10);
+            goto retry;
+          }
         }
+        rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_PLAY);
       } break;
 
       case RSI_APP_EVENT_AVRCP_NEXT:
@@ -3756,44 +3792,46 @@ int32_t rsi_bt_app_task()
           LOG_PRINT("\nAVRCP get_cap resp nbr_ids: %d\n", get_cap_resp.nbr_ids);
         }
         if (app_state & (1 << AVRCP_CONNECTED)) {
-          uint8_t playback_status = 0;
 #if 0 //for Sennheiser(Momentum Tw) headset is rejecting this PLAYBACK_STATUS_CHANGED notification, hence we are not receiving pause/play
           status =
-            rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_PLAYBACK_STATUS_CHANGED, &playback_status);
+            rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_PLAYBACK_STATUS_CHANGED, NULL);
           if (status != RSI_SUCCESS) {
             LOG_PRINT("AVRCP Register Notification: status: 0x%x\r\n", status);
           }
           rsi_delay_ms(5);
 #endif
-          status = rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_VOLUME_CHANGED, &abs_vol);
+          status = rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_VOLUME_CHANGED, NULL);
           if (status != RSI_SUCCESS) {
             LOG_PRINT("AVRCP Register Notification: status: 0x%x\r\n", status);
           }
-          uint8_t abs_vol_per = (abs_vol * 100) / 0x7f;
-          LOG_PRINT("Absolute Volume: %d% (0x%x)\r\n", abs_vol_per, abs_vol);
         }
-
         rsi_bt_app_set_event(RSI_APP_EVENT_AVRCP_GET_REM_VER);
       } break;
       case RSI_APP_EVENT_AVRCP_NOTIFY: {
         rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_NOTIFY);
 
-        status = rsi_bt_avrcp_reg_notification(remote_dev_addr, avrcp_notify.notify_val.eventid, &abs_vol);
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("Avrcp reg notification cmd status: 0x%x\r\n", status);
-          break;
-        }
-
         //LOG_PRINT ("notify event id: %d \r\n", avrcp_notify.notify_val.eventid);
         switch (avrcp_notify.notify_val.eventid) {
           case AVRCP_EVENT_VOLUME_CHANGED: {
-            uint8_t abs_vol_per;
-            uint8_t abs_vol = avrcp_notify.notify_val.notify_val.abs_vol;
-            abs_vol_per     = (abs_vol * 100) / 0x7f;
+            abs_vol     = avrcp_notify.notify_val.notify_val.abs_vol;
+            abs_vol_per = (abs_vol * 100) / 0x7f;
             LOG_PRINT("Absolute Volume: %d% (0x%x)\r\n", abs_vol_per, abs_vol);
+            if (avrcp_notify.notify_val.rtype == AVRCP_CHANGED_RESPONSE) {
+              status = rsi_bt_avrcp_reg_notification(remote_dev_addr, AVRCP_EVENT_VOLUME_CHANGED, NULL);
+              if (status != RSI_SUCCESS) {
+                LOG_PRINT("Avrcp reg notification cmd status: 0x%x\r\n", status);
+                break;
+              }
+            }
+          } break;
+          case AVRCP_EVENT_PLAYBACK_STATUS_CHANGED: {
+            playback_status = avrcp_notify.notify_val.notify_val.player_status;
+            LOG_PRINT("Playback Status: %d \r\n", playback_status);
           } break;
         }
+
       } break;
+
       case RSI_APP_EVENT_AVRCP_GET_REM_VER: {
         rsi_bt_app_clear_event(RSI_APP_EVENT_AVRCP_GET_REM_VER);
         avrcp_version = (rsi_bt_rsp_avrcp_remote_version_t){ 0 };
@@ -4019,6 +4057,8 @@ int32_t rsi_bt_app_task()
                   avdtp_stats.ack_delay[9],
                   avdtp_stats.ack_delay[10]);
 
+        LOG_PRINT("No_of_No_Responses: %d\n", avdtp_stats.no_of_rx_missed);
+
         packet_error = avdtp_stats.no_of_crc_fail + avdtp_stats.no_of_retries + avdtp_stats.no_of_hdr_err;
         packet_sent  = avdtp_stats.tx_poll + avdtp_stats.tx_null + avdtp_stats.dm1_pkt[0] + avdtp_stats.dm3_pkt[0]
                       + avdtp_stats.dm5_pkt[0] + avdtp_stats.edr_2dh1_pkt[0] + avdtp_stats.edr_2dh3_pkt[0]
@@ -4044,7 +4084,7 @@ int32_t rsi_bt_app_task()
         LOG_PRINT("AVDTP_STATS: Actual TX pkts: %d Total Ack count: %d \n\n", actual_tx_count, ack_count);
 #if BT_BR_EDR_ADAPTIVE
         first_pkt_type  = PTYPE_2DH3_MAY_BE_USED;
-        second_pkt_type = PTYPE_2DH5_MAY_BE_USED;
+        second_pkt_type = PTYPE_3DH3_MAY_BE_USED;
         if (packet_error_rate >= PACKET_ERROR_RATE_THRESHOLD && is_first_pkt_type_set) {
           is_first_pkt_type_set = 0;
           status                = rsi_bt_change_pkt_type(remote_dev_addr, first_pkt_type);
@@ -4138,4 +4178,4 @@ int32_t rsi_bt_app_task()
   }
   return 0;
 }
-//#endif
+#endif

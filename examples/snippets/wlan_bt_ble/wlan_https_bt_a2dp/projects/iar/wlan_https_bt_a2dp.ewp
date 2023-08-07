@@ -4331,12 +4331,6 @@
             <name>$PROJ_DIR$\..\..\rsi_lk_save.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\rsi_sock_test.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\..\rsi_sock_test.h</name>
-        </file>
-        <file>
             <name>$PROJ_DIR$\..\..\rsi_wlan_config.h</name>
         </file>
         <file>

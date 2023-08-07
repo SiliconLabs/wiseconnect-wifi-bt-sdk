@@ -713,6 +713,7 @@ int32_t rsi_bt_spp_slave(void)
   int32_t temp_event_map  = 0;
   uint8_t str_bd_addr[18] = { 0 };
   uint8_t eir_data[200]   = { 2, 1, 0 };
+  uint8_t fmversion[20]   = { 0 };
 
 #ifdef FW_LOGGING_ENABLE
   //Fw log component level
@@ -759,6 +760,14 @@ int32_t rsi_bt_spp_slave(void)
 
   if (status != RSI_SUCCESS) {
     return status;
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   status = rsi_switch_proto(1, NULL);

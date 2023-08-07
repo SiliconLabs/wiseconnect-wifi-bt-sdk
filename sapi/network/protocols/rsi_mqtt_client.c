@@ -186,14 +186,14 @@ int32_t rsi_mqtt_connect(rsi_mqtt_client_info_t *rsi_mqtt_client,
   }
   // Connect to the new network
 #ifdef ASYNC_MQTT
-  status = ConnectNetwork((Network *)&rsi_mqtt_client->mqtt_client,
+  status = ConnectNetwork(rsi_mqtt_client->mqtt_client.ipstack,
                           flags,
                           (char *)&(rsi_mqtt_client->server_ip),
                           rsi_mqtt_client->server_port,
                           rsi_mqtt_client->client_port,
                           callback);
 #else
-  status = ConnectNetwork((Network *)&rsi_mqtt_client->mqtt_client,
+  status = ConnectNetwork(rsi_mqtt_client->mqtt_client.ipstack,
                           flags,
                           (char *)&(rsi_mqtt_client->server_ip),
                           rsi_mqtt_client->server_port,

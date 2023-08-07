@@ -55,30 +55,30 @@
 #if !RUN_TIME_CONFIG_ENABLE
 rsi_parsed_conf_t rsi_parsed_conf = { 0 };
 #endif
-rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, ant_app_sem, wlan_app_sem, bt_inquiry_sem,
-  ble_scan_sem;
+rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, prop_protocol_app_sem, wlan_app_sem,
+  bt_inquiry_sem, ble_scan_sem;
 #if WLAN_SYNC_REQ
-rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_ant_sem, sync_coex_bt_sem;
+rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_prop_protocol_sem, sync_coex_bt_sem;
 bool other_protocol_activity_enabled;
 #endif
 #if SOCKET_ASYNC_FEATURE
 rsi_semaphore_handle_t sock_wait_sem;
 #endif
-rsi_task_handle_t ble_main_app_task_handle, bt_app_task_handle, ant_app_task_handle, wlan_app_task_handle,
+#if (RSI_TCP_IP_BYPASS && SOCKET_ASYNC_FEATURE)
+rsi_semaphore_handle_t lwip_sock_async_sem;
+#endif
+rsi_task_handle_t ble_main_app_task_handle, bt_app_task_handle, prop_protocol_app_task_handle, wlan_app_task_handle,
   wlan_task_handle;
 rsi_task_handle_t window_reset_notify_task_handle;
-bool rsi_ble_running, rsi_bt_running, rsi_ant_running, rsi_wlan_running, wlan_radio_initialized, powersave_cmd_given;
+bool rsi_ble_running, rsi_bt_running, rsi_prop_protocol_running, rsi_wlan_running, wlan_radio_initialized,
+  powersave_cmd_given;
 rsi_mutex_handle_t power_cmd_mutex;
 rsi_mutex_handle_t window_update_mutex;
 bool rsi_window_update_sem_waiting;
 rsi_semaphore_handle_t window_reset_notify_sem;
-#if (RX_DATA && HTTPS_DOWNLOAD)
+#if (SSL_TX_DATA || SSL_RX_DATA || (RX_DATA && HTTPS_DOWNLOAD))
 rsi_semaphore_handle_t cert_sem, conn_sem;
 rsi_task_handle_t cert_bypass_task_handle[SOCKTEST_INSTANCES_MAX];
-#endif
-#if WLAN_TRANSIENT_CASE
-uint32_t disable_factor_count = 0, enable_factor_count = 0;
-rsi_semaphore_handle_t wlan_sync_coex_ble_sem, wlan_sync_coex_ant_sem, wlan_sync_coex_bt_sem;
 #endif
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
@@ -146,13 +146,8 @@ int32_t rsi_initiate_power_save(void)
     LOG_PRINT("\r\n Failed in initiating power save\r\n");
     return status;
   }
-#if (WLAN_TRANSIENT_CASE && WLAN_POWER_SAVE_USAGE)
-  //! initiating power save in wlan mode
-  status = rsi_wlan_power_save_profile(RSI_SLEEP_MODE_8, PSP_TYPE);
-#else
   //! initiating power save in wlan mode
   status = rsi_wlan_power_save_profile(RSI_SLEEP_MODE_2, PSP_TYPE);
-#endif
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\n Failed in initiating power save\r\n");
     return status;
@@ -161,7 +156,7 @@ int32_t rsi_initiate_power_save(void)
 }
 
 #if !RUN_TIME_CONFIG_ENABLE
-
+/*==============================================*/
 /**
  * @fn         rsi_ble_initialize_conn_buffer
  * @brief      this function initializes the configurations for each connection
@@ -307,9 +302,9 @@ int8_t rsi_fill_user_config()
   int8_t status = RSI_SUCCESS;
   //! copy protocol selection macros
   //  rsi_parsed_conf.rsi_protocol_sel.is_ble_enabled  = RSI_ENABLE_BLE_TEST;
-  rsi_parsed_conf.rsi_protocol_sel.is_bt_enabled   = RSI_ENABLE_BT_TEST;
-  rsi_parsed_conf.rsi_protocol_sel.is_ant_enabled  = RSI_ENABLE_ANT_TEST;
-  rsi_parsed_conf.rsi_protocol_sel.is_wifi_enabled = RSI_ENABLE_WIFI_TEST;
+  rsi_parsed_conf.rsi_protocol_sel.is_bt_enabled            = RSI_ENABLE_BT_TEST;
+  rsi_parsed_conf.rsi_protocol_sel.is_prop_protocol_enabled = RSI_ENABLE_PROP_PROTOCOL_TEST;
+  rsi_parsed_conf.rsi_protocol_sel.is_wifi_enabled          = RSI_ENABLE_WIFI_TEST;
 
   //! copy ble connection specific configurations
 
@@ -390,15 +385,16 @@ void rsi_wlan_stats_receive_handler(uint16_t status, const uint8_t *buffer, cons
 void rsi_common_app_task(void)
 {
   int8_t status                 = RSI_SUCCESS;
+  uint8_t fmversion[20]         = { 0 };
   rsi_ble_running               = false;
   rsi_bt_running                = false;
-  rsi_ant_running               = false;
+  rsi_prop_protocol_running     = false;
   rsi_wlan_running              = false;
   wlan_radio_initialized        = false;
   powersave_cmd_given           = false;
   ble_main_app_task_handle      = NULL;
   bt_app_task_handle            = NULL;
-  ant_app_task_handle           = NULL;
+  prop_protocol_app_task_handle = NULL;
   wlan_app_task_handle          = NULL;
   rsi_window_update_sem_waiting = false;
   uint8_t own_bd_addr[6]        = { 0x66, 0x55, 0x44, 0x33, 0x22, 0x11 };
@@ -433,6 +429,15 @@ void rsi_common_app_task(void)
       LOG_PRINT("\r\n wireless init failed \n");
       return;
     }
+
+    //! Firmware version Prints
+    status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    } else {
+      LOG_PRINT("\nfirmware_version = %s", fmversion);
+    }
+
 #if !(PER_TEST_TX_ENABLE || PER_TEST_RX_ENABLE)
     status = rsi_bt_set_bd_addr(own_bd_addr);
     if (status != RSI_SUCCESS) {
@@ -446,6 +451,16 @@ void rsi_common_app_task(void)
     if (status != RSI_SUCCESS) {
       return;
     }
+#if CONFIGURE_TIMEOUT
+    status = rsi_config_timeout(KEEP_ALIVE_TIMEOUT, 60);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\n Timeout Configuration Failed : 0x%x \n", status);
+      return status;
+    } else {
+      LOG_PRINT("\nTimeout Configuration SUCCESS");
+    }
+#endif
+
     //! initialize wlan radio
     status = rsi_wlan_radio_init();
     if (status != RSI_SUCCESS) {
@@ -518,25 +533,22 @@ void rsi_common_app_task(void)
     if (rsi_parsed_conf.rsi_protocol_sel.is_wifi_enabled) {
       rsi_wlan_running = true;                //! Making sure wlan got triggered.
       rsi_semaphore_create(&wlan_app_sem, 0); //! This lock will be used from one download complete notification.
-#if (RX_DATA && HTTPS_DOWNLOAD)
+#if (SSL_TX_DATA || SSL_RX_DATA || (RX_DATA && HTTPS_DOWNLOAD))
       rsi_semaphore_create(&cert_sem, 0);
       rsi_semaphore_create(&conn_sem, 0);
       rsi_semaphore_post(&conn_sem);
 #endif
 #if WLAN_SYNC_REQ
       rsi_semaphore_create(&sync_coex_bt_sem, 0); //! This lock will be used from wlan task to be done.
-      rsi_semaphore_create(&sync_coex_ant_sem, 0);
+      rsi_semaphore_create(&sync_coex_prop_protocol_sem, 0);
       rsi_semaphore_create(&sync_coex_ble_sem, 0);
-#endif
-#if WLAN_TRANSIENT_CASE
-      rsi_semaphore_create(&wlan_sync_coex_bt_sem, 0);
-      rsi_semaphore_create(&wlan_sync_coex_ant_sem, 0);
-      rsi_semaphore_create(&wlan_sync_coex_ble_sem, 0);
 #endif
 #if SOCKET_ASYNC_FEATURE
       rsi_semaphore_create(&sock_wait_sem, 0);
 #endif
-
+#if (RSI_TCP_IP_BYPASS && SOCKET_ASYNC_FEATURE)
+      rsi_semaphore_create(&lwip_sock_async_sem, 0);
+#endif
 #if WLAN_STA_TX_CASE
       status = rsi_task_create((void *)rsi_app_task_wifi_tcp_tx_ps,
                                (uint8_t *)"wlan_task",
@@ -558,24 +570,6 @@ void rsi_common_app_task(void)
       if (status != RSI_ERROR_NONE) {
         LOG_PRINT("\r\n rsi_wlan_app_task failed to create \r\n");
         break;
-      }
-#endif
-#if WINDOW_UPDATE_FEATURE
-      rsi_semaphore_create(&window_reset_notify_sem, 0);
-      status = rsi_task_create((void *)rsi_window_reset_notify_app_task,
-                               (uint8_t *)"window_reset_notify_task",
-                               RSI_WINDOW_RESET_NOTIFY_TASK_STACK_SIZE,
-                               NULL,
-                               RSI_WINDOW_RESET_NOTIFY_TASK_PRIORITY,
-                               &window_reset_notify_task_handle);
-      if (status != RSI_ERROR_NONE) {
-        LOG_PRINT("\r\n rsi_window_reset_notify_app_task failed to create \r\n");
-        break;
-      }
-      status = rsi_mutex_create(&window_update_mutex);
-      if (status != RSI_ERROR_NONE) {
-        LOG_PRINT("failed to create mutex object, error = %d \r\n", status);
-        return;
       }
 #endif
     }
@@ -616,18 +610,18 @@ void rsi_common_app_task(void)
       }
     }
 
-    //! create ant task if ant protocol is selected
-    /*   if (rsi_parsed_conf.rsi_protocol_sel.is_ant_enabled) { // To remove errors
-      rsi_ant_running = 1;
-      rsi_semaphore_create(&ant_app_sem, 0);
-      status = rsi_task_create((void *)rsi_ant_app_task,
-                               (uint8_t *)"ant_task",
-                               RSI_ANT_APP_TASK_SIZE,
+    //! create prop_protocol task if prop_protocol protocol is selected
+    /*if (rsi_parsed_conf.rsi_protocol_sel.is_prop_protocol_enabled) {
+      rsi_prop_protocol_running = 1;
+      rsi_semaphore_create(&prop_protocol_app_sem, 0);
+      status = rsi_task_create((void *)rsi_prop_protocol_app_task,
+                               (uint8_t *)"prop_protocol_task",
+                               RSI_PROP_PROTOCOL_APP_TASK_SIZE,
                                NULL,
-                               RSI_ANT_APP_TASK_PRIORITY,
-                               &ant_app_task_handle);
+                               RSI_PROP_PROTOCOL_APP_TASK_PRIORITY,
+                               &prop_protocol_app_task_handle);
       if (status != RSI_ERROR_NONE) {
-        LOG_PRINT("\r\n rsi_ant_app_task failed to create \r\n");
+        LOG_PRINT("\r\n rsi_prop_protocol_app_task failed to create \r\n");
         return;
       }
     }*/

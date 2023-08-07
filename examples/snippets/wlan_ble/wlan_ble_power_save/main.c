@@ -52,7 +52,8 @@ extern void rsi_ble_app_task(void);
 
 int32_t rsi_wlan_ble_app(void)
 {
-  int32_t status = RSI_SUCCESS;
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
 
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
@@ -81,6 +82,14 @@ int32_t rsi_wlan_ble_app(void)
     return status;
   }
   LOG_PRINT("\r\nWireless Initialization Success\r\n");
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
+  }
 
   //! BLE initialization
   rsi_ble_app_init();

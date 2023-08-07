@@ -97,7 +97,8 @@ rsi_semaphore_handle_t ble_thread_sem;
 
 int32_t application(void)
 {
-  int32_t status = RSI_SUCCESS;
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
 
 #ifdef RSI_WITH_OS
   rsi_semaphore_create(&wlan_thread_sem, 0);
@@ -147,6 +148,14 @@ int32_t application(void)
     return status;
   }
   LOG_PRINT("\r\nWireless Initialization Success\r\n");
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
+  }
 
   // BLE initialization
   rsi_ble_configurator_init();

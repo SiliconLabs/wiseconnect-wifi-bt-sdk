@@ -1875,7 +1875,8 @@ typedef void (*rsi_ble_on_le_ltk_req_event_t)(rsi_bt_event_le_ltk_request_t *rsi
 /**
  * @typedef    void (*rsi_ble_on_le_security_keys_t)(rsi_bt_event_le_security_keys_t *rsi_ble_event_le_security_keys);
  * @brief      The callback function will be called if le security keys event is received
- * @param[out]  rsi_bt_event_le_security_keys_t contains security keys. Please refer rsi_bt_event_le_security_keys_s for more info
+ * @param[out]  rsi_bt_event_le_security_keys_t contains security keys. Please refer rsi_bt_event_le_security_keys_s for more info \n
+ * @note       When the device is disconnected from the remote device, the pairing information such as LTK, EDIV, and RAND will be erased. Therefore, it is essential for the application developer to store and manage this information in the Host NVM. \n
  * @return      void
  * @section description
  * This callback function will be called if le security keys event is received from the module \n
@@ -1981,7 +1982,8 @@ typedef void (*rsi_ble_on_sc_method_t)(rsi_bt_event_sc_method_t *scmethod);
  * @typedef    void (*rsi_ble_on_encrypt_started_t)(uint16_t resp_status, rsi_bt_event_encryption_enabled_t *enc_enabled);
  * @brief      The callback function will be called if encrypted event is received from module
  * @param[out] resp_status contains the response status (Success or Error code)
- * @param[out] enc_enabled contains encryption information. Please refer rsi_bt_event_encryption_enabled_s for more info. 
+ * @param[out] enc_enabled contains encryption information. Please refer rsi_bt_event_encryption_enabled_s for more info. \n
+ * @note       When the device is disconnected from the remote device, the pairing information such as LTK, EDIV, and RAND will be erased. Therefore, it is essential for the application developer to store and manage this information in the Host NVM. \n
  * @return     void
  * @section description
  * This callback function will be called if the  encryption process is started with remote device \n

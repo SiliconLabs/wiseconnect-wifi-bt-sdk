@@ -3,12 +3,12 @@
  * @version  0.1  
  * @date     03 Sep 2015
  *
- *  Copyright(C) Redpine Signals 2015
- *  All rights reserved by Redpine Signals.
+ *  Copyright(C) Silicon Labs 2015
+ *  All rights reserved by Silicon Labs.
  *
  *  @section License
  *  This program should be used on your own responsibility.
- *  Redpine Signals assumes no responsibility for any losses
+ *  Silicon Labs assumes no responsibility for any losses
  *  incurred by customers or third parties arising from the use of this file.
  *
  *  @brief : This file contain definitions and declarations of BLE APIs.

@@ -76,8 +76,8 @@ extern int32_t rsi_bt_app_task();
 
 int main(void)
 {
-  int32_t status = RSI_SUCCESS;
-
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -116,6 +116,14 @@ int main(void)
   status = rsi_wireless_init(RSI_WLAN_MODE, RSI_COEX_MODE);
   if (status != RSI_SUCCESS) {
     return status;
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   //! Send Feature frame

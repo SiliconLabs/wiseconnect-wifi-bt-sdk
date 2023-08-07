@@ -300,6 +300,7 @@ int8_t rsi_fill_user_config()
 void rsi_common_app_task(void)
 {
   int8_t status            = RSI_SUCCESS;
+  uint8_t fmversion[20]    = { 0 };
   rsi_ble_running          = false;
   rsi_bt_running           = false;
   rsi_wlan_running         = false;
@@ -338,6 +339,14 @@ void rsi_common_app_task(void)
     if (status != RSI_SUCCESS) {
       LOG_PRINT("\r\n wireless init failed \n");
       return;
+    }
+
+    //! Firmware version Prints
+    status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    } else {
+      LOG_PRINT("\nfirmware_version = %s", fmversion);
     }
 
 #ifdef FW_LOGGING_ENABLE

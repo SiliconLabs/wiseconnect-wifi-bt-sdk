@@ -780,6 +780,7 @@ int32_t rsi_ble_throughput_test_app(void)
 {
   int32_t status = 0;
   int32_t event_id;
+  uint8_t fmversion[20]   = { 0 };
   uint8_t adv[31]         = { 2, 1, 6 };
   uint8_t read_data1[232] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
@@ -837,6 +838,14 @@ int32_t rsi_ble_throughput_test_app(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   //! registering the GAP callback functions

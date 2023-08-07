@@ -455,6 +455,7 @@ int32_t rsi_ble_smp_test_app(void)
   int32_t event_id;
   uint8_t adv[31]                = { 2, 1, 6 };
   uint8_t pairing_info_available = 0;
+  uint8_t fmversion[20]          = { 0 };
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
@@ -505,6 +506,15 @@ int32_t rsi_ble_smp_test_app(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
+  }
+
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components
   sl_set_fw_component_log_levels(&fw_component_log_level);

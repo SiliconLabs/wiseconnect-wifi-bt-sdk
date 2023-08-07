@@ -60,7 +60,7 @@
 #define UAPSD_POWER_SAVE 0
 
 #define SD_DEMO                1
-#define HTTP_USER_AGENT_HEADER "User-Agent: redpine/1.0.4a"
+#define HTTP_USER_AGENT_HEADER "User-Agent: silabs/1.0.4a"
 #define HTTP_ACCEPT_HEADER     "Accept: */*"
 
 /***********************************************************************************************************************************************/
@@ -140,7 +140,11 @@
 /*=======================================================================*/
 //! Socket configuration
 /*=======================================================================*/
+#if RSI_TCP_IP_BYPASS
+#define HIGH_PERFORMANCE_ENABLE RSI_DISABLE //@ RSI_ENABLE or RSI_DISABLE High performance socket
+#else
 #define HIGH_PERFORMANCE_ENABLE RSI_ENABLE //@ RSI_ENABLE or RSI_DISABLE High performance socket
+#endif
 //#define TOTAL_SOCKETS                   1          //@ Total number of sockets. TCP TX + TCP RX + UDP TX + UDP RX
 //#define TOTAL_TCP_SOCKETS               1          //@ Total TCP sockets. TCP TX + TCP RX
 #define TOTAL_UDP_SOCKETS   0 //@ Total UDP sockets. UDP TX + UDP RX

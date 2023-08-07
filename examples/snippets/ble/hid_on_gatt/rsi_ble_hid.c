@@ -1285,7 +1285,8 @@ int8_t hid_kbd_in_rpt_send(uint8_t len, uint8_t *p_data)
  */
 int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
 {
-  int32_t status = 0;
+  int32_t status        = 0;
+  uint8_t fmversion[20] = { 0 };
   int32_t event_id, i;
   uint8_t local_dev_addr[BD_ADDR_ARRAY_LEN]           = { 0 };
   uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
@@ -1357,6 +1358,14 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components

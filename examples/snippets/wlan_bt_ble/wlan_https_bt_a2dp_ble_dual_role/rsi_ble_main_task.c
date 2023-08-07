@@ -103,12 +103,7 @@ extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_inquiry_
 #if WLAN_SYNC_REQ
 extern rsi_semaphore_handle_t sync_coex_ble_sem;
 #endif
-#if WLAN_TRANSIENT_CASE
-extern rsi_semaphore_handle_t wlan_sync_coex_ble_sem;
-extern uint32_t disable_factor_count;
-uint8_t ble_scanning_is_there, ble_adv_is_there;
-#endif
-extern bool rsi_bt_running, rsi_ant_running, rsi_wlan_running, powersave_cmd_given;
+extern bool rsi_bt_running, rsi_prop_protocol_running, rsi_wlan_running, powersave_cmd_given;
 extern rsi_mutex_handle_t power_cmd_mutex;
 /*========================================================================*/
 //!  CALLBACK FUNCTIONS
@@ -709,6 +704,11 @@ void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_
 
   //! Need to ignore advertising reports until one slave connection is completed successfully
   if ((slave_connection_in_prgs) || (slave_con_req_pending)) {
+    return;
+  }
+
+  //! Need to ignore advertising reports when the max slave connections is reached
+  if (slave_task_instances >= RSI_BLE_MAX_NBR_SLAVES) {
     return;
   }
 
@@ -1897,6 +1897,12 @@ static int32_t rsi_ble_dual_role(void)
       RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_M1;
   }
 
+  status = rsi_ble_set_prop_protocol_ble_bandedge_tx_power(BLE_PROTOCOL, 8);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\nSET BANDEDGE TX POWER FAILED : 0x%x\n", status);
+  } else {
+    LOG_PRINT("\nSET BANDEDGE TX POWER SUCCESS : 0x%x\n", status);
+  }
   //! Module advertises if master connections are configured
   if (RSI_BLE_MAX_NBR_MASTERS > 0) {
     //! prepare advertise data //local/device name
@@ -1921,9 +1927,6 @@ static int32_t rsi_ble_dual_role(void)
         LOG_PRINT("\r\n advertising failed \r\n");
       } else {
         LOG_PRINT("\r\n advertising started \r\n");
-#if WLAN_TRANSIENT_CASE
-        ble_adv_is_there = 1;
-#endif
         SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
       }
     }
@@ -1937,9 +1940,6 @@ static int32_t rsi_ble_dual_role(void)
       return status;
     }
     LOG_PRINT("\r\n scanning started \r\n");
-#if WLAN_TRANSIENT_CASE
-    ble_scanning_is_there = 1;
-#endif
     SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
   }
 
@@ -2002,42 +2002,15 @@ void rsi_ble_main_app_task()
 
   //! start bt inquiry after ble scan
   if (rsi_bt_running) {
-    //! wait for ant start if ANT is running
-    if (rsi_ant_running) {
+    //! wait for prop_protocol start if PROP_PROTOCOL is running
+    if (rsi_prop_protocol_running) {
       rsi_semaphore_wait(&ble_scan_sem, 0);
     }
-    //! ANT and BLE activities started , so start bt inquiry
+    //! PROP_PROTOCOL and BLE activities started , so start bt inquiry
     rsi_semaphore_post(&bt_inquiry_sem);
   }
 
   while (1) {
-#if WLAN_TRANSIENT_CASE
-    if (disable_factor_count == DISABLE_ITER_COUNT) {
-      LOG_PRINT("Reach the disable factor in ble main task\r\n");
-      if (ble_scanning_is_there || CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
-        status = rsi_ble_stop_scanning();
-        if (status == 0) {
-          LOG_PRINT("disabled ble scan activity \n");
-          CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
-        }
-        ble_scanning_is_there = 0;
-      }
-      if (ble_adv_is_there || CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
-        status = rsi_ble_stop_advertising();
-        if (status == 0) {
-          LOG_PRINT("disabled ble Adv activity \n");
-          CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
-        }
-        ble_adv_is_there = 0;
-      }
-      //! Releasing from here only when no connection.
-      if (!(slave_task_instances || master_task_instances)) {
-        if (rsi_wlan_running) {
-          rsi_semaphore_post(&wlan_sync_coex_ble_sem);
-        }
-      }
-    }
-#endif
 
     //! checking for events list
     event_id = rsi_ble_app_get_event();
@@ -2227,9 +2200,6 @@ void rsi_ble_main_app_task()
             LOG_PRINT("\r\n scanning stop cmd status = %x\r\n", status);
             //return status;	//! TODO
           } else {
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 0;
-#endif
             CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
         }
@@ -2242,9 +2212,6 @@ void rsi_ble_main_app_task()
             LOG_PRINT("\r\n scanning start cmd status = %x\r\n", status);
             //return status;	//! TODO
           } else {
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
         }

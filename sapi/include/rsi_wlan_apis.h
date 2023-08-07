@@ -964,7 +964,8 @@ typedef enum rsi_wlan_query_cmd_e {
   RSI_SOCKETS_INFO      = 7,
   RSI_CFG_GET           = 8,
   RSI_GET_WLAN_STATS    = 9,
-  RSI_WLAN_EXT_STATS    = 10
+  RSI_WLAN_EXT_STATS    = 10,
+  RSI_WMM_PARAMS        = 11,
 } rsi_wlan_query_cmd_t;
 
 /******************************************************

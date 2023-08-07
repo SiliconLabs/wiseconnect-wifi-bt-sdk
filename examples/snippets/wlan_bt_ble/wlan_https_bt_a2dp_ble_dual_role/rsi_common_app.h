@@ -34,10 +34,10 @@
 /***********************************************************************************************************************************************/
 //! Macros to enable/disable individual protocol activities Minors
 /***********************************************************************************************************************************************/
-#define RSI_ENABLE_BLE_TEST  1
-#define RSI_ENABLE_BT_TEST   1
-#define RSI_ENABLE_ANT_TEST  0
-#define RSI_ENABLE_WIFI_TEST 1
+#define RSI_ENABLE_BLE_TEST           1
+#define RSI_ENABLE_BT_TEST            1
+#define RSI_ENABLE_PROP_PROTOCOL_TEST 0
+#define RSI_ENABLE_WIFI_TEST          1
 #endif
 //#endif
 
@@ -70,7 +70,6 @@ int32_t rsi_bt_app_task();
 void rsi_ble_main_app_task(void);
 void rsi_ble_task_on_conn(void *parameters);
 void rsi_ble_slave_app_task(void);
-void rsi_ant_app_task(void);
 void rsi_ui_app_task(void);
 void rsi_common_app_task(void);
 void rsi_window_reset_notify_app_task(void);

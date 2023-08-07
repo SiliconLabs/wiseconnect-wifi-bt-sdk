@@ -76,8 +76,8 @@ void switch_proto_async(uint16_t mode, uint8_t *bt_disabled_status)
 
 int32_t rsi_bt_ble_app(void)
 {
-  int32_t status = RSI_SUCCESS;
-
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
   //! Driver initialization
   status = rsi_driver_init(global_buf, BT_GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > BT_GLOBAL_BUFF_LEN)) {
@@ -98,6 +98,14 @@ int32_t rsi_bt_ble_app(void)
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_BT_BLE_MODE);
   if (status != RSI_SUCCESS) {
     return status;
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components

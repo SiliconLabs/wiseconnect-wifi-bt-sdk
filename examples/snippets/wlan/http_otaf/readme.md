@@ -211,8 +211,8 @@ Configure FLAGS to choose the version and security type to be enabled
    #define HTTP_V_1_1       BIT(6) 
    ```
    
-In code, **AWS_ENABLE** macro is enabled by default in application.<br />
-Depending on the requirement user can enable downloading firmware from Azure Blob storage (Enable Macro **AZURE_ENABLE**).<br />
+In code, **AWS_ENABLE** macro is enabled by default in application.
+Depending on the requirement user can enable downloading firmware from Azure Blob storage (Enable Macro **AZURE_ENABLE**).
 Else if both AWS and Azure macro is disabled, HTTP/s Apache server can be used to download the firmware.
 
 - HTTP_PORT refers to HTTP Server port number
@@ -356,12 +356,14 @@ For firmware download using HTTPs Apache server, replace the below certificate i
 **Note:** For AWS S3 use the certificate "aws_starfield_ca.pem.h" and for Azure Blob storage use the certificate "http_baltimore_ca.pem.h" included in release pacakge for SSL connection. The corresponding rsi_wlan_set_certificate function calls would be as follows:
 
 For AWS
-```
+
+```c
 status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, aws_starfield_ca, (sizeof(aws_starfield_ca) - 1));
 ```
 
 For Azure
-```
+
+```c
 status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, http_baltimore_ca, (sizeof(http_baltimore_ca) - 1));
 ```
 

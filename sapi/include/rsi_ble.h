@@ -1099,7 +1099,7 @@ typedef struct ae_adv_params_s {
  *   |       Bit Number    |                    Parameter Description                                          |
  *   ----------------------|-----------------------------------------------------------------------------------
  *   |      0              |                   Connectable Advertising                                         |
- *   |      1              |                   Scannable Advertising                                           |  
+ *   |      1              |                   Scannable Advertising                                           |
  *   |      2              |                   Direct Advertising                                              |
  *   |      3              |  High Duty cycle Directed Connectable advertising (≤ 3.75 ms Advertising interval)|
  *   |      4              |                 Use legacy advertising PDUs                                       |
@@ -1141,7 +1141,7 @@ typedef struct ae_adv_params_s {
   /** uint8_t, Advertising_Filter_Policy
               0x00 - Process scan and connection requests from all devices (i.e., the Filter Accept List is not in use)
               0x01 - Process connection requests from all devices and scan requests only from devices that are in the Filter Accept List.
-              0x02 - Process scan requests from all devices and connection requests only from devices that are in the Filter Accept List. 
+              0x02 - Process scan requests from all devices and connection requests only from devices that are in the Filter Accept List.
               0x03 - Process scan and connection requests only from devices in the Filter Accept List.
   */
   uint8_t adv_filter_policy;
@@ -1173,14 +1173,15 @@ typedef struct ae_adv_params_s {
 
 } __attribute__((__packed__)) rsi_ble_ae_adv_params_t;
 
-// AE adv,scan_rsp and periodic data
+//! AE adv, scan_rsp and periodic data
 typedef struct rsi_ble_ae_data_s {
 
 #define AE_ADV_DATA      0x01
 #define AE_SCAN_RSP_DATA 0x02
-  /**  AE_ADV_DATA_TYPE           1   
-      AE_PERIODIC_ADV_DATA_TYPE  2 
-      AE_SCAN_RSP_DATA_TYPE      3   */
+  /** AE_ADV_DATA_TYPE 1 
+      AE_PERIODIC_ADV_DATA_TYPE 2 
+      AE_SCAN_RSP_DATA_TYPE 3 
+  */
   uint8_t type;
   /** uint8_t Advertising Handle, used to identify an Advertising set, Ranges from 0x00 to 0xEF */
   uint8_t adv_handle;
@@ -1201,7 +1202,7 @@ typedef struct rsi_ble_ae_data_s {
   /** uint8_t Data Length, Specifies Advertising_Data_Length , This parameter ranges from 0 to 251 */
   uint8_t data_len;
   /** uint8_t Data ,Specifies Advertising_Data. */
-  uint8_t data[0xC8]; //FIXME
+  uint8_t data[0xC8];
 } __attribute__((__packed__)) rsi_ble_ae_data_t;
 
 //! AE Advertising enable

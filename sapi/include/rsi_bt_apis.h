@@ -3283,8 +3283,8 @@ typedef struct attr_list_s {
   /** Length of the value of the attribute*/
   uint16_t attr_len;
 
-  /** Attribute Name in specified character set*/
-  uint8_t attr_val[499];
+  /** Limiting to 50 bytes*/
+  uint8_t attr_val[50]; //499
 } attr_list_t;
 #define MAX_ATT_LIST 7
 typedef struct elem_attr_list_s {

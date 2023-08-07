@@ -243,16 +243,6 @@ int32_t rsi_mqtt_client_app()
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
-#ifdef RSI_WITH_OS
-  //! Task created for Driver task
-  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
-                  (uint8_t *)"driver_task",
-                  RSI_DRIVER_TASK_STACK_SIZE,
-                  NULL,
-                  RSI_DRIVER_TASK_PRIORITY,
-                  &driver_task_handle);
-#endif
-
   //! Silabs module initialization
   status = rsi_device_init(LOAD_NWP_FW);
   if (status != RSI_SUCCESS) {
@@ -265,6 +255,16 @@ int32_t rsi_mqtt_client_app()
 #ifdef RSI_M4_INTERFACE
   /* MCU Hardware Configuration for Low-Power Applications */
   RSI_WISEMCU_HardwareSetup();
+#endif
+
+#ifdef RSI_WITH_OS
+  //! Task created for Driver task
+  rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
+                  (uint8_t *)"driver_task",
+                  RSI_DRIVER_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_DRIVER_TASK_PRIORITY,
+                  &driver_task_handle);
 #endif
 
   //! WC initialization

@@ -234,9 +234,10 @@ int32_t rsi_ble_ibeacon(void)
   int32_t temp_event_map = 0;
   uint8_t adv[31]        = { 0x02, 0x01, 0x02, 0x1A, 0xFF, 0x4C, 0x00, 0x02, 0x15 }; //prefix(9bytes)
   uint8_t uuid[16] = { 0xFB, 0x0B, 0x57, 0xA2, 0x82, 0x28, 0x44, 0xCD, 0x91, 0x3A, 0x94, 0xA1, 0x22, 0xBA, 0x12, 0x06 };
-  uint8_t major_num[2] = { 0x11, 0x22 };
-  uint8_t minor_num[2] = { 0x33, 0x44 };
-  uint8_t tx_power     = 0x33;
+  uint8_t major_num[2]  = { 0x11, 0x22 };
+  uint8_t minor_num[2]  = { 0x33, 0x44 };
+  uint8_t tx_power      = 0x33;
+  uint8_t fmversion[20] = { 0 };
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
@@ -283,6 +284,14 @@ int32_t rsi_ble_ibeacon(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   //! BLE register GAP callbacks

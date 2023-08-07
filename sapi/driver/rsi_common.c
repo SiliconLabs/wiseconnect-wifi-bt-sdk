@@ -183,9 +183,13 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_uint32_to_4bytes(rsi_opermode->bt_feature_bit_map, RSI_BT_FEATURE_BITMAP);
 
 #if (defined RSI_BLE_ENABLE || defined RSI_BT_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE)
-      if ((((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) == RSI_OPERMODE_WLAN_BLE)
-          || (((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) == RSI_OPERMODE_WLAN_BT_CLASSIC)
-          || (((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) == RSI_OPERMODE_WLAN_BT_DUAL_MODE)) {
+      if ((((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) & BLE_PROTO_ENABLE)
+          || (((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) & BT_CLASSIC_PROTO_ENABLE)
+          || (((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) & BT_DUAL_MODE_PROTO_ENABLE)
+#ifdef RSI_PROP_PROTOCOL_ENABLE
+          || (((rsi_bytes4R_to_uint32(rsi_opermode->opermode) >> 16) & 0xFFFF) & PROP_PROTO_ENABLE)
+#endif
+      ) {
         rsi_opermode->custom_feature_bit_map[3] |= 0x80;
         rsi_opermode->ext_custom_feature_bit_map[3] |= 0x80;
 #if (defined A2DP_POWER_SAVE_ENABLE)

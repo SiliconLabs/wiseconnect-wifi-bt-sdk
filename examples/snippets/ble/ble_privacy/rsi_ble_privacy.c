@@ -840,6 +840,7 @@ int32_t rsi_ble_privacy_app(void)
   int32_t status = 0, ix;
   int32_t event_id;
   uint8_t first_connect               = 0;
+  uint8_t fmversion[20]               = { 0 };
   rsi_ble_dev_ltk_list_t *ble_dev_ltk = NULL;
 #if (RSI_DEVICE_ROLE == RSI_SLAVE)
   uint8_t adv[31] = { 2, 1, 6 };
@@ -894,6 +895,14 @@ int32_t rsi_ble_privacy_app(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components

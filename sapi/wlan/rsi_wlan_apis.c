@@ -2475,6 +2475,7 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
  *                     4   |  BURN_GAIN_OFFSET_LOW |  1 - Update gain offset for low sub-band (2 GHz) \n	0 - Skip low sub-band gain-offset update
  *                     5   |  BURN_GAIN_OFFSET_MID |  1 - Update gain offset for mid sub-band (2 GHz) \n	0 - Skip mid sub-band gain-offset update
  *                     6   |  BURN_GAIN_OFFSET_HIGH|  1 - Update gain offset for high sub-band (2 GHz) \n	0 - Skip high sub-band gain-offset update
+ *                     7   |  SELECT_GAIN_OFFSETS_1P8V | 1 - Update gain offsets for 1.8 V \n    0 - Update gain offsets for 3.3 V
  *                     31-4 |                      |	Reserved
  * @param[in]         gain_offset_low - gain_offset as observed in dBm in channel-1
  * @param[in]         gain_offset_mid - gain_offset as observed in dBm in channel-6
@@ -3544,6 +3545,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
   int32_t status = RSI_SUCCESS;
   rsi_pkt_t *pkt;
   int32_t rsi_response_wait_time = 0;
+  rsi_timer_instance_t timer_instance;
 
   SL_PRINTF(SL_WLAN_GET_ENTRY, WLAN, LOG_INFO);
 
@@ -3553,6 +3555,7 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
   // Get common control block structure pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
+  rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);
   // If state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     if (cmd_type == RSI_FW_VERSION) {
@@ -3560,6 +3563,10 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
 #ifndef RSI_WITH_OS
         rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 #endif
+        if (rsi_timer_expired(&timer_instance)) {
+          SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
+          return RSI_ERROR_CARD_READY_TIMEOUT;
+        }
       }
     } else {
       // Command given in wrong state
@@ -3863,6 +3870,28 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
       } break;
       case RSI_FW_VERSION:
         break;
+      case RSI_WMM_PARAMS: {
+        // Allocate command buffer from WLAN pool
+        pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+        // If allocation of packet fails
+        if (pkt == NULL) {
+          // Change the WLAN CMD state to allow
+          rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+          // Return packet allocation failure error
+          SL_PRINTF(SL_WLAN_GET_PKT_ALLOCATION_FAILURE_1, WLAN, LOG_ERROR, "status: %4x", status);
+          return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+        }
+        rsi_response_wait_time = RSI_WMM_PARAMS_RESPONSE_WAIT_TIME;
+#ifndef RSI_WLAN_SEM_BITMAP
+        rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+        // Send WMM PARAMS query request
+        status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_WMM_PARAMS, pkt);
+        // Wait on WLAN semaphore
+        rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, rsi_response_wait_time);
+
+      } break;
       default:
         // Return status if command given in driver is in an invalid state
         status = RSI_ERROR_COMMAND_NOT_SUPPORTED;
@@ -7433,8 +7462,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
 */
 /*==============================================*/
 /**
- * @brief      Assign the user configurable channel gain values in different regions to the module from user. This API is used for overwriting default gain tables that are present in firmware. \n
- *             You can load all the three gain tables (i.e., 2.4GHz-20Mhz, 5GHz-20Mhz, 5GHz-40Mhz) one after other by changing band and bandwidth values. This is a blocking API.
+ * @brief      Assign the user-configurable channel gain values in different regions to the module from the user. This API is used for overwriting default gain tables that are present in the firmware. \n
+ *             Users can load 2 gain tables (i.e. 2.4GHz-20Mhz, 5GHz-20Mhz) one after the other by changing band and bandwidth values. This is a blocking API.
  * @param[in]  band        -  0 : 2.4GHz \n
  *					                  1 : 5GHz \n
  *					                  2 : Dual band (2.4 Ghz and 5 Ghz)
@@ -7445,8 +7474,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                           Max payload length (table size) in 5GHz is 64 bytes
  *             ### Gain Table Payload Format ###
  *
- *                            1. Gain table Format for 2.4G Band: (Each entry of the table is 1 byte)
- *                               In 2Ghz, Max Gain/Power obtained from certification should be doubled and loaded.
+ *                            1. Gain table Format for 2.4GHz Band: (Each entry of the table is 1 byte)
+ *                               In 2.4GHz, Max Gain/Power obtained from certification should be doubled and loaded.
  *                            <TABLE NAME[]>= {
  *                            <NO.of Regions>,
  *                            <REGION NAME 1>, <CHANNEL_CODE_2G>,
@@ -7470,8 +7499,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                            <CHANNEL NUMBER m>, <2 * MAX POWER FOR b RATE>, <2 * MAX POWER FOR g RATE>, <2 * MAX POWER FOR n RATE>, 
  *                            }; 
  *    
- *                            Gain table Format for 5G Band: (Each entry of the table is 1 byte)
- *                              In 5Ghz, Max Gain/Power obtained from certification should be loaded.
+ *                            Gain table Format for 5GHz Band (Each entry of the table is 1 byte):
+ *                              In 5GHz, Max Gain/Power obtained from certification should be loaded.
  *                             <TABLE NAME[]>= { 
  *                                               <NO.of Regions>, 
  *                                               <REGION NAME 1>, <CHANNEL_CODE_5G>, 
@@ -7491,12 +7520,12 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                               <REGION NAME y>, <CHANNEL_CODE_5G>, 
  *                                               }; 
  *                            2. Supported Region names:
- *                                                    FCC, RED,TELEC  
+ *                                                   FCC, RED,TELEC  
  *                                                   The following are the regions and the values to be passed instead of macros in the example.
  *                                                   Region      |          Macro Value
  *                                                   ------------|--------------------
  *                                                   FCC         |            0
- *                                                   RED        |            1
+ *                                                   RED         |            1
  *                                                   TELEC       |            2
  *                            3. <CHANNEL_CODE_2G> is a 8 bit value which is encoded as:
  *                               If TX powers of all the channels are same, then use CHANNEL_CODE_2G as 17. In this case, mention channel number as 255.
@@ -7516,8 +7545,8 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *
  * ### Example payload formats ###
  *
- *                            Examples: 
- *                          For 2.4Ghz Band in 20Mhz bandwidth
+ *                          Examples: 
+ *                          For 2.4GHz Band in 20MHz bandwidth
  *                            {3, //NUM_OF_REGIONS 
  *                                FCC, 13, //NUM_OF_CHANNELS 
  *                            //   rate,  11b, 11g, 11n   
@@ -7538,7 +7567,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                     255, 20,  16, 16, 
  *                            }; //}}} 
  *
- *                          For 5Ghz band in 20Mhz bandwidth
+ *                          For 5GHz band in 20MHz bandwidth
  *                             {2, 
  *                             FCC, 6, 
  *                                 1,  9, 10, //band 1 
@@ -7553,28 +7582,10 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                               4, 6,  7, //band 4 
  *                             };
  *                              
- *                              
- *                          For 5Ghz band in 40Mhz bandwidth
- *                             {2, 
- *                             FCC, 8, 
- *                                 1,  9, 10, //band 1 
- *                                62,  8,  9, //band 2 
- *                                 2,  8,  9, //band 2 
- *                               102,  4,  4, //band 3 
- *                               134,  6,  8, //band 3 
- *                                 3,  6,  8, //band 3 
- *                               151,  3,  3, //band 4    
- *                                 4,  6,  7, //band 4    
- *                             TELEC, 4, 
- *                                1, 9, 10, //band 1 
- *                                2, 8, 10, //band 2  
- *                                3, 6,  8, //band 3  
- *                                4, 6,  7, //band 4 
- *                             }; 
  *                                
  * ###Customers using Certified MARS antenna should use the gain table structures below:###
  *
- *                          For 2.4Ghz Band in 20Mhz bandwidth
+ *                          For 2.4GHz Band in 20MHz bandwidth
  *                           {3,//NUM_OF_REGIONS
  *                               FCC, 0xD,//NUM_OF_CHANNELS
  *                           //   rate,  11b, 11g, 11n
@@ -7595,7 +7606,7 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                    255, 20,  16, 16,
  *                           };
  *                            
- *                          For 5Ghz band in 20Mhz bandwidth
+ *                          For 5GHz band in 20MHz bandwidth
  *                           {2,
  *                           FCC, 0x6,
  *                               1, 12, 12, //band 1
@@ -7612,28 +7623,11 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                           };
  *                            
  *                            
- *                          For 5Ghz band in 40Mhz bandwidth
- *                           {2,
- *                           FCC, 0x8,   
- *                               1,  9,  9, //band 1
- *                              62,  8,  8, //band 2   
- *                               2,  9,  9, //band 2   
- *                             102,  9,  9, //band 3   
- *                             134, 12, 12, //band 3   
- *                               3, 10, 10, //band 3   
- *                             151, 11, 11, //band 4       
- *                               4, 11, 11, //band 4       
- *                           TELEC, 0x4, //NA  
- *                              1, 9, 10, //band 1
- *                              2, 8, 10, //band 2   
- *                              3, 6,  8, //band 3   
- *                              4, 6,  7, //band 4
- *                           };
  * @return     0              -  Success \n
  * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0x0021,0x003E) \n
  * @note   	   **Precondition** - \ref rsi_radio_init() API needs to be called before this API
  * @note		   Length of the payload should match with payload_len parameter value.
- * @note		   40Mhz is not supported in both 2.4GHz and 5GHz
+ * @note		   40MHz is not supported in both 2.4GHz and 5GHz
  * @note       This API must be used by customers who has done FCC/RED/TELEC certification with their own antenna. Inappropriate use of this API may result in violation of FCC/RED/TELEC, or any certifications and Silicon labs is not liable for that.
  * @note       Internally firmware maintains two gain tables: Worldwide table & Region based table. Worldwide table is populated by firmware with maximum power values that chip can transmit that meets target specifications like EVM. Region based table has default gain value set.
  * @note       When certifying with your own antenna, region must be set to Worldwide and sweep the power from 0 to 21dBm. Arrive at maximum power level that is passing certification especially band-edge.

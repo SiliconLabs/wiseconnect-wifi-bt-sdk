@@ -34,6 +34,10 @@
 #ifdef RSI_WITH_OS
 //! OS include file to refer OS specific functionality
 #include "rsi_os.h"
+#ifdef FW_LOGGING_ENABLE
+//! Firmware logging includes
+#include "sl_fw_logging.h"
+#endif
 
 //! Wlan task priority
 #define RSI_WLAN_TASK_PRIORITY 1
@@ -57,14 +61,14 @@
 
 #define RSI_SBC_ENCODE_STACK_SIZE 1024
 
-#define RSI_ANT_TASK_STACK_SIZE 1024
+#define RSI_PROP_PROTOCOL_TASK_STACK_SIZE 1024
 
 #define RSI_BT_TASK_PRIORITY 1
 
 #define RSI_SOCKET1_TASK_PRIORITY 2
 #define RSI_SOCKET2_TASK_PRIORITY 2
 
-#define RSI_ANT_TASK_PRIORITY 1
+#define RSI_PROP_PROTOCOL_TASK_PRIORITY 1
 
 #define RSI_BLE_TASK_STACK_SIZE 1024
 
@@ -79,8 +83,8 @@ rsi_task_handle_t common_task_handle = NULL;
 #define RSI_COMMON_TASK_STACK_SIZE (512 * 2)
 
 rsi_semaphore_handle_t common_task_sem;
-rsi_semaphore_handle_t ant_coex_sem;
-rsi_semaphore_handle_t ant_sem;
+rsi_semaphore_handle_t prop_protocol_coex_sem;
+rsi_semaphore_handle_t prop_protocol_sem;
 rsi_semaphore_handle_t coex_sem;
 rsi_semaphore_handle_t coex_sem1;
 rsi_semaphore_handle_t socket_wait_sem1;
@@ -99,7 +103,7 @@ rsi_semaphore_handle_t bt_sem;
 rsi_task_handle_t ui_task_handle = NULL;
 #endif
 
-#define GLOBAL_BUFF_LEN 50000 //16900
+#define GLOBAL_BUFF_LEN 48000 //16900
 
 //! Flag for infinite loop
 #define RSI_FOREVER 1
@@ -136,7 +140,7 @@ int main(void)
 
   rsi_task_handle_t ble_task_handle = NULL;
 
-  rsi_task_handle_t ant_task_handle = NULL;
+  rsi_task_handle_t prop_protocol_task_handle = NULL;
 
   rsi_task_handle_t ui_task_handle = NULL;
 
@@ -149,7 +153,7 @@ int main(void)
   (void)socket2_task_handle;
   (void)bt_task_handle;
   (void)ble_task_handle;
-  (void)ant_task_handle;
+  (void)prop_protocol_task_handle;
   (void)driver_task_handle;
   (void)ui_task_handle;
   (void)cert_task_handle;

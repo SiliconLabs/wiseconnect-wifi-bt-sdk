@@ -40,6 +40,8 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
  * @param[in]   ip_address                       - Server IP address
  * @param[in]   port                             - Port number of HTTP server
@@ -62,6 +64,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
  * @return      Negative value    - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        HTTP server port is configurable on non-standard port. \n 
+ * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -121,6 +124,8 @@ int32_t rsi_http_client_get_async(uint16_t flags,
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
  * @param[in]  ip_address                        - Server IP address
  * @param[in]  port                              - Port number of HTTP server
@@ -144,6 +149,7 @@ int32_t rsi_http_client_get_async(uint16_t flags,
  * @return      0                -  Success  \n
  * @return      Negative value   - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -205,8 +211,8 @@ int32_t rsi_http_client_post_async(uint16_t flags,
  *  BIT(4) | RSI_SSL_V_1_1      |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA     |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1         |    Set this bit  to use HTTP version 1.1
- *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate cert at index 1 to be used for HTTPS 
- *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate cert at index 2 to be used for HTTPS, Leave both unset for cert index 0
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
  * 
  * @param[in]   ip_address       - Server IP address
@@ -232,6 +238,7 @@ int32_t rsi_http_client_post_async(uint16_t flags,
  * @return      0                -  Success  \n
  * @return      Negative value   - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -680,7 +687,9 @@ int32_t rsi_http_client_put_delete(void)
  *  BIT(5) | HTTP_POST_DATA                 |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1                     |    Set this bit  to use HTTP version 1.1
  *  BIT(7) | HTTP_USER_DEFINED_CONTENT_TYPE |    Set  this bit to enable user defined http_content type
- *
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
+ * 
  * @param[in]  ip_address       - Server IP address
  * @param[in]  port_number      - Port number of HTTP server
  * @param[in]  resource         - URL string for requested resource
@@ -707,6 +716,7 @@ int32_t rsi_http_client_put_delete(void)
  * @return     0              -  Success  \n
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc) \n
  * @note       **Precondition** - \ref rsi_config_ipaddress() API and \ref rsi_http_client_put_create API needs to be called before this API.
+ * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
 

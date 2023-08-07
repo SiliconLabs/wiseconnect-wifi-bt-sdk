@@ -521,6 +521,19 @@ void rsi_tx_event_handler(void)
 #endif
     }
   } else {
+    uint32_t xflags;
+    xflags             = rsi_critical_section_entry();
+    common_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->common_tx_q);
+    if (common_pkt_pending) {
+      rsi_critical_section_exit(xflags);
+      return;
+    }
+    // check for packet pending in wlan queue
+    wlan_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->wlan_tx_q);
+    if (wlan_pkt_pending) {
+      rsi_critical_section_exit(xflags);
+      return;
+    }
 
 #if (defined RSI_BT_ENABLE || defined RSI_BLE_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE)
     /* REVIEW : reviewed by siva. */
@@ -528,36 +541,8 @@ void rsi_tx_event_handler(void)
       bt_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->bt_single_tx_q);
 
       if (bt_pkt_pending) {
-#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) \
-     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
-        // Read interrupt status register to check buffer full condition
-        ret_status = rsi_device_interrupt_status(&int_status);
-
-        // if buffer full then return without clearing Tx event
-        if ((ret_status != 0x0)
-#ifdef RSI_BT_ENABLE
-            || ((int_status & (BIT(1)))
-                && (rsi_bt_get_ACL_type(frame_type)
-                    == RSI_BT_HCI_ACL_PKT)) /* Check for ACL Packet Buffer full Condition */
-#endif
-#if ((defined RSI_BT_ENABLE) || (defined RSI_BLE_ENABLE))
-            || ((int_status & (BIT(4))) /* Check for Command Pool Buffer full Condition */
-#ifdef RSI_BT_ENABLE
-                // ACL Packets should not blocked by Command Buffer Full Condition
-                && (!(frame_type == RSI_BT_REQ_A2DP_SBC_AAC_DATA) || (frame_type == RSI_BT_REQ_SPP_TRANSFER))
-#endif
-                  )
-#endif
-#ifdef RSI_BLE_ENABLE
-            || (int_status & (BIT(2)))
-#endif
-        ) {
-          //do nothing
-        } else
-#endif
-        {
-          return;
-        }
+        rsi_critical_section_exit(xflags);
+        return;
       }
     }
 #ifdef RSI_PROP_PROTOCOL_ENABLE
@@ -565,6 +550,7 @@ void rsi_tx_event_handler(void)
       prop_protocol_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->prop_protocol_tx_q);
 
       if (prop_protocol_pkt_pending) {
+        rsi_critical_section_exit(xflags);
         return;
       }
     }
@@ -600,6 +586,7 @@ void rsi_tx_event_handler(void)
     rsi_common_packet_transfer_done(pkt);
 #endif
     rsi_clear_event(RSI_TX_EVENT);
+    rsi_critical_section_exit(xflags);
   }
 }
 /** @} */

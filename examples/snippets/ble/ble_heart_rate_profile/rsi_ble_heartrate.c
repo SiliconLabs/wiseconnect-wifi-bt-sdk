@@ -718,7 +718,8 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
   int32_t event_id;
   int8_t data[8] = { 0 };
   uint8_t len;
-  uint8_t connected = 0;
+  uint8_t connected     = 0;
+  uint8_t fmversion[20] = { 0 };
 #if (GATT_ROLE == CLIENT)
   uuid_t service_uuid = { 0 };
   uint8_t ix;
@@ -778,6 +779,14 @@ int32_t rsi_ble_heart_rate_gatt_server(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components

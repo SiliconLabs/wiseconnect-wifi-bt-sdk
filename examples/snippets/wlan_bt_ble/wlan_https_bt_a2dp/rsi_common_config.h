@@ -35,46 +35,28 @@
 /*=======================================================================*/
 //   ! MACROS
 /*=======================================================================*/
-//! Transient WLAN CoEx cases.
-#define WLAN_TRANSIENT_CASE 0 //!Test Head
-#if WLAN_TRANSIENT_CASE
-#define WLAN_POWER_SAVE_USAGE    0
-#define WLAN_TRANSIENT_SCAN_CASE 1 //! Head 1st category
-#define WLAN_TRANSIENT_SYNC_CASE 0 //! Head 2nd category
-#if WLAN_TRANSIENT_SCAN_CASE
-#define DISABLE_ITER_COUNT 30
-#elif WLAN_TRANSIENT_SYNC_CASE
-#define DISABLE_ITER_COUNT 2
-#endif
-#endif
-
+#ifndef WLAN_SYNC_REQ
 #define WLAN_SYNC_REQ \
-  1 //! Enable this macro to start bt,ble and ant activites after wlan connection, else all activities starts concurrently
+  1 //! Enable this macro to start bt,ble and prop_protocol activites after wlan connection, else all activities starts concurrently
+#endif
 #define WLAN_STA_TX_CASE 0 //for WIFI_TCP_TX_POWERSAVE
 //! Application Task priorities
-#define RSI_BLE_MAIN_TASK_PRIORITY            2
-#define RSI_BT_APP_TASK_PRIORITY              2 //! BT & BLE with Same Priority Fixes some basic issues.
-#define RSI_HTTP_SOCKET_TASK_PRIORITY         1 //2
-#define RSI_CERT_BYPASS_TASK_PRIORITY         1
-#define RSI_WINDOW_RESET_NOTIFY_TASK_PRIORITY 1
-#define RSI_BLE_APP_TASK_PRIORITY             1
-#define RSI_ANT_APP_TASK_PRIORITY             0
-#define RSI_WLAN_APP_TASK_PRIORITY            0
+#define RSI_BLE_MAIN_TASK_PRIORITY          2
+#define RSI_BT_APP_TASK_PRIORITY            2 //! BT & BLE with Same Priority Fixes some basic issues.
+#define RSI_BLE_APP_TASK_PRIORITY           1
+#define RSI_PROP_PROTOCOL_APP_TASK_PRIORITY 0
+#define RSI_WLAN_APP_TASK_PRIORITY          0
 
 //! Application Task sizes
-#define RSI_BLE_APP_MAIN_TASK_SIZE              (512 * 2)
-#define RSI_BLE_APP_MASTER1_TASK_SIZE           (512 * 2)
-#define RSI_BLE_APP_TASK_SIZE                   (512 * 4)
-#define RSI_BT_APP_TASK_SIZE                    (512 * 2)
-#define RSI_SBC_APP_ENCODE_SIZE                 (512 * 2)
-#define RSI_ANT_APP_TASK_SIZE                   (512 * 2)
-#define RSI_WLAN_APP_TASK_SIZE                  (512 * 2)
-#define RSI_HTTP_SOCKET_TASK_STACK_SIZE         (512 * 2)
-#define RSI_CERT_BYPASS_TASK_STACK_SIZE         (512 * 2)
-#define RSI_WINDOW_RESET_NOTIFY_TASK_STACK_SIZE (512 * 2)
-#define RSI_WLAN_TASK_STACK_SIZE                (512 * 2)
+#define RSI_BLE_APP_MAIN_TASK_SIZE      (512 * 2)
+#define RSI_BLE_APP_MASTER1_TASK_SIZE   (512 * 2)
+#define RSI_BLE_APP_TASK_SIZE           (512 * 4)
+#define RSI_BT_APP_TASK_SIZE            (512 * 2)
+#define RSI_SBC_APP_ENCODE_SIZE         (512 * 2)
+#define RSI_PROP_PROTOCOL_APP_TASK_SIZE (512 * 2)
+#define RSI_WLAN_APP_TASK_SIZE          (512 * 2)
+#define RSI_WLAN_TASK_STACK_SIZE        (512 * 2)
 
-#define RSI_REM_DEV_ADDR_LEN 18
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
 /*=======================================================================*/
@@ -83,7 +65,7 @@ typedef struct rsi_parsed_conf_s {
   struct rsi_protocol_sel_t {
     bool is_ble_enabled;
     bool is_bt_enabled;
-    bool is_ant_enabled;
+    bool is_prop_protocol_enabled;
     bool is_wifi_enabled;
   } rsi_protocol_sel;
 

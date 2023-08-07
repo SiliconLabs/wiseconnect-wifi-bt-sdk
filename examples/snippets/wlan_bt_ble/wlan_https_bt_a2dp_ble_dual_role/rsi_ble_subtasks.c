@@ -71,13 +71,6 @@ extern rsi_semaphore_handle_t ble_conn_sem[TOTAL_CONNECTIONS];
 extern rsi_semaphore_handle_t ble_slave_conn_sem;
 extern uint8_t rsi_ble_states_bitmap;
 
-#if WLAN_TRANSIENT_CASE
-extern rsi_semaphore_handle_t ble_main_task_sem;
-extern bool rsi_wlan_running;
-extern rsi_semaphore_handle_t wlan_sync_coex_ble_sem;
-extern uint32_t disable_factor_count;
-extern uint8_t ble_scanning_is_there, ble_adv_is_there;
-#endif
 /*========================================================================*/
 //!  CALLBACK FUNCTIONS
 /*=======================================================================*/
@@ -256,13 +249,10 @@ void rsi_ble_task_on_conn(void *parameters)
   bool rsi_rx_from_rem_dev             = false;
   bool rsi_tx_to_rem_dev               = false;
   //! flag indicating whether notifications from remote device received or not
-  bool notification_received = false;
-  bool profile_mem_init      = false;
-  bool service_char_mem_init = false;
-#if WLAN_TRANSIENT_CASE
-  int8_t l_conn_id_local                             = -1;
-  uint8_t rsi_connected_dev_addr_l[RSI_DEV_ADDR_LEN] = { 0 };
-#endif
+  bool notification_received           = false;
+  bool profile_mem_init                = false;
+  bool service_char_mem_init           = false;
+  rsi_task_handle_t task_to_be_deleted = NULL;
   rsi_ble_profile_list_by_conn_t rsi_ble_profile_list_by_conn;
   rsi_ble_profile_list_by_conn.profile_desc      = NULL;
   rsi_ble_profile_list_by_conn.profile_info_uuid = NULL;
@@ -301,44 +291,6 @@ void rsi_ble_task_on_conn(void *parameters)
   }
 
   while (1) {
-#if WLAN_TRANSIENT_CASE
-    if (disable_factor_count == DISABLE_ITER_COUNT) {
-      LOG_PRINT("Reach the disable factor in ble sub task\r\n");
-      if (ble_scanning_is_there || CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
-        status = rsi_ble_stop_scanning();
-        if (status == 0) {
-          LOG_PRINT("disabled ble scan activity \n");
-          ble_scanning_is_there = 0;
-          CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
-        }
-      }
-      if (ble_adv_is_there || CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
-        status = rsi_ble_stop_advertising();
-        if (status == 0) {
-          LOG_PRINT("disabled ble adv activity \n");
-          ble_adv_is_there = 0;
-          CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
-        }
-      }
-      if (l_conn_id != 0xff) {
-        l_conn_id_local = l_conn_id;
-
-        //while(l_conn_id_local >=0 )
-        {
-          if (rsi_ble_conn_info[l_conn_id_local].conn_status == 1) {
-            rsi_ascii_dev_address_to_6bytes_rev(rsi_connected_dev_addr_l,
-                                                (int8_t *)rsi_ble_conn_info[l_conn_id_local].remote_dev_addr);
-            status = rsi_ble_disconnect((int8_t *)rsi_connected_dev_addr_l);
-            if (status == 0) {
-              LOG_PRINT("disabled ble connection (%d) activity \n", l_conn_id_local);
-              //rsi_semaphore_post(&ble_conn_sem[l_conn_id]);
-            }
-          }
-          //l_conn_id_local--;
-        }
-      }
-    }
-#endif
     //! checking for events list
     event_id = rsi_ble_get_event_based_on_conn(l_conn_id);
     if (event_id == -1) {
@@ -372,9 +324,6 @@ void rsi_ble_task_on_conn(void *parameters)
           } else {
             CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
-#if WLAN_TRANSIENT_CASE
-          ble_scanning_is_there = 0;
-#endif
         }
         slave_con_req_pending    = 0;
         slave_connection_in_prgs = 1;
@@ -458,9 +407,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n advertising failed with status = 0x%x -conn%d \r\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_adv_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
           }
 
@@ -472,9 +418,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n advertising with values failed with status = 0x%x -conn%d \r\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_adv_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
           }
           LOG_PRINT("\r\n advertising device -conn%d\n", l_conn_id);
@@ -490,9 +433,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n scan channel failed to open 0x%x -conn%d\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
 
@@ -505,9 +445,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n scan channel failed to open 0x%x -conn%d\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
         }
@@ -568,9 +505,6 @@ void rsi_ble_task_on_conn(void *parameters)
             } else {
               CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
             }
-#if WLAN_TRANSIENT_CASE
-            ble_adv_is_there = 0;
-#endif
           }
 
           if ((num_of_conn_masters < RSI_BLE_MAX_NBR_MASTERS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
@@ -580,9 +514,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n advertising failed with status = 0x%x -conn%d \n", status, l_conn_id);
               //continue;
             } else {
-#if WLAN_TRANSIENT_CASE
-              ble_adv_is_there = 1;
-#endif
               SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
             }
           }
@@ -597,9 +528,6 @@ void rsi_ble_task_on_conn(void *parameters)
               SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
             }
           }
-#if WLAN_TRANSIENT_CASE
-          ble_adv_is_there = 1;
-#endif
           LOG_PRINT("\r\n advertising device -conn%d\n", l_conn_id);
         } else {
           //! assuming that connection is from remote slave device
@@ -613,9 +541,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n scan channel failed to open 0x%x -conn%d\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
 
@@ -628,9 +553,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n scan channel failed to open 0x%x -conn%d\n", status, l_conn_id);
               continue;
             }
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
         }
@@ -1375,6 +1297,9 @@ void rsi_ble_task_on_conn(void *parameters)
         rsi_free(rsi_ble_profile_list_by_conn.profile_info_uuid);
         rsi_free(rsi_ble_profile_list_by_conn.profile_char_info);
         memset(rsi_connected_dev_addr, 0, RSI_DEV_ADDR_LEN);
+        /*copying the subtask which needs to be deleted, to prevent any wrong task being deleted due to creation of new subtask
+	  after scanning/advertising is enabled for new connection */
+        task_to_be_deleted = ble_app_task_handle[l_conn_id];
 
         //! check whether disconnection is from master
         if (l_conn_id >= RSI_BLE_MAX_NBR_SLAVES) {
@@ -1389,14 +1314,9 @@ void rsi_ble_task_on_conn(void *parameters)
               status = rsi_ble_stop_advertising();
               if (status != RSI_SUCCESS) {
                 LOG_PRINT("\r\n advertising failed to stop = 0x%x -conn%d \n", status, l_conn_id);
-#if !WLAN_TRANSIENT_CASE
                 continue;
-#endif
               } else {
                 CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
-#if WLAN_TRANSIENT_CASE
-                ble_adv_is_there = 0;
-#endif
               }
             }
             LOG_PRINT("\r\n In dis-conn evt, Start Adv -conn%d \r\n", l_conn_id);
@@ -1405,17 +1325,12 @@ void rsi_ble_task_on_conn(void *parameters)
               status = rsi_ble_start_advertising();
               if (status != RSI_SUCCESS) {
                 LOG_PRINT("\r\n advertising failed to start = 0x%x -conn%d \n", status, l_conn_id);
-#if !WLAN_TRANSIENT_CASE
                 continue;
-#endif
               } else {
                 SET_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
               }
             }
             LOG_PRINT("\r\n advertising started -conn%d \n", l_conn_id);
-#if WLAN_TRANSIENT_CASE
-            ble_adv_is_there = 1;
-#endif
           }
         } else {
           LOG_PRINT("\r\n slave is disconnected, reason : 0x%x -conn%d \r\n",
@@ -1431,9 +1346,6 @@ void rsi_ble_task_on_conn(void *parameters)
             } else {
               CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
             }
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 0;
-#endif
           }
           LOG_PRINT("\r\n Restarting scanning \n");
           if (!CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
@@ -1442,9 +1354,6 @@ void rsi_ble_task_on_conn(void *parameters)
               LOG_PRINT("\r\n scanning start failed, cmd status = %x -conn%d\n", status, l_conn_id);
             } else {
               SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
-#if WLAN_TRANSIENT_CASE
-              ble_scanning_is_there = 1;
-#endif
             }
           }
         }
@@ -1462,12 +1371,8 @@ void rsi_ble_task_on_conn(void *parameters)
         }
 
         LOG_PRINT("\r\n delete task%d resources \r\n", l_conn_id);
-#if WLAN_TRANSIENT_CASE
-        //LOG_PRINT("unlocking ble main task from sub-task(%d)\r\n",l_conn_id);
-        rsi_semaphore_post(&ble_main_task_sem);
-#endif
         //! delete the task
-        rsi_task_destroy(ble_app_task_handle[l_conn_id]);
+        rsi_task_destroy(task_to_be_deleted);
         l_conn_id = 0xff;
       } break;
       case RSI_BLE_GATT_WRITE_EVENT: {
@@ -1768,37 +1673,39 @@ void rsi_ble_task_on_conn(void *parameters)
         //! indicate to remote device continuously
         else if (ble_conn_conf->tx_indications) {
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
-          //! prepare the data to set as local attribute value.
-          read_data1[0] = indication_cnt;
-          read_data1[1] = indication_cnt >> 8;
-          status        = rsi_ble_indicate_value(rsi_connected_dev_addr,
-                                          rsi_ble_att3_val_hndl,
-                                          max_data_length,
-                                          (uint8_t *)read_data1);
-          if (status != RSI_SUCCESS) {
-            if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
+          if (rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value[0] == INDICATION_ENABLE) {
+            //! prepare the data to set as local attribute value.
+            read_data1[0] = indication_cnt;
+            read_data1[1] = indication_cnt >> 8;
+            status        = rsi_ble_indicate_value(rsi_connected_dev_addr,
+                                            rsi_ble_att3_val_hndl,
+                                            max_data_length,
+                                            (uint8_t *)read_data1);
+            if (status != RSI_SUCCESS) {
+              if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
 #if RSI_DEBUG_EN
-              LOG_PRINT_D("\r\n indicate %d failed with buffer full error -conn%d \r\n", indication_cnt, l_conn_id);
+                LOG_PRINT_D("\r\n indicate %d failed with buffer full error -conn%d \r\n", indication_cnt, l_conn_id);
 #endif
-              rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
-              rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
-              break;
-            } else if (status == RSI_ERROR_IN_BUFFER_ALLOCATION) //! TO-DO, add proper error code
-            {
-              LOG_PRINT("\r\n cannot transmit %d bytes in small buffer configuration mode -conn%d\n",
-                        max_data_length,
-                        l_conn_id);
-              rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
-              status = rsi_ble_disconnect((int8_t *)rsi_connected_dev_addr);
-              if (status != RSI_SUCCESS) {
-                LOG_PRINT("\ndisconnect command failed with reason %x\n", status);
+                rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
+                rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
+                break;
+              } else if (status == RSI_ERROR_IN_BUFFER_ALLOCATION) //! TO-DO, add proper error code
+              {
+                LOG_PRINT("\r\n cannot transmit %d bytes in small buffer configuration mode -conn%d\n",
+                          max_data_length,
+                          l_conn_id);
+                rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
+                status = rsi_ble_disconnect((int8_t *)rsi_connected_dev_addr);
+                if (status != RSI_SUCCESS) {
+                  LOG_PRINT("\ndisconnect command failed with reason %x\n", status);
+                }
+                break;
+              } else {
+                LOG_PRINT("\r\n indication %d failed with error code %x -conn%d\n", indication_cnt, status, l_conn_id);
               }
-              break;
             } else {
-              LOG_PRINT("\r\n indication %d failed with error code %x -conn%d\n", indication_cnt, status, l_conn_id);
+              indication_cnt++;
             }
-          } else {
-            indication_cnt++;
           }
         }
 
@@ -1963,9 +1870,6 @@ void rsi_ble_task_on_conn(void *parameters)
           } else {
             CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
-#if WLAN_TRANSIENT_CASE
-          ble_scanning_is_there = 0;
-#endif
         }
         LOG_PRINT("\r\n Restarting scanning \n");
         if (!CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
@@ -1975,9 +1879,6 @@ void rsi_ble_task_on_conn(void *parameters)
             rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
           } else {
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
-#if WLAN_TRANSIENT_CASE
-            ble_scanning_is_there = 1;
-#endif
           }
         }
       } break;
@@ -2046,6 +1947,11 @@ void rsi_ble_task_on_conn(void *parameters)
                                               rsi_ble_conn_info[l_conn_id].rsi_encryption_enabled.localrand,
                                               rsi_ble_conn_info[l_conn_id].rsi_encryption_enabled.localltk);
           }
+        } else {
+          //SMP Pairing not supported
+          LOG_PRINT("\r\n smp pairing not supported \r\n");
+          status = rsi_ble_smp_pair_failed(rsi_ble_conn_info[l_conn_id].rsi_ble_event_smp_req.dev_addr,
+                                           RSI_SMP_PAIRING_NOT_SUPPORTED);
         }
       } break;
 
@@ -2060,6 +1966,11 @@ void rsi_ble_task_on_conn(void *parameters)
           status = rsi_ble_smp_pair_response(rsi_ble_conn_info[l_conn_id].rsi_ble_event_smp_resp.dev_addr,
                                              RSI_BLE_SMP_IO_CAPABILITY,
                                              MITM_ENABLE);
+        } else {
+          //SMP Pairing not supported
+          LOG_PRINT("\r\n smp pairing not supported \r\n");
+          status = rsi_ble_smp_pair_failed(rsi_ble_conn_info[l_conn_id].rsi_ble_event_smp_req.dev_addr,
+                                           RSI_SMP_PAIRING_NOT_SUPPORTED);
         }
       } break;
 
@@ -2142,6 +2053,7 @@ void rsi_ble_task_on_conn(void *parameters)
 
         LOG_PRINT("\r\n in smp security keys event  -conn%d \r\n", l_conn_id);
 
+        smp_done = 1;
       } break;
 
       case RSI_BLE_SMP_FAILED_EVENT: {
@@ -2173,7 +2085,6 @@ void rsi_ble_task_on_conn(void *parameters)
                &rsi_ble_conn_info[l_conn_id].rsi_encryption_enabled,
                sizeof(rsi_bt_event_encryption_enabled_t));
         LOG_PRINT("\r\n in smp encrypt event -conn%d \r\n", l_conn_id);
-        smp_done = 1;
       } break;
       case RSI_BLE_GATT_ERROR: {
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_ERROR);

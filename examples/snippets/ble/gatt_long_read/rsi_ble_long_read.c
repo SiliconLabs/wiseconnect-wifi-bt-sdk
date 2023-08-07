@@ -679,7 +679,8 @@ int32_t rsi_ble_simple_gatt_test(void)
   int32_t status  = 0;
   uint8_t adv[31] = { 2, 1, 6 };
   int32_t event_id;
-  int8_t data[20] = { 0 };
+  int8_t data[20]       = { 0 };
+  uint8_t fmversion[20] = { 0 };
 #if (GATT_ROLE == CLIENT)
   int8_t client_data[100] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
                               1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
@@ -737,6 +738,14 @@ int32_t rsi_ble_simple_gatt_test(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
 #if (GATT_ROLE == SERVER)

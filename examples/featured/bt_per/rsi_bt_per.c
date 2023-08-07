@@ -158,7 +158,8 @@ static rsi_bt_per_stats_t per_stats;
  */
 int32_t rsi_bt_per(void)
 {
-  int32_t status = 0;
+  int32_t status        = 0;
+  uint8_t fmversion[20] = { 0 };
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
@@ -197,6 +198,14 @@ int32_t rsi_bt_per(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   //! get the local device address(MAC address).

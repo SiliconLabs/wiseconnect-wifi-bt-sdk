@@ -327,6 +327,7 @@ int32_t rsi_ble_central(void)
   int32_t status          = 0;
   int32_t temp_event_map  = 0;
   int32_t temp_event_map1 = 0;
+  uint8_t fmversion[20]   = { 0 };
 #ifdef RSI_BLE_ENABLE_WHITELIST_BASEDON_ADV_PAYLOAD
   uint8_t compare[31];
 #endif
@@ -380,6 +381,15 @@ int32_t rsi_ble_central(void)
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
+  }
+
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components
   sl_set_fw_component_log_levels(&fw_component_log_level);

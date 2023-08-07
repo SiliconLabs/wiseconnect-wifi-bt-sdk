@@ -40,6 +40,9 @@
 //! BT_A2DP_SOURCE APP CONFIG defines
 /***********************************************************************************************************************************************/
 
+//! To test braktooth Vulnerabilities
+#define BT_VUL_TEST 0
+
 //! Enable this for dual pairing
 #define RSI_BT_DUAL_PAIR_TEST 0
 
@@ -50,6 +53,9 @@
 #define RSI_APP_AVDTP_ROLE INITIATOR_ROLE //! ACCEPTOR_ROLE
 
 #define A2DP_BT_ONLY_CONNECTION 0 /* 1: Only BT connection and No Streaming  | 0: BT connection + Streaming */
+
+#define BT_EIR_FRIENDLY_NAME_TEST 0
+#define LINK_KEY_PRINT            1 //To Print saved Linkkey
 
 #if BT_EIR_FRIENDLY_NAME_TEST
 #define RSI_BT_REMOTE_DEV1_NAME "Name1"
@@ -75,16 +81,22 @@
 #define GAIN_INDEX_BR            9
 #define GAIN_INDEX_2M            9
 #define GAIN_INDEX_3M            9
-#define RSI_BT_AVDTP_STATS       0
+#define RSI_BT_AVDTP_STATS       1
 #define RSI_BT_AUTO_RATE         0
 #define RSI_BT_AUTO_RATE_ENABLE  0
+
+#define AFH_CLASSIFICATION 0
+#if AFH_CLASSIFICATION
+#define AFH_MIN 0x0640
+#define AFH_MAX 0xBB80
+#endif
 
 #if RSI_BT_AVDTP_STATS
 #define BT_BR_EDR_ADAPTIVE       1
 #define RUN_TIME_PKT_TYPE_CHANGE 1
 #endif
 
-#define RSI_PACKET_CHANGE_INDICATION 0
+#define RSI_PACKET_CHANGE_INDICATION 1
 
 #define RSI_BT_MEMORY_STATS 0
 
@@ -120,7 +132,7 @@
 #define MP3_INPUT_BUFFER_SIZE 10 * 512
 
 #define BIN_FILE    1
-#define BT_ARRAY    2
+#define ARRAY       2
 #define SD_BIN_FILE 3
 
 #define RSI_AUDIO_DATA_SRC SD_BIN_FILE
@@ -179,6 +191,11 @@ enum rsi_app_event_e {
   RSI_APP_EVENT_A2DP_CONFIGURE,
   RSI_APP_EVENT_WLAN_PCM_DATA,
   RSI_APP_EVENT_WLAN_SBC_DATA,
+#if BT_VUL_TEST
+  RSI_APP_EVENT_SPP_CONN,
+  RSI_APP_EVENT_SPP_DISCONN,
+  RSI_APP_EVENT_SPP_RX,
+#endif
 };
 
 #define RSI_APP_EVENT_CONNECT              0
@@ -288,32 +305,6 @@ enum rsi_app_event_e {
 #define MAX_NAME_LENGTH     10
 #endif
 #include <rsi_bt_common_config.h>
-#ifdef FW_LOGGING_ENABLE
-/*=======================================================================*/
-//! Firmware Logging Parameters
-/*=======================================================================*/
-//! Enable or Disable firmware logging (Enable = 1; Disable = 0)
-#define FW_LOG_ENABLE 1
-//! Set TSF Granularity for firmware logging in micro seconds
-#define FW_TSF_GRANULARITY_US 10
-//! Log level for COMMON component in firmware
-#define COMMON_LOG_LEVEL FW_LOG_ERROR
-//! Log level for CM_PM component in firmware
-#define CM_PM_LOG_LEVEL FW_LOG_ERROR
-//! Log level for WLAN_LMAC component in firmware
-#define WLAN_LMAC_LOG_LEVEL FW_LOG_ERROR
-//! Log level for WLAN_UMAC component in firmware
-#define WLAN_UMAC_LOG_LEVEL FW_LOG_ERROR
-//! Log level for WLAN NETWORK STACK component in firmware
-#define WLAN_NETSTACK_LOG_LEVEL FW_LOG_ERROR
-//! Log level for BT BLE CONTROL component in firmware
-#define BT_BLE_CTRL_LOG_LEVEL FW_LOG_INFO
-//! Log level for BT BLE STACK component in firmware
-#define BT_BLE_STACK_LOG_LEVEL FW_LOG_INFO
-//! Min Value = 2048 bytes; Max Value = 4096 bytes; Value should be in multiples of 512 bytes
-#define FW_LOG_BUFFER_SIZE 2048
-//! Set queue size for firmware log messages
-#define FW_LOG_QUEUE_SIZE 2
 #endif
 //#endif
-#endif
+//#endif

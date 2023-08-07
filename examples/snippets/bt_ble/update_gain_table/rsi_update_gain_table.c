@@ -55,7 +55,8 @@
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 int rsi_app_task_update_gain_table(void)
 {
-  int32_t status = RSI_SUCCESS;
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
 
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -70,6 +71,14 @@ int rsi_app_task_update_gain_table(void)
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_BT_BLE_MODE);
   if (status != RSI_SUCCESS) {
     return status;
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = { 5, 0,  4, 255, 0, 0,   0, 39, 0, 78,  2, 1,  4, 255,

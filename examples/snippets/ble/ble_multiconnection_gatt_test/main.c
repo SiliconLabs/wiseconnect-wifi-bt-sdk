@@ -301,6 +301,7 @@ void rsi_common_app_task(void)
   int8_t status            = RSI_SUCCESS;
   powersave_cmd_given      = false;
   ble_main_app_task_handle = NULL;
+  uint8_t fmversion[20]    = { 0 };
 
   while (1) {
 #ifndef RSI_M4_INTERFACE
@@ -338,6 +339,14 @@ void rsi_common_app_task(void)
       return;
     } else {
       LOG_PRINT("\r\n wireless init success \n");
+    }
+
+    //! Firmware version Prints
+    status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    } else {
+      LOG_PRINT("\nfirmware_version = %s", fmversion);
     }
 #ifdef FW_LOGGING_ENABLE
     //! Set log levels for firmware components

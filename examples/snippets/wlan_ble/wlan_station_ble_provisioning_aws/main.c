@@ -118,6 +118,7 @@ int32_t rsi_wlan_ble_app_init(void)
   int32_t status                     = RSI_SUCCESS;
   rsi_task_handle_t wlan_task_handle = NULL;
   rsi_task_handle_t ble_task_handle  = NULL;
+  uint8_t fmversion[20]              = { 0 };
 #ifdef BLE_CONFIGURATOR
   //! WiSeConnect initialization
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_OPERMODE_WLAN_BLE);
@@ -129,6 +130,14 @@ int32_t rsi_wlan_ble_app_init(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   status = rsi_wlan_mqtt_certs_init();
@@ -149,7 +158,8 @@ int32_t rsi_wlan_ble_app_init(void)
 
 int32_t rsi_wlan_ble_app(void)
 {
-  int32_t status = RSI_SUCCESS;
+  int32_t status        = RSI_SUCCESS;
+  uint8_t fmversion[20] = { 0 };
 #ifdef BLE_CONFIGURATOR
   //! WiSeConnect initialization
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_OPERMODE_WLAN_BLE);
@@ -161,6 +171,14 @@ int32_t rsi_wlan_ble_app(void)
     return status;
   } else {
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
+  }
+
+  //! Firmware version Prints
+  status = rsi_get_fw_version(fmversion, sizeof(fmversion));
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
 
   status = rsi_wlan_mqtt_certs_init();

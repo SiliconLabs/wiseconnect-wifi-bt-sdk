@@ -592,10 +592,10 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
 
 #if defined(RSI_BT_ENABLE) || defined(RSI_BLE_ENABLE) || defined(RSI_PROP_PROTOCOL_ENABLE)
   if (!status) {
-    if ((coex_mode == RSI_OPERMODE_WLAN_BLE) || (coex_mode == RSI_OPERMODE_WLAN_BT_CLASSIC)
-        || (coex_mode == RSI_OPERMODE_WLAN_BT_DUAL_MODE)
+    if ((coex_mode & BLE_PROTO_ENABLE) || (coex_mode & BT_CLASSIC_PROTO_ENABLE)
+        || (coex_mode & BT_DUAL_MODE_PROTO_ENABLE)
 #if defined(RSI_PROP_PROTOCOL_ENABLE)
-        || (coex_mode == RSI_OPERMODE_PROP_PROTOCOL)
+        || (coex_mode & PROP_PROTO_ENABLE)
 #endif
     ) {
       // WC waiting for BT Classic/ZB/BLE card ready
@@ -1011,7 +1011,11 @@ int32_t rsi_wireless_deinit(void)
   rsi_sdio_deinit();
 #endif
   // Initialize Device
+#ifdef RSI_ACTIVE_LOW
+  status = rsi_device_init(LOAD_DEFAULT_NWP_FW_ACTIVE_LOW);
+#else
   status = rsi_device_init(LOAD_NWP_FW);
+#endif
   if (status != RSI_SUCCESS) {
     SL_PRINTF(SL_WIRELESS_DEINIT_DEVICE_INIT_ERROR_2, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
@@ -1314,18 +1318,25 @@ int32_t rsi_send_feature_frame(void)
 int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
 {
   int32_t status = RSI_SUCCESS;
+  rsi_timer_instance_t timer_instance;
+
   SL_PRINTF(SL_GET_FW_VERSION_ENTRY, COMMON, LOG_INFO);
   rsi_pkt_t *pkt;
 
   // Get common cb structure pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
+  rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);
   // If state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     while (common_cb->state != RSI_COMMON_CARDREADY) {
 #ifndef RSI_WITH_OS
       rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 #endif
+      if (rsi_timer_expired(&timer_instance)) {
+        SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
+        return RSI_ERROR_CARD_READY_TIMEOUT;
+      }
     }
   }
 
@@ -1417,6 +1428,7 @@ int32_t rsi_get_module_type(uint8_t *response)
 {
   int32_t status = RSI_SUCCESS;
   rsi_pkt_t *pkt;
+  rsi_timer_instance_t timer_instance;
 
   if (rsi_driver_cb_non_rom->module_type_valid) {
     *response = rsi_driver_cb_non_rom->module_type_id;
@@ -1425,12 +1437,17 @@ int32_t rsi_get_module_type(uint8_t *response)
   // Get common cb structure pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
+  rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);
   // if state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     while (common_cb->state != RSI_COMMON_CARDREADY) {
 #ifndef RSI_WITH_OS
       rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 #endif
+      if (rsi_timer_expired(&timer_instance)) {
+        SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
+        return RSI_ERROR_CARD_READY_TIMEOUT;
+      }
     }
   }
 

@@ -169,6 +169,7 @@ typedef enum rsi_wlan_cmd_response_e {
   RSI_WLAN_RSP_IPCONFV4               = 0x41,
   RSI_WLAN_RSP_SOCKET_CREATE          = 0x42,
   RSI_WLAN_RSP_SOCKET_CLOSE           = 0x43,
+  RSI_WLAN_RSP_WMM_PARAMS             = 0x45,
   RSI_WLAN_RSP_EAP_CONFIG             = 0x4C,
   RSI_WLAN_RSP_FW_VERSION             = 0x49,
   RSI_WLAN_RSP_MAC_ADDRESS            = 0x4A,
@@ -290,6 +291,7 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_IPCONFV4              = 0x41,
   RSI_WLAN_REQ_SOCKET_CREATE         = 0x42,
   RSI_WLAN_REQ_SOCKET_CLOSE          = 0x43,
+  RSI_WLAN_REQ_WMM_PARAMS            = 0x45,
   RSI_WLAN_REQ_EAP_CONFIG            = 0x4C,
   RSI_WLAN_REQ_FW_VERSION            = 0x49,
   RSI_WLAN_REQ_MAC_ADDRESS           = 0x4A,
@@ -1713,6 +1715,16 @@ typedef struct rsi_cfgGetFrameRcv {
   uint8_t http_password[MAX_HTTP_SERVER_PASSWORD];
 } rsi_cfgGetFrameRcv_t, rsi_user_store_config_t;
 
+typedef struct wmm_info_s {
+  uint8_t aifsn : 4;
+  uint8_t acm : 1;
+  uint8_t aci : 2;
+  uint8_t res : 1;
+  uint8_t ECW_min : 4;
+  uint8_t ECW_max : 4;
+  uint16_t txop;
+} wmm_info_t;
+
 // user configurable gain table structure
 typedef struct rsi_gain_table_info_s {
   // band value
@@ -1745,10 +1757,14 @@ typedef struct rsi_calib_write_s {
 #define BURN_INTO_FLASH 1
   uint8_t target;
   uint8_t reserved0[3];
-#define BURN_GAIN_OFFSET     BIT(0)
-#define BURN_FREQ_OFFSET     BIT(1)
-#define SW_XO_CTUNE_VALID    BIT(2)
-#define BURN_XO_FAST_DISABLE BIT(3)
+#define CALIB_WRITE_RESERVED     BIT(0)
+#define BURN_FREQ_OFFSET         BIT(1)
+#define SW_XO_CTUNE_VALID        BIT(2)
+#define BURN_XO_FAST_DISABLE     BIT(3)
+#define BURN_GAIN_OFFSET_LOW     BIT(4)
+#define BURN_GAIN_OFFSET_MID     BIT(5)
+#define BURN_GAIN_OFFSET_HIGH    BIT(6)
+#define SELECT_GAIN_OFFSETS_1P8V BIT(7)
   uint32_t flags;
   int8_t gain_offset[3];
   int8_t xo_ctune;
