@@ -1323,7 +1323,7 @@ int32_t rsi_bt_link_policy_settings_config(uint8_t *remote_dev_addr, uint16_t li
     return RSI_ERROR_INVALID_PARAM;
   }
 
-  memset(&link_policy_sett, NULL, sizeof(rsi_bt_cmd_link_policy_settings_t));
+  memset(&link_policy_sett, 0, sizeof(rsi_bt_cmd_link_policy_settings_t));
   memcpy(link_policy_sett.dev_addr, (uint8_t *)remote_dev_addr, RSI_DEV_ADDR_LEN);
   link_policy_sett.link_policy_settings = link_policy_settings;
   return rsi_bt_driver_send_cmd(RSI_BT_LINK_POLICY_CONFIG, &link_policy_sett, NULL);
