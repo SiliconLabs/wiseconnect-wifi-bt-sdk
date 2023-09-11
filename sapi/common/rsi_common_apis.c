@@ -101,8 +101,7 @@ void rsi_common_set_status(int32_t status)
 uint8_t *buffer_addr = NULL;
 int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 {
-#if (defined RSI_WLAN_ENABLE) || (defined RSI_UART_INTERFACE) | (defined LINUX_PLATFORM) || (defined RSI_BLE_ENABLE) \
-  || (defined RSI_BT_ENABLE)
+#if (defined RSI_WLAN_ENABLE) || (defined RSI_UART_INTERFACE) | (defined LINUX_PLATFORM)
   int32_t status = RSI_SUCCESS;
 #endif
 
