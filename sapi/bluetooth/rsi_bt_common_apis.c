@@ -367,7 +367,6 @@ int32_t rsi_bt_power_save_profile(uint8_t psp_mode, uint8_t psp_type)
   return status;
 }
 /** @} */
-/*! \cond RS9116 */
 /** @addtogroup BT-CLASSIC5
 * @{
 */
@@ -533,7 +532,6 @@ int32_t rsi_bt_vendor_set_afh_classification_intervals(uint16_t afh_min, uint16_
 }
 
 /** @} */
-/*! \endcond */
 
 /**
  * @fn         int32_t rsi_memory_stats_enable(uint8_t protocol, uint8_t memory_stats_enable, uint32_t memory_stats_interval_ms)

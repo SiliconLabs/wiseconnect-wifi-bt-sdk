@@ -41,7 +41,6 @@
 #include "task.h"
 #endif
 
-
 /*===================================================*/
 /**
  * @fn           int32_t rsi_timer_start(uint8_t timer_no, uint8_t mode,uint8_t type,uint32_t duration,void (* rsi_timer_expiry_handler)())
@@ -231,6 +230,23 @@ void rsi_os_delay_ms(uint32_t delay_ms)
 }
 
 #endif
+
+/*==============================================*/
+/**
+ * @fn          uint32_t rsi_ms_to_tick(uint32_t timeout_ms)
+ * @brief       Converting ms to os ticks
+ * @param[in]   timeout_ms - timeout in ms
+ * @return      uint32_t
+ */
+uint32_t rsi_ms_to_tick(uint32_t timeout_ms)
+{
+  uint32_t ticks_cnt = 0, ticks_val = 0, ticks = 0;
+  ticks_cnt = SysTick->LOAD + 1UL;
+  ticks_val = SystemCoreClock / ticks_cnt;
+  ticks     = ticks_val / 1000;
+  return (timeout_ms * ticks);
+}
+
 
 
 

@@ -1,0 +1,1 @@
+https://artifactory.silabs.net/artifactory/iotwifi-generic-staging/wifi_release_packages/release_packages/RS9116_WiSeConnect_SDK/RS9116_WiSeConnect_SDK.2.8.2.27/RS916W.2.8.2.0.27.rps

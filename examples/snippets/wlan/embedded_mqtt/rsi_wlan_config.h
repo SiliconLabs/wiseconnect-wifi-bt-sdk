@@ -31,6 +31,9 @@
 //! To enable concurrent mode
 #define CONCURRENT_MODE RSI_DISABLE
 
+//! to enable MQTT Keep alive retries
+#define RSI_EMB_MQTT_KEEPALIVE_RETRIES 0
+
 //! opermode command paramaters
 /*=======================================================================*/
 

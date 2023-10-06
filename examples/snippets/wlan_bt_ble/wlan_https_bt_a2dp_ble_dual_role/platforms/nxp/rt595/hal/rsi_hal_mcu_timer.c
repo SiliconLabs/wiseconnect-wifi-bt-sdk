@@ -30,6 +30,8 @@
 #include "timers.h"
 #include "stack_macros.h"
 
+#define RSI_HAL_MS_TO_TICKS		1
+
 extern void xPortSysTick_Handler( void );
 #endif 
 
@@ -245,4 +247,16 @@ uint32_t rsi_hal_gettickcount(void)
 {
   //! Define your API to get the tick count delay in milli seconds from systic ISR and return the resultant value
 	return g_systicks;
+}
+
+/*==============================================*/
+/**
+ * @fn          uint32_t rsi_ms_to_tick(uint32_t timeout_ms)
+ * @brief       Converting ms to os ticks
+ * @param[in]   timeout_ms - timeout in ms
+ * @return      uint32_t
+ */
+uint32_t rsi_ms_to_tick(uint32_t timeout_ms)
+{
+  return (timeout_ms * RSI_HAL_MS_TO_TICKS);
 }

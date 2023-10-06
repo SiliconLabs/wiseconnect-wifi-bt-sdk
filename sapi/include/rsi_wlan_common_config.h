@@ -59,6 +59,11 @@
 #ifndef RSI_FAST_FW_UP
 #define RSI_FAST_FW_UP RSI_DISABLE
 #endif
+
+// to enable MQTT Keep alive retries
+#ifndef RSI_EMB_MQTT_KEEPALIVE_RETRIES
+#define RSI_EMB_MQTT_KEEPALIVE_RETRIES 0
+#endif
 // opermode command paramaters
 /*=======================================================================*/
 // To set wlan feature select bit map

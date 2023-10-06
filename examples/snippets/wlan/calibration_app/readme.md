@@ -270,7 +270,7 @@ Using rsi_calib_write command the calibrated XO Ctune and calculated gain offset
 
    ```sh
    Prototype :
-   rsi_calib_write=<target>,<flags>,<gain_offset>,<xo_ctune>
+   rsi_calib_write=<target>,<flags>,<gain_offset_low>,<gain_offset_mid>,<gain_offset_high>,<xo_ctune>
    ```
 
 **Parameters**
@@ -293,6 +293,8 @@ Using rsi_calib_write command the calibrated XO Ctune and calculated gain offset
    ||||	0 - Skip mid sub-band gain-offset update
    |            |   6         |  BURN_GAIN_OFFSET_HIGH | 1 - Update gain offset for high sub-band (2 GHz)  
    ||||	0 - Skip high sub-band gain-offset update
+   |            |   7         |  SELECT_GAIN_OFFSETS_1P8V | 1 - Update gain offsets for 1.8 V 
+   ||||	0 - Update gain offsets for 3.3 V
    |            |   31-4      |                        |	Reserved for future use
    |gain_offset_low | gain_offset as observed in dBm in channel-1 | |
    |gain_offset_mid | gain_offset as observed in dBm in channel-6 | |

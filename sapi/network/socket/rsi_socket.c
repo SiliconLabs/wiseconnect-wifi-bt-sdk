@@ -1343,6 +1343,8 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  *                                |  5	| Critical - mainly used for voice RTP (Real-time Tranlocal_port Protocol)  |
  *                                |  6	| Internet                                                                  |       
  *                                |  7	| Network                                                                   |
+ *                             8.SO_TLS_SNI for configuring the SNI feature \n
+*                              9.SO_RCVTIMEO: Configure the socket-receive timeout using this option. If no data is received within this time, the sapi driver will unblock this API.
  *
  * @param[in]    option_value - Value of the parameter
  * @param[in]    option_len   - Length of the parameter

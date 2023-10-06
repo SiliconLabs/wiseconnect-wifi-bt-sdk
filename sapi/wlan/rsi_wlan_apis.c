@@ -2485,7 +2485,7 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
  * @return            0			- Success \n
  * @return            Non-Zero Value	- Failure
  * @note              **Precondition** - \ref rsi_transmit_test_start(), \ref rsi_send_freq_offset() API needs to be called before this API. This API is relevant in PER mode only. 
- * @note              For gain-offset calibration in 2.4 GHz, the user needs to calibrate gain-offset for low sub-band (channel-1), mid sub-band (channel-6), and high sub-band (channel-11) and input the three gain-offsets to this API and set the corresponding flags to validate it. \n
+ * @note              For RS9116 Rev 1.5, the user needs to calibrate gain-offset for low sub-band (channel-1), mid sub-band (channel-6), and high sub-band (channel-11) and input the three gain-offsets to this API and set the corresponding flags to validate it. However, for RS9116 Rev 1.4, the user needs to calibrate gain-offset for low sub-band (channel-1) only and input the three gain-offsets to this API with dummy values for mid and high gain offsets and set the flag for low gain offset only to validate it. \n
  * @note              Recalibration is not possible if EFuse is being used instead of flash as calibration data storage
  */
 
@@ -3464,7 +3464,7 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
 }
 /** @} */
 
-/** @addtogroup NETWORK16
+/** @addtogroup WLAN
 * @{
 */
 /*==============================================*/
@@ -3481,12 +3481,28 @@ int32_t rsi_wlan_set_certificate_index(uint8_t certificate_type,
  *                                  5          | SSL CA Certificate     \n
  *                                  6          | SSL Server Certificate \n
  *                                  7          | SSL Server Private Key \n
+ *                                  17         | EAP Private Key        \n
+ *                                  33         | EAP Public Key         \n
+ *                                  49         | EAP CA Certificate     \n
  * @param[in]  buffer 			      - Pointer to a buffer which contains the certificate
  * @param[in]  certificate_length - Certificate length
  * @return     0               - Success \n
  * @return     Non-Zero  Value - Failure 	(**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0015,0x0021,0x0025,0x0026,0x002C) \n 
  * @note       **Precondition** - \ref rsi_wireless_init() API must be called before this API.
- * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Refer to \ref error-codes for the description of above error codes. \n 
+ * @note       For TLS Certificates, the max length is 12280 bytes and for the Private Keys, it is 4088 bytes. \n
+ *             Module shares same TLS certificates for all supported SSL sockets. \n
+ * @note       For enterprise, user can load certificates in two ways: \n
+ *             -  User can load a single certificate, for this user need to generate a single certificate which contains a combination of 4 certificates \n 
+ *             in a given fixed order(3 actual and 1 dummy)- one Private Key, one Public Key, one dummy, and one CA certificate. The CA certificate can \n 
+ *             include a chain of certificates. Make sure each certificate has their respective header and footer of -----BEGIN CERTIFICATE----- \n
+ *             and -----END CERTIFICATE-----. The dummy certificate can be a copy of one of the certificates for convenience(but must have header and footer). \n 
+ *             The dummy certificate is not used for the authentication but is expected by the firmware. \n
+ *             The single certificate can be loaded with CertType as 1. The maximum allowed single certificate length is 12280 bytes if webpages feature \n 
+ *             (TCP_IP_FEAT_HTTP_SERVER in tcp_ip_feature_bit_map) is enabled, otherwise it is 20472 bytes. \n \n
+ *             -  User can load individual EAP certificates private key, public key, and CA certificates with CertType as 17,33 and 49 respectively. \n 
+ *             The maximum certificate length for private key and public key is 4088 bytes. The maximum allowed CA certificate length is 4088 bytes if webpages \n
+ *             feature (TCP_IP_FEAT_HTTP_SERVER in tcp_ip_feature_bit_map) is enabled, otherwise it is 12280 bytes.
  *
  */
 int32_t rsi_wlan_set_certificate(uint8_t certificate_type, uint8_t *buffer, uint32_t certificate_length)
@@ -4184,63 +4200,64 @@ int32_t rsi_wlan_buffer_config(void)
  * @param[in]  ssid    - SSID of the access point. Length of the SSID should be less than or equal to 32 bytes.
  * @param[in]  channel - Channel number. Refer the following channels for the valid channel numbers supported: \n
  *                       2.4GHz Band Channel Mapping, 5GHz Band Channel Mapping \n
- *                      channel number 0 is to enable ACS feature
- *			###The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum###
- *			Channel numbers (2.4GHz)|	Center frequencies for 20MHz channel width 
- *			:----------------------:|:-----------------------------------------------:
- *			1			|	2412 
- *			2			|	2417  
- *			3			|	2422 
- *			4			|	2427
- *			5			|	2432 
- *			6			|	2437 
- *			7			|	2442 
- *			8			|	2447 
- *			9			|	2452
- *			10		|	2457  
- *			11		|	2462 
- *			12		|	2467 
- *			13		|	2472 
- *			14		|	2484 
- * 	  ###The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum###
- * 		Channel Numbers(5GHz) |	Center frequencies for 20MHz channel width 
- * 		:--------------------:|:------------------------------------------:
- *		36		      |5180 
- *		40		      |5200 
- *		44		      |5220 
- *		48		      |5240 
- *		144		      |5700 
- *		149		      |5745 
- *		153		      |5765 
- *		157		      |5785 
- *		161		      |5805 
- *		165		      |5825 
+ *                      Channel number 0 is to enable ACS feature. \n
+ * The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum.
+ *             Channel numbers (2.4GHz)| Center frequencies for 20MHz channel width
+ *             :----------------------:|:-----------------------------------------------:
+ *             1                       |       2412
+ *             2                       |       2417
+ *             3                       |       2422
+ *             4                       |       2427
+ *             5                       |       2432
+ *             6                       |       2437
+ *             7                       |       2442
+ *             8                       |       2447
+ *             9                       |       2452
+ *             10                      |       2457
+ *             11                      |       2462
+ *             12                      |       2467
+ *             13                      |       2472
+ *             14                      |       2484
+ * The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum.
+ *              Channel Numbers(5GHz) | Center frequencies for 20MHz channel width
+ *              :--------------------:|:------------------------------------------:
+ *              36                    |5180
+ *              40                    |5200
+ *              44                    |5220
+ *              48                    |5240
+ *              144                   |5700
+ *              149                   |5745
+ *              153                   |5765
+ *              157                   |5785
+ *              161                   |5805
+ *              165                   |5825
  * @param[in]  security_type - Type of the security modes on which an access point needs to be operated: \n
- * 		                     Value |	Security type 
- * 		                     :----:|:------------------------------------------:
- *                         1     | RSI_OPEN \n
- *                         2     | RSI_WPA \n
- *                         3     | RSI_WPA2 \n
- *                         4     | RSI_WPA_WPA2_MIXED \n
- *                         5     | RSI_WPS_PUSH_BUTTON
- * @param[in]  encryption_mode - Type of the encryption mode: \n
- * 		                     Value |	Encryption mode 
- * 		                     :----:|:------------------------------------------:
- *                         0     | RSI_NONE \n
- *                         1     | RSI_TKIP \n
- *                         2     | RSI_CCMP
+ *                           Value | Security type
+ *                           :----:|:------------------------------------------:
+ *                          1    | RSI_OPEN \n
+ *                          2    | RSI_WPA  \n
+ *                          3    | RSI_WPA2 \n
+ *                          4    | RSI_WPA_WPA2_MIXED \n
+ *                          5    | RSI_WPS_PUSH_BUTTON
+ * @param[in]  encryption_mode - Type of the encryption mode:\n
+ *                           Value |    Encryption mode
+ *                           :----:|:------------------------------------------:
+ *                          0    | RSI_NONE \n
+ *                          1    | RSI_TKIP \n
+ *                          2    | RSI_CCMP
  * @param[in]  password - PSK to be used in security mode. \n
  *                        Minimum and maximum length of PSK is 8 bytes and 63 bytes respectively
  * @param[in]  beacon_interval - Beacon interval in ms. Allowed values are integers from 100 to 1000 which are multiples of 100.
  * @param[in]  dtim_period     - DTIM period. Allowed values are integers between 1 and 255.
  * @return     0               - Success \n
- * @return     Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n      
+ * @return     Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
- * @note	     DFS channels are not supported in AP mode.
+ * @note         DFS channels are not supported in AP mode.
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
  */
+
 int32_t rsi_wlan_ap_start(int8_t *ssid,
                           uint8_t channel,
                           rsi_security_mode_t security_type,
@@ -6938,14 +6955,6 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  *             ^                                             @param buffer  device name \n 
  *             ^                                             @param status  Response status 
  *             ^                                             @param length 32
- *             RSI_WLAN_SCAN_RESPONSE_HANDLER            |   Called when a response for scan request is received from the firmware. It is an indication to host that the scan is success or failed. This is valid only STA mode. This callback is triggered when module try to scan and receive response of all the available AP's. 
- *             ^                                             @pre Need to call rsi_scan() API.  
- *             ^                                             @param buffer NULL  \n 
- *             ^                                             @param status Response status. Possible error codes - 0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c
- * 		         RSI_WLAN_JOIN_RESPONSE_HANDLER		         |   Called when a response for join request is received from the firmware. It is an indication to application that the join to AP is success or failed. This is valid in STA mode. This callback is triggered when station is successfully connected.  
- *             ^                                             @pre  Need to call rsi_scan API.  
- *             ^                                             @param buffer  NULL \n 
- *             ^                                             @param status  Response status. Possible Error response codes -0x0019, 0x0048,0x0045,0x0008
  *             RSI_WLAN_RAW_DATA_RECEIVE_HANDLER         |   Called when raw data packets are received from the firmware. This is valid in both AP and STA mode. This callback is triggered when raw data is received in TCP/IP bypass mode. 
  *             ^                                             @pre Need to connect to socket.  
  *             ^                                             @param buffer raw data  \n 

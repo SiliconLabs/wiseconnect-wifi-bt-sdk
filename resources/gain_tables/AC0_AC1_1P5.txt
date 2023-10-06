@@ -1,0 +1,275 @@
+
+//************************AC0 (Rev 1.5si) - Region based Power table*********************************//
+//// External Dipole Antenna - Gain : -0.9dBi ////
+
+AC0_AC1_1P5_WLAN_2.4GHz_20MHz = {
+4,//NUM_OF_REGIONS
+    FCC, 0xB,//NUM_OF_CHANNELS
+//   rate,  11b, 11g, 11n
+        1,  32,  22,  20,
+        2,  32,  30,  30,
+        3,  32,  32,  32,
+        4,  32,  32,  32,
+        5,  32,  32,  32,
+        6,  32,  32,  32,
+        7,  32,  32,  32,
+        8,  32,  32,  32,
+        9,  32,  32,  32,
+        10, 32,  32,  32,
+        11, 32,  22,  22,
+    ETSI,0x11,
+    	 255, 32,  32, 32,
+    TELEC,0xD,
+    	1,  32,  32, 32,
+    	2,  32,  32, 32,
+    	3,  32,  32, 32,
+    	4,  32,  32, 32,
+    	5,  32,  32, 32,
+    	6,  32,  32, 32,
+    	7,  32,  32, 32,
+    	8,  32,  32, 32,
+    	9,  32,  32, 32,
+       10,  32,  32, 32,
+       11,  32,  30, 30,
+       12,  32,  28, 28,
+       13,  32,  26, 26,
+    KCC, 0x11,
+    	 255, 32,  32, 32,
+};//}}}
+
+
+//BTC - BDR,EDR
+AC0_AC1_1P5_BT_MAXPOWER = {
+FCC,        10,
+ETSI,        7,
+TELEC,       7,
+WORLDWIDE,  11,
+KCC,         7,
+};
+
+AC0_AC1_BT_OFFSET = {
+5,//NUM_OF_REGIONS
+FCC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   3,   5,
+            0,      0,   3,   5,
+	   38,      0,   3,   5,
+	   79,      0,   3,   5,
+ETSI,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+TELEC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+WORLDWIDE,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   0,
+            0,      0,   0,   0,
+	   38,      0,   0,   0,
+	   79,      0,   0,   0,
+KCC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+};
+
+
+//BLE,BLR 
+AC0_AC1_1P5_BLE_MAXPOWER = {
+FCC,        14,
+ETSI,        8,
+TELEC,       8,
+WORLDWIDE,  20,
+KCC,         8,
+};
+
+AC0_AC1_BLE_OFFSET[] = {
+5,//NUM_OF_REGIONS
+FCC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     1,   0,      3,   3,
+         0,      2,   1,      3,   3,
+        19,      1,   0,      3,   3,
+        39,      2,   1,      3,   3,
+ETSI,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        19,      2,   0,      2,   2,
+        39,      2,   0,      2,   2,
+TELEC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        19,      2,   0,      2,   2,
+        39,      2,   0,      2,   2,
+WORLDWIDE,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     0,   0,      0,   0,
+         0,      0,   0,      0,   0,
+        19,      0,   0,      0,   0,
+        39,      0,   0,      0,   0,
+KCC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        20,      2,   0,      2,   2,
+        39,      2,   0,      2,   2
+};
+
+
+//************************AC1 (Rev 1.5si) - Region based Power table*********************************//
+//// On board PCB Antenna - Gain : 1.66dBi ////
+
+AC0_AC1_1P5_WLAN_2.4GHz_20MHz = {
+4,//NUM_OF_REGIONS
+    FCC, 0xB,//NUM_OF_CHANNELS
+//   rate,  11b, 11g, 11n
+        1,  32,  22,  20,
+        2,  32,  30,  30,
+        3,  32,  32,  32,
+        4,  32,  32,  32,
+        5,  32,  32,  32,
+        6,  32,  32,  32,
+        7,  32,  32,  32,
+        8,  32,  32,  32,
+        9,  32,  32,  32,
+       10,  32,  32,  32,
+       11,  32,  26,  26,
+    ETSI,0x11,
+       255, 32,  32, 32,
+    TELEC,0xD,
+    	1,  32,  32, 32,
+    	2,  32,  32, 32,
+    	3,  32,  32, 32,
+    	4,  32,  32, 32,
+    	5,  32,  32, 32,
+    	6,  32,  32, 32,
+    	7,  32,  32, 32,
+    	8,  32,  32, 32,
+    	9,  32,  32, 32,
+       10,  32,  32, 32,
+       11,  32,  30, 30,
+       12,  32,  28, 28,
+       13,  32,  26, 26,
+    KCC, 0x11,
+       255, 32,  32, 32,
+};
+
+
+//BTC - BDR,EDR
+AC0_AC1_1P5_BT_MAXPOWER = {
+FCC,        10,
+ETSI,        7,
+TELEC,       7,
+WORLDWIDE,  11,
+KCC,         7,
+};
+
+AC0_AC1_BT_OFFSET = {
+5,//NUM_OF_REGIONS
+FCC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   3,   5,
+            0,      0,   3,   5,
+	   38,      0,   3,   5,
+	   79,      0,   3,   5,
+ETSI,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+TELEC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+WORLDWIDE,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   0,
+            0,      0,   0,   0,
+	   38,      0,   0,   0,
+	   79,      0,   0,   0,
+KCC,
+4,//NUM_OF_CHANNELS
+   //chann_num     1M   2M   3M(Tx_Power_offset)
+	   255,	    0,   0,   2,
+            0,      0,   0,   2,
+	   38,      0,   0,   2,
+	   79,      0,   0,   2,
+};
+
+
+//BLE,BLR 
+AC0_AC1_1P5_BLE_MAXPOWER = {
+FCC,        14,
+ETSI,        8,
+TELEC,       8,
+WORLDWIDE,  20,
+KCC,         8,
+};
+
+AC0_AC1_BLE_OFFSET[] = {
+5,//NUM_OF_REGIONS
+FCC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     1,   0,      3,   3,
+         0,      2,   1,      3,   3,
+        19,      1,   0,      3,   3,
+        39,      2,   1,      3,   3,
+ETSI,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        19,      2,   0,      2,   2,
+        39,      2,   0,      2,   2,
+TELEC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        19,      2,   0,      2,   2,
+        39,      2,   0,      2,   2,
+WORLDWIDE,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     0,   0,      0,   0,
+         0,      0,   0,      0,   0,
+        19,      0,   0,      0,   0,
+        39,      0,   0,      0,   0,
+KCC,
+4,//NUM_OF_CHANNELS
+//chann_num     1M   2M   500kbps 125kbps(Tx_Power_offset)
+        255,     2,   0,      2,   2,
+         0,      2,   0,      2,   2,
+        20,      2,   0,      2,   2,
+        39,      2,   0,      2,   2
+};
+
+

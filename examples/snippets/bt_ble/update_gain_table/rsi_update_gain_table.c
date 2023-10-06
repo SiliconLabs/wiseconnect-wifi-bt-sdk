@@ -48,6 +48,38 @@
 #define UPDATE_GAIN_TABLE_OFFSET    1
 #define BLE_NODE                    0
 #define BT_NODE                     1
+#define ACX_MODULE                  4
+/* BT/BLE  gain offset tables non acx module */
+uint8_t RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = { 5, 0,  4, 255, 0, 0,   0, 39, 0, 78,  2, 1,  4, 255,
+                                                           0, 0,  0, 39,  0, 78,  0, 2,  4, 255, 3, 12, 0, 15,
+                                                           5, 26, 1, 3,   6, 255, 0, 0,  0, 3,   0, 39, 1, 75,
+                                                           2, 78, 0, 4,   4, 255, 3, 2,  2, 5,   5, 7,  1 };
+
+uint8_t RS9116_BT_REGION_BASED_MAXPOWER_XX[] = { 0, 16, 1, 10, 2, 14, 3, 10, 4, 12 };
+
+uint8_t RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = { 5, 0,  4, 255, 0, 0,   0, 39, 0, 78,  2, 1,  4, 255,
+                                                            0, 0,  0, 39,  0, 78,  0, 2,  4, 255, 3, 12, 0, 15,
+                                                            5, 26, 1, 3,   6, 255, 0, 0,  0, 3,   0, 39, 1, 75,
+                                                            2, 78, 0, 4,   4, 255, 3, 2,  2, 5,   5, 7,  1 };
+
+uint8_t RS9116_BLE_REGION_BASED_MAXPOWER_XX[] = { 0, 17, 1, 10, 2, 14, 3, 20, 4, 12 };
+/* BT/BLE rate based power offset tables for ACX module */
+uint8_t RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_AC1[] = {
+  5, 0, 4, 255, 0, 3,  5, 0, 0, 3,   5, 38, 0,   3, 5, 79, 0, 3,  5, 1, 4,  255, 0, 0, 2,  0, 0, 0,   2, 38,
+  0, 0, 2, 79,  0, 0,  2, 2, 4, 255, 0, 0,  2,   0, 0, 0,  2, 38, 0, 0, 2,  79,  0, 0, 2,  3, 4, 255, 0, 0,
+  0, 0, 0, 0,   0, 38, 0, 0, 0, 79,  4, 4,  255, 0, 0, 2,  0, 0,  0, 2, 38, 0,   0, 2, 79, 0, 0, 2
+};
+
+uint8_t RS9116_BT_REGION_BASED_MAXPOWER_AC1[] = { 0, 10, 1, 7, 2, 7, 3, 11, 4, 7 };
+
+uint8_t RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_AC1[] = {
+  5,  0,  4, 255, 1, 0, 3,  3,   0, 2, 1, 3, 3,  19,  1, 0, 3, 3,  39, 2,   1, 3, 3,  1,  4, 255, 2, 0,
+  2,  2,  0, 2,   0, 2, 2,  19,  2, 0, 2, 2, 39, 2,   0, 2, 2, 2,  4,  255, 2, 0, 2,  2,  0, 2,   0, 2,
+  2,  19, 2, 0,   2, 2, 39, 2,   0, 2, 2, 3, 4,  255, 0, 0, 0, 0,  0,  0,   0, 0, 0,  19, 0, 0,   0, 0,
+  39, 0,  0, 0,   0, 4, 4,  255, 2, 0, 2, 2, 0,  2,   0, 2, 2, 19, 2,  0,   2, 2, 39, 2,  0, 2,   2
+};
+
+uint8_t RS9116_BLE_REGION_BASED_MAXPOWER_AC1[] = { 0, 14, 1, 8, 2, 8, 3, 20, 4, 8 };
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
 /*=======================================================================*/
@@ -57,6 +89,11 @@ int rsi_app_task_update_gain_table(void)
 {
   int32_t status        = RSI_SUCCESS;
   uint8_t fmversion[20] = { 0 };
+  uint8_t module_type   = 0;
+  uint8_t _RS9116_BLE_REGION_BASED_MAXPOWER_XX[10];
+  uint8_t _RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX[128];
+  uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_XX[10];
+  uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX[128];
 
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -80,20 +117,39 @@ int rsi_app_task_update_gain_table(void)
   } else {
     LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
-
-  uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = { 5, 0,  4, 255, 0, 0,   0, 39, 0, 78,  2, 1,  4, 255,
-                                                              0, 0,  0, 39,  0, 78,  0, 2,  4, 255, 3, 12, 0, 15,
-                                                              5, 26, 1, 3,   6, 255, 0, 0,  0, 3,   0, 39, 1, 75,
-                                                              2, 78, 0, 4,   4, 255, 3, 2,  2, 5,   5, 7,  1 };
-
-  uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_XX[] = { 0, 16, 1, 10, 2, 14, 3, 10, 4, 12 };
-
-  uint8_t _RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = { 5, 0,  4, 255, 0, 0,   0, 39, 0, 78,  2, 1,  4, 255,
-                                                               0, 0,  0, 39,  0, 78,  0, 2,  4, 255, 3, 12, 0, 15,
-                                                               5, 26, 1, 3,   6, 255, 0, 0,  0, 3,   0, 39, 1, 75,
-                                                               2, 78, 0, 4,   4, 255, 3, 2,  2, 5,   5, 7,  1 };
-
-  uint8_t _RS9116_BLE_REGION_BASED_MAXPOWER_XX[] = { 0, 17, 1, 10, 2, 14, 3, 20, 4, 12 };
+  status = rsi_get_module_type(&module_type);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Module type Failed, Error Code : 0x%lX\r\n", status);
+  } else {
+    LOG_PRINT("\r\n Module type = %d", module_type);
+  }
+  if (module_type == ACX_MODULE) {
+    memcpy(_RS9116_BLE_REGION_BASED_MAXPOWER_XX,
+           RS9116_BLE_REGION_BASED_MAXPOWER_AC1,
+           sizeof(RS9116_BLE_REGION_BASED_MAXPOWER_AC1));
+    memcpy(_RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_AC1,
+           sizeof(RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_AC1));
+    memcpy(_RS9116_BT_REGION_BASED_MAXPOWER_XX,
+           RS9116_BT_REGION_BASED_MAXPOWER_AC1,
+           sizeof(RS9116_BT_REGION_BASED_MAXPOWER_AC1));
+    memcpy(_RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_AC1,
+           sizeof(RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_AC1));
+  } else {
+    memcpy(_RS9116_BT_REGION_BASED_MAXPOWER_XX,
+           RS9116_BT_REGION_BASED_MAXPOWER_XX,
+           sizeof(RS9116_BT_REGION_BASED_MAXPOWER_XX));
+    memcpy(_RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           sizeof(RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX));
+    memcpy(_RS9116_BLE_REGION_BASED_MAXPOWER_XX,
+           RS9116_BLE_REGION_BASED_MAXPOWER_XX,
+           sizeof(RS9116_BLE_REGION_BASED_MAXPOWER_XX));
+    memcpy(_RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
+           sizeof(RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX));
+  }
 
 #if (RSI_BT_BLE_MODE == 9 || RSI_BT_BLE_MODE == 12)
   status = rsi_bt_cmd_update_gain_table_offset_or_max_pwr(BLE_NODE,
@@ -113,6 +169,7 @@ int rsi_app_task_update_gain_table(void)
     return status;
   }
 #endif
+
 #if (RSI_BT_BLE_MODE == 9 || RSI_BT_BLE_MODE == 4)
   status = rsi_bt_cmd_update_gain_table_offset_or_max_pwr(BT_NODE,
                                                           sizeof(_RS9116_BT_REGION_BASED_MAXPOWER_XX),
@@ -132,6 +189,7 @@ int rsi_app_task_update_gain_table(void)
     return status;
   }
 #endif
+
   return status;
 }
 //! Forever in wireless driver task

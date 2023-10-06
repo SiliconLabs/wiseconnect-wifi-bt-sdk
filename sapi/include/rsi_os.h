@@ -116,6 +116,7 @@ void rsi_os_task_delay(uint32_t timeout_ms);
 void rsi_task_suspend(rsi_task_handle_t *task_handle);
 void rsi_start_os_scheduler(void);
 void rsi_wireless_driver_task_create(void);
+uint32_t rsi_ms_to_tick(uint32_t timeout_ms);
 /*  ---------- OS MEMORY MAPPING FUNCTIONS -------- */
 void *rsi_virtual_to_physical_address(void *x);
 void *rsi_physical_to_virtual_address(void *x);

@@ -1367,6 +1367,10 @@ typedef struct rsi_emb_mqtt_client_init_s {
   //! Capping tcp retransmission timeout
   uint8_t tcp_max_retransmission_cap_for_emb_mqtt;
 #endif
+#ifndef CHIP_9117
+  //keep alive retries
+  uint8_t keep_alive_retries[2];
+#endif
 } rsi_emb_mqtt_client_init_t;
 
 typedef struct rsi_req_emb_mqtt_command_s {

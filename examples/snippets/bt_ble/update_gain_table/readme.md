@@ -104,7 +104,14 @@ int32_t rsi_bt_cmd_update_gain_table_offset_or_max_pwr(uint8_t node_id,
     * Gain table with Max power vs offset values for each channel of all regions
 * There are 5 regions supported and are FCC, ETSI, TELEC, KCC, WORLDWIDE. These FCC/ETSI/TELEC/KCC gain table max power level and offset values should be loaded in end-to-end mode via BT/BLE User Gain table. This has to be called upon every boot-up since this information is not saved inside flash. SoC uses these tables in FCC/ETSI/TELEC/KCC to limit power and not to violate allowed limits.
 * For Worldwide region firmware uses Worldwide values for Tx. For other regions(FCC/ETSI/TELEC/KCC), Firmware uses min value out of Worldwide & Region based values for Tx.  Also there will be part to part variation across chips and offsets are estimated during manufacturing flow which will be applied as correction factor during normal mode of operation.
-* This frame has to be used by customers who has done FCC/ETSI/TELEC/KCC certification with their own antenna.  All other customers should not use this. Inappropriate use of this frame may result in violation of FCC/ETSI/TELEC/KCC or any certifications and Silicon labs is not liable for that.**
+* This frame has to be used by customers who has done FCC/ETSI/TELEC/KCC certification with their own antenna. All other customers should not use this. Inappropriate use of this frame may result in violation of FCC/ETSI/TELEC/KCC or any certifications and Silicon labs is not liable for that.
+
+---
+
+* for ACX module
+* BT power offset like < CHANNEL_NUM >, <1M_OFFSET>, <2M_OFFSET>, <3M_oFFSET>
+* BLE power offset like < CHANNEL_NUM >, <1M_OFFSET>, <2M_OFFSET>, <500kbps_oFFSET>, <125kbps_oFFSET>
+
 ---
 
 **req_type** can be set to one of the following macros :
@@ -122,12 +129,19 @@ The following arrays will be used to update_gain_table based on `node_id` and `r
 
 | `node_id`  | `req_type`                    | Payload Array                                    |
 | ---------- | ----------------------------- | ------------------------------------------------ |
-| `BLE_NODE` | `UPDATE_GAIN_TABLE_MAX_POWER` | `_RS9116_BLE_REGION_BASED_MAXPOWER_XX`           |
-| `BLE_NODE` | `UPDATE_GAIN_TABLE_OFFSET`    | `_RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX` |
-| `BT_NODE`  | `UPDATE_GAIN_TABLE_MAX_POWER` | `_RS9116_BT_REGION_BASED_MAXPOWER_XX`            |
-| `BT_NODE`  | `UPDATE_GAIN_TABLE_OFFSET`    | `_RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX`  |
+| `BLE_NODE` | `UPDATE_GAIN_TABLE_MAX_POWER` | `RS9116_BLE_REGION_BASED_MAXPOWER_XX`           |
+| `BLE_NODE` | `UPDATE_GAIN_TABLE_OFFSET`    | `RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX` |
+| `BT_NODE`  | `UPDATE_GAIN_TABLE_MAX_POWER` | `RS9116_BT_REGION_BASED_MAXPOWER_XX`            |
+| `BT_NODE`  | `UPDATE_GAIN_TABLE_OFFSET`    | `RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_XX`  |
 
+The following arrays will be used to update_gain_table for ACX module based on `node_id` and `req_type`.
 
+| `node_id`  | `req_type`                    | Payload Array                                    |
+| ---------- | ----------------------------- | ------------------------------------------------ |
+| `BLE_NODE` | `UPDATE_GAIN_TABLE_MAX_POWER` | `RS9116_BLE_REGION_BASED_MAXPOWER_AC1`           |
+| `BLE_NODE` | `UPDATE_GAIN_TABLE_OFFSET`    | `RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_AC1` |
+| `BT_NODE`  | `UPDATE_GAIN_TABLE_MAX_POWER` | `RS9116_BT_REGION_BASED_MAXPOWER_AC1`            |
+| `BT_NODE`  | `UPDATE_GAIN_TABLE_OFFSET`    | `RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_AC1`  |
 **Gain Table Max Power Array Format**
 
 ```c
@@ -139,6 +153,20 @@ uint8_t _RS9116_BT/BLE_REGION_BASED_MAXPOWER_XX[] = {}; //! Fill the user gain t
                     .
                     .
                    <REGION NAME N>, <MAX POWER> 
+                 };
+```
+
+**Gain Table Max Power Array Format for ACX module**
+
+```c
+uint8_t _RS9116_BT/BLE_REGION_BASED_MAXPOWER_AC1[] = {}; //! Fill the user gain table max power values in the below mentioned way.
+
+<TABLE NAME>[] = {
+                   <REGION NAME 1>, <MAX POWER>,
+                   <REGION NAME 1>, <MAX POWER>,
+                    .
+                    .
+                   <REGION NAME N>, <MAX POWER>
                  };
 ```
 
@@ -169,6 +197,61 @@ uint8_t _RS9116_BT/BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX[] = {};  // Fill the u
                        .
                        .
                        <CHANNEL NUMBER n>, <OFFSET>,
+                   };
+```
+
+**Gain Table Offset Array Format for ACX module**
+```c
+uint8_t _RS9116_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_AC1[] = {};  // Fill the user gain table offset values as shown.
+
+<TABLE NAME>[] = {
+                  <Number Of Regions - 'r'>,
+                    <REGION NAME 1>, <Number of Channels - 'm'>,
+                      <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                      <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                      .
+                      .
+                      <CHANNEL NUMBER m>, <OFFSET>,
+                    <REGION NAME 2>, <Number of Channels - 'n'>,
+                      <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                      <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                      .
+                      .
+                      <CHANNEL NUMBER n>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                     .
+                     .
+                     <REGION NAME r>, <Number of Channels - 'n'>,
+                       <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                       <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                       .
+                       .
+                       <CHANNEL NUMBER n>, <OFFSET>, <OFFSET>, <OFFSET>, <OFFSET>
+                   };
+
+uint8_t _RS9116_BT_REGION_BASED_MAXPOWER_VS_OFFSET_AC1[] = {};  // Fill the user gain table offset values as shown.
+
+<TABLE NAME>[] = {
+                  <Number Of Regions - 'r'>,
+                    <REGION NAME 1>, <Number of Channels - 'm'>,
+                      <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>
+                      <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>
+                      .
+                      .
+                      <CHANNEL NUMBER m>, <OFFSET>,
+                    <REGION NAME 2>, <Number of Channels - 'n'>,
+                      <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>
+                      <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>
+                      .
+                      .
+                      <CHANNEL NUMBER n>, <OFFSET>, <OFFSET>, <OFFSET>
+                     .
+                     .
+                     <REGION NAME r>, <Number of Channels - 'n'>,
+                       <CHANNEL NUMBER 1>, <OFFSET>, <OFFSET>, <OFFSET>
+                       <CHANNEL NUMBER 2>, <OFFSET>, <OFFSET>, <OFFSET>
+                       .
+                       .
+                       <CHANNEL NUMBER n>, <OFFSET>, <OFFSET>, <OFFSET>
                    };
 ```
 

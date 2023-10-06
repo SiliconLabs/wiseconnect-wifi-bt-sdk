@@ -305,6 +305,12 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_join->data_rate           = RSI_DATA_RATE;
       rsi_join->power_level         = RSI_POWER_LEVEL;
       rsi_join->join_feature_bitmap = RSI_JOIN_FEAT_BIT_MAP;
+      if (rsi_join->security_type == SME_WPA3) {
+        rsi_join->join_feature_bitmap |= RSI_JOIN_FEAT_MFP_CAPABLE_REQUIRED;
+      } else if (rsi_join->security_type == SME_WPA3_TRANSITION) {
+        rsi_join->join_feature_bitmap &= ~(RSI_JOIN_FEAT_MFP_CAPABLE_REQUIRED);
+        rsi_join->join_feature_bitmap |= RSI_JOIN_FEAT_MFP_CAPABLE_ONLY;
+      }
       rsi_uint32_to_4bytes(rsi_join->listen_interval, RSI_LISTEN_INTERVAL);
       memcpy(rsi_join->join_bssid, rsi_wlan_cb_non_rom->join_bssid_non_rom, 6);
 

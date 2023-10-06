@@ -928,7 +928,6 @@ void rsi_bt_common_init(void)
   rsi_semaphore_wait(&bt_common_cb->bt_sem, RSI_BT_BLE_CMD_MAX_RESP_WAIT_TIME);
 }
 
-/*! \cond RS9116 */
 /** @} */
 /** @addtogroup BT-CLASSIC6
 * @{
@@ -1008,7 +1007,6 @@ void rsi_bt_gap_register_callbacks(rsi_bt_on_role_change_t bt_on_role_change_sta
   bt_specific_cb->bt_on_connection_initiated             = bt_on_connection_initiated;
 }
 /** @} */
-/*! \endcond */
 /** @addtogroup DRIVER14
 * @{
 */
@@ -1033,7 +1031,6 @@ void rsi_bt_gatt_extended_register_callbacks(rsi_bt_on_gatt_connection_t bt_on_g
   bt_specific_cb->bt_on_gatt_disconnection_event = bt_on_gatt_disconnection_event;
 }
 /** @} */
-/*! \cond RS9116 */
 /** @addtogroup BT-CLASSIC6
 * @{
 */
@@ -1072,7 +1069,6 @@ void rsi_bt_pkt_change_events_register_callbacks(rsi_bt_pkt_change_stats_t bt_pk
   bt_specific_cb->bt_pkt_change_stats_event = bt_pkt_change_stats_event;
 }
 /** @} */
-/*! \endcond */
 /**
  * @brief       Register the chip memory stats callbacks.
  * @note        This API is not supported in the current release.
@@ -1092,7 +1088,6 @@ void rsi_bt_on_chip_memory_status_callbacks_register(
 
   bt_specific_cb->bt_on_chip_memory_stats_event = bt_on_chip_memory_stats_event;
 }
-/*! \cond RS9116 */
 /** @addtogroup  BT-CLASSIC6
 * @{
 */
@@ -1114,7 +1109,6 @@ void rsi_bt_ar_events_register_callbacks(rsi_bt_on_ar_stats_t bt_on_ar_stats_eve
 }
 
 /** @} */
-/*! \endcond */
 /**
  * @brief       Register the l2cap callbacks
  * @param[in]   bt_on_l2cap_connect_event - HID connection status callback
@@ -1173,7 +1167,6 @@ void rsi_bt_hid_register_callbacks(rsi_bt_on_hid_connect_t bt_on_hid_connect_eve
   bt_specific_cb->bt_on_hid_get_proto       = bt_on_hid_get_proto;
   bt_specific_cb->bt_on_hid_set_proto       = bt_on_hid_set_proto;
 }
-/*! \cond RS9116 */
 /** @addtogroup BT-CLASSIC6
 * @{
 */
@@ -1364,7 +1357,6 @@ void rsi_bt_avrcp_target_register_callbacks(
   return;
 }
 /** @} */
-/*! \endcond */
 /**
  * @brief       Register the bt_hfp callbacks
  * @param[in]   bt_on_hfp_connect_event - HFP connect event

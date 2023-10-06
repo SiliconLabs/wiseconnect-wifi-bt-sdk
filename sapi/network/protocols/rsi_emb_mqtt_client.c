@@ -126,6 +126,10 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
     // Copy MQTT Keep Alive period
     rsi_uint16_to_2bytes(mqtt_ops->keep_alive_interval, keep_alive_interval);
 
+#ifndef CHIP_9117
+    // Copy MQTT Keep Alive retries
+    rsi_uint16_to_2bytes(mqtt_ops->keep_alive_retries, RSI_EMB_MQTT_KEEPALIVE_RETRIES);
+#endif
     if (!(flags & RSI_EMB_MQTT_IPV6_ENABLE)) {
       // Fill IP version
       rsi_uint32_to_4bytes(mqtt_ops->server_ip.ip_version, RSI_IP_VERSION_4);
@@ -825,6 +829,12 @@ int32_t rsi_emb_mqtt_destroy()
  * @param[out] buffer                - Pointer to buffer which holds data \n
  * @param[out] length                - Length of the buffer \n
  * @return     Status of the call_back_handler_ptr 
+ * @note       **callback_id**\n
+ *  ID                                         |    Description
+ *  :------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ *  RSI_WLAN_NWK_EMB_MQTT_REMOTE_TERMINATE_CB  |     If registered, this callback notifies the application of disconnection with the MQTT broker. \n
+ *  RSI_WLAN_NWK_EMB_MQTT_PUB_MSG_CB           |     If registered, this callback provides MQTT publish received data to the application. \n
+ *  RSI_WLAN_NWK_EMB_MQTT_KEEPALIVE_TIMEOUT_CB |     If registered, this callback notifies the application of MQTT keepalive response timeout, i.e., ping response is not received within the MQTT Command ACK Timer. \n
  */
 
 int32_t rsi_emb_mqtt_register_call_back(uint32_t callback_id,
