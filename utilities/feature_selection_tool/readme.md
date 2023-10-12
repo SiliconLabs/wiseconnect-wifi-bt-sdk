@@ -25,7 +25,7 @@ This document provides a comprehensive description of the RS9116 TCP/IP Feature 
 
 This document explains the application's usage to determine the static memory footprint in an RS9116 module to establish applications using either WiFi only or Wi-Fi plus Bluetooth/BLE capabilities and determine whether the desired Wi-Fi, Bluetooth Classic, Bluetooth LE and TCP/IP capabilities for a customer application can be fit within the static memory available in the RS9116 system of choice.
 
-**Note:** This application only works for **2.8.0.45** build version and checks for static memory allocation (Dynamic memory is not profiled by this application).
+**Note:** This application only works for **2.8.2.27** build version and checks for static memory allocation (Dynamic memory is not profiled by this application).
 
 ## 2. Prerequisites
 
