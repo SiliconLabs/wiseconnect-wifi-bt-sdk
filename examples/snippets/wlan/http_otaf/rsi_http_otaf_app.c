@@ -315,7 +315,7 @@ int32_t rsi_http_otaf_app()
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
   uint8_t flags = FLAGS;
-#ifndef RSI_M4_INTERFACE
+
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -330,7 +330,7 @@ int32_t rsi_http_otaf_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#endif
+
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   status = rsi_task_create(rsi_wireless_driver_task,
@@ -610,22 +610,7 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
-#ifdef RSI_M4_INTERFACE
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
 
-  //! SiLabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
-#endif
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task

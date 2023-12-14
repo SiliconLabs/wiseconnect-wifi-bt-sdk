@@ -120,7 +120,7 @@
 //! FTP client mode 1- Passive mode 0- Active mode
 #define FTP_CLIENT_MODE FTP_ENABLE_ACTIVE
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
 //! FTP data transfer modes 1- Block transfer mode 0- Stream transfer mode
 #define FTP_TRANSFER_MODE FTP_STREAM_TRANSFER_MODE
 #endif
@@ -230,15 +230,6 @@ int32_t rsi_ftp_client()
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
-  //! Silabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
-
 #ifdef RSI_WITH_OS
 
   //! Task created for Driver task
@@ -249,6 +240,14 @@ int32_t rsi_ftp_client()
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+  //! Silabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
@@ -314,13 +313,13 @@ int32_t rsi_ftp_client()
   ////////////////////////////////////////////////////////////////
 
   if (FTP_CLIENT_MODE
-#ifdef CHIP_9117
+#ifdef CHIP_917
       || FTP_TRANSFER_MODE
 #endif
   ) {
     //! Set FTP client PASSIVE mode
     mode_type = FTP_CLIENT_MODE;
-#ifdef CHIP_9117
+#ifdef CHIP_917
     mode_type = mode_type | (FTP_TRANSFER_MODE << 1);
 #endif
     retval = rsi_ftp_mode_set(mode_type);
@@ -372,7 +371,7 @@ int32_t rsi_ftp_client()
   } else {
     LOG_PRINT("\r\nFile Write Success\r\n");
   }
-#ifdef CHIP_9117
+#ifdef CHIP_917
   if (FTP_TRANSFER_MODE) {
     retval = rsi_ftp_file_size_set(file_write_data_length);
     if (retval != RSI_SUCCESS) {

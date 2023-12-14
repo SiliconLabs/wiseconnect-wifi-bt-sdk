@@ -63,6 +63,21 @@ The Application is provided with the project folder consists of Keil and Simplic
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
     - Project path:`<SDK>/examples/featured/powersave_standby_associated/projects/powersave_standby_associated-brd2204a-gg11.slsproj`
 
+### **For Powersave functionality with NCP expansion (ACX) board**
+
+> **Note:** 
+  For using powersave functionality with NCP expansion (ACX) board, the following macro has to be enabled:
+
+ * While using the NCP expansion (ACX) board, the `EXP_BOARD=1` preprocessor symbol should be added to the list of defined symbols in the preprocessor menu of project settings.
+
+    > - Open the project in Simplicity Studio
+    > - Right click on the project and choose 'Properties'
+    > - Go to 'C/C++ Build' | 'Settings' | 'GNU ARM C Compiler' | 'Preprocessor' and add the macro `EXP_BOARD=1`
+    > - Select 'Apply' and 'OK' to save the settings
+
+
+![Figure: Adding pre-processor symbol required for Expansion board](resources/readme/exp_board.png)
+
 ### Bare Metal/RTOS Support
 To select a bare metal configuration, see [Selecting bare metal](#selecting-bare-metal).
 

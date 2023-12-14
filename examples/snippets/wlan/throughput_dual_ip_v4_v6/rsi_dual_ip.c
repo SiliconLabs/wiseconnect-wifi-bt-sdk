@@ -348,22 +348,12 @@ int32_t application()
   int8_t send_buf[BUF_SIZE];
   uint16_t i              = 0;
   uint32_t total_bytes_tx = 0, tt_start = 0, tt_end = 0, pkt_cnt = 0;
-#ifndef RSI_M4_INTERFACE
 
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
   }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
@@ -383,6 +373,14 @@ int32_t application()
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+
+  // Silicon labs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nDevice Initialization Success\r\n");
 
   // WC initialization
   status = rsi_wireless_init(0, 0);

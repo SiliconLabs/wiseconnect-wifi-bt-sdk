@@ -44,6 +44,13 @@
 
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
+#include "rsi_rtc.h"
+#include "rsi_driver.h"
+#include "rsi_chip.h"
+#include "rsi_wisemcu_hardware_setup.h"
+#include "rsi_m4.h"
+#include "rsi_ps_ram_func.h"
+#include "rsi_ds_timer.h"
 #endif
 #ifdef FW_LOGGING_ENABLE
 //! Firmware logging includes
@@ -64,11 +71,11 @@
 //! Memory to initialize driver
 uint8_t global_buf[BT_GLOBAL_BUFF_LEN];
 
-#define RSI_SLAVE  0
-#define RSI_MASTER 1
+#define PERIPHERAL_ROLE 0
+#define CENTRAL_ROLE    1
 
 //!local device role
-#define RSI_DEVICE_ROLE RSI_SLAVE
+#define RSI_DEVICE_ROLE PERIPHERAL_ROLE
 
 //! local device name
 #define RSI_BLE_DEVICE_NAME "SIMPLE_PRIVACY"
@@ -149,9 +156,20 @@ rsi_task_handle_t fw_log_task_handle = NULL;
 void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
 void sl_fw_log_task(void);
 #endif
-
 void rsi_wireless_driver_task(void);
+void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled);
 
+#endif
+/*=======================================================================*/
+//!    Powersave configurations
+/*=======================================================================*/
+#define ENABLE_POWER_SAVE 0 //! Set to 1 for powersave mode
+
+#if ENABLE_POWER_SAVE
+//! Power Save Profile Mode
+#define PSP_MODE RSI_SLEEP_MODE_2
+//! Power Save Profile type
+#define PSP_TYPE RSI_MAX_PSP
 #endif
 
 #define MITM_REQ          0x01
@@ -234,7 +252,88 @@ int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
 int8_t add_security_keys_to_device_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
                                         rsi_bt_event_le_security_keys_t *le_sec_keys);
 int8_t rsi_get_ltk_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list, rsi_bt_event_le_ltk_request_t *le_ltk_req);
+void update_resolvlist(rsi_ble_resolvlist_group_t *resolvlist_p, rsi_ble_resolve_key_t *resolve_key_p);
+void main_loop(void);
+int32_t rsi_ble_privacy_app(void);
+int32_t add_device_to_resolvlist(rsi_ble_resolvlist_group_t *resolvlist_p, rsi_ble_resolve_key_t *resolve_key_p);
+void rsi_ble_on_remote_features_event(rsi_ble_event_remote_features_t *rsi_ble_event_remote_features);
+void rsi_ble_on_conn_update_complete_event(rsi_ble_event_conn_update_t *rsi_ble_event_conn_update_complete,
+                                           uint16_t resp_status);
+void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event_phy_update_complete);
+void rsi_ble_data_length_change_event(rsi_ble_event_data_length_update_t *rsi_ble_data_length_update);
+void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address);
+void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey);
+void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display);
+void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address);
+void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address);
+void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address);
+void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report);
+void rsi_ble_app_set_event(uint32_t event_num);
 
+/**
+ * @fn         rsi_ble_only_Trigger_M4_Sleep
+ * @brief      Keeps the M4 In the Sleep
+ * @param[in]  none
+ * @return    none.
+ * @section description
+ * This function is used to trigger sleep in the M4 and in the case of the retention submitting the buffer valid
+ * to the TA for the rx packets.
+ */
+#if M4_POWERSAVE_ENABLE
+void rsi_ble_only_Trigger_M4_Sleep(void)
+{
+  /* Configure Wakeup-Source */
+  RSI_PS_SetWkpSources(WIRELESS_BASED_WAKEUP);
+  /* sets the priority of an Wireless wakeup interrupt. */
+  NVIC_SetPriority(WIRELESS_WAKEUP_IRQHandler, WIRELESS_WAKEUP_IRQ_PRI);
+  NVIC_EnableIRQ(WIRELESS_WAKEUP_IRQHandler);
+
+#ifndef FLASH_BASED_EXECUTION_ENABLE
+  /* LDOSOC Default Mode needs to be disabled */
+  RSI_PS_LdoSocDefaultModeDisable();
+
+  /* bypass_ldorf_ctrl needs to be enabled */
+  RSI_PS_BypassLdoRfEnable();
+
+  RSI_PS_FlashLdoDisable();
+
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_48KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  /* Trigger M4 Sleep */
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           0,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           0,
+                           RSI_WAKEUP_WITH_RETENTION_WO_ULPSS_RAM);
+
+#else
+
+#ifdef COMMON_FLASH_EN
+  M4SS_P2P_INTR_SET_REG &= ~BIT(3);
+#endif
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           WKP_RAM_USAGE_LOCATION,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           IVT_OFFSET_ADDR,
+                           RSI_WAKEUP_FROM_FLASH_MODE);
+#endif
+#ifdef RSI_WITH_OS
+  /*  Setup the systick timer */
+  vPortSetupTimerInterrupt();
+#endif
+#ifdef DEBUG_UART
+  fpuInit();
+  DEBUGINIT();
+#endif
+}
+#endif
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -312,11 +411,11 @@ static int32_t rsi_ble_app_get_event(void)
   for (ix = 0; ix < 64; ix++) {
     if (ix < 32) {
       if (ble_app_event_map & (1 << ix)) {
-        return ix;
+        return (int32_t)ix;
       }
     } else {
       if (ble_app_event_map1 & (1 << (ix - 32))) {
-        return ix;
+        return (int32_t)ix;
       }
     }
   }
@@ -400,8 +499,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when an SMP request event is received (we are in central mode)
+ * Note: peripheral requested to start SMP request, we have to send SMP request command
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
@@ -418,8 +517,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode) 
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when an SMP response event is received(we are in peripheral mode) 
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {
@@ -607,7 +706,7 @@ void rsi_ble_on_conn_update_complete_event(rsi_ble_event_conn_update_t *rsi_ble_
 void rsi_ble_on_remote_features_event(rsi_ble_event_remote_features_t *rsi_ble_event_remote_features)
 {
   memcpy(&remote_dev_feature, rsi_ble_event_remote_features, sizeof(rsi_ble_event_remote_features_t));
-  LOG_PRINT("\nFeature received is %d\n");
+  LOG_PRINT("\nFeature received is \n");
   for (int i = 0; i < 8; i++) {
     LOG_PRINT("remote_features:[%d]0x%x\n", i, remote_dev_feature.remote_features[i]);
   }
@@ -665,7 +764,7 @@ void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled
  * @section description
  * add device to ltk key list
  * */
-int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
+int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list_s,
                                   rsi_bt_event_encryption_enabled_t *enc_enabled)
 {
   int8_t status = 0;
@@ -673,25 +772,26 @@ int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
 
   for (ix = 0; ix < RSI_MAX_LIST_SIZE; ix++) {
 
-    if (ble_dev_ltk_list[ix].used == 1) {
-      if ((enc_enabled->dev_addr_type > 1) && (!memcmp(enc_enabled->dev_addr, ble_dev_ltk_list[ix].Identity_addr, 6))) {
+    if (ble_dev_ltk_list_s[ix].used == 1) {
+      if ((enc_enabled->dev_addr_type > 1)
+          && (!memcmp(enc_enabled->dev_addr, ble_dev_ltk_list_s[ix].Identity_addr, 6))) {
         break;
       }
 
       if ((enc_enabled->dev_addr_type <= 1)
-          && (!memcmp(enc_enabled->dev_addr, ble_dev_ltk_list[ix].remote_dev_addr, 6))) {
+          && (!memcmp(enc_enabled->dev_addr, ble_dev_ltk_list_s[ix].remote_dev_addr, 6))) {
         break;
       }
     }
 
-    if (ble_dev_ltk_list[ix].used == 0) {
-      ble_dev_ltk_list[ix].used       = 1;
-      ble_dev_ltk_list[ix].enc_enable = enc_enabled->enabled;
-      ble_dev_ltk_list[ix].sc_enable  = enc_enabled->sc_enable;
-      memcpy(ble_dev_ltk_list[ix].remote_dev_addr, enc_enabled->dev_addr, 6);
-      memcpy(ble_dev_ltk_list[ix].localltk, enc_enabled->localltk, 16);
-      memcpy(ble_dev_ltk_list[ix].localrand, enc_enabled->localrand, 8);
-      ble_dev_ltk_list[ix].local_ediv = enc_enabled->localediv;
+    if (ble_dev_ltk_list_s[ix].used == 0) {
+      ble_dev_ltk_list_s[ix].used       = 1;
+      ble_dev_ltk_list_s[ix].enc_enable = enc_enabled->enabled;
+      ble_dev_ltk_list_s[ix].sc_enable  = enc_enabled->sc_enable;
+      memcpy(ble_dev_ltk_list_s[ix].remote_dev_addr, enc_enabled->dev_addr, 6);
+      memcpy(ble_dev_ltk_list_s[ix].localltk, enc_enabled->localltk, 16);
+      memcpy(ble_dev_ltk_list_s[ix].localrand, enc_enabled->localrand, 8);
+      ble_dev_ltk_list_s[ix].local_ediv = enc_enabled->localediv;
       break;
     }
   }
@@ -710,22 +810,23 @@ int8_t add_device_to_ltk_key_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
  * @section description
  * add device to resolvlistwith updated irks 
  * */
-int8_t add_security_keys_to_device_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list,
+int8_t add_security_keys_to_device_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list_s,
                                         rsi_bt_event_le_security_keys_t *le_sec_keys)
 {
   int8_t status = 0;
   uint8_t ix;
   for (ix = 0; ix < RSI_MAX_LIST_SIZE; ix++) {
 
-    if ((ble_dev_ltk_list[ix].used == 1) && (!memcmp(ble_dev_ltk_list[ix].remote_dev_addr, le_sec_keys->dev_addr, 6))
-        && (ble_dev_ltk_list[ix].remote_dev_addr_type == le_sec_keys->dev_addr_type)) {
-      memcpy(ble_dev_ltk_list[ix].local_irk, le_sec_keys->local_irk, 16);
-      memcpy(ble_dev_ltk_list[ix].peer_irk, le_sec_keys->remote_irk, 16);
-      memcpy(ble_dev_ltk_list[ix].remote_rand, le_sec_keys->remote_rand, 8);
-      memcpy(ble_dev_ltk_list[ix].remote_ltk, le_sec_keys->remote_ltk, 16);
-      memcpy(ble_dev_ltk_list[ix].Identity_addr, le_sec_keys->Identity_addr, 6);
-      ble_dev_ltk_list[ix].remote_ediv        = le_sec_keys->remote_ediv;
-      ble_dev_ltk_list[ix].Identity_addr_type = le_sec_keys->Identity_addr_type;
+    if ((ble_dev_ltk_list_s[ix].used == 1)
+        && (!memcmp(ble_dev_ltk_list_s[ix].remote_dev_addr, le_sec_keys->dev_addr, 6))
+        && (ble_dev_ltk_list_s[ix].remote_dev_addr_type == le_sec_keys->dev_addr_type)) {
+      memcpy(ble_dev_ltk_list_s[ix].local_irk, le_sec_keys->local_irk, 16);
+      memcpy(ble_dev_ltk_list_s[ix].peer_irk, le_sec_keys->remote_irk, 16);
+      memcpy(ble_dev_ltk_list_s[ix].remote_rand, le_sec_keys->remote_rand, 8);
+      memcpy(ble_dev_ltk_list_s[ix].remote_ltk, le_sec_keys->remote_ltk, 16);
+      memcpy(ble_dev_ltk_list_s[ix].Identity_addr, le_sec_keys->Identity_addr, 6);
+      ble_dev_ltk_list_s[ix].remote_ediv        = le_sec_keys->remote_ediv;
+      ble_dev_ltk_list_s[ix].Identity_addr_type = le_sec_keys->Identity_addr_type;
       break;
     }
   }
@@ -747,7 +848,7 @@ int8_t add_security_keys_to_device_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list
  * */
 int32_t add_device_to_resolvlist(rsi_ble_resolvlist_group_t *resolvlist_p, rsi_ble_resolve_key_t *resolve_key_p)
 {
-  uint32_t status = 0;
+  int32_t status = 0;
   uint8_t ix;
 
   for (ix = 0; ix < RSI_BLE_RESOLVING_LIST_SIZE; ix++) {
@@ -776,19 +877,20 @@ int32_t add_device_to_resolvlist(rsi_ble_resolvlist_group_t *resolvlist_p, rsi_b
   return status;
 }
 
-int8_t rsi_get_ltk_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list, rsi_bt_event_le_ltk_request_t *le_ltk_req)
+int8_t rsi_get_ltk_list(rsi_ble_dev_ltk_list_t *ble_dev_ltk_list_s, rsi_bt_event_le_ltk_request_t *le_ltk_req)
 {
-  uint8_t ix;
+  int8_t ix;
 
   for (ix = 0; ix < RSI_MAX_LIST_SIZE; ix++) {
 
     if (ble_dev_ltk_list[ix].used == 1) {
-      if ((le_ltk_req->dev_addr_type > 1) && (!(memcmp(le_ltk_req->dev_addr, ble_dev_ltk_list[ix].Identity_addr, 6)))) {
+      if ((le_ltk_req->dev_addr_type > 1)
+          && (!(memcmp(le_ltk_req->dev_addr, ble_dev_ltk_list_s[ix].Identity_addr, 6)))) {
         return ix;
       }
 
       if ((le_ltk_req->dev_addr_type <= 1)
-          && (!(memcmp(le_ltk_req->dev_addr, ble_dev_ltk_list[ix].remote_dev_addr, 6)))) {
+          && (!(memcmp(le_ltk_req->dev_addr, ble_dev_ltk_list_s[ix].remote_dev_addr, 6)))) {
         return ix;
       }
     }
@@ -840,9 +942,9 @@ int32_t rsi_ble_privacy_app(void)
   int32_t status = 0, ix;
   int32_t event_id;
   uint8_t first_connect               = 0;
-  uint8_t fmversion[20]               = { 0 };
   rsi_ble_dev_ltk_list_t *ble_dev_ltk = NULL;
-#if (RSI_DEVICE_ROLE == RSI_SLAVE)
+  uint8_t fmversion[20]               = { 0 };
+#if (RSI_DEVICE_ROLE == PERIPHERAL_ROLE)
   uint8_t adv[31] = { 2, 1, 6 };
 #endif
 #ifdef RSI_WITH_OS
@@ -904,6 +1006,14 @@ int32_t rsi_ble_privacy_app(void)
   } else {
     LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
+#if M4_POWERSAVE_ENABLE
+
+  //RSI_PS_FlashLdoEnable();
+  /* MCU Hardware Configuration for Low-Power Applications */
+  RSI_WISEMCU_HardwareSetup();
+  LOG_PRINT("\r\nRSI_WISEMCU_HardwareSetup Success\r\n");
+
+#endif
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components
   sl_set_fw_component_log_levels(&fw_component_log_level);
@@ -966,7 +1076,7 @@ int32_t rsi_ble_privacy_app(void)
     return status;
   }
 
-#if (RSI_DEVICE_ROLE == RSI_SLAVE)
+#if (RSI_DEVICE_ROLE == PERIPHERAL_ROLE)
   //!preparing scan response data
   adv[3] = strlen(RSI_BLE_DEVICE_NAME) + 1;
   adv[4] = 9;
@@ -1008,7 +1118,35 @@ int32_t rsi_ble_privacy_app(void)
   }
 
 #endif
+#if ENABLE_POWER_SAVE
 
+  LOG_PRINT("\r\n Initiate module in to power save \r\n");
+  //! enable wlan radio
+  status = rsi_wlan_radio_init();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\n radio init failed \n");
+  }
+
+  //! initiating power save in BLE mode
+  status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+    return status;
+  }
+
+  //! initiating power save in wlan mode
+  status = rsi_wlan_power_save_profile(PSP_MODE, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Failed to initiate power save in WLAN mode \r\n");
+    return status;
+  }
+
+  LOG_PRINT("\r\n Module is in power save \r\n");
+#endif
+#if M4_POWERSAVE_ENABLE
+  P2P_STATUS_REG &= ~M4_wakeup_TA;
+  // LOG_PRINT("\n RSI_BLE_REQ_PWRMODE\n ");
+#endif
   //! waiting for events from controller.
   while (1) {
 
@@ -1020,7 +1158,17 @@ int32_t rsi_ble_privacy_app(void)
     event_id = rsi_ble_app_get_event();
 
     if (event_id == -1) {
-      rsi_semaphore_wait(&ble_main_task_sem, 0);
+#if M4_POWERSAVE_ENABLE
+      //! if events are not received loop will be continued.
+      if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
+        P2P_STATUS_REG &= ~M4_wakeup_TA;
+        rsi_ble_only_Trigger_M4_Sleep();
+      }
+#else
+      {
+        rsi_semaphore_wait(&ble_main_task_sem, 0);
+      }
+#endif
       continue;
     }
 
@@ -1054,7 +1202,7 @@ int32_t rsi_ble_privacy_app(void)
         LOG_PRINT("\r\nModule got Disconnected\r\n");
         device_found  = 0;
         first_connect = 0;
-#if (RSI_DEVICE_ROLE == RSI_MASTER)
+#if (RSI_DEVICE_ROLE == CENTRAL_ROLE)
 
         status = rsi_ble_connect(
           resolve_key.Identity_addr_type + 2,
@@ -1119,10 +1267,10 @@ int32_t rsi_ble_privacy_app(void)
           LOG_PRINT("\n positive reply\n");
           //!  give le ltk req reply cmd with positive reply
           status = rsi_ble_ltk_req_reply(temp_le_ltk_req.dev_addr,
-                                         (1 | (ble_dev_ltk->enc_enable) | (ble_dev_ltk->sc_enable << 7)),
+                                         (1 | (ble_dev_ltk->enc_enable) | ((uint8_t)(ble_dev_ltk->sc_enable << 7))),
                                          ble_dev_ltk->localltk);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n failed to restart smp pairing with status: 0x%x \r\n", status);
+            LOG_PRINT("\r\n failed to restart smp pairing with status: 0x%lX \r\n", status);
           }
         }
 
@@ -1191,7 +1339,7 @@ int32_t rsi_ble_privacy_app(void)
 
       case RSI_BLE_SMP_FAILED_EVENT: {
         LOG_PRINT("\r\nIn SMP failed event\r\n");
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_FAILED_EVENT);

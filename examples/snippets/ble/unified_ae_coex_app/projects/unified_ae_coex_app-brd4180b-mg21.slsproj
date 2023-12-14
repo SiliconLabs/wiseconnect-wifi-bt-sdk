@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="unified_ae_coex_app_brd4180b-mg21" boardCompatibility="brd4180b" partCompatibility="mcu.arm.efr32.mg21.*" toolchainCompatibility="" contentRoot="../../../../../">
+  <module id="com.silabs.sdk.exx32.board">
+    <exclude pattern=".*" />
+  </module>
+  <module id="com.silabs.sdk.exx32.common.CMSIS">
+    <exclude pattern=".*" />
+  </module>
+  <module id="com.silabs.sdk.exx32.common.emlib">
+    <include pattern="emlib/em_cmu.c" />
+    <include pattern="emlib/em_emu.c" />
+    <include pattern="emlib/em_gpio.c" />
+    <include pattern="emlib/em_core.c" />
+    <include pattern="emlib/em_ldma.c" />
+    <include pattern="emlib/em_system.c" />
+    <include pattern="emlib/em_usart.c" />
+	<include pattern="emlib/em_rtcc.c" />
+  </module>
+  <module id="com.silabs.sdk.exx32.common.emdrv">
+    <include pattern="Drivers/tempdrv.c" />
+  </module>
+  <module id="com.silabs.sdk.exx32.common.bsp">
+    <exclude pattern=".*" />
+  </module>
+  <module id="com.silabs.sdk.exx32.common.platform">
+    <exclude pattern=".*" />
+  </module>
+  <module id="com.silabs.sdk.exx32.part">
+    <include pattern="CMSIS/.*/startup_.*_.*.s" />
+    <include pattern="CMSIS/.*/system_.*.c" />
+  </module>
+  <folder name="unified_ae_coex_app" >
+  	<file name="main.c" uri="examples/snippets/ble/unified_ae_coex_app/main.c" />
+  	<file name="root_auto_gen.c" uri="examples/snippets/ble/unified_ae_coex_app/root_auto_gen.c" />
+  	<file name="btc_auto_gen.c" uri="examples/snippets/ble/unified_ae_coex_app/btc_auto_gen.c" />
+  	<file name="ble/ble_cmd_hdlr_auto_gen.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_cmd_hdlr_auto_gen.c" />
+  	<file name="ble/ble_event_hdlr_auto_gen.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_event_hdlr_auto_gen.c" />
+  	<file name="ble/ble_task.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_task.c" />
+  	<file name="ble/ble_ui_cmd_hdlr.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_ui_cmd_hdlr.c" />
+  	<file name="ble/ble_user_cmd.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_user_cmd.c" />
+  	<file name="ble/ble_user_event_hdlrs.c" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_user_event_hdlrs.c" />
+  	<file name="user_input/rsi_user_input_DEMO_x.c" uri="examples/snippets/ble/unified_ae_coex_app/user_input/rsi_user_input_DEMO_x.c" />
+  	<file name="utils/command_parser.c" uri="examples/snippets/ble/unified_ae_coex_app/utils/command_parser.c" />
+  	<file name="utils/event_loop.c" uri="examples/snippets/ble/unified_ae_coex_app/utils/event_loop.c" />
+  	<file name="utils/rsi_common_utils.c" uri="examples/snippets/ble/unified_ae_coex_app/utils/rsi_common_utils.c" />
+  	
+  	<file name="ble/ble_config.h" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_config.h" />
+  	<file name="ble/ble_cmd_hdlr_auto_gen.h" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_cmd_hdlr_auto_gen.h" />
+  	<file name="ble/ble_event_hdlr_auto_gen.h" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_event_hdlr_auto_gen.h" />
+  	<file name="ble/ble_private.h" uri="examples/snippets/ble/unified_ae_coex_app/ble/ble_private.h" />
+  	<file name="inc/rsi_ble_config.h" uri="examples/snippets/ble/unified_ae_coex_app/inc/rsi_ble_config.h" />
+  	<file name="inc/rsi_bt_config.h" uri="examples/snippets/ble/unified_ae_coex_app/inc/rsi_bt_config.h" />
+  	<file name="inc/rsi_common_app.h" uri="examples/snippets/ble/unified_ae_coex_app/inc/rsi_common_app.h" />
+  	<file name="inc/rsi_wlan_config.h" uri="examples/snippets/ble/unified_ae_coex_app/inc/rsi_wlan_config.h" />
+  	<file name="user_input/rsi_user_input_DEMO_x.h" uri="examples/snippets/ble/unified_ae_coex_app/user_input/rsi_user_input_DEMO_x.h" />
+  	<file name="utils/generic_command_handling.h" uri="examples/snippets/ble/unified_ae_coex_app/utils/generic_command_handling.h" />
+  	<file name="utils/rsi_common_utils.h" uri="examples/snippets/ble/unified_ae_coex_app/utils/rsi_common_utils.h" />
+  	<file name="utils/event_loop.h" uri="examples/snippets/ble/unified_ae_coex_app/utils/event_loop.h" />
+  	
+  </folder>
+  
+  <folder name="platform">
+    <folder name="hal" uri="platforms/efx32/hal" includeAllFiles="true" includeAllFolders="true" />
+    <folder name="core" uri="platforms/efx32/core" includeAllFiles="true" includeAllFolders="true" />
+    <folder name="board" uri="platforms/efx32/boards/brd4180b-mg21" includeAllFiles="true" includeAllFolders="true" />
+  </folder>
+  <folder name="sapi/include" uri="sapi/include" includeAllFiles="true" includeAllFolders="true"/>
+  
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/include"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/network/protocols"/>
+  
+  <folder name="sapi/common" uri="sapi/common" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/crypto" uri="sapi/crypto" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/driver" uri="sapi/driver" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/driver/device_interface" uri="sapi/driver/device_interface" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/network/socket" uri="sapi/network/socket" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="sapi/wlan" uri="sapi/wlan" includeAllFiles="true" includeAllFolders="true"/>
+  
+
+  
+  
+  
+  
+  
+  
+  
+  <folder name="sapi/bluetooth" uri="sapi/bluetooth" includeAllFiles="true" includeAllFolders="true"/>
+  
+  <file name="sapi/bluetooth/rsi_bt_spp_apis.c" uri="sapi/bluetooth/rsi_bt_spp_apis.c" />
+  <file name="sapi/bluetooth/rsi_bt_gap_apis.c" uri="sapi/bluetooth/rsi_bt_gap_apis.c" />
+  <file name="sapi/bluetooth/rsi_ble_gap_apis.c" uri="sapi/bluetooth/rsi_ble_gap_apis.c" />
+  <file name="sapi/bluetooth/rsi_bt_common_apis.c" uri="sapi/bluetooth/rsi_bt_common_apis.c" />
+  <file name="sapi/bluetooth/rsi_ble_gatt_apis.c" uri="sapi/bluetooth/rsi_ble_gatt_apis.c" />
+  <file name="sapi/bluetooth/rsi_bt_avrcp_apis.c" uri="sapi/bluetooth/rsi_bt_avrcp_apis.c" />
+  <file name="sapi/bluetooth/rsi_bt_a2dp_apis.c" uri="sapi/bluetooth/rsi_bt_a2dp_apis.c" />
+  
+  
+  
+  
+  
+  
+  <file name="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" uri="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" />
+  <file name="sapi/rtos/freertos_wrapper/port.c" uri="sapi/rtos/freertos_wrapper/port.c" />
+  
+  <file name="sapi/rtos/freertos_wrapper/portmacro.h" uri="sapi/rtos/freertos_wrapper/portmacro.h" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/rtos/freertos_wrapper"/>
+  
+  <folder name="third_party/freertos/include" uri="third_party/freertos/include" includeAllFiles="true" includeAllFolders="true"/>
+  <file name="third_party/freertos/croutine.c" uri="third_party/freertos/croutine.c" />
+  <file name="third_party/freertos/event_groups.c" uri="third_party/freertos/event_groups.c" />
+  <file name="third_party/freertos/list.c" uri="third_party/freertos/list.c" />
+  <file name="third_party/freertos/queue.c" uri="third_party/freertos/queue.c" />
+  <file name="third_party/freertos/stream_buffer.c" uri="third_party/freertos/stream_buffer.c" />
+  <file name="third_party/freertos/tasks.c" uri="third_party/freertos/tasks.c" />
+  <file name="third_party/freertos/timers.c" uri="third_party/freertos/timers.c" />
+  <file name="third_party/freertos/portable/MemMang/heap_4.c" uri="third_party/freertos/portable/MemMang/heap_4.c" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/include"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/portable"/>
+  
+  <includePath uri="$(isCopySources?$(projectLocation)/unified_ae_coex_app:./examples/snippets/ble/unified_ae_coex_app)"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/examples/snippets/ble/unified_ae_coex_app/ble"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/examples/snippets/ble/unified_ae_coex_app/inc"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/examples/snippets/ble/unified_ae_coex_app/user_input"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/examples/snippets/ble/unified_ae_coex_app/utils"/>
+  
+  <includePath uri="$(projectLocation)/platform/core"/>
+  <includePath uri="$(projectLocation)/platform/board"/>
+   <macroDefinition name="WISECONNECT" />
+   <macroDefinition name="RSI_SAMPLE_HAL" />
+   <macroDefinition name="RSI_DEBUG_PRINTS" />
+   <macroDefinition name="RSI_WLAN_ENABLE" />
+  
+   <macroDefinition name="RSI_CRYPTO_ENABLE" />
+  
+   <macroDefinition name="RSI_BLE_ENABLE" />
+   <macroDefinition name="RSI_WITH_OS" />
+  
+  
+  
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.assembler.flags" value="-c -x assembler-with-cpp -mfloat-abi=softfp -mfpu=fpv4-sp-d16 "/>
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.floatingpoint.type" value="floatingpoint.type.softfp"/>
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.base" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.clibs" value="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.baseclibs"/>
+  
+  <toolOption toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.compiler.base" optionId="com.silabs.gnu.c.compiler.option.misc.otherlist" value="-mcmse -c -fmessage-length=0"/>
+</project>

@@ -313,10 +313,6 @@ int rsi_device_shadow_logging_stats_app(void)
     return status;
   }
 
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    return status;
-  }
 #ifdef RSI_WITH_OS
   //! Create Semaphores
   rsi_semaphore_create(&rsi_shadow_sem, 0);
@@ -329,6 +325,14 @@ int rsi_device_shadow_logging_stats_app(void)
                   &driver_task_handle);
 #endif
 
+  //! Silabs module initialization
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {

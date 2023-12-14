@@ -462,8 +462,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when SMP request events is received(we are in Central mode)
+ * Note: Peripheral requested to start SMP request, we have to send SMP request command
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
@@ -478,8 +478,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode)
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when SMP response events is received(we are in Peripheral mode)
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {
@@ -565,11 +565,12 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
       } break;
 
       // Sending SSID
-      case '2': //else if(rsi_ble_write->att_value[0] == '2')                                           //The length of the ssid and pasword is not more than 17 character
+      case '2': //else if(rsi_ble_write->att_value[0] == '2')
       {
         LOG_PRINT("join command is passed\n");
         memset(coex_ssid, 0, sizeof(coex_ssid));
         strcpy((char *)coex_ssid, (const char *)&rsi_ble_write->att_value[3]);
+        LOG_PRINT("\n SSID = %s \n", coex_ssid);
         rsi_ble_app_set_event(RSI_SSID);
       } break;
 
@@ -637,6 +638,7 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
 void rsi_ble_configurator_init(void)
 {
   uint8_t adv[31] = { 2, 1, 6 };
+  uint32_t status = 0;
 
   //  initializing the application events map
   rsi_ble_app_init_events();
@@ -704,7 +706,12 @@ void rsi_ble_configurator_init(void)
   rsi_ble_set_advertise_data(adv, strlen(RSI_BLE_APP_DEVICE_NAME) + 5);
 
   // set device in advertising mode.
-  rsi_ble_start_advertising();
+  status = rsi_ble_start_advertising();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\n rsi_ble_start_advertising cmd failed : %x", status);
+  } else {
+    LOG_PRINT("\n rsi_ble_start_advertising cmd success \n");
+  }
 }
 
 /*==============================================*/
@@ -748,7 +755,15 @@ void rsi_ble_configurator_task(void)
 
         // clear the served event
         rsi_ble_app_clear_event(RSI_BLE_ENH_CONN_EVENT);
+        //MTU exchange
+        status = rsi_ble_mtu_exchange_event(conn_event_to_app.dev_addr, BLE_MTU_SIZE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\n rsi_ble_mtu_exchange_event command failed : %x", status);
+        } else {
+          LOG_PRINT("\n rsi_ble_mtu_exchange_event command success \n");
+        }
         ble_connected = 1;
+
       } break;
 
       case RSI_BLE_DISCONN_EVENT: {

@@ -461,8 +461,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when SMP request events is received(we are in Central mode)
+ * Note: Peripheral requested to start SMP request, we have to send SMP request command
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
@@ -478,8 +478,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode)
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when SMP response events is received(we are in Peripheral mode)
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {

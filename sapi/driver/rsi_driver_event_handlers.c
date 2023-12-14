@@ -931,6 +931,9 @@ void rsi_rx_event_handler(void)
 #ifdef RSI_CRYPTO_ENABLE
              || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
 #endif
+#ifdef CHIP_917
+             || (frame_type == RSI_COMMON_RSP_ECDSA_256_VERIFY_HASH)
+#endif
                )
 #ifdef CONFIGURE_GPIO_FROM_HOST
        || (frame_type == RSI_COMMON_RSP_GPIO_CONFIG)

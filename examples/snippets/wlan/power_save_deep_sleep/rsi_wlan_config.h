@@ -31,7 +31,7 @@
 //! opermode command paramaters
 /*=======================================================================*/
 //! To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_OPEN | FEAT_ULP_GPIO_BASED_HANDSHAKE)
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | FEAT_ULP_GPIO_BASED_HANDSHAKE)
 
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
@@ -42,8 +42,13 @@
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP CONFIG_FEAT_EXTENTION_VALID
 

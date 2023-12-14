@@ -275,6 +275,8 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 ![Receiving data on the TCP server port](resources/readme/image107.png)
 
+5. If rsi_wlan_ap_stop() API is used to turn off the module's soft Access Point, then its Wi-Fi network closes the connection with all connected clients and it stops beaconing its Wi-Fi network of specified SSID.
+
 ## Compressed Debug Logging
 
 To enable the compressed debug logging feature please refer to [Logging User Guide](https://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-sapi-reference/logging-user-guide)

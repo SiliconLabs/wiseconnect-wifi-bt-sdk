@@ -2395,9 +2395,28 @@ typedef struct rsi_bt_event_avrcp_get_tot_num_items_s {
   3 - NowPlaying */
   uint8_t scope;
 } rsi_bt_event_avrcp_get_tot_num_items_t;
+
+//CTKD Event
+typedef struct rsi_bt_event_ctkd_s {
+  /*remote device address*/
+  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  /*derived linkkey from ltk*/
+  uint8_t key[16];
+} rsi_bt_event_ctkd_t;
 /** @addtogroup BT-CLASSIC7
 * @{
 */
+
+/**
+ * @typedef   void (*rsi_bt_on_ctkd_t)(uint16_t resp_status, rsi_bt_event_ctkd_t *ctkd);
+ * @brief      Callback function invoked if ctkd event is received from module
+ * @param[out] ctkd, contains the converted key
+ * @return     void
+ * @note This callback function will be called if the ctkd is generated for the remote device
+ * This callback has to be registered using rsi_ble_smp_extended_register_callbacks API
+ */
+typedef void (*rsi_bt_on_ctkd_t)(uint16_t resp_status, rsi_bt_event_ctkd_t *ctkd);
+
 /**
  * @typedef void (*rsi_bt_on_avrcp_get_cap_event_t)(uint8_t *bd_addr, uint8_t cap_type);
  * @brief      Callback function is invoke when we receive get capabilities request from remote device.
@@ -3283,6 +3302,7 @@ typedef struct attr_list_s {
   /** Length of the value of the attribute*/
   uint16_t attr_len;
 
+  /** Attribute Name in specified character set*/
   /** Limiting to 50 bytes*/
   uint8_t attr_val[50]; //499
 } attr_list_t;
@@ -3690,6 +3710,7 @@ int32_t rsi_bt_ptt_req(uint8_t mode);
 int32_t rsi_bt_per_stats(uint8_t cmd_type, struct rsi_bt_per_stats_s *per_stats);
 int32_t rsi_bt_vendor_avdtp_stats_enable(uint16_t avdtp_stats_enable, uint32_t avdtp_stats_rate);
 int32_t rsi_bt_vendor_ar_enable(uint16_t enable);
+int32_t rsi_bt_vendor_set_hapi_rect_val(uint8_t value);
 int32_t rsi_memory_stats_enable(uint8_t protocol, uint8_t memory_stats_enable, uint32_t memory_stats_interval_ms);
 int32_t rsi_bt_vendor_dynamic_pwr(uint16_t enable,
                                   uint8_t *remote_dev,

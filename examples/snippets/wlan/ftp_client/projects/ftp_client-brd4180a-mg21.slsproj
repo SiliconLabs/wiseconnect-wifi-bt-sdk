@@ -90,6 +90,7 @@
    <macroDefinition name="RSI_DEBUG_PRINTS" />
    <macroDefinition name="RSI_WLAN_ENABLE" />
   
+   <macroDefinition name="RSI_CRYPTO_ENABLE" />
   
    <macroDefinition name="RSI_WLAN_API_ENABLE" />
   

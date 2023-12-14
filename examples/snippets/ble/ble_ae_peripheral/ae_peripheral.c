@@ -53,10 +53,10 @@
 #define BLE_ADV_HNDL1   0x00
 
 //! Address type of the device to connect
-#define RSI_BLE_WHITELIST_DEV_ADDR1_TYPE LE_RANDOM_ADDRESS
+#define RSI_BLE_ACCEPTLIST_DEV_ADDR1_TYPE LE_RANDOM_ADDRESS
 
-//! Address of the device to add in white list
-uint8_t ble_whitelist_addr1[6] = { 0xDA, 0x81, 0xE0, 0xB8, 0xB9, 0x42 };
+//! Address of the device to add in accept list
+uint8_t ble_acceptlist_addr1[6] = { 0xDA, 0x81, 0xE0, 0xB8, 0xB9, 0x42 };
 
 //! application events list
 #define RSI_APP_EVENT_CONNECTED          1
@@ -402,7 +402,7 @@ int32_t rsi_ble_peripheral(void)
   //! initialize the event map
   rsi_ble_app_init_events();
 
-  status = rsi_ble_addto_whitelist((int8_t *)ble_whitelist_addr1, RSI_BLE_WHITELIST_DEV_ADDR1_TYPE);
+  status = rsi_ble_addto_acceptlist((int8_t *)ble_acceptlist_addr1, RSI_BLE_ACCEPTLIST_DEV_ADDR1_TYPE);
   if (status != RSI_SUCCESS) {
     return status;
   }
@@ -536,7 +536,7 @@ int32_t rsi_ble_peripheral(void)
   rsi_ble_ae_data_t ble_ae_data = { 0 };
   ble_ae_data.type              = BLE_AE_PERIODIC_ADV_DATA_TYPE;
   ble_ae_data.adv_handle        = 0x00;
-  ble_ae_data.operation         = 0x00;
+  ble_ae_data.operation         = 0x03;
   ble_ae_data.frag_pref         = 0x00;
   ble_ae_data.data_len          = BLE_AE_ADV_DATA_LEN;
   memcpy(ble_ae_data.data, data, ble_ae_data.data_len);
@@ -555,7 +555,7 @@ int32_t rsi_ble_peripheral(void)
 
   ble_ae_data.type       = BLE_AE_ADV_DATA_TYPE;
   ble_ae_data.adv_handle = BLE_ADV_HNDL1;
-  ble_ae_data.operation  = 0x00;
+  ble_ae_data.operation  = 0x03;
   ble_ae_data.frag_pref  = 0x00;
   ble_ae_data.data_len   = BLE_AE_ADV_DATA_LEN;
   memcpy(ble_ae_data.data, data, ble_ae_data.data_len);
@@ -572,7 +572,7 @@ int32_t rsi_ble_peripheral(void)
   //setting ae scan response data for set 1
   ble_ae_data.type       = BLE_AE_SCAN_RSP_DATA_TYPE;
   ble_ae_data.adv_handle = BLE_ADV_HNDL1;
-  ble_ae_data.operation  = 0x00;
+  ble_ae_data.operation  = 0x03;
   ble_ae_data.frag_pref  = 0x00;
   ble_ae_data.data_len   = BLE_AE_ADV_DATA_LEN;
   memcpy(ble_ae_data.data, data, ble_ae_data.data_len);
@@ -586,7 +586,6 @@ int32_t rsi_ble_peripheral(void)
     LOG_PRINT("set ae data success \n");
   }
 #endif
-
   // Setting ae advertising enable for set 1
   rsi_ble_ae_adv_enable_t ble_ae_adv = { 0 };
 

@@ -131,6 +131,8 @@ uint32_t rsi_hal_gettickcount(void);
 void rsi_hal_enable_uart_irq(void);
 void SysTick_Handler(void);
 void rsi_hal_enable_uart_irq(void);
+void rsi_delay_ms1(uint32_t delay_ms);
+uint32_t GetTickCount(void);
 
 void rsi_interrupt_handler(void);
 void ABRD(void);

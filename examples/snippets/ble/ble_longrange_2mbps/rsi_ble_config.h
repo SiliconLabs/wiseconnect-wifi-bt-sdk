@@ -26,9 +26,9 @@
 
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 
-#define CLEAR_WHITELIST              0x00
-#define ADD_DEVICE_TO_WHITELIST      0x01
-#define DELETE_DEVICE_FROM_WHITELIST 0x02
+#define CLEAR_ACCEPTLIST              0x00
+#define ADD_DEVICE_TO_ACCEPTLIST      0x01
+#define DELETE_DEVICE_FROM_ACCEPTLIST 0x02
 
 #define ALL_PHYS 0x00
 
@@ -39,20 +39,17 @@
 #ifdef RSI_M4_INTERFACE
 #define RSI_BLE_MAX_NBR_ATT_REC 20
 /* Number of BLE notifications */
-#define RSI_BLE_NUM_CONN_EVENTS 4
+#define RSI_BLE_NUM_CONN_EVENTS 2
 #else
 #define RSI_BLE_MAX_NBR_ATT_REC 80
 /* Number of BLE notifications */
 #define RSI_BLE_NUM_CONN_EVENTS 20
 #endif
 
-#define RSI_BLE_MAX_NBR_SLAVES    3
-#define RSI_BLE_MAX_NBR_MASTERS   1
-#define RSI_BLE_GATT_ASYNC_ENABLE 0
-#define RSI_BLE_GATT_INIT         0
-
-/* Number of BLE notifications */
-#define RSI_BLE_NUM_CONN_EVENTS 20
+#define RSI_BLE_MAX_NBR_PERIPHERALS 1
+#define RSI_BLE_MAX_NBR_CENTRALS    1
+#define RSI_BLE_GATT_ASYNC_ENABLE   0
+#define RSI_BLE_GATT_INIT           0
 
 /* Number of BLE GATT RECORD SIZE IN (n*16 BYTES), eg:(0x40*16)=1024 bytes */
 #define RSI_BLE_NUM_REC_BYTES 0x40
@@ -84,7 +81,10 @@
 #define BLE_2MBPS_RX_PHY 0x02
 
 #define BLE_2MBPS_CODED_PHY 0x00
-
+/*=======================================================================*/
+//! M4 Powersave configuration
+/*=======================================================================*/
+#define M4_POWERSAVE_ENABLE 0
 /*=======================================================================*/
 //! Advertising command parameters
 /*=======================================================================*/
@@ -150,10 +150,10 @@
 #define LE_BR_EDR_NOT_SUPPORTED 0x04
 
 //!Advertise filters
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY               0x00
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY        0x01
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST        0x02
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST 0x03
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY                 0x00
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY         0x01
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST         0x02
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST 0x03
 
 //! Address types
 #define LE_PUBLIC_ADDRESS            0x00
@@ -193,8 +193,8 @@
 #define SCAN_TYPE_PASSIVE 0x00
 
 //!Scan filters
-#define SCAN_FILTER_TYPE_ALL             0x00
-#define SCAN_FILTER_TYPE_ONLY_WHITE_LIST 0x01
+#define SCAN_FILTER_TYPE_ALL              0x00
+#define SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST 0x01
 
 #define RSI_SEL_INTERNAL_ANTENNA 0x00
 #define RSI_SEL_EXTERNAL_ANTENNA 0x01
@@ -216,9 +216,15 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
+#ifdef RSI_M4_INTERFACE
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
-  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC)
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                                              \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC \
+   | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#endif
 #else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #endif
@@ -235,6 +241,12 @@
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED
 #endif
 
+#ifdef M4_POWERSAVE_ENABLE
+#define WIRELESS_WAKEUP_IRQ_PRI 8
+#define portNVIC_SHPR3_REG      (*((volatile uint32_t *)0xe000ed20))
+#define portNVIC_PENDSV_PRI     (((uint32_t)(0x3f << 4)) << 16UL)
+#define portNVIC_SYSTICK_PRI    (((uint32_t)(0x3f << 4)) << 24UL)
+#endif
 #endif
 #ifdef FW_LOGGING_ENABLE
 /*=======================================================================*/

@@ -49,14 +49,17 @@
 #define RSI_WLAN_APP_TASK_PRIORITY          0
 
 //! Application Task sizes
-#define RSI_BLE_APP_MAIN_TASK_SIZE      (512 * 2)
-#define RSI_BLE_APP_MASTER1_TASK_SIZE   (512 * 2)
-#define RSI_BLE_APP_TASK_SIZE           (512 * 4)
-#define RSI_BT_APP_TASK_SIZE            (512 * 2)
-#define RSI_SBC_APP_ENCODE_SIZE         (512 * 2)
-#define RSI_PROP_PROTOCOL_APP_TASK_SIZE (512 * 2)
-#define RSI_WLAN_APP_TASK_SIZE          (512 * 2)
-#define RSI_WLAN_TASK_STACK_SIZE        (512 * 2)
+#define RSI_BLE_APP_MAIN_TASK_SIZE              (512 * 2)
+#define RSI_BLE_APP_CENTRAL1_TASK_SIZE          (512 * 2)
+#define RSI_BLE_APP_TASK_SIZE                   (512 * 4)
+#define RSI_BT_APP_TASK_SIZE                    (512 * 2)
+#define RSI_SBC_APP_ENCODE_SIZE                 (512 * 2)
+#define RSI_ANT_APP_TASK_SIZE                   (512 * 2)
+#define RSI_WLAN_APP_TASK_SIZE                  (512 * 2)
+#define RSI_HTTP_SOCKET_TASK_STACK_SIZE         (512 * 2)
+#define RSI_CERT_BYPASS_TASK_STACK_SIZE         (512 * 2)
+#define RSI_WINDOW_RESET_NOTIFY_TASK_STACK_SIZE (512 * 2)
+#define RSI_WLAN_TASK_STACK_SIZE                (512 * 2)
 
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
@@ -70,15 +73,15 @@ typedef struct rsi_parsed_conf_s {
     bool is_wifi_enabled;
   } rsi_protocol_sel;
   struct rsi_ble_config_t {
-    //		uint8_t no_of_slaves;
-    //		uint8_t no_of_masters;
+    //		uint8_t no_of_peripherals;
+    //		uint8_t no_of_centrals;
     //		uint8_t conn_by_name;
-    //		uint8_t slave1_name[RSI_REM_DEV_NAME_LEN];
-    //		uint8_t slave2_name[RSI_REM_DEV_NAME_LEN];
-    //		uint8_t slave3_name[RSI_REM_DEV_NAME_LEN];
-    //		uint8_t slave1_addr[RSI_REM_DEV_ADDR_LEN];
-    //		uint8_t slave2_addr[RSI_REM_DEV_ADDR_LEN];
-    //		uint8_t slave3_addr[RSI_REM_DEV_ADDR_LEN];
+    //		uint8_t peripheral1_name[RSI_REM_DEV_NAME_LEN];
+    //		uint8_t peripheral2_name[RSI_REM_DEV_NAME_LEN];
+    //		uint8_t peripheral3_name[RSI_REM_DEV_NAME_LEN];
+    //		uint8_t peripheral1_addr[RSI_REM_DEV_ADDR_LEN];
+    //		uint8_t peripheral2_addr[RSI_REM_DEV_ADDR_LEN];
+    //		uint8_t peripheral3_addr[RSI_REM_DEV_ADDR_LEN];
     rsi_ble_conn_config_t rsi_ble_conn_config[TOTAL_CONNECTIONS];
   } rsi_ble_config;
   //! To be defined

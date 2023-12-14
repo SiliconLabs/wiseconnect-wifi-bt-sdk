@@ -45,15 +45,24 @@
 // Max number events used in the driver
 #define RSI_MAX_NUM_EVENTS 3
 
+#ifdef LINUX_PLATFORM
 // RX event number used in the driver
-#define RSI_RX_EVENT       0
+#define RSI_RX_EVENT 1
 
 // TX event number used in the driver
-#define RSI_TX_EVENT       1
+#define RSI_TX_EVENT 0
 
+#else
+
+// RX event number used in the driver
+#define RSI_RX_EVENT 0
+
+// TX event number used in the driver
+#define RSI_TX_EVENT 1
+
+#endif
 // Socket event number used in the driver
-#define RSI_SOCKET_EVENT   2
-
+#define RSI_SOCKET_EVENT 2
 #endif
 #else
 

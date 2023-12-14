@@ -83,6 +83,9 @@ int32_t rsi_device_init(uint8_t select_option)
 #ifdef RSI_WITH_OS
   // Set P2P Intr priority
   NVIC_SetPriority(SysTick_IRQn, SYSTICK_INTR_PRI);
+
+  //Configure NVIC interrupt priorities
+  nvic_priorities_config();
 #endif
   if (!(P2P_STATUS_REG & TA_is_active)) {
 #ifdef DEBUG_UART

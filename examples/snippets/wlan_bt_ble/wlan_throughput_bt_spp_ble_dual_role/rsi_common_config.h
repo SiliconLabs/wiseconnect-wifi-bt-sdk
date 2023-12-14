@@ -113,7 +113,7 @@ int32_t rsi_bt_a2dp_task(void);
 int32_t wlan_throughput_task(void *paramaters);
 void rsi_ble_main_app_task(void);
 void rsi_ble_task_on_conn(void *parameters);
-void rsi_ble_slave_app_task(void);
+void rsi_ble_peripheral_app_task(void);
 void rsi_ui_app_task(void);
 void rsi_common_app_task(void);
 #endif

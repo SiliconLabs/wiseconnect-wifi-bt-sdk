@@ -1318,7 +1318,7 @@ int32_t rsi_ftp_mode_set(uint8_t mode)
  * @note       This API should called before every \ref rsi_ftp_file_write_content() when the Block transfer mode is in use
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
-#ifdef CHIP_9117
+#ifdef CHIP_917
 int32_t rsi_ftp_file_size_set(uint32_t file_size)
 {
   int32_t status = RSI_SUCCESS;

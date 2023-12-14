@@ -43,8 +43,13 @@
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS | MEMORY_CONFIG)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM | EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS)
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 

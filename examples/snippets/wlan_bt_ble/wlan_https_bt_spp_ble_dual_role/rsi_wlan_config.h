@@ -148,7 +148,7 @@ typedef struct rsi_wlan_app_cb_s {
 //! opermode command paramaters
 /*=======================================================================*/
 //! To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1 | FEAT_SECURITY_OPEN)
+#define RSI_FEATURE_BIT_MAP (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1 | FEAT_SECURITY_PSK)
 
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE

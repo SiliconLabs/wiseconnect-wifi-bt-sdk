@@ -88,6 +88,8 @@ typedef enum rsi_error_e {
   RSI_ERROR_BLE_INVALID_CALLBACK_CNT        = -53,
   RSI_ERROR_BLE_ADV_EXT_COMMAND_NOT_ALLOWED = -54,
   RSI_ERROR_BLE_LEGACY_COMMAND_NOT_ALLOWED  = -55,
+  RSI_ERROR_TRNG_DUPLICATE_ENTROPY          = -56,
+  RSI_ERROR_CORRUPTED_FIRMWARE              = -57
 } rsi_error_t;
 
 /******************************************************

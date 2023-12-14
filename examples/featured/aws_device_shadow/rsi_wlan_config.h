@@ -47,7 +47,7 @@
 /*=======================================================================*/
 #if !(ENABLE_POWER_SAVE)
 // To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_OPEN)
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK)
 
 // TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
@@ -58,14 +58,19 @@
 // To set custom feature select bit map ;
 #define RSI_CUSTOM_FEATURE_BIT_MAP (FEAT_CUSTOM_FEAT_EXTENTION_VALID)
 
+#ifdef RSI_M4_INTERFACE
+// To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (BIT(1) | BIT(3) | BIT(27) | MEMORY_CONFIG)
+#else
 // To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM | BIT(1) | BIT(3) | BIT(27))
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
 #else
 //! To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_OPEN | FEAT_ULP_GPIO_BASED_HANDSHAKE)
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | FEAT_ULP_GPIO_BASED_HANDSHAKE)
 
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS   RSI_DISABLE
@@ -77,9 +82,15 @@
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | BIT(1) | BIT(3) | BIT(27) | MEMORY_CONFIG)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
   (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM | BIT(1) | BIT(3) | BIT(27))
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP CONFIG_FEAT_EXTENTION_VALID
 

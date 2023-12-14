@@ -82,7 +82,7 @@
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 #define CALIB_MAX_COMMAND_LENGTH 200
-#define CALIB_MIN_COMMAND_LENGTH (strlen("rsi_freq_offset=") + 2 /*atleast one char of input data and CR */)
+#define CALIB_MIN_COMMAND_LENGTH (strlen("rsi_evm_write=") + 2 /*atleast one char of input data and CR */)
 //! buffer to gather host command received on UART
 uint8_t uart_recv_buf[CALIB_MAX_COMMAND_LENGTH];
 //! UART receive buffer index
@@ -100,13 +100,32 @@ rsi_semaphore_handle_t event_sem;
 #define RSI_FOREVER 0
 #endif
 
-#define NO_OF_CALIB_HOST_COMMANDS 2
+#ifdef CHIP_917
+#define DPD_CALIB_ENABLE BIT(8)
+#define BURN_DPD_COEFF   BIT(9)
+#endif
+
+#define NO_OF_CALIB_HOST_COMMANDS 5
 typedef struct rsi_calib_host_commands_s {
   uint8_t cmd[CALIB_MAX_COMMAND_LENGTH];
 } rsi_calib_host_commands_t;
-enum rsi_CALIB_host_cmd_types { FREQ_OFFSET, CALIB_WRITE };
+enum rsi_CALIB_host_cmd_types {
+  FREQ_OFFSET,
+  CALIB_WRITE,
+  EVM_OFFSET,
+  EVM_WRITE,
+#ifdef CHIP_917
+  DPD_CALIB_WRITE
+#endif
+};
 rsi_calib_host_commands_t rsi_calib_host_commands[NO_OF_CALIB_HOST_COMMANDS] = { { "rsi_freq_offset=" },
-                                                                                 { "rsi_calib_write=" } };
+                                                                                 { "rsi_calib_write=" },
+                                                                                 { "rsi_evm_offset=" },
+                                                                                 { "rsi_evm_write=" },
+#ifdef CHIP_917
+                                                                                 { "rsi_dpd_calib_write=" }
+#endif
+};
 
 // function prototypes
 void rsi_calib_host_cmd_event_handler(void);
@@ -127,7 +146,13 @@ void rsi_calib_display_usage(void)
   LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset_low>,<gain_offset_mid>,<gain_offset_high>\r\n");
   LOG_PRINT("OR\r\n");
   LOG_PRINT("rsi_calib_write=<target>,<flags>,<gain_offset_low>,<gain_offset_mid>,<gain_offset_high>,<xo_ctune>\r\n");
+  LOG_PRINT("rsi_evm_offset=<index>,<evm_offset>\r\n");
+  LOG_PRINT(
+    "rsi_evm_write=<target>,<flags>,<evm_offset_0>,<evm_offset_1>,<evm_offset_2>,<evm_offset_3>,<evm_offset_4>\r\n");
   LOG_PRINT("\r\n");
+#ifdef CHIP_917
+  LOG_PRINT("rsi_dpd_calib_write=<dpd_power_index>\r\n");
+#endif
 }
 
 /*==============================================*/
@@ -295,11 +320,18 @@ void rsi_calib_host_cmd_event_handler(void)
   uint8_t cmd_len    = 0;
   uint8_t num_params = 0;
   uint8_t target;
-  uint8_t flags;
+  uint32_t flags;
   int8_t gain_offset[3];
-  int8_t xo_ctune     = 80;
-  int32_t status      = 0;
-  int32_t freq_offset = 0;
+  uint8_t xo_ctune                            = 80;
+  int32_t status                              = 0;
+  int32_t freq_offset                         = 0;
+  int8_t evm_offset_val                       = 0;
+  uint8_t evm_index                           = 0;
+  int8_t evm_offset_11B                       = 0;
+  int8_t evm_offset_11G_6M_24M_11N_MCS0_MCS2  = 0;
+  int8_t evm_offset_11G_36M_54M_11N_MCS3_MCS7 = 0;
+  int8_t evm_offset_11N_MCS0                  = 0;
+  int8_t evm_offset_11N_MCS7                  = 0;
 
   if (!rsi_strncasecmp((const char *)calib_host_cmd_buf, (const char *)"rsi_", strlen("rsi_"))) {
     for (index = 0; index < NO_OF_CALIB_HOST_COMMANDS; index++) {
@@ -321,7 +353,6 @@ void rsi_calib_host_cmd_event_handler(void)
             } else {
               goto error;
             }
-
           case CALIB_WRITE:
             if (calib_host_cmd_buf[offset] != '\0') {
               offset += rsi_parse(&target, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
@@ -371,6 +402,117 @@ void rsi_calib_host_cmd_event_handler(void)
             } else {
               goto error;
             }
+          case EVM_OFFSET:
+            status = rsi_transmit_test_stop();
+            if (status == RSI_SUCCESS) {
+              LOG_PRINT("Transmit test stop successfully\r\n");
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_index, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_offset_val, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (num_params == 2) {
+              status = rsi_send_evm_offset(evm_index, evm_offset_val);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("Ok\r\n");
+              } else {
+                LOG_PRINT("Error %lx\r\n", status);
+              }
+              status = rsi_transmit_test_start(RSI_TX_TEST_POWER,
+                                               RSI_TX_TEST_RATE,
+                                               RSI_TX_TEST_LENGTH,
+                                               RSI_TX_TEST_MODE,
+                                               RSI_TX_TEST_CHANNEL);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("Transmit test start successfully\r\n");
+              }
+              //! exit loop
+              goto exit;
+            } else {
+              goto error;
+            }
+          case EVM_WRITE:
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&target, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&flags, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_offset_11B, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_offset_11G_6M_24M_11N_MCS0_MCS2, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset +=
+                rsi_parse(&evm_offset_11G_36M_54M_11N_MCS3_MCS7, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_offset_11N_MCS0, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (calib_host_cmd_buf[offset] != '\0') {
+              offset += rsi_parse(&evm_offset_11N_MCS7, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              num_params++;
+            }
+            if (num_params == 7) {
+              status = rsi_evm_write(target,
+                                     flags,
+                                     evm_offset_11B,
+                                     evm_offset_11G_6M_24M_11N_MCS0_MCS2,
+                                     evm_offset_11G_36M_54M_11N_MCS3_MCS7,
+                                     evm_offset_11N_MCS0,
+                                     evm_offset_11N_MCS7);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("Ok\r\n");
+              } else {
+                LOG_PRINT("Error %lx\r\n", status);
+              }
+              rsi_calib_read_t calib_data;
+              status = rsi_calib_read(target, &calib_data);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("target %d, evm_offset_11B:%d, evm_offset_11G_6M_24M_11N_MCS0_MCS2:%d, "
+                          "evm_offset_11G_36M_54M_11N_MCS3_MCS7:%d, evm_offset_11N_MCS0:%d, evm_offset_11N_MCS7:%d\r\n",
+                          calib_data.target,
+                          calib_data.rsi_evm_data_t.evm_offset[0],
+                          calib_data.rsi_evm_data_t.evm_offset[1],
+                          calib_data.rsi_evm_data_t.evm_offset[2],
+                          calib_data.rsi_evm_data_t.evm_offset[3],
+                          calib_data.rsi_evm_data_t.evm_offset[4]);
+              } else {
+                LOG_PRINT("calib read Error %lx\r\n", status);
+              }
+              //! exit loop
+              goto exit;
+            } else {
+              goto error;
+            }
+#ifdef CHIP_917
+          case DPD_CALIB_WRITE:
+
+            if (calib_host_cmd_buf[offset] != '\0') {
+              status = rsi_process_dpd_calibration(127);
+              if (status == RSI_SUCCESS) {
+                LOG_PRINT("Ok\r\n");
+              } else {
+                LOG_PRINT("Error %lx\r\n", status);
+              }
+              //! exit loop
+              goto exit;
+            } else {
+              goto error;
+            }
+#endif
         } //! switch ends
       }   //! if block ends
     }     //! for loop ends
@@ -397,14 +539,6 @@ int32_t rsi_calib_app_task()
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-  //! module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("Device init failed %lx\r\n", status);
-    return status;
-  }
-  LOG_PRINT("Device init success\r\n");
-
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)(uint32_t)rsi_wireless_driver_task,
@@ -414,6 +548,14 @@ int32_t rsi_calib_app_task()
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+  //! module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("Device init failed %lx\r\n", status);
+    return status;
+  }
+  LOG_PRINT("Device init success\r\n");
+
   //! WC initialization
   status = rsi_wireless_init(8, 0);
   if (status != RSI_SUCCESS) {
@@ -459,6 +601,85 @@ int32_t rsi_calib_app_task()
 
   return status;
 }
+#ifdef CHIP_917
+/*==============================================*/
+/**
+ * @fn         rsi_dpd_cal
+ * @brief      sets the channel and pass the dpd power index value  
+ * @param[in]  dpd_power_inx, dpd power index 
+ * @return     none.
+ * @section description
+ * This function used to do transmit start and stop and then do calibration for 6 channels and burn coefficients to flash.
+ */
+#define MAX_DPD_TRAINING_CHANNELS 6
+uint8_t channel_sel[MAX_DPD_TRAINING_CHANNELS] = { 1, 3, 6, 8, 11, 13 };
+void rsi_process_dpd_calibration(uint8_t dpd_power_inx)
+{
+  uint8_t i;
+  int32_t status = RSI_SUCCESS;
+
+  status = rsi_transmit_test_stop();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("Transmit failed to stop %lx\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("Transmit command stopped\n");
+  }
+
+  for (i = 0; i < MAX_DPD_TRAINING_CHANNELS; i++) {
+    //! Checking the region code if the channel number is above 11
+    if (!((channel_sel[i] > 11) && (RSI_REGION_CODE < 2))) {
+      status = rsi_transmit_test_start(RSI_TX_TEST_POWER,
+                                       RSI_TX_TEST_RATE,
+                                       RSI_TX_TEST_LENGTH,
+                                       RSI_TX_TEST_MODE,
+                                       channel_sel[i]);
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("Transmit failed with channel num %lx\r\n", status);
+        return status;
+      } else {
+        LOG_PRINT("Transmit command started with channel num %lx\r\n", channel_sel[i]);
+      }
+      rsi_delay_ms(1000);
+
+      status = rsi_transmit_test_stop();
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("Transmit failed to stop %lx\r\n", status);
+        return status;
+      } else {
+        LOG_PRINT("Transmit command stopped\n");
+      }
+      rsi_delay_ms(1000);
+    }
+    if (i == MAX_DPD_TRAINING_CHANNELS - 1) {
+      status = rsi_calibrate_dpd(dpd_power_inx);
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("rsi_calibration_dpd_failed %lx\r\n", status);
+        return status;
+      } else {
+        LOG_PRINT("calib_dpd training successful\n");
+      }
+      rsi_delay_ms(1000);
+      status = rsi_calib_write(1, DPD_CALIB_ENABLE, 0, 0, 0, 0);
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("rsi_calib_write failed with error %lx\r\n", status);
+        return status;
+      } else {
+        LOG_PRINT("calib-write pass\n");
+      }
+    } else {
+      status = rsi_calibrate_dpd(dpd_power_inx);
+      if (status != RSI_SUCCESS) {
+        LOG_PRINT("rsi_calibration_dpd_failed %lx\r\n", status);
+        return status;
+      } else {
+        LOG_PRINT("calib_dpd training successful\n");
+      }
+      rsi_delay_ms(1000);
+    }
+  }
+}
+#endif
 
 void main_loop(void)
 {

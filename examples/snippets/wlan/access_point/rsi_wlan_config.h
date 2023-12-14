@@ -42,8 +42,13 @@
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP 0
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (MEMORY_CONFIG | 0)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP 0
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
@@ -62,7 +67,7 @@
 //! Band command paramters
 /*=======================================================================*/
 
-//! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
+//! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz)
 #define RSI_BAND RSI_BAND_2P4GHZ
 
 /*=======================================================================*/
@@ -231,6 +236,9 @@
 
 //! This parameter is used to configure maximum stations supported
 #define RSI_MAX_STATIONS_SUPPORT 4
+
+//! This parameter is used to enable or disable beacon transmission, when stations are not connected
+#define RSI_BEACON_STOP RSI_DISABLE
 /*=======================================================================*/
 
 //! Join command parameters

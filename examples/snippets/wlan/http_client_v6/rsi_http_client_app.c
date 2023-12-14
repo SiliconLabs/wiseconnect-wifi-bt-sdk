@@ -57,6 +57,10 @@
 #include "string.h"
 //! standard defines
 
+#ifndef RSI_CONFIGURE_IPV6
+#define RSI_CONFIGURE_IPV6 1
+#endif
+
 //! Enable IPv6 set this bit in FLAGS, Default is IPv4
 #define HTTPV6 BIT(0)
 
@@ -275,6 +279,14 @@ int32_t rsi_http_client_app()
   //! Get the length of the index html page
   uint32_t file_size = (sizeof(rsi_index) - 1);
 
+  //! Silabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
   //! WC initialization
   status = rsi_wireless_init(0, 0);
   if (status != RSI_SUCCESS) {
@@ -499,15 +511,6 @@ int main()
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
-  }
-
-  //! Silabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
 
 #ifdef RSI_WITH_OS

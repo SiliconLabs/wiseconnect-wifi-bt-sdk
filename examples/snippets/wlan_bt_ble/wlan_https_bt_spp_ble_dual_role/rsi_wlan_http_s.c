@@ -89,7 +89,7 @@ int32_t recv_size2 = RECV_BUFFER_SIZE;
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
-extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem, bt_app_sem, wlan_app_sem, bt_inquiry_sem,
+extern rsi_semaphore_handle_t ble_main_task_sem, ble_peripheral_conn_sem, bt_app_sem, wlan_app_sem, bt_inquiry_sem,
   ble_scan_sem;
 #if WLAN_SYNC_REQ
 extern rsi_semaphore_handle_t sync_coex_ble_sem, sync_coex_bt_sem;

@@ -58,6 +58,11 @@
 #include "rsi_driver.h"
 //To use asynchronous MQTT please add ASYNC_MQTT macro in IDE configuration
 #include "string.h"
+
+#ifndef RSI_CONFIGURE_IPV6
+#define RSI_CONFIGURE_IPV6 1
+#endif
+
 //! Access point SSID to connect
 #define SSID "SILABS_AP"
 //! Security type

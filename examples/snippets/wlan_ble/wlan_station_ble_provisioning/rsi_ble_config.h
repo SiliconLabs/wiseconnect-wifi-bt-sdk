@@ -40,9 +40,9 @@
 
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 
-#define CLEAR_WHITELIST              0x00
-#define ADD_DEVICE_TO_WHITELIST      0x01
-#define DELETE_DEVICE_FROM_WHITELIST 0x02
+#define CLEAR_ACCEPTLIST              0x00
+#define ADD_DEVICE_TO_ACCEPTLIST      0x01
+#define DELETE_DEVICE_FROM_ACCEPTLIST 0x02
 
 #define ALL_PHYS 0x00
 
@@ -51,15 +51,15 @@
 #define RSI_OPERMODE_WLAN_BLE 13
 
 #ifdef RSI_M4_INTERFACE
-#define RSI_BLE_MAX_NBR_ATT_REC 20
-#define RSI_BLE_MAX_NBR_SLAVES  1
-#define RSI_BLE_NUM_CONN_EVENTS 2
+#define RSI_BLE_MAX_NBR_ATT_REC     20
+#define RSI_BLE_MAX_NBR_PERIPHERALS 1
+#define RSI_BLE_NUM_CONN_EVENTS     2
 #else
-#define RSI_BLE_MAX_NBR_ATT_REC 80
-#define RSI_BLE_MAX_NBR_SLAVES  3
+#define RSI_BLE_MAX_NBR_ATT_REC     80
+#define RSI_BLE_MAX_NBR_PERIPHERALS 3
 #endif
 #define RSI_BLE_MAX_NBR_ATT_SERV  10
-#define RSI_BLE_MAX_NBR_MASTERS   1
+#define RSI_BLE_MAX_NBR_CENTRALS  1
 #define RSI_BLE_GATT_ASYNC_ENABLE 0
 #define RSI_BLE_GATT_INIT         0
 
@@ -68,6 +68,8 @@
 
 /* Number of BLE GATT RECORD SIZE IN (n*16 BYTES), eg:(0x40*16)=1024 bytes */
 #define RSI_BLE_NUM_REC_BYTES 0x40
+
+#define BLE_MTU_SIZE 232
 
 /*=======================================================================*/
 // Advertising command parameters
@@ -134,10 +136,10 @@
 #define LE_BR_EDR_NOT_SUPPORTED 0x04
 
 //Advertise filters
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY               0x00
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY        0x01
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST        0x02
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST 0x03
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY                 0x00
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY         0x01
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST         0x02
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST 0x03
 
 // Address types
 #define LE_PUBLIC_ADDRESS            0x00
@@ -177,16 +179,16 @@
 #define SCAN_TYPE_PASSIVE 0x00
 
 //Scan filters
-#define SCAN_FILTER_TYPE_ALL             0x00
-#define SCAN_FILTER_TYPE_ONLY_WHITE_LIST 0x01
+#define SCAN_FILTER_TYPE_ALL              0x00
+#define SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST 0x01
 
 #define RSI_SEL_INTERNAL_ANTENNA 0x00
 #define RSI_SEL_EXTERNAL_ANTENNA 0x01
 
 /*=======================================================================*/
-// Parameters for whitelisting of BLE advertise reports based on the ADV payload
+// Parameters for acceptlisting of BLE advertise reports based on the ADV payload
 /*=======================================================================*/
-#define RSI_BLE_ENABLE_WHITELIST_BASEDON_ADV_PAYLOAD     0x00
+#define RSI_BLE_ENABLE_ACCEPTLIST_BASEDON_ADV_PAYLOAD    0x00
 #define RSI_BLE_ADV_PAYLOAD_INDEX_FOR_COMPARE            0x00
 #define RSI_BLE_ADV_PAYLOAD_LENGTH_FROM_INDEX_TO_COMPARE 0x00
 #endif

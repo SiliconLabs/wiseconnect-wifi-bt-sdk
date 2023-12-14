@@ -96,6 +96,8 @@ uint8_t publish_message_mq[] = "{\"state\":{\"desired\":{\"toggle\":1}}}";
 int8_t username_mq[]         = "username";
 int8_t password_mq[]         = "password";
 uint8_t global_buf[GLOBAL_BUFF_LEN];
+volatile uint8_t data_received     = 0;
+char data[AWS_IOT_MQTT_RX_BUF_LEN] = { 0 };
 
 void rsi_remote_socket_terminate_handler1(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
@@ -163,9 +165,14 @@ static void iot_subscribe_callback_handler(AWS_IoT_Client *pClient,
   UNUSED_PARAMETER(
     topicName); //This statement is added only to resolve compilation warning, value is unchanged terminated
   UNUSED_PARAMETER(
-    topicNameLen);          //This statement is added only to resolve compilation warning, value is unchanged terminated
-  UNUSED_PARAMETER(params); //This statement is added only to resolve compilation warning, value is unchanged terminated
-  UNUSED_PARAMETER(pData);  //This statement is added only to resolve compilation warning, value is unchanged terminated
+    topicNameLen);         //This statement is added only to resolve compilation warning, value is unchanged terminated
+  UNUSED_PARAMETER(pData); //This statement is added only to resolve compilation warning, value is unchanged terminated
+  memcpy(data, (char *)params->payload, params->payloadLen);
+  for (int i = 0; i < params->payloadLen; i++) {
+    LOG_PRINT("%c", data[i]);
+  }
+  LOG_PRINT("\r\n");
+  data_received = 1;
 }
 
 static void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data)
@@ -240,7 +247,6 @@ int32_t rsi_mqtt_client_app()
   connectParams.pPassword   = (char *)password_mq;
   connectParams.passwordLen = strlen((char *)password_mq);
 
-#ifndef RSI_M4_INTERFACE
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
     return status;
@@ -253,7 +259,6 @@ int32_t rsi_mqtt_client_app()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   //! Create Semaphores
@@ -475,17 +480,7 @@ int32_t rsi_mqtt_client_app()
           // If the client is attempting to reconnect we will skip the rest of the loop.
           continue;
         }
-        //! toggle LED based on msg received from cloud
-        for (i = 0; i < AWS_IOT_MQTT_RX_BUF_LEN; i++) {
-          if (client.clientData.readBuf[i] == 't' && client.clientData.readBuf[i + 1] == 'o'
-              && client.clientData.readBuf[i + 2] == 'g') {
-            LOG_PRINT("Toggling LED\n");
-#ifdef RSI_M4_INTERFACE
-            RSI_EGPIO_TogglePort(EGPIO, EGPIO_PORT0, (0x1 << GPIO_PIN));
-#endif
-            break;
-          }
-        }
+
 #endif
         paramsQOS0.payloadLen = strlen((char *)publish_message_mq);
         rc                    = aws_iot_mqtt_publish(&client, RSI_MQTT_TOPIC, strlen(RSI_MQTT_TOPIC), &paramsQOS0);
@@ -495,6 +490,22 @@ int32_t rsi_mqtt_client_app()
         if (rc == MQTT_REQUEST_TIMEOUT_ERROR) {
           LOG_PRINT("QOS1 publish ack not received.\n");
         }
+
+        while (!data_received) {
+          aws_iot_mqtt_yield(&client, 100);
+        }
+        //! toggle LED based on msg received from cloud
+        for (i = 0; i < AWS_IOT_MQTT_RX_BUF_LEN; i++) {
+          if (data[i] == 't' && data[i + 1] == 'o' && data[i + 2] == 'g') {
+            LOG_PRINT("Toggling LED\n");
+#ifdef RSI_M4_INTERFACE
+            RSI_EGPIO_TogglePort(EGPIO, EGPIO_PORT0, (0x1 << GPIO_PIN));
+#endif
+            break;
+          }
+        }
+        data_received = 0;
+        memset(data, 0, AWS_IOT_MQTT_RX_BUF_LEN);
         rsi_wlan_app_cb.state = RSI_WLAN_MQTT_PUBLISH_STATE;
 #ifdef RSI_WITH_OS
         rsi_semaphore_post(&rsi_mqtt_sem);
@@ -533,22 +544,6 @@ int32_t rsi_mqtt_client_app()
 
 int main()
 {
-#ifdef RSI_M4_INTERFACE
-  int32_t status = RSI_SUCCESS;
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   //! Common Init task

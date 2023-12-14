@@ -412,6 +412,14 @@ int32_t rsi_wlan_tcp_logging_stats()
   while (1) {
     switch (rsi_wlan_app_cb.state) {
       case RSI_WLAN_INITIAL_STATE: {
+        //! Silabs module intialisation
+        status = rsi_device_init(LOAD_NWP_FW);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+          return status;
+        }
+        LOG_PRINT("\r\nDevice Initialization Success\r\n");
+
         //! WC initialization
         status = rsi_wireless_init(0, 0);
         if (status != RSI_SUCCESS) {
@@ -638,14 +646,6 @@ int main()
   }
 
   rsi_hal_log_stats_intr_config(rsi_give_wakeup_indication);
-  //! Silabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-
 #ifdef RSI_WITH_OS
   //! OS case
   //! Task created for WLAN task

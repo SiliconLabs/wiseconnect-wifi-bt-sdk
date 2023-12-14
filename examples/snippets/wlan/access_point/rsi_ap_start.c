@@ -112,6 +112,9 @@
 
 #define SOCKET_ASYNC_FEATURE 1
 
+//! To turnoff the AP at the end
+#define AP_TURN_OFF 1
+
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
@@ -182,7 +185,6 @@ int32_t rsi_ap_start()
   uint32_t gateway      = ip_to_reverse_hex(GATEWAY);
   int32_t addr_size;
 
-#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -197,7 +199,6 @@ int32_t rsi_ap_start()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#endif
 
   //! Register callback for Station connected and disconnected events
   rsi_wlan_register_callbacks(RSI_STATIONS_CONNECT_NOTIFY_CB, stations_connect_notify_handler);
@@ -365,6 +366,19 @@ int32_t rsi_ap_start()
 
 #endif
 
+#ifdef AP_TURN_OFF
+
+  //! Stop Access point
+  status = rsi_wlan_ap_stop();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nAP Stop Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nAP Stop Success\r\n");
+  }
+
+#endif
+
   return 0;
 }
 
@@ -383,22 +397,6 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
-
-#ifdef RSI_M4_INTERFACE
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Silabs module initialization
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t wlan_task_handle = NULL;

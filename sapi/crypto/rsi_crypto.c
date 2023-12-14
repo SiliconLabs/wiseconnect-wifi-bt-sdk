@@ -1,19 +1,19 @@
 /*******************************************************************************
-* @file  rsi_crypto.c
-* @brief
-*******************************************************************************
-* # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
-*******************************************************************************
-*
-* The licensor of this software is Silicon Laboratories Inc. Your use of this
-* software is governed by the terms of Silicon Labs Master Software License
-* Agreement (MSLA) available at
-* www.silabs.com/about-us/legal/master-software-license-agreement. This
-* software is distributed to you in Source Code format and is governed by the
-* sections of the MSLA applicable to Source Code.
-*
-******************************************************************************/
+ * @file  rsi_crypto.c
+ * @brief
+ *******************************************************************************
+ * # License
+ * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+ *******************************************************************************
+ *
+ * The licensor of this software is Silicon Laboratories Inc. Your use of this
+ * software is governed by the terms of Silicon Labs Master Software License
+ * Agreement (MSLA) available at
+ * www.silabs.com/about-us/legal/master-software-license-agreement. This
+ * software is distributed to you in Source Code format and is governed by the
+ * sections of the MSLA applicable to Source Code.
+ *
+ ******************************************************************************/
 
 #include "rsi_driver.h"
 #include "rsi_crypto.h"
@@ -21,8 +21,8 @@
 #ifdef RSI_CRYPTO_ENABLE
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the SHA digest. This is a blocking API.
@@ -36,7 +36,6 @@
  * @return     Non-Zero Value - Failure
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
-
 int32_t rsi_sha_pen(uint8_t sha_mode,
                     uint8_t *msg,
                     uint16_t msg_length,
@@ -44,7 +43,6 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
                     uint8_t pending_flag,
                     uint8_t *digest)
 {
-
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_SHA_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
@@ -72,7 +70,6 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Fill digest length based on sha mode
     if (sha_mode == SHA_1) {
       digest_len = SHA_1_DIGEST_LEN;
@@ -144,6 +141,14 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -158,10 +163,7 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_SHA_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -174,7 +176,11 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
   SL_PRINTF(SL_SHA_PEN_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
  * @brief      Decide whether the SHA message can be sent once or requires multiple calls to send. This is a blocking API.
@@ -188,7 +194,6 @@ int32_t rsi_sha_pen(uint8_t sha_mode,
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
 {
   int32_t status = RSI_SUCCESS;
@@ -241,7 +246,37 @@ int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *di
   SL_PRINTF(SL_SHA_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
+
+#ifdef CHIP_917B0
+/*==============================================*/
+/**
+ * @brief      Hold computed digest from HMAC-SHA. This is a blocking API.
+ * @param[in]  hmac_sha_mode - 1 – For HMAC-SHA1 \n 2 – For HMAC-SHA256 \n 3 – For HMAC-SHA384 \n 4 – For HMAC-SHA512 \n
+ * @param[in]  data          - Pointer to key along with message
+ * @param[in]  total_length  - Total message length
+ * @param[in]  chunk_length  - Current chunk length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  pending_flag  - BIT(0) - 1st chunk \n BIT(1) - Middle chunk \n BIT(2) - Last chunk \n
+ * @param[out] digest        - Output parameter to hold computed digest from HMAC-SHA
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ *
+ * @note       Refer to \ref error-codes for the description of above error codes.
+ */
+int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
+                         uint8_t *data,
+                         uint16_t total_length,
+                         uint16_t chunk_length,
+                         key_descriptor_t *key_info,
+                         uint8_t pending_flag,
+                         uint8_t *digest)
+#else
+/** @cond */
 /*==============================================*/
 /**
  * @brief      Hold computed digest from HMAC-SHA. This is a blocking API.
@@ -256,7 +291,6 @@ int32_t rsi_sha(uint8_t sha_mode, uint8_t *msg, uint16_t msg_length, uint8_t *di
  *
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
-
 int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
                          uint8_t *data,
                          uint16_t total_length,
@@ -264,8 +298,9 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
                          uint32_t key_length,
                          uint8_t pending_flag,
                          uint8_t *digest)
+/** @endcond */
+#endif
 {
-
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_HMAC_SHA_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
@@ -273,6 +308,34 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
   uint8_t digest_len = 0;
   rsi_pkt_t *pkt;
   rsi_hmac_sha_req_t *hmac_sha;
+#ifdef CHIP_917B0
+  // Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  // Key size
+  uint32_t key_size = key_info->key_detail.key_size;
+
+  // Get the key slot
+  uint32_t key_slot = key_info->key_detail.key_spec.key_slot;
+
+  //! Only 32 bytes M4 OTA built in key support is present
+  if (key_type == RSI_BUILT_IN_KEY) {
+    if (key_size != M4_OTA_KEY_SIZE || key_slot != GET_M4_OTA_KEY)
+      return RSI_ERROR_INVALID_OPTION;
+  }
+
+  // Get the plain key data/ wrapped key
+  uint8_t *key_buffer = key_info->key_detail.key_spec.key_buffer;
+
+  // Get the Wrapped IV mode
+  uint32_t wrap_iv_mode = key_info->key_detail.key_spec.wrap_iv_mode;
+
+  // Get the Wrapped IV
+  uint8_t *wrap_iv = key_info->key_detail.key_spec.wrap_iv;
+
+  //Reserved for future use
+  uint32_t reserved = key_info->reserved;
+#endif
 
   // Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -294,7 +357,6 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Fill digest length based on sha mode
     if (hmac_sha_mode == SHA_1) {
       digest_len = SHA_1_DIGEST_LEN;
@@ -351,8 +413,36 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
     // Fill current chunk length
     hmac_sha->current_chunk_length = chunk_length;
 
-    // Fill key length
+// Fill key length
+#ifdef CHIP_917B0
+    hmac_sha->key_info.key_type = key_type;
+
+    hmac_sha->key_info.key_detail.key_size = key_size;
+
+    hmac_sha->key_info.key_detail.key_spec.key_slot = key_slot;
+
+    hmac_sha->key_info.reserved = reserved;
+
+    hmac_sha->key_info.key_detail.key_spec.wrap_iv_mode = wrap_iv_mode;
+
+    // Wrap IV
+    // Memset before filling
+    memset(&hmac_sha->key_info.key_detail.key_spec.wrap_iv[0], 0, IV_SIZE);
+
+    //Copy the IV if mode is CBC
+    if (wrap_iv_mode) {
+      memcpy(&hmac_sha->key_info.key_detail.key_spec.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //KEY
+    // Memset before filling
+    memset(&hmac_sha->key_info.key_detail.key_spec.key_buffer[0], 0, key_size);
+
+    //Copy the key
+    memcpy(&hmac_sha->key_info.key_detail.key_spec.key_buffer[0], key_buffer, key_size);
+#else
     hmac_sha->key_length = key_length;
+#endif
 
     // Data
     // Memset before filling
@@ -366,6 +456,14 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
 
     // Get the host descriptor
     host_desc = (pkt->desc);
+
+    // Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
 
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
@@ -381,10 +479,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_HMAC_SHA_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -397,11 +492,40 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
   SL_PRINTF(SL_HMAC_SHA_PEN_EXIT, CRYPTO, LOG_INFO, "status: %4x", status);
   return status;
 }
-
 /** @} */
+
 /** @addtogroup CRYPTO
+
 * @{
 */
+
+#ifdef CHIP_917B0
+/*==============================================*/
+/**
+ * @brief      Decide whether the HMAC-SHA message can be sent once or requires multiple calls to send the message. This is a blocking API.
+ * @param[in]  hmac_sha_mode - 1 – For HMAC-SHA1 \n 2 – For HMAC-SHA256 \n 3 – For HMAC-SHA384 \n 4 – For HMAC-SHA512 \n
+ * @param[in]  msg           - Pointer to message
+ * @param[in]  msg_length    - Total message length
+ * @param[in]  key           - Pointer to HMAC key
+ * @param[in]  key_info      - Structure Pointer to key_info
+ * @param[in]  key_length    - HMAC key length in bytes
+ * @param[out]  digest       - Output parameter to hold computed digest from HMAC-SHA
+ * @return     0              - Success   \n
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xFF15, 0xCC9C, 0xCC9B) \n
+ *
+ * @note       Refer to \ref error-codes for the description of above error codes.
+ *
+ *
+ */
+int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
+                     uint8_t *msg,
+                     uint32_t msg_length,
+                     uint8_t *key,
+                     key_descriptor_t *key_info,
+                     uint8_t *digest,
+                     uint8_t *hmac_buffer)
+#else
+/** @cond */
 /*==============================================*/
 /**
  * @brief      Decide whether the HMAC-SHA message can be sent once or requires multiple calls to send the message. This is a blocking API.
@@ -418,7 +542,6 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
  *
  *
  */
-
 int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
                      uint8_t *msg,
                      uint32_t msg_length,
@@ -426,6 +549,8 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
                      uint32_t key_length,
                      uint8_t *digest,
                      uint8_t *hmac_buffer)
+/** @endcond */
+#endif
 {
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_HMAC_SHA_ENTRY, CRYPTO, LOG_INFO);
@@ -435,7 +560,11 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
   uint8_t hmac_sha_flags = 0;
   uint8_t *data          = NULL;
   data                   = hmac_buffer;
-  total_len              = msg_length + key_length;
+#ifdef CHIP_917B0
+  // Key size
+  uint32_t key_length = key_info->key_detail.key_size;
+#endif
+  total_len = msg_length + key_length;
 
   // Copy key in to data
   memcpy(data, key, key_length);
@@ -444,7 +573,6 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
   memcpy((data + key_length), msg, msg_length);
 
   while (total_len) {
-
     // Check total length
     if (total_len > MAX_DATA_SIZE_BYTES) {
       chunk_len = MAX_DATA_SIZE_BYTES;
@@ -467,10 +595,14 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
       }
     }
 
-    // Send the current chunk length message
+// Send the current chunk length message
+#ifdef CHIP_917B0
+    status =
+      rsi_hmac_sha_pen(hmac_sha_mode, data, (msg_length + key_length), chunk_len, key_info, hmac_sha_flags, digest);
+#else
     status =
       rsi_hmac_sha_pen(hmac_sha_mode, data, (msg_length + key_length), chunk_len, key_length, hmac_sha_flags, digest);
-
+#endif
     if (status != RSI_SUCCESS) {
       SL_PRINTF(SL_HMAC_SHA_CHUNK_LENGTH_MSG_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
       return status;
@@ -490,15 +622,42 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
+
 * @{
 */
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
  * @brief      Decide whether the AES message can be sent once or requires multiple calls to send the message. This is a blocking API.
  * @param[in]  aes_mode   - 1 – For AES CBC mode \n 2 – For AES ECB mode \n 3 – For AES CTR mode \n
  * @param[in]  enc_dec    - 1 – For AES Encryption \n 2 – For AES Decryption \n
  * @param[in]  msg        - Pointer to message
- * @param[in]  msg_length - Total message length
+ * @param[in]  msg_length - Total message length (must be divisible by 16)
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv         - Pointer to AES iv
+ * @param[out]  output    - Output parameter to hold encrypted/decrypted from AES
+ * @return    0              - Success   \n
+ * @return    Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xFF15, 0xCC9C, 0xCC9B) \n
+ *
+ * @note      Refer to \ref error-codes for the description of above error codes.
+ *
+ */
+int32_t rsi_aes(uint16_t aes_mode,
+                uint16_t enc_dec,
+                uint8_t *msg,
+                uint16_t msg_length,
+                key_descriptor_t *key_info,
+                uint8_t *iv,
+                uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @brief      Decide whether the AES message can be sent once or requires multiple calls to send the message. This is a blocking API.
+ * @param[in]  aes_mode   - 1 – For AES CBC mode \n 2 – For AES ECB mode \n 3 – For AES CTR mode \n
+ * @param[in]  enc_dec    - 1 – For AES Encryption \n 2 – For AES Decryption \n
+ * @param[in]  msg        - Pointer to message
+ * @param[in]  msg_length - Total message length (must be divisible by 16)
  * @param[in]  key        - Pointer to AES key
  * @param[in]  key_length - AES key length in bytes
  * @param[in]  iv         - Pointer to AES iv
@@ -509,7 +668,6 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
  * @note      Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_aes(uint16_t aes_mode,
                 uint16_t enc_dec,
                 uint8_t *msg,
@@ -518,6 +676,8 @@ int32_t rsi_aes(uint16_t aes_mode,
                 uint16_t key_length,
                 uint8_t *iv,
                 uint8_t *output)
+#endif
+/** @endcond */
 {
   SL_PRINTF(SL_AES_ENTRY, CRYPTO, LOG_INFO);
   uint16_t total_len = 0;
@@ -549,8 +709,12 @@ int32_t rsi_aes(uint16_t aes_mode,
       }
     }
 
-    // Send the current chunk length message
+// Send the current chunk length message
+#ifdef CHIP_917B0
+    status = rsi_aes_pen(aes_mode, enc_dec, msg, msg_length, chunk_len, key_info, iv, aes_flags, output);
+#else
     status = rsi_aes_pen(aes_mode, enc_dec, msg, msg_length, chunk_len, key, key_length, iv, aes_flags, output);
+#endif
 
     if (status != RSI_SUCCESS) {
       SL_PRINTF(SL_AES_CHUNK_LENGTH_MSG_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
@@ -569,13 +733,46 @@ int32_t rsi_aes(uint16_t aes_mode,
 }
 /** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
  * @brief      Encrypt/decrypt the data using AES
  * @param[in]  aes_mode     - 1 – For AES CBC mode \n 2 – For AES ECB mode \n 3 – For AES CTR mode \n
  * @param[in]  enc_dec      - 1 – For AES Encryption \n 2 – For AES Decryption \n
  * @param[in]  msg          - Pointer to message
- * @param[in]  msg_lengthm  - Total message length
+ * @param[in]  msg_length  - Total message length (must be divisible by 16)
+ * @param[in]  chunk_length - Current chunk length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv           - Pointer to AES iv
+ * @param[in]  aes_flags    - BIT(0) - 1st chunk \n BIT(1) - Middle chunk \n BIT(2) - Last chunk \n
+ * @param[out]  output      - Output parameter to hold encrypted/decrypted from AES
+ * @return     0              - Success  \n
+ *             Non-Zero Value - Failure
+ *
+ * @note       Refer to \ref error-codes for the description of above error codes.
+ *
+ */
+int32_t rsi_aes_pen(uint16_t aes_mode,
+                    uint16_t enc_dec,
+                    uint8_t *msg,
+                    uint16_t msg_length,
+                    uint16_t chunk_length,
+                    key_descriptor_t *key_info,
+                    uint8_t *iv,
+                    uint8_t aes_flags,
+                    uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @brief      Encrypt/decrypt the data using AES
+ * @param[in]  aes_mode     - 1 – For AES CBC mode \n 2 – For AES ECB mode \n 3 – For AES CTR mode \n
+ * @param[in]  enc_dec      - 1 – For AES Encryption \n 2 – For AES Decryption \n
+ * @param[in]  msg          - Pointer to message
+ * @param[in]  msg_length  - Total message length (must be divisible by 16)
  * @param[in]  chunk_length - Current chunk length
  * @param[in]  key          - Pointer to AES key
  * @param[in]  key_length   - AES key length in bytes
@@ -588,7 +785,6 @@ int32_t rsi_aes(uint16_t aes_mode,
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_aes_pen(uint16_t aes_mode,
                     uint16_t enc_dec,
                     uint8_t *msg,
@@ -599,8 +795,9 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
                     uint8_t *iv,
                     uint8_t aes_flags,
                     uint8_t *output)
+/** @endcond */
+#endif
 {
-
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_AES_PEN_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
@@ -608,15 +805,56 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
   rsi_pkt_t *pkt;
   rsi_aes_req_t *aes;
 
+#ifdef CHIP_917B0
+
+  //! Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  //! Key size
+  uint32_t key_size = key_info->key_detail.key_size;
+
+  //! Get the key slot
+  uint32_t key_slot = key_info->key_detail.key_spec.key_slot;
+
+  //! Only 32 bytes M4 OTA built in key support is present
+  if (key_type == RSI_BUILT_IN_KEY) {
+    if (key_size != M4_OTA_KEY_SIZE || key_slot != GET_M4_OTA_KEY)
+      return RSI_ERROR_INVALID_OPTION;
+  }
+
+  //! Get the plain key data/ wrapped key
+  uint8_t *key_buffer = key_info->key_detail.key_spec.key_buffer;
+
+  //! Get the Wrapped IV mode
+  uint32_t wrap_iv_mode = key_info->key_detail.key_spec.wrap_iv_mode;
+
+  //! Get the Wrapped IV
+  uint8_t *wrap_iv = key_info->key_detail.key_spec.wrap_iv;
+
+  //!Reserved for future use
+  uint32_t reserved = key_info->reserved;
+
+#endif
+
   // Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
   // Input pointer check
   if (msg == NULL) {
     SL_PRINTF(SL_AES_PEN_INVALID_PARAM_1, CRYPTO, LOG_ERROR);
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  // Input msg should be multiple of 128 bits block size
+  if (msg_length % AES_BLOCK_SIZE) {
     return RSI_ERROR_INVALID_PARAM;
   }
 
@@ -627,7 +865,6 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -672,6 +909,35 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
     // Fill chunk length
     aes->current_chunk_length = chunk_length;
 
+#ifdef CHIP_917B0
+
+    aes->key_info.key_type = key_type;
+
+    aes->key_info.key_detail.key_size = key_size;
+
+    aes->key_info.key_detail.key_spec.key_slot = key_slot;
+
+    aes->key_info.reserved = reserved;
+
+    aes->key_info.key_detail.key_spec.wrap_iv_mode = wrap_iv_mode;
+
+    // Wrap IV
+    // Memset before filling
+    memset(&aes->key_info.key_detail.key_spec.wrap_iv[0], 0, IV_SIZE);
+
+    //Copy the IV if mode is CBC
+    if (wrap_iv_mode) {
+      memcpy(&aes->key_info.key_detail.key_spec.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //KEY
+    // Memset before filling
+    memset(&aes->key_info.key_detail.key_spec.key_buffer[0], 0, key_size);
+
+    //Copy the key
+    memcpy(&aes->key_info.key_detail.key_spec.key_buffer[0], key_buffer, key_size);
+
+#else
     // Fill key length
     aes->key_length = key_length;
 
@@ -681,6 +947,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 
     // Copy KEY
     memcpy(&aes->key[0], key, key_length);
+#endif
 
     if ((aes_mode == CBC_MODE) || (aes_mode == CTR_MODE)) {
       // IV
@@ -704,6 +971,14 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -718,10 +993,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_AES_PEN_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -738,8 +1010,8 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Calculate the DH key. This is a blocking API.
@@ -791,7 +1063,6 @@ int32_t rsi_exponentiation(uint8_t *prime,
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -857,6 +1128,14 @@ int32_t rsi_exponentiation(uint8_t *prime,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -871,10 +1150,7 @@ int32_t rsi_exponentiation(uint8_t *prime,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_EXPONENTIATION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -891,30 +1167,37 @@ int32_t rsi_exponentiation(uint8_t *prime,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the ECDH point multiplication vector. This is a blocking API.
  * @param[in]  ecdh_mode  - 1 – For ECDH 192 \n 2 – For ECDH 224 \n 3 – For ECDH 256 \n
  * @param[in]  d          - Pointer to scalar value that needs to be multiplied
- * @param[in]  sx, sy, sz - Pointers to x, y, z coordinates of the point to be multiplied with scalar ‘d’
- * @param[out] rx, ry, rz - Pointers to x, y, z coordinates of the result point
+ * @param[in]  sx, - Pointer to x coordinate of the point to be multiplied with scalar ‘d’
+ * @param[in]  sy, - Pointer to y coordinate of the point to be multiplied with scalar ‘d’
+ * @param[in]  sz, - Pointer to z coordinate of the point to be multiplied with scalar ‘d’
+ * @param[in]  affinity  - 0 – no affinity \n 1 – affinity on input \n 2 – affinity on output \n 3 – affinity on both input and output \n
+ * @param[out] rx,  - Pointer to x coordinate of the result point
+ * @param[out] ry,- Pointer to  y coordinate of the result point
+ * @param[out] rz,- Pointer to z coordinate of the result point
+ * @param[in]  reverse  - setting this will perform \ref reverse_8 on the inputs and outputs.
  * @return    0              - Success   \n
  * @return    Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xFF15, 0xCC9C, 0xCC9B) \n
  *
  * @note      Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
                                       uint8_t *d,
                                       uint8_t *sx,
                                       uint8_t *sy,
                                       uint8_t *sz,
+                                      uint32_t affinity,
                                       uint8_t *rx,
                                       uint8_t *ry,
-                                      uint8_t *rz)
+                                      uint8_t *rz,
+                                      uint8_t reverse)
 {
   SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_ENTRY, CRYPTO, LOG_INFO);
   int32_t status     = RSI_SUCCESS;
@@ -932,9 +1215,13 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     if (ecdh_mode == ECDH_192) {
       size = ECDH_VECTOR_192_SIZE;
     } else if (ecdh_mode == ECDH_224) {
@@ -984,6 +1271,9 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
     // Fill Curve type
     ecdh->ecdh_curve_type = ECDH_CURVE_P;
 
+    // Fill affinity modes for point input and output
+    ecdh->affinity = affinity;
+
     // Memset before filling
     memset(&ecdh->sx[0], 0, ECDH_MAX_VECTOR_SIZE);
 
@@ -1008,11 +1298,27 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
     // Copy Data
     memcpy(&ecdh->d[0], d, size);
 
+    // Reversing the values before the packet is sent
+    if (reverse) {
+      reverse_8((unsigned char *)&ecdh->sx, size);
+      reverse_8((unsigned char *)&ecdh->sy, size);
+      reverse_8((unsigned char *)&ecdh->sz, size);
+      reverse_8((unsigned char *)&ecdh->d, size);
+    }
+
     // Using host descriptor to set payload length
     send_size = sizeof(rsi_ecdh_pm_req_t);
 
     // Get the host descriptor
     host_desc = (pkt->desc);
+
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
 
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
@@ -1036,12 +1342,16 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
     // Copy Data
     memcpy(rz, (rsi_common_cb->app_buffer) + offset, ECDH_MAX_VECTOR_SIZE);
 
+    // Reversing the output to match input point format
+    if (reverse) {
+      reverse_8(rx, size);
+      reverse_8(ry, size);
+      reverse_8(rz, size);
+    }
+
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_ECDH_POINT_MULTIPLICATION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -1058,22 +1368,27 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the ECDH point addition vector. This is a blocking API.
  * @param[in]  ecdh_mode  - 1 – For ECDH 192 \n 2 – For ECDH 224 \n 3 – For ECDH 256 \n
- * @param[in]  sx, sy, sz - Pointers to x, y, z coordinates of the point1 that needs to be added
- * @param[in]  tx, ty, tz - Pointers to x, y, z coordinates of the point2 that needs to be added
- * @param[out] rx, ry, rz - Pointers to x, y, z coordinates of the result point
+ * @param[in]  sx - Pointer to x coordinate of the point1 that needs to be added
+ * @param[in]  sy - Pointer to y coordinate of the point1 that needs to be added
+ * @param[in]  sz - Pointer to z coordinate of the point1 that needs to be added
+ * @param[in]  tx - Pointer to x coordinate of the point2 that needs to be added
+ * @param[in]  ty - Pointer to y coordinate of the point2 that needs to be added
+ * @param[in]  tz - Pointer to z coordinate of the point2 that needs to be added
+ * @param[out] rx - Pointer to x coordinate of the result point
+ * @param[out] ry - Pointer to y coordinate of the result point
+ * @param[out] rz - Pointer to z coordinate of the result point
  * @return      0              - Success   \n
  * @return      Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xFF15, 0xCC9C, 0xCC9B) \n
  *
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
                                 uint8_t *sx,
                                 uint8_t *sy,
@@ -1085,7 +1400,6 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
                                 uint8_t *ry,
                                 uint8_t *rz)
 {
-
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_ECDH_POINT_ADDITION_ENTRY, CRYPTO, LOG_INFO);
   uint16_t send_size = 0;
@@ -1101,6 +1415,11 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
 
   if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
     // Fill vector size based on ecdh mode
@@ -1194,6 +1513,14 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -1218,10 +1545,7 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_ECDH_POINT_ADDITION_COMMON_CMD_IN_PROGRESS, CRYPTO, LOG_ERROR);
     return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
@@ -1238,8 +1562,8 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the ECDH point subtraction vector. This is a blocking API.
@@ -1252,7 +1576,6 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
  *
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
-
 int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
                                    uint8_t *sx,
                                    uint8_t *sy,
@@ -1280,9 +1603,13 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Fill vector size based on ecdh mode
     if (ecdh_mode == ECDH_192) {
       size = ECDH_VECTOR_192_SIZE;
@@ -1374,6 +1701,14 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -1399,10 +1734,7 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_ECDH_POINT_SUBTRACTION_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -1419,8 +1751,8 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the ECDH point double vector. This is a blocking API.
@@ -1434,7 +1766,6 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
  *
  *
  */
-
 int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
                               uint8_t *sx,
                               uint8_t *sy,
@@ -1459,9 +1790,13 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Fill vector size based on ecdh mode
     if (ecdh_mode == ECDH_192) {
       size = ECDH_VECTOR_192_SIZE;
@@ -1534,6 +1869,14 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -1559,10 +1902,7 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_ECDH_POINT_DOUBLE_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -1579,8 +1919,8 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
 /** @} */
 
 /** @addtogroup CRYPTO
-* @{
-*/
+ * @{
+ */
 /*==============================================*/
 /**
  * @brief      Compute the ECDH point affinity vector. This is a blocking API.
@@ -1593,7 +1933,6 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  */
-
 int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
                               uint8_t *sx,
                               uint8_t *sy,
@@ -1618,9 +1957,13 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
   // Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
+  if (wlan_cb->state < RSI_WLAN_STATE_OPERMODE_DONE) {
+    // Command given in wrong state
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Fill vector size based on ecdh mode
     if (ecdh_mode == ECDH_192) {
       size = ECDH_VECTOR_192_SIZE;
@@ -1697,6 +2040,14 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
     // Get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     // Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -1721,10 +2072,7 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     SL_PRINTF(SL_ECDH_POINT_AFFINE_COMMAND_ERROR, CRYPTO, LOG_ERROR, "status: %4x", status);
     return status;
@@ -1749,17 +2097,511 @@ void reverse_8(unsigned char *xx, int no_digits)
   }
 }
 
-#ifdef CHIP_9117
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn          int32 trng_init
+ * @fn         rsi_ccm(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, key_descriptor_t *key_info, uint8_t *iv, uint16_t iv_sz,
+                uint8_t *tag, uint16_t tag_len, uint8_t *ad, uint16_t ad_len, uint8_t *output)
+ * @brief      Decides whether the CCM message can be sent once or requires multiple calls to send
+ * @param[in]  enc_dec: 0 – For CCM Encryption 1 – For CCM Decryption
+ * @param[in]  msg: Pointer to message
+ * @param[in]  msg_length: Total message length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv: Pointer to CCM iv
+ * @param[in]  iv_sz:size of IV
+ * @param[in]  tag: Pointer to CCM tag
+ * @param[in]  tag_len: size of tag
+ * @param[in]  ad:pointer to AD
+ * @param[in]  ad_len: Total length of AD
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from CCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the CCM message can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_ccm(uint8_t enc_dec,
+                uint8_t *msg,
+                uint16_t msg_length,
+                key_descriptor_t *key_info,
+                uint8_t *iv,
+                uint16_t iv_sz,
+                uint8_t *tag,
+                uint16_t tag_len,
+                uint8_t *ad,
+                uint16_t ad_len,
+                uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @fn         rsi_ccm(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, uint8_t *key, uint16_t key_length, uint8_t *iv, uint16_t iv_sz,
+                uint8_t *tag, uint16_t tag_len, uint8_t *ad, uint16_t ad_len, uint8_t *output)
+ * @brief      Decides whether the CCM message can be sent once or requires multiple calls to send
+ * @param[in]  enc_dec: 0 – For CCM Encryption 1 – For CCM Decryption
+ * @param[in]  msg: Pointer to message
+ * @param[in]  msg_length: Total message length
+ * @param[in]  key: Pointer to CCM key
+ * @param[in]  key_length: CCM key length in bytes
+ * @param[in]  iv: Pointer to CCM iv
+ * @param[in]  iv_sz:size of IV
+ * @param[in]  tag: Pointer to CCM tag
+ * @param[in]  tag_len: size of tag
+ * @param[in]  ad:pointer to AD
+ * @param[in]  ad_len: Total length of AD
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from CCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function decides whether the CCM message can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_ccm(uint8_t enc_dec,
+                uint8_t *msg,
+                uint16_t msg_length,
+                uint8_t *key,
+                uint16_t key_length,
+                uint8_t *iv,
+                uint16_t iv_sz,
+                uint8_t *tag,
+                uint16_t tag_len,
+                uint8_t *ad,
+                uint16_t ad_len,
+                uint8_t *output)
+#endif
+/** @endcond */
+{
+  uint16_t total_len = 0;
+  uint16_t chunk_len = 0;
+  uint16_t offset    = 0;
+  uint8_t ccm_flags  = 0;
+  int32_t status     = RSI_SUCCESS;
+
+  total_len = msg_length;
+
+  //! Input pointer check
+  if (((msg_length > 0) && (msg == NULL)) || ((ad_len > 0) && (ad == NULL)) || iv == NULL ||
+#ifdef CHIP_917B0
+      key_info->key_detail.key_spec.key_buffer == NULL
+#else
+      key == NULL
+#endif
+      || tag == NULL || ((output == NULL) && (msg_length > 0))) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (total_len == 0) {
+    chunk_len = total_len;
+    ccm_flags = LAST_CHUNK;
+    ccm_flags |= FIRST_CHUNK;
+#ifdef CHIP_917B0
+    //! send the current chunk length message
+    status = rsi_ccm_pen(enc_dec,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key_info,
+                         iv,
+                         iv_sz,
+                         tag,
+                         tag_len,
+                         ad,
+                         ad_len,
+                         ccm_flags,
+                         output);
+#else
+    //! send the current chunk length message
+    status = rsi_ccm_pen(enc_dec,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key,
+                         key_length,
+                         iv,
+                         iv_sz,
+                         tag,
+                         tag_len,
+                         ad,
+                         ad_len,
+                         ccm_flags,
+                         output);
+#endif
+    return status;
+  }
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES_FOR_CCM) {
+      chunk_len = MAX_DATA_SIZE_BYTES_FOR_CCM;
+      if (offset == 0) {
+        //! Make ccm_flags as first chunk
+        ccm_flags |= FIRST_CHUNK;
+      } else {
+        //! Make ccm_flags as Middle chunk
+        ccm_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len = total_len;
+      ccm_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero
+           then make ccm_flags as both first chunk as well as last chunk*/
+        ccm_flags |= FIRST_CHUNK;
+      }
+    }
+
+#ifdef CHIP_917B0
+    //! send the current chunk length message
+    status = rsi_ccm_pen(enc_dec,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key_info,
+                         iv,
+                         iv_sz,
+                         tag,
+                         tag_len,
+                         ad,
+                         ad_len,
+                         ccm_flags,
+                         output);
+#else
+    //! send the current chunk length message
+    status = rsi_ccm_pen(enc_dec,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key,
+                         key_length,
+                         iv,
+                         iv_sz,
+                         tag,
+                         tag_len,
+                         ad,
+                         ad_len,
+                         ccm_flags,
+                         output);
+#endif
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+    //! Increment the offset value
+    offset += chunk_len;
+    msg += chunk_len;
+
+    //! Decrement the total message length
+    total_len -= chunk_len;
+  }
+  return status;
+}
+
+/** @addtogroup CRYPTO
+
+* @{
+*/
+#ifdef CHIP_917B0
+/*==============================================*/
+/**
+ * @fn         rsi_ccm_pen(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, uint16_t chunk_length, key_descriptor_t *key_info,
+ *                      uint8_t *iv,uint16_t iv_sz, uint8_t *tag, uint16_t tag_len, uint8_t *ad, uint16_t ad_len, uint8_t ccm_flags, uint8_t *output)
+ * @brief      Encrypt/Decrypt the data using CCM
+ * @param[in]  enc_dec: 0 – For CCM Encryption 1 – For CCM Decryption
+ * @param[in]  msg: Pointer to message
+ * @param[in]  msg_length: Total message length
+ * @param[in]  chunk_length: current chunk length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv: Pointer to CCM iv
+ * @param[in]  iv_sz: size of IV
+ * @param[in]  tag: Pointer to CCM tag
+ * @param[in]  tag_len: size of tag
+ * @param[in]  ad:pointer to AD
+ * @param[in]  ad_len: Total length of AD
+ * @param[in]  ccm_flags: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from CCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function encrypt/decrypt the data using CCM
+ *
+ */
+int32_t rsi_ccm_pen(uint8_t enc_dec,
+                    uint8_t *msg,
+                    uint16_t msg_length,
+                    uint16_t chunk_length,
+                    key_descriptor_t *key_info,
+                    uint8_t *iv,
+                    uint16_t iv_sz,
+                    uint8_t *tag,
+                    uint16_t tag_len,
+                    uint8_t *ad,
+                    uint16_t ad_len,
+                    uint8_t ccm_flags,
+                    uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @fn         rsi_ccm_pen(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, uint16_t chunk_length, uint8_t *key, uint16_t key_length,
+ *                      uint8_t *iv,uint16_t iv_sz, uint8_t *tag, uint16_t tag_len, uint8_t *ad, uint16_t ad_len, uint8_t ccm_flags, uint8_t *output)
+ * @brief      Encrypt/Decrypt the data using CCM
+ * @param[in]  enc_dec: 0 – For CCM Encryption 1 – For CCM Decryption
+ * @param[in]  msg: Pointer to message
+ * @param[in]  msg_length: Total message length
+ * @param[in]  chunk_length: current chunk length
+ * @param[in]  key: Pointer to CCM key
+ * @param[in]  key_length: CCM key length in bytes
+ * @param[in]  iv: Pointer to CCM iv
+ * @param[in]  iv_sz: size of IV
+ * @param[in]  tag: Pointer to CCM tag
+ * @param[in]  tag_len: size of tag
+ * @param[in]  ad:pointer to AD
+ * @param[in]  ad_len: Total length of AD
+ * @param[in]  ccm_flags: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
+ * @param[out]  output:  Output parameter to hold encrypted/decrypted from CCM
+ *  * @return
+ *              Non zero - If fails
+ *              0 - If success
+ *
+ * @section description
+ * This function encrypt/decrypt the data using CCM
+ *
+ */
+int32_t rsi_ccm_pen(uint8_t enc_dec,
+                    uint8_t *msg,
+                    uint16_t msg_length,
+                    uint16_t chunk_length,
+                    uint8_t *key,
+                    uint16_t key_length,
+                    uint8_t *iv,
+                    uint16_t iv_sz,
+                    uint8_t *tag,
+                    uint16_t tag_len,
+                    uint8_t *ad,
+                    uint16_t ad_len,
+                    uint8_t ccm_flags,
+                    uint8_t *output)
+#endif
+/** @endcond */
+{
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  rsi_pkt_t *pkt;
+  rsi_ccm_req_t *ccm;
+
+#ifdef CHIP_917B0
+
+  //! Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  //! Key size
+  uint32_t key_size = key_info->key_detail.key_size;
+
+  //! Get the key slot
+  uint32_t key_slot = key_info->key_detail.key_spec.key_slot;
+
+  //! Only 32 bytes M4 OTA built in key support is present
+  if (key_type == RSI_BUILT_IN_KEY) {
+    if (key_size != M4_OTA_KEY_SIZE || key_slot != GET_M4_OTA_KEY)
+      return RSI_ERROR_INVALID_OPTION;
+  }
+
+  //! Get the plain key data/ wrapped key
+  uint8_t *key_buffer = key_info->key_detail.key_spec.key_buffer;
+
+  //! Get the Wrapped IV mode
+  uint32_t wrap_iv_mode = key_info->key_detail.key_spec.wrap_iv_mode;
+
+  //! Get the Wrapped IV
+  uint8_t *wrap_iv = key_info->key_detail.key_spec.wrap_iv;
+
+  //!Reserved for future use
+  uint32_t reserved = key_info->reserved;
+
+#endif
+
+  //! Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  //! Check IV size for ccm
+  //!Return error if IV size if less than 7 Bytes or greater than 13 bytes
+
+  if (iv_sz < CCM_IV_MIN_SIZE_BYTES || iv_sz > CCM_IV_MAX_SIZE_BYTES) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (output != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = output;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = msg_length + tag_len;
+    }
+
+    //! Get Data Pointer
+    ccm = (rsi_ccm_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(ccm, 0, sizeof(rsi_ccm_req_t));
+
+    //! Fill Algorithm type CCM - 31
+    ccm->algorithm_type = CCM;
+
+    //! Fill enc_dec: 0 – For CCM Encryption 1 – For CCM Decryption
+    ccm->encrypt_decryption = enc_dec;
+
+    //! Fill aes_flags BIT(0) - 1st chunk BIT(1)- Middle chunk BIT(2) - Last chunk
+    ccm->ccm_flags = ccm_flags;
+
+    //! Fill msg length
+    ccm->total_msg_length = msg_length;
+
+    //! Fill chunk length
+    ccm->current_chunk_length = chunk_length;
+
+    //! Fill ad length
+    ccm->ad_len = ad_len;
+
+    //! Fill tag length
+    ccm->tag_len = tag_len;
+
+    //! Fill nonce length
+    ccm->nonce_len = iv_sz;
+
+#ifdef CHIP_917B0
+
+    ccm->key_info.key_type = key_type;
+
+    ccm->key_info.key_detail.key_size = key_size;
+
+    ccm->key_info.key_detail.key_spec.key_slot = key_slot;
+
+    ccm->key_info.reserved = reserved;
+
+    ccm->key_info.key_detail.key_spec.wrap_iv_mode = wrap_iv_mode;
+
+    // Wrap IV
+    // Memset before filling
+    memset(&ccm->key_info.key_detail.key_spec.wrap_iv[0], 0, IV_SIZE);
+
+    //Copy the IV if mode is CBC
+    if (wrap_iv_mode) {
+      memcpy(&ccm->key_info.key_detail.key_spec.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //KEY
+    // Memset before filling
+    memset(&ccm->key_info.key_detail.key_spec.key_buffer[0], 0, key_size);
+
+    //Copy the key
+    memcpy(&ccm->key_info.key_detail.key_spec.key_buffer[0], key_buffer, key_size);
+
+#else
+    //! Fill key length
+    ccm->key_length = key_length;
+
+    //!KEY
+    //! Memset before filling
+    memset(&ccm->key[0], 0, key_length);
+
+    //! Copy KEY
+    memcpy(&ccm->key[0], key, key_length);
+#endif
+    //!IV
+    //! Memset before filling
+    memset(&ccm->nonce[0], 0, iv_sz);
+
+    //! Copy IV
+    memcpy(&ccm->nonce[0], iv, iv_sz);
+
+    //!AD
+    //!Memset before filling
+    memset(&ccm->ad[0], 0, ad_len);
+
+    //!Copy header
+    memcpy(&ccm->ad[0], ad, ad_len);
+
+    //!TAG
+    //!Memset before filling
+    memset(&ccm->tag[0], 0, tag_len);
+
+    //!Copy header
+    memcpy(&ccm->tag[0], tag, tag_len);
+
+    //!Data
+    //! Memset before filling
+    memset(&ccm->msg[0], 0, MAX_DATA_SIZE_BYTES_FOR_CCM);
+
+    //! Copy Data
+    if (msg_length > 0) {
+      memcpy(&ccm->msg[0], msg, chunk_length);
+    }
+    //! Using host descriptor to set payload length
+    send_size = sizeof(rsi_ccm_req_t) - MAX_DATA_SIZE_BYTES_FOR_CCM + chunk_length;
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    //! send aes encrypt/decrypt request to module
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+
+/** @} */
+
+#ifdef CHIP_917
+/*==============================================*/
+/**
+ * @fn          int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_length, uint32_t *output)
  * @brief       This API Initializes the TRNG hardware engine and Evaluate AES-CBC
  * @param[in]   trng_key - Pointer to trng_key
  * @param[in]   trng_test_data - Pointer to test data for trng
  * @param[in]   input_length - Length of test data in dwords
  * @param[out]  output - Pointer to output
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This API Initializes the TRNG hardware engine
@@ -1776,7 +2618,6 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
   if (rsi_common_cb == NULL) {
-
     return RSI_ERROR_INVALID_MEMORY;
   }
 
@@ -1787,7 +2628,6 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -1848,10 +2688,7 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     return status;
   }
@@ -1862,20 +2699,22 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
   // Return the status
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn          int32 check_trng_entropy()
+ * @fn          int32 trng_entropy()
  * @brief       This API check the health of Trng
- * @param[in]   None
- * @param[out]  None
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This API checks the Entropy of TRNG
  */
-
 int32_t trng_entropy(void)
 {
   int32_t status     = RSI_SUCCESS;
@@ -1893,7 +2732,6 @@ int32_t trng_entropy(void)
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -1937,10 +2775,7 @@ int32_t trng_entropy(void)
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     return status;
   }
@@ -1951,19 +2786,23 @@ int32_t trng_entropy(void)
   // Return the status
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn          int32 trng_program_key(uint32 *key,uint16 key_length)
+ * @fn          int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length)
  * @brief       This API Initializes key which needs to be programmed to TRNG hardware engine
- * @param[in]   key, Key for TRNG
- * @param[in]   key_length, key length in Dwords
- * @param[out]  None
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[in]   trng_key - Pointer to trng_key
+ * @param[in]   key_length - key_length - key length in Dwords
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
- *       This API Initializes key which needs to be programmed to TRNG hardware engine
+ * This API Initializes key which needs to be programmed to TRNG hardware engine
  */
 int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length)
 {
@@ -1987,7 +2826,6 @@ int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length)
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -2034,10 +2872,7 @@ int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length)
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     return status;
   }
@@ -2048,21 +2883,24 @@ int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length)
   // Return the status
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn          int32 trng_get_random_num(uint32 *random_number,uint16 length)
+ * @fn          int32_t trng_get_random_num(uint32_t *random_number, uint16_t length)
  * @brief       This API generated random number of desired length
- * @param[in]   random_number, Address for Random number
- * @param[in]   length,Random number which needs to be generated in Dwords
- * @param[out]  None
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[in]   random_number - Address for Random number
+ * @param[in]   length - Random number which needs to be generated in Dwords
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
- *      This API generates random number of desired length
+ * This API generated random number of desired length
  */
-
 int32_t trng_get_random_num(uint32_t *random_number, uint16_t length)
 {
   int32_t status     = RSI_SUCCESS;
@@ -2084,7 +2922,6 @@ int32_t trng_get_random_num(uint32_t *random_number, uint16_t length)
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -2139,10 +2976,7 @@ int32_t trng_get_random_num(uint32_t *random_number, uint16_t length)
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     return status;
   }
@@ -2153,21 +2987,26 @@ int32_t trng_get_random_num(uint32_t *random_number, uint16_t length)
   // Return the status
   return status;
 }
+/** @} */
+
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn          int32 sl_attestation_get_token(uint8_t *token,uint16 length,uint32_t *nonce)
+ * @fn          int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonce)
  * @brief       This API gets token
- * @param[in]   token, Address for token
- * @param[in]   length,Length of token request
- * @param[in]   nonce, 32 byte nonce
- * @param[out]  none
- * return 0  - success
- *        !0 - Failure
+ * @param[in]   token - Address for token
+ * @param[in]   length -Length of token request
+ * @param[in]   nonce - 32 byte nonce
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
- *      This API gets token
+ * This API gets token
  */
-
 int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonce)
 {
   int32_t status     = RSI_SUCCESS;
@@ -2189,7 +3028,6 @@ int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonc
 
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
-
     // Allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -2248,10 +3086,7 @@ int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonc
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     // Return common command error
     return status;
   }
@@ -2262,9 +3097,15 @@ int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonc
   // Return the status
   return status;
 }
+#endif
+/** @} */
+
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn         rsi_sha3_shake_pen(uint8_t pad_char,uint8_t mode, uint8_t *msg, uint16_t msg_length,
+ * @fn         int32_t rsi_sha3_shake_pen(uint8_t pad_char,uint8_t mode, uint8_t *msg, uint16_t msg_length,
  *              uint16_t chunk_len, uint8_t pending_flag, uint8_t *digest)
  * @brief      Computes the sha3/shake digest
  * @param[in]  pad_char: 0x1F SHAKE, 0x06 SHA3
@@ -2277,9 +3118,10 @@ int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonc
  * @param[in]  msg_length: Total message length
  * @param[in]  chunk_length: current chunk length
  * @param[in]  pending_flag: BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
- * @param[out] digest:  Output parameter to hold computed digest from SHA3/SHAKE
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[out]  digest:  Output parameter to hold computed digest from SHA3/SHAKE
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This function computes the sha3/shake digest for the given input message
@@ -2293,7 +3135,6 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
                            uint8_t pending_flag,
                            uint8_t *digest)
 {
-
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
@@ -2319,7 +3160,6 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
     return RSI_ERROR_INVALID_PARAM;
   }
   if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
-
     //! Fill digest length based on sha mode
     if (mode == SHA3_224) {
       digest_len = SHA_224_DIGEST_LEN;
@@ -2331,9 +3171,7 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
       digest_len = SHA_512_DIGEST_LEN;
     } else if (mode == SHAKE_128) {
       digest_len = SHAKE_128_DIGEST_LEN;
-    }
-
-    else {
+    } else {
       //!Changing the common state to allow state
       rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
       return RSI_ERROR_INVALID_PARAM;
@@ -2395,6 +3233,14 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
     //! get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     //! Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -2406,10 +3252,7 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
 
     //!Changing the common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-
-  }
-
-  else {
+  } else {
     //!return common command error
     return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
   }
@@ -2420,18 +3263,24 @@ int32_t rsi_sha3_shake_pen(uint8_t pad_char,
   //! Return the status
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn         rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest) 
+ * @fn         int32_t rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest) 
  * @brief      Decides whether the sha message can be sent once or requires multiple calls to send
- * @param[in]  mode:    21  - SHAKE_128 \n
- *                      17  - SHAKE_256 \n
+ * @param[in]  mode
+ *        21  - SHAKE_128
+ *        17  - SHAKE_256
  * @param[in]  msg: Pointer to message
  * @param[in]  msg_length: Total message length
- * @param[out] digest:  Output parameter to hold computed digest from SHAKE
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[out]  digest:  Output parameter to hold computed digest from SHAKE
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This function decides whether the shakeamessage can be sent once or requires multiple calls to send the message
@@ -2488,10 +3337,14 @@ int32_t rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *dige
 
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
 /*==============================================*/
 /**
- * @fn         rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
+ * @fn         int32_t rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
  * @brief      Decides whether the sha message can be sent once or requires multiple calls to send
  * @param[in]  mode:  17  - SHA3_256 \n
  *                    18  - SHA3_224 \n
@@ -2499,15 +3352,15 @@ int32_t rsi_shake(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *dige
  *                    9   - SHA3_512 \n
  * @param[in]  msg: Pointer to message
  * @param[in]  msg_length: Total message length
- * @param[out] digest:  Output parameter to hold computed digest from SHA3
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[out]  digest:  Output parameter to hold computed digest from SHA3
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This function decides whether the sha message can be sent once or requires multiple calls to send the message
  *
  */
-
 int32_t rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *digest)
 {
   int32_t status     = RSI_SUCCESS;
@@ -2559,30 +3412,61 @@ int32_t rsi_sha3(uint8_t mode, uint8_t *msg, uint16_t msg_length, uint8_t *diges
 
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn         rsi_chachapoly(uint16_t chachapoly_mode, uint16_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint8_t *key_chacha, uint8_t *keyr_in,uint8_t *keys_in,
-        uint8_t *nonce, uint8_t *header_input, uint16_t header_length, uint8_t *output)
  * @brief      Decides whether the CHACHAPOLY message can be sent once or requires multiple calls to send
- * @param[in]  chacha_mode : 0 – For CHACHA20POLY1305 mode \n 1 – For CHACHA20 mode \n 3 – For POLY1305 mode \n
- * @param[in]  enc_dec: 0 – For CHACHAPOLY Encryption \n 1 – For CHACHAPOLY Decryption \n
- * @param[in]  dma_use: 1 - DMA enable \n  0- disable DMA \n
- * @param[in]  msg: Pointer to message
- * @param[in]  msg_length: Total message length
- * @param[in]  key_chacha: Pointer to chacha key
- * @param[in]  keyr_in: pointer to keyr_in
- * @param[in]  keys_in: pointer to keys_in
- * @param[in]  nonce: pointer to nonce (1st index is IV)
- * @param[in]  header_input: Pointer to header
- * @param[in]  header_length: header length in bytes
- * @param[out]  output:  Output parameter to hold encrypted/decrypted from chachapoly
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[in]  chachapoly_mode - 0 – For CHACHA20POLY1305 mode \n 1 – For CHACHA20 mode \n 3 – For POLY1305 mode \n
+ * @param[in]  enc_dec - 0 – For CHACHAPOLY Encryption \n 1 – For CHACHAPOLY Decryption \n
+ * @param[in]  dma_use - 1 - DMA enable \n  0- disable DMA \n
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  nonce - pointer to nonce (1st index is IV)
+ * @param[in]  header_input- Pointer to header
+ * @param[in]  header_length - header length in bytes
+ * @param[out]  output  Output parameter to hold encrypted/decrypted from chachapoly
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
- * @section description
- * This function decides whether the chachapoly message can be sent once or requires multiple calls to send the message
+ */
+int32_t rsi_chachapoly(uint16_t chachapoly_mode,
+                       uint16_t enc_dec,
+                       uint16_t dma_use,
+                       uint8_t *msg,
+                       uint16_t msg_length,
+                       key_descriptor_t *key_info,
+                       uint8_t *nonce,
+                       uint8_t *header_input,
+                       uint16_t header_length,
+                       uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @brief      Decides whether the CHACHAPOLY message can be sent once or requires multiple calls to send
+ * @param[in]  chachapoly_mode - 0 – For CHACHA20POLY1305 mode \n 1 – For CHACHA20 mode \n 3 – For POLY1305 mode \n
+ * @param[in]  enc_dec - 0 – For CHACHAPOLY Encryption \n 1 – For CHACHAPOLY Decryption \n
+ * @param[in]  dma_use - 1 - DMA enable \n  0- disable DMA \n
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  key_chacha - Pointer to chacha key
+ * @param[in]  keyr_in - pointer to keyr_in
+ * @param[in]  keys_in - pointer to keys_in
+ * @param[in]  nonce - pointer to nonce (1st index is IV)
+ * @param[in]  header_input- Pointer to header
+ * @param[in]  header_length - header length in bytes
+ * @param[out]  output  Output parameter to hold encrypted/decrypted from chachapoly
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
  *
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  */
 int32_t rsi_chachapoly(uint16_t chachapoly_mode,
                        uint16_t enc_dec,
@@ -2596,8 +3480,9 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
                        uint8_t *header_input,
                        uint16_t header_length,
                        uint8_t *output)
+/** @endcond */
+#endif
 {
-
   uint16_t total_len       = 0;
   uint16_t chunk_len       = 0;
   uint16_t offset          = 0;
@@ -2632,7 +3517,21 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
       }
     }
 
-    //! send the current chunk length message
+//! send the current chunk length message
+#ifdef CHIP_917B0
+    status = rsi_chachapoly_pen(chachapoly_mode,
+                                enc_dec,
+                                dma_use,
+                                msg,
+                                msg_length,
+                                chunk_len,
+                                key_info,
+                                nonce,
+                                header_input,
+                                header_length,
+                                chachapoly_flags,
+                                output);
+#else
     status = rsi_chachapoly_pen(chachapoly_mode,
                                 enc_dec,
                                 dma_use,
@@ -2647,6 +3546,7 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
                                 header_length,
                                 chachapoly_flags,
                                 output);
+#endif
 
     if (status != RSI_SUCCESS) {
       return status;
@@ -2662,11 +3562,14 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
 
   return status;
 }
+/** @} */
 
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn         rsi_chachapoly_pen(uint16_t chachapoly_mode, uint16_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length,uint16_t chunk_len, uint8_t *key_chacha, uint8_t *keyr_in,uint8_t *keys_in,
-        uint8_t *nonce, uint8_t *header_input, uint16_t header_length,uint8_t chachapoly_flags,uint8_t *output)
  * @brief      Encrypt/Decrypt the data using CHACHA_POLY
  * @param[in]  chacha_mode : 0 – For CHACHA20POLY1305 mode \n 1 – For CHACHA20 mode \n 3 – For POLY1305 mode \n
  * @param[in]  enc_dec: 0 – For CHACHAPOLY Encryption \n 1 – For CHACHAPOLY Decryption \n
@@ -2685,9 +3588,43 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
  * @return      0              - Success
  * @return      Non-Zero Value - Failure
  *
- * @section description
- * This function encrypt/decrypt the data using CHACHAPOLY
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ */
+int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
+                           uint16_t enc_dec,
+                           uint16_t dma_use,
+                           uint8_t *msg,
+                           uint16_t msg_length,
+                           uint16_t chunk_len,
+                           key_descriptor_t *key_info,
+                           uint8_t *nonce,
+                           uint8_t *header_input,
+                           uint16_t header_length,
+                           uint8_t chachapoly_flags,
+                           uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
+ * @brief      Encrypt/Decrypt the data using CHACHA_POLY
+ * @param[in]  chachapoly_mode - 0 – For CHACHA20POLY1305 mode \n 1 – For CHACHA20 mode \n 3 – For POLY1305 mode \n
+ * @param[in]  enc_dec - 0 – For CHACHAPOLY Encryption \n 1 – For CHACHAPOLY Decryption \n
+ * @param[in]  dma_use - 1 - DMA enable \n  0- disable DMA \n
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  chunk_len        - current chunk length
+ * @param[in]  key_chacha         - Pointer to chacha key
+ * @param[in]  keyr_in            - pointer to keyr_in
+ * @param[in]  keys_in            - pointer to keys_in
+ * @param[in]  nonce - pointer to nonce (1st index is IV)
+ * @param[in]  header_input- Pointer to header
+ * @param[in]  header_length - header length in bytes
+ * @param[in]  chachapoly_flags - BIT(0) - 1st chunk \n BIT(1) - Middle chunk \n BIT(2) - Last chunk \n
+ * @param[out]  output  Output parameter to hold encrypted/decrypted from chachapoly
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
  *
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  */
 int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
                            uint16_t enc_dec,
@@ -2703,13 +3640,45 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
                            uint16_t header_length,
                            uint8_t chachapoly_flags,
                            uint8_t *output)
+/** @endcond */
+#endif
 {
-
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   rsi_pkt_t *pkt;
   rsi_chachapoly_req_t *chachapoly;
+
+#ifdef CHIP_917B0
+
+  //! Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  //! Key size
+  uint32_t key_size = key_info->key_detail.key_size;
+
+  //! Get the key slot
+  uint32_t key_slot = key_info->key_detail.key_spec.key_slot;
+
+  //! Only 32 bytes M4 OTA built in key support is present
+  if (key_type == RSI_BUILT_IN_KEY) {
+    if (key_size != M4_OTA_KEY_SIZE || key_slot != GET_M4_OTA_KEY)
+      return RSI_ERROR_INVALID_OPTION;
+  }
+
+  //! Get the plain key data/ wrapped key
+  uint8_t *key_buffer = key_info->key_detail.key_spec.key_buffer;
+
+  //! Get the Wrapped IV mode
+  uint32_t wrap_iv_mode = key_info->key_detail.key_spec.wrap_iv_mode;
+
+  //! Get the Wrapped IV
+  uint8_t *wrap_iv = key_info->key_detail.key_spec.wrap_iv;
+
+  //!Reserved for future use
+  uint32_t reserved = key_info->reserved;
+
+#endif
 
   //! Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -2723,19 +3692,27 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
   }
 
   //! check for proper key
-  if (chachapoly_mode == CHACHAPOLY_MODE_POLY1305_KEYR_KEYS) {
-    if ((keyr_in == NULL) || (keys_in == NULL))
-      return RSI_ERROR_INVALID_PARAM;
-  } else if (chachapoly_mode == CHACHA20POLY1305 || chachapoly_mode == CHACHA20) {
-    if (key_chacha == NULL || nonce == NULL)
-      return RSI_ERROR_INVALID_PARAM;
-  } else {
-    if ((keyr_in == NULL) || (keys_in == NULL))
-      return RSI_ERROR_INVALID_PARAM;
+#ifdef CHIP_917B0
+  if (key_buffer == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
   }
+#else
+  if (chachapoly_mode == CHACHAPOLY_MODE_POLY1305_KEYR_KEYS) {
+    if ((keyr_in == NULL) || (keys_in == NULL)) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  } else if (chachapoly_mode == CHACHA20POLY1305 || chachapoly_mode == CHACHA20) {
+    if (key_chacha == NULL || nonce == NULL) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  } else {
+    if ((keyr_in == NULL) || (keys_in == NULL)) {
+      return RSI_ERROR_INVALID_PARAM;
+    }
+  }
+#endif
 
   if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
-
     //! allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -2785,6 +3762,42 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
     //!Fill header length
     chachapoly->header_length = header_length;
 
+#ifdef CHIP_917B0
+
+    chachapoly->key_info.key_type = key_type;
+
+    chachapoly->key_info.key_detail.key_size = key_size;
+
+    chachapoly->key_info.key_detail.key_spec.key_slot = key_slot;
+
+    chachapoly->key_info.reserved = reserved;
+
+    chachapoly->key_info.key_detail.key_spec.wrap_iv_mode = wrap_iv_mode;
+
+    // Wrap IV
+    // Memset before filling
+    memset(&chachapoly->key_info.key_detail.key_spec.wrap_iv[0], 0, IV_SIZE);
+
+    //Copy the IV if mode is CBC
+    if (wrap_iv_mode) {
+      memcpy(&chachapoly->key_info.key_detail.key_spec.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //!Key for chachapoly
+    //! Memset before filling
+    memset(&chachapoly->key_info.key_detail.key_spec.key_buffer[0], 0, key_size);
+
+    //Copy the key
+    memcpy(&chachapoly->key_info.key_detail.key_spec.key_buffer, key_buffer, key_size);
+
+    //!Nonce
+    //!Memset before filling
+    memset(&chachapoly->nonce[0], 0, NONCE_SIZE);
+
+    //! Copy the Nonce
+    memcpy(&chachapoly->nonce[0], nonce, NONCE_SIZE);
+
+#else
     //!memset header before filling
     memset(&chachapoly->header_input[0], 0, header_length);
 
@@ -2818,7 +3831,7 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
       memcpy(&chachapoly->keyr_in[0], keyr_in, KEYR_SIZE);
       memcpy(&chachapoly->keys_in[0], keys_in, KEYS_SIZE);
     }
-
+#endif
     //!Data
     //! Memset before filling
     memset(&chachapoly->msg[0], 0, MAX_DATA_SIZE_BYTES_FOR_CHACHAPOLY);
@@ -2832,6 +3845,14 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
     //! get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     //! Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
@@ -2843,9 +3864,7 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
 
     //!Changing the common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
-  }
-
-  else {
+  } else {
     //!return common command error
     return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
   }
@@ -2856,24 +3875,65 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
   //! Return the status
   return status;
 }
+/** @} */
+
+/** @addtogroup CRYPTO
+* @{
+*/
+
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn         rsi_gcm(uint8_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint8_t *key,
- *        uint16_t key_length, uint8_t *iv,uint8_t iv_sz,uint8_t *header,uint16_t header_length, uint8_t *output,uint8_t tag_out)
+ * @brief      Decides whether the GCM/CMAC message can be sent once or requires multiple calls to send
+ * @param[in]  gcm_mode - 0 – For GCM, 1 – For CMAC. CMAC doesn't support decryption
+ * @param[in]  enc_dec - 0 – For GCM/CMAC Encryption 1 – For GCM Decryption
+ * @param[in]  dma_use - 0 - DMA disable   1: DMA Enable
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv - Pointer to GCM iv
+ * @param[in] iv_sz - size of IV
+ * @param[in]  header - pointer to header
+ * @param[in] header_length - Total length of header
+ * @param[out]  output -  Output parameter to hold encrypted/decrypted from GCM
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ *
+ * @section description
+ * This function decides whether the GCM/CMAC message can be sent once or requires multiple calls to send the message
+ *
+ */
+int32_t rsi_gcm(uint32_t gcm_mode,
+                uint8_t enc_dec,
+                uint16_t dma_use,
+                uint8_t *msg,
+                uint16_t msg_length,
+                key_descriptor_t *key_info,
+                uint8_t *iv,
+                uint16_t iv_sz,
+                uint8_t *header,
+                uint16_t header_length,
+                uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
  * @brief      Decides whether the GCM message can be sent once or requires multiple calls to send
- * @param[in]  enc_dec: 0 – For GCM Encryption \n 1 – For GCM Decryption \n
- * @param[in]  dma_use: 0 - DMA disable \n  1: DMA Enable \n
- * @param[in]  msg: Pointer to message
- * @param[in]  msg_length: Total message length
- * @param[in]  key: Pointer to GCM key
- * @param[in]  key_length: GCM key length in bits
- * @param[in]  iv: Pointer to GCM iv
- * @param[in]  iv_sz:size of IV
- * @param[in]  header:pointer to header
- * @param[in]  header_length: Total length of header
- * @param[out]  output:  Output parameter to hold encrypted/decrypted from GCM
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[in]  enc_dec - 0 – For GCM Encryption 1 – For GCM Decryption
+ * @param[in]  dma_use - 0 - DMA disable   1: DMA Enable
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  key - Pointer to GCM key
+ * @param[in]  key_length - GCM key length in bytes
+ * @param[in]  iv - Pointer to GCM iv
+ * @param[in] iv_sz - size of IV
+ * @param[in]  header - pointer to header
+ * @param[in] header_length - Total length of header
+ * @param[out]  output -  Output parameter to hold encrypted/decrypted from GCM
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This function decides whether the GCM message can be sent once or requires multiple calls to send the message
@@ -2890,8 +3950,9 @@ int32_t rsi_gcm(uint8_t enc_dec,
                 uint8_t *header,
                 uint16_t header_length,
                 uint8_t *output)
+/** @endcond */
+#endif
 {
-
   uint16_t total_len = 0;
   uint16_t chunk_len = 0;
   uint16_t offset    = 0;
@@ -2900,10 +3961,16 @@ int32_t rsi_gcm(uint8_t enc_dec,
 
   total_len = msg_length;
 
-  //! Input pointer check
-  if (msg == NULL || header == NULL || iv == NULL) {
+  //! Input pointer check for IV and key
+#ifdef CHIP_917B0
+  if (key_info->key_detail.key_spec.key_buffer == NULL && (gcm_mode == GCM_MODE && iv == NULL)) {
     return RSI_ERROR_INVALID_PARAM;
   }
+#else
+  if (key == NULL && iv == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+#endif
 
   while (total_len) {
     //! check total length
@@ -2927,6 +3994,21 @@ int32_t rsi_gcm(uint8_t enc_dec,
     }
 
     //! send the current chunk length message
+#ifdef CHIP_917B0
+    status = rsi_gcm_pen(gcm_mode,
+                         enc_dec,
+                         dma_use,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key_info,
+                         iv,
+                         iv_sz,
+                         header,
+                         header_length,
+                         gcm_flags,
+                         output);
+#else
     status = rsi_gcm_pen(enc_dec,
                          dma_use,
                          msg,
@@ -2940,6 +4022,7 @@ int32_t rsi_gcm(uint8_t enc_dec,
                          header_length,
                          gcm_flags,
                          output);
+#endif
 
     if (status != RSI_SUCCESS) {
       return status;
@@ -2955,26 +4038,70 @@ int32_t rsi_gcm(uint8_t enc_dec,
 
   return status;
 }
+/** @} */
+
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
 /*==============================================*/
 /**
- * @fn         rsi_gcm_pen(uint8_t enc_dec,uint16_t dma_use, uint8_t *msg, uint16_t msg_length, uint16_t chunk_length, uint8_t *key, uint16_t key_length,
- *                      uint8_t *iv,uint16_t iv_sz, uint8_t *header,uint16_t header_length, uint8_t gcm_flags, uint8_t *output, uint8_t *tag_out)
+ * @brief      Encrypt/Decrypt the data using GCM/CMAC. CMAC Descryption is not supported
+ * @param[in]  gcm_mode - 0- GCM mode, 1- CMAC mode 
+ * @param[in]  enc_dec - 0 – For GCM/CMAC Encryption 1 – For GCM Decryption
+ * @param[in]  dma_use - 0 - DMA disable   1 - DMA Enable
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  chunk_length - current chunk length
+ * @param[in]  key_info      - Structure pointer for key_info
+ * @param[in]  iv - Pointer to GCM iv
+ * @param[in]  iv_sz - size of IV
+ * @param[in]  header - pointer to header
+ * @param[in]  header_length - Total length of header
+ * @param[in]  gcm_flags - BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
+ * @param[out]  output -  Output parameter to hold encrypted/decrypted from GCM
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ *
+ * @section description
+ * This function encrypt/decrypt the data using GCM/CMAC
+ *
+ */
+int32_t rsi_gcm_pen(uint32_t gcm_mode,
+                    uint8_t enc_dec,
+                    uint16_t dma_use,
+                    uint8_t *msg,
+                    uint16_t msg_length,
+                    uint16_t chunk_length,
+                    key_descriptor_t *key_info,
+                    uint8_t *iv,
+                    uint16_t iv_sz,
+                    uint8_t *header,
+                    uint16_t header_length,
+                    uint8_t gcm_flags,
+                    uint8_t *output)
+#else
+/** @cond */
+/*==============================================*/
+/**
  * @brief      Encrypt/Decrypt the data using GCM
- * @param[in]  enc_dec: 0 – For GCM Encryption \n 1 – For GCM Decryption \n
- * @param[in]  dma_use: 0 - DMA disable \n  1 - DMA Enable \n
- * @param[in]  msg: Pointer to message
- * @param[in]  msg_length: Total message length
- * @param[in]  chunk_length: current chunk length
- * @param[in]  key: Pointer to GCM key
- * @param[in]  key_length: GCM key length in bits
- * @param[in]  iv: Pointer to GCM iv
- * @param[in]  iv_sz: size of IV
- * @param[in]  header:pointer to header
- * @param[in]  header_length: Total length of header
- * @param[in]  gcm_flags: BIT(0) - 1st chunk \n BIT(1) - Middle chunk \n BIT(2) - Last chunk \n
- * @param[out]  output:  Output parameter to hold encrypted/decrypted from GCM
- * @return      0              - Success
- * @return      Non-Zero Value - Failure
+ * @param[in]  enc_dec - 0 – For GCM Encryption 1 – For GCM Decryption
+ * @param[in]  dma_use - 0 - DMA disable   1 - DMA Enable
+ * @param[in]  msg - Pointer to message
+ * @param[in]  msg_length - Total message length
+ * @param[in]  chunk_length - current chunk length
+ * @param[in]  key - Pointer to GCM key
+ * @param[in]  key_length - GCM key length in bytes
+ * @param[in]  iv - Pointer to GCM iv
+ * @param[in]  iv_sz - size of IV
+ * @param[in]  header - pointer to header
+ * @param[in]  header_length - Total length of header
+ * @param[in]  gcm_flags - BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
+ * @param[out]  output - Output parameter to hold encrypted/decrypted from GCM
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
  *
  * @section description
  * This function encrypt/decrypt the data using GCM
@@ -2993,13 +4120,44 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
                     uint16_t header_length,
                     uint8_t gcm_flags,
                     uint8_t *output)
+/** @endcond */
+#endif
 {
-
   int32_t status     = RSI_SUCCESS;
   uint16_t send_size = 0;
   uint8_t *host_desc = NULL;
   rsi_pkt_t *pkt;
   rsi_gcm_req_t *gcm;
+
+#ifdef CHIP_917B0
+  //! Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  //! Key size
+  uint32_t key_size = key_info->key_detail.key_size;
+
+  //! Get the key slot
+  uint32_t key_slot = key_info->key_detail.key_spec.key_slot;
+
+  //! Only 32 bytes M4 OTA built in key support is present
+  if (key_type == RSI_BUILT_IN_KEY) {
+    if (key_size != M4_OTA_KEY_SIZE || key_slot != GET_M4_OTA_KEY)
+      return RSI_ERROR_INVALID_OPTION;
+  }
+
+  //! Get the plain key data/ wrapped key
+  uint8_t *key_buffer = key_info->key_detail.key_spec.key_buffer;
+
+  //! Get the Wrapped IV mode
+  uint32_t wrap_iv_mode = key_info->key_detail.key_spec.wrap_iv_mode;
+
+  //! Get the Wrapped IV
+  uint8_t *wrap_iv = key_info->key_detail.key_spec.wrap_iv;
+
+  //!Reserved for future use
+  uint32_t reserved = key_info->reserved;
+
+#endif
 
   //! Get wlan cb structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -3007,15 +4165,20 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
   //! Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
 
-  //! Check IV size for gcm
+  //! Check IV size for GCM mode only
   //!Return error if IV size if not 12 bytes/96 bits
 
+#ifdef CHIP_917B0
+  if ((gcm_mode == GCM_MODE) && iv_sz != GCM_IV_SIZE_IN_BYTES) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+#else
   if (iv_sz != GCM_IV_SIZE_IN_BYTES) {
     return RSI_ERROR_INVALID_PARAM;
   }
+#endif
 
   if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
-
     //! allocate command buffer  from wlan pool
     pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
 
@@ -3059,15 +4222,49 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
     //! Fill chunk length
     gcm->current_chunk_length = chunk_length;
 
-    //! Fill key length
-    gcm->key_length = key_length;
+#ifdef CHIP_917B0
 
+    //! Check for GCM or CMAC mode
+    gcm->gcm_mode = gcm_mode;
+
+    gcm->key_info.key_type = key_type;
+
+    //!update key size in BITS
+    gcm->key_info.key_detail.key_size = (key_size * 8);
+
+    gcm->key_info.key_detail.key_spec.key_slot = key_slot;
+
+    gcm->key_info.reserved = reserved;
+
+    gcm->key_info.key_detail.key_spec.wrap_iv_mode = wrap_iv_mode;
+
+    // Wrap IV
+    // Memset before filling
+    memset(&gcm->key_info.key_detail.key_spec.wrap_iv[0], 0, IV_SIZE);
+
+    //Copy the IV if mode is CBC
+    if (wrap_iv_mode) {
+      memcpy(&gcm->key_info.key_detail.key_spec.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //KEY
+    // Memset before filling
+    memset(&gcm->key_info.key_detail.key_spec.key_buffer[0], 0, key_size);
+
+    //Copy the key
+    memcpy(&gcm->key_info.key_detail.key_spec.key_buffer[0], key_buffer, key_size);
+
+#else
+    //! Update key length in BITS
+    gcm->key_length = (key_length * 8);
     //!KEY
     //! Memset before filling
     memset(&gcm->key[0], 0, key_length);
 
     //! Copy KEY
     memcpy(&gcm->key[0], key, key_length);
+
+#endif
 
     //!IV
     //! Memset before filling
@@ -3099,10 +4296,356 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
     //! get the host descriptor
     host_desc = (pkt->desc);
 
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
     //! Fill data length in the packet host descriptor
     rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
 
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+
     //! send aes encrypt/decrypt request to module
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+/** @} */
+
+/** @addtogroup CRYPTO
+* @{
+*/
+#ifdef CHIP_917B0
+/*==============================================*/
+/**
+ * @fn         rsi_wrap_pen(key_descriptor_wrap_t *key_info, uint8_t wrap_flags, uint16_t chunk_length, uint8_t *output)                                                                                                           
+ * @brief      This function is used to get wrap version of plain key
+ * @param[in]  key_info - structure pointer of key_descriptor_wrap_t
+ * @param[in]  wrap_flags - BIT(0) - 1st chunk BIT(1) - Middle chunk BIT(2) - Last chunk
+ * @param[in]  chunk_length - current chunk length
+ * @param[out] output -  Output parameter to hold wrap key 
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ * @section description
+ *  This function is used to get wrap version of plain key 
+ *
+ */
+int32_t rsi_wrap_pen(key_descriptor_wrap_t *key_info, uint8_t wrap_flags, uint16_t chunk_length, uint8_t *output)
+{
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  rsi_pkt_t *pkt;
+  wrap_req_t *wrap;
+
+  //! reserved
+  uint32_t reserved = key_info->reserved;
+
+  //! Get the key type
+  uint32_t key_type = key_info->key_type;
+
+  //! Key size
+  uint32_t key_size = key_info->key_size;
+
+  //! Get the key slot
+  uint32_t wrap_iv_mode = key_info->wrap_iv_mode;
+
+  //! Get the IV
+  uint8_t *wrap_iv = key_info->wrap_iv;
+
+  //! Get the wrapped key
+  uint8_t *key_buffer = key_info->key_buffer;
+
+  //! Get wlan cb structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  if (key_buffer == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (output != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = output;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = key_size;
+    }
+
+    //! Get Data Pointer
+    wrap = (wrap_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(wrap, 0, sizeof(wrap_req_t));
+
+    //! Fill Algorithm type WRAP - 20
+    wrap->algorithm_type = WRAP;
+
+    //! Fill wrap_flags BIT(0) - 1st chunk BIT(1)- Middle chunk BIT(2) - Last chunk
+    wrap->wrap_flags = wrap_flags;
+
+    //! Fill chunk length
+    wrap->current_chunk_length = chunk_length;
+
+    //! Fill key Reserved
+    wrap->key_info.reserved = reserved;
+
+    //! Fill key length
+    wrap->key_info.key_size = key_size;
+
+    //! Fill the key type
+    wrap->key_info.key_type = key_type;
+
+    //! Fill the Wrap IV mode
+    wrap->key_info.wrap_iv_mode = wrap_iv_mode;
+
+    //!IV
+    //! Memset before filling
+    memset(&wrap->key_info.wrap_iv[0], 0, IV_SIZE);
+
+    if (wrap_iv_mode) {
+      memcpy(&wrap->key_info.wrap_iv[0], wrap_iv, IV_SIZE);
+    }
+
+    //!Key
+    //! Memset before filling
+    memset(&wrap->key_info.key_buffer[0], 0, MAX_DATA_SIZE_BYTES);
+
+    //! Copy Data
+    memcpy(&wrap->key_info.key_buffer[0], key_buffer, chunk_length);
+
+    //! Using host descriptor to set payload length
+    send_size = sizeof(wrap_req_t) - MAX_DATA_SIZE_BYTES + chunk_length;
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
+
+    //! wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_CRYPTO_RESPONSE_WAIT_TIME);
+
+    //!Changing the common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    //!return common command error
+    return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+  }
+
+  //! get common command response stattus
+  status = rsi_common_get_status();
+
+  //! Return the status
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_wrap(key_descriptor_wrap_t *key_info, uint8_t *output)                                                                                                           
+ * @brief      This function is used to get wrap version of plain key
+ * @param[in]  key_info - structure pointer of key_descriptor_wrap_t
+ * @param[out] output -  Output parameter to hold wrap key 
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ * @section description
+ *  This function is used to get wrap version of plain key 
+ *
+ */
+int32_t rsi_wrap(key_descriptor_wrap_t *key_info, uint8_t *output)
+{
+  uint32_t total_len = 0;
+  uint16_t chunk_len = 0;
+  uint16_t offset    = 0;
+  uint8_t wrap_flags = 0;
+  int32_t status     = RSI_SUCCESS;
+
+  //! Key size
+  uint32_t key_size = key_info->key_size;
+
+  //! Get the wrapped key
+  uint8_t *key_buffer = key_info->key_buffer;
+
+  total_len = key_size;
+
+  //! Input pointer check
+  if (key_buffer == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  while (total_len) {
+    //! check total length
+    if (total_len > MAX_DATA_SIZE_BYTES) {
+      chunk_len = MAX_DATA_SIZE_BYTES;
+      if (offset == 0) {
+        //! Make gcm_flags as first chunk
+        wrap_flags |= FIRST_CHUNK;
+      } else {
+        //! Make gcm_flags as Last chunk
+        wrap_flags = MIDDLE_CHUNK;
+      }
+    } else {
+      chunk_len  = total_len;
+      wrap_flags = LAST_CHUNK;
+      if (offset == 0) {
+        /* if the total length is less than 1400 and offset is zero
+             then make gcm_flags as both first chunk as well as last chunk*/
+        wrap_flags |= FIRST_CHUNK;
+      }
+    }
+
+    //! send the current chunk length message
+    status = rsi_wrap_pen(key_info, wrap_flags, chunk_len, output);
+
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
+
+    //! Increment the offset value
+    offset += chunk_len;
+    key_buffer += chunk_len;
+
+    //! Decrement the total message lenth
+    total_len -= chunk_len;
+  }
+
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @fn         rsi_get_built_in_keys(uint16_t key_size, uint32_t key_slot, uint8_t *output)                                                                                                      
+ * @brief      This function is used to get built-in-keys
+ * @param[in]  key_size - size of keys in bytes, 32- M4_OTA_KEY, 96- M4_PUBLIC_KEY
+ * @param[in]  key_slot - 1- M4_OTA_KEY, 2- M4_PUBLIC_KEY 
+ * @param[out] output -  Output parameter to hold built-in-key 
+ * @return     0              - Success \n
+ *             Non-Zero Value - Failure
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ * @section description
+ *  This function is used to get built-in-keys
+ *
+ */
+int32_t rsi_get_built_in_keys(uint16_t key_size, uint32_t key_slot, uint8_t *output)
+{
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  rsi_pkt_t *pkt;
+  built_in_key_req_t *built_in_key_req;
+
+  //! Get commmon cb pointer
+  rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
+
+  //! Check for Key size
+  if ((key_size != M4_OTA_KEY_SIZE) && (key_size != M4_PUBLIC_KEY_SIZE)) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  //! Check for valid key slot
+  if ((key_slot != GET_M4_OTA_KEY) && (key_slot != GET_M4_PUBLIC_KEY)) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  if (rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE) == RSI_SUCCESS) {
+
+    //! allocate command buffer  from wlan pool
+    pkt = rsi_pkt_alloc(&rsi_common_cb->common_tx_pool);
+
+    //! If allocation of packet fails
+    if (pkt == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    if (output != NULL) {
+      //! attach the buffer given by user
+      rsi_common_cb->app_buffer = output;
+
+      //! length of the buffer provided by user
+      rsi_common_cb->app_buffer_length = key_size;
+    }
+
+    //! Get Data Pointer
+    built_in_key_req = (built_in_key_req_t *)pkt->data;
+
+    //! Memset before filling
+    memset(built_in_key_req, 0, sizeof(built_in_key_req_t));
+
+    //! Fill Algorithm type RSI_BUILT_IN_KEYS - 22
+    built_in_key_req->algorithm_type = RSI_BUILT_IN_KEYS;
+
+    //! Fill key length
+    built_in_key_req->key_size = key_size;
+
+    //! Fill the key slot
+    built_in_key_req->key_slot = key_slot;
+
+    //! Using host descriptor to set payload length
+    send_size = sizeof(built_in_key_req_t);
+
+    //! get the host descriptor
+    host_desc = (pkt->desc);
+
+    //! Failure of host descriptor
+    if (host_desc == NULL) {
+      //!Changing the common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      //! return packet allocation failure error
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    //! Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ENCRYPT_CRYPTO, pkt);
 
     //! wait on common semaphore
@@ -3124,6 +4667,9 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
   //! Return the status
   return status;
 }
+
+#endif
+/** @} */
 
 #endif
 

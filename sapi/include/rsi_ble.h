@@ -39,10 +39,11 @@
 #define SI_LE_BUFFER_FULL        1
 #define SI_LE_BUFFER_IN_PROGRESS 2
 
-#define BLE_VENDOR_RF_TYPE_CMD_OPCODE               0xFC14
-#define BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD 0xFC1B
+#define BLE_VENDOR_RF_TYPE_CMD_OPCODE                0xFC14
+#define BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD 0xFC1B
+#define BLE_VENDOR_FEATURE_BITMAP                    0xFC24
 
-#define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS       1
+#define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS       2
 #define RSI_BLE_MAX_NUM_ADV_EXT_EVENT_CALLBACKS 0x08
 
 /******************************************************
@@ -74,6 +75,7 @@ typedef enum RSI_BLE_CMD_AE_opcode_e {
 
 // enumeration for BLE command request codes
 typedef enum rsi_ble_cmd_request_e {
+  RSI_BLE_REQ_HCI_RAW                                = 0x0050,
   RSI_BLE_REQ_ADV                                    = 0x0075,
   RSI_BLE_REQ_SCAN                                   = 0x0076,
   RSI_BLE_REQ_CONN                                   = 0x0077,
@@ -111,7 +113,7 @@ typedef enum rsi_ble_cmd_request_e {
   RSI_BLE_ENCRYPT                                    = 0x00A4,
   RSI_BLE_CMD_READ_RESP                              = 0x00A5,
   RSI_BLE_SET_SCAN_RESPONSE_DATA                     = 0x00A8,
-  RSI_BLE_LE_WHITE_LIST                              = 0x00AA,
+  RSI_BLE_LE_ACCEPT_LIST                             = 0x00AA,
   RSI_BLE_CMD_REMOVE_SERVICE                         = 0x00AB,
   RSI_BLE_CMD_REMOVE_ATTRIBUTE                       = 0x00AC,
   RSI_BLE_PROCESS_RESOLV_LIST                        = 0x00AD,
@@ -209,7 +211,7 @@ typedef enum rsi_ble_cmd_resp_e {
   RSI_BLE_RSP_SET_RANDOM_ADDRESS            = 0x00A3,
   RSI_BLE_RSP_ENCRYPT                       = 0x00A4,
   RSI_BLE_RSP_READ_RESP                     = 0x00A5,
-  RSI_BLE_RSP_LE_WHITE_LIST                 = 0x00AA,
+  RSI_BLE_RSP_LE_ACCEPT_LIST                = 0x00AA,
   RSI_BLE_RSP_REMOVE_SERVICE                = 0x00AB,
   RSI_BLE_RSP_REMOVE_ATTRIBUTE              = 0x00AC,
   RSI_BLE_RSP_PROCESS_RESOLV_LIST           = 0x00AD,
@@ -320,7 +322,6 @@ typedef enum rsi_ble_event_e {
   RSI_BLE_EVENT_CHIP_MEMORY_STATS           = 0x1530,
   RSI_BLE_EVENT_SC_METHOD                   = 0x1540,
   RSI_BLE_EVENT_MTU_EXCHANGE_INFORMATION    = 0x1541,
-  RSI_BLE_EVENT_CTKD                        = 0x1542,
   RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION   = 0x1543,
   RSI_BLE_EVENT_AE_ADVERTISING_REPORT       = 0x1544,
   RSI_BLE_EVENT_PER_ADV_SYNC_ESTBL          = 0x1545,
@@ -329,6 +330,7 @@ typedef enum rsi_ble_event_e {
   RSI_BLE_EVENT_SCAN_TIMEOUT                = 0x1548,
   RSI_BLE_EVENT_ADV_SET_TERMINATED          = 0x1549,
   RSI_BLE_EVENT_SCAN_REQ_RECVD              = 0x154a,
+  RSI_BLE_EVENT_RCP_DATA_RCVD               = 0x15FF,
 
 } rsi_ble_event_t;
 
@@ -340,7 +342,6 @@ typedef enum {
 
 // enumerations for call back types
 typedef enum rsi_ble_callback_id_e {
-  RSI_BLE_ON_CTKD                                    = 1,
   RSI_BLE_ON_ADV_EXT_ADVERTISE_REPORT_EVENT          = 2,
   RSI_BLE_ON_ADV_EXT_PERIODIC_ADV_SYNC_ESTBL_EVENT   = 3,
   RSI_BLE_ON_ADV_EXT_PERIODIC_ADVERTISE_REPORT_EVENT = 4,
@@ -382,9 +383,9 @@ typedef struct rsi_ble_req_adv_s {
   uint8_t adv_type;
   /** Advertising filter type \n
       #define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY                        0x00 \n
-      #define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY                 0x01 \n
-      #define ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST                 0x02 \n
-      #define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST          0x03 */
+      #define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY                 0x01 \n
+      #define ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST                 0x02 \n
+      #define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST          0x03 */
   uint8_t filter_type;
   /** Address type of the device to which directed advertising has to be done \n
       #define LE_PUBLIC_ADDRESS                                     0x00 \n
@@ -421,15 +422,26 @@ typedef struct rsi_ble_req_adv_data_s {
   uint8_t adv_data[31];
 } rsi_ble_req_adv_data_t;
 
-// Adv data payload for whitelisting based on the payload
-typedef struct rsi_ble_req_whitelist_using_payload_s {
+// Adv data payload for acceptlisting based on the payload
+typedef struct rsi_ble_req_acceptlist_using_payload_s {
   uint8_t opcode[2];
   uint8_t enable;
   uint8_t total_len;
   uint8_t data_compare_index;
   uint8_t len_for_compare_data;
   uint8_t adv_data_payload[31];
-} rsi_ble_req_whitelist_using_payload_t;
+} rsi_ble_req_acceptlist_using_payload_t;
+
+// ble vendor feature bitmap structure
+typedef struct ble_vendor_feature_bitmap_s {
+  //uint8, opcode
+  uint8_t opcode[2];
+  //uint8, reserved
+  uint8_t reserved[2];
+  //uint32, bitmap
+  // BIT(0) - enable/disable scan responses
+  uint32_t bitmap;
+} ble_vendor_feature_bitmap_t;
 
 #define BLE_PROTOCOL  0x01
 #define PROP_PROTOCOL 0x02
@@ -473,9 +485,9 @@ typedef struct rsi_ble_req_scan_s {
 
   /** To filter incoming advertising reports \n
    FILTERING_DISABLED = 0 (default) \n
-   WHITELIST_FILTERING = 1
-   @note     In order to allow only whitelisted devices, need to add bd_addr
-   into whitelist by calling @ref rsi_ble_addto_whitelist() API  */
+   ACCEPTLIST_FILTERING = 1
+   @note     In order to allow only acceptlisted devices, need to add bd_addr
+   into acceptlist by calling @ref rsi_ble_addto_acceptlist() API  */
   uint8_t filter_type;
 
   /** Address type of the local device \n
@@ -507,16 +519,20 @@ typedef struct rsi_ble_encrypt_s {
 
 } rsi_ble_encrypt_t;
 
-//White list structure
-typedef struct rsi_ble_white_list_s {
+typedef struct rsi_data_packet_s {
+  uint8_t data[1024];
+} rsi_data_packet_t;
+
+//accept list structure
+typedef struct rsi_ble_accept_list_s {
   //This bit is used to add or delet the address form/to whit list
-  uint8_t addordeltowhitlist;
+  uint8_t addordeltoacceptlist;
   //Address of the device
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   //Address type
   uint8_t bdaddressType;
 
-} rsi_ble_white_list_t;
+} rsi_ble_accept_list_t;
 
 //Connect command structure
 typedef struct rsi_ble_req_conn_s {
@@ -1020,6 +1036,7 @@ typedef struct rsi_ble_set_local_irk_s {
 // BLE GAP extended callback ids
 typedef enum rsi_ble_gap_extended_callbacks_s {
   RSI_BLE_ON_REMOTE_DEVICE_INFORMATION = 1,
+  RSI_BLE_ON_RCP_EVENT                 = 2,
 
 } rsi_ble_gap_extended_callbacks_t;
 
@@ -1044,12 +1061,12 @@ typedef struct rsi_ble_att_error_response_s {
   uint8_t err_code;
 } rsi_ble_att_error_response_t;
 
-//white list(cmd), cmd_ix = 0x00AB
+//accept list(cmd), cmd_ix = 0x00AB
 typedef struct rsi_ble_gatt_remove_serv_s {
   uint32_t serv_hndler;
 } rsi_ble_gatt_remove_serv_t;
 
-//white list(cmd), cmd_ix = 0x00AC
+//accept list(cmd), cmd_ix = 0x00AC
 typedef struct rsi_ble_gatt_remove_att_s {
   uint32_t serv_hndler;
   uint16_t att_hndl;
@@ -1064,13 +1081,13 @@ typedef struct rsi_ble_vendor_rf_type_s {
 // rf type command structure
 typedef struct rsi_ble_mtu_exchange_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  uint8_t req_mtu_size;
+  uint16_t req_mtu_size;
 } rsi_ble_mtu_exchange_t;
 
 // mtu exchange resp command structure
 typedef struct rsi_ble_mtu_exchange_resp_s {
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  uint8_t req_mtu_size;
+  uint16_t req_mtu_size;
 } rsi_ble_mtu_exchange_resp_t;
 
 typedef struct rsi_ble_ae_get_supported_no_of_adv_sets_s {
@@ -1614,6 +1631,7 @@ struct rsi_ble_cb_s {
   rsi_ble_ae_scan_timeout_t ble_ae_scan_timeout_event;
   rsi_ble_ae_adv_set_terminated_t ble_ae_adv_set_terminated_event;
   rsi_ble_ae_scan_req_recvd_t ble_ae_scan_req_recvd_event;
+  rsi_ble_on_rcp_resp_rcvd_t ble_on_rcp_resp_rcvd_event;
 };
 
 /******************************************************
@@ -1622,10 +1640,10 @@ struct rsi_ble_cb_s {
 
 void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *payload, uint16_t payload_length);
 int32_t rsi_ble_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp);
-int32_t rsi_ble_white_list_using_adv_data(uint8_t enable,
-                                          uint8_t data_compare_index,
-                                          uint8_t len_for_compare_data,
-                                          uint8_t *payload);
+int32_t rsi_ble_accept_list_using_adv_data(uint8_t enable,
+                                           uint8_t data_compare_index,
+                                           uint8_t len_for_compare_data,
+                                           uint8_t *payload);
 int32_t rsi_ble_get_multiple_att_values(uint8_t *dev_addr,
                                         uint8_t num_of_handlers,
                                         uint16_t *handles,

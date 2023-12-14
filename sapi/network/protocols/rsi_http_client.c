@@ -40,6 +40,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(8) | RSI_SSL_V_1_3   |    Set this bit to support SSL_TLS Version 1.3 if HTTPS is enabled
  *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
  *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
@@ -124,6 +125,7 @@ int32_t rsi_http_client_get_async(uint16_t flags,
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(8) | RSI_SSL_V_1_3   |    Set this bit to support SSL_TLS Version 1.3 if HTTPS is enabled
  *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
  *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
@@ -211,9 +213,10 @@ int32_t rsi_http_client_post_async(uint16_t flags,
  *  BIT(4) | RSI_SSL_V_1_1      |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA     |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1         |    Set this bit  to use HTTP version 1.1
- *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
- *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
- *
+ *  BIT(8) | RSI_SSL_V_1_3      |    Set this bit to support SSL_TLS Version 1.3 if HTTPS is enabled
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate cert at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate cert at index 2 to be used for HTTPS, Leave both unset for cert index 0
+ *  BIT(11)| RSI_HTTPS_USE_SNI  |    Enable this to utilize the SNI extension for HTTPs socket provided by \ref rsi_set_sni_emb_socket() 
  * 
  * @param[in]   ip_address       - Server IP address
  * @param[in]   port             - Port number of HTTP server
@@ -354,6 +357,18 @@ int32_t rsi_http_client_async(uint8_t type,
     }
     if (flags & RSI_SSL_V_1_1) {
       https_enable |= RSI_SSL_V_1_1;
+    }
+    if (flags & RSI_SSL_V_1_2) {
+      https_enable |= RSI_SSL_V_1_2;
+    }
+#ifdef CHIP_917
+    if (flags & RSI_SSL_V_1_3) {
+      https_enable |= RSI_SSL_V_1_3;
+    }
+#endif
+
+    if (flags & RSI_HTTPS_USE_SNI) {
+      https_enable |= RSI_HTTPS_USE_SNI;
     }
 
     if (flags & RSI_SUPPORT_HTTP_POST_DATA) {

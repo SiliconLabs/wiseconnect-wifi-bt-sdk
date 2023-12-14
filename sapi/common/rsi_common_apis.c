@@ -691,7 +691,7 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
 }
 
 #ifdef RSI_M4_INTERFACE
-#ifdef CHIP_9117
+#ifdef CHIP_917
 /*==============================================*/
 /**
  * @brief      To write content on TA flash from M4. This is a blocking API.
@@ -703,7 +703,10 @@ int32_t rsi_cmd_uart_flow_ctrl(uint8_t uartflow_en)
  *
  *
  */
-int32_t rsi_cmd_to_wr_comm_flash(uint32_t wr_addr, uint8_t *write_data, uint16_t wr_data_len)
+int32_t rsi_cmd_to_wr_comm_flash(uint32_t wr_addr,
+                                 uint8_t *write_data,
+                                 uint16_t wr_data_len,
+                                 uint8_t flash_sector_erase_enable)
 {
   static uint32_t rem_len;
   uint16_t chunk_size = 0;
@@ -720,91 +723,77 @@ int32_t rsi_cmd_to_wr_comm_flash(uint32_t wr_addr, uint8_t *write_data, uint16_t
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
 
   if (status == RSI_SUCCESS) {
+    // Allocate command buffer
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
 
-    // Get the chunk size
-    chunk_size = RSI_MAX_CHUNK_SIZE - (sizeof(rsi_req_ta2m4_t) - RSI_MAX_CHUNK_SIZE);
+    // If allocation of packet fails
+    if (pkt == NULL) {
 
-    // Get input length
-    rem_len = wr_data_len;
+      //Change common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
 
-    while (rem_len) {
+      // Return packet allocation failure error
+      SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
 
-      // Allocate command buffer
-      pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
 
-      // If allocation of packet fails
-      if (pkt == NULL) {
-
+    if (flash_sector_erase_enable == 0) {
+      if (wr_data_len > RSI_MAX_CHUNK_SIZE) {
         //Change common state to allow state
         rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
 
         // Return packet allocation failure error
         SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
 
-        return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+        return RSI_ERROR_INSUFFICIENT_BUFFER;
       }
+      memset(&pkt->data, 0, wr_data_len);
+    } else {
+      memset(&pkt->data, 0, sizeof(rsi_req_ta2m4_t));
+    }
 
-      rsi_chunk_ptr = (rsi_req_ta2m4_t *)pkt->data;
+    rsi_chunk_ptr = (rsi_req_ta2m4_t *)pkt->data;
 
-      memset(&pkt->data, 0, RSI_MAX_CHUNK_SIZE);
+    // Take the sub_cmd_type for TA and M4 commands
+    rsi_chunk_ptr->sub_cmd = RSI_WRITE_TO_COMMON_FLASH;
 
-      // Take the sub_cmd_type for TA and M4 commands
-      rsi_chunk_ptr->sub_cmd = RSI_WRITE_TO_COMMON_FLASH;
+    // Writes on which TA Flash location
+    rsi_chunk_ptr->addr = wr_addr;
 
-      // Writes on which TA Flash location
-      rsi_chunk_ptr->addr = wr_addr;
+    // Total remaining length
+    rsi_chunk_ptr->in_buf_len = wr_data_len;
 
-      // Total remaining length
-      rsi_chunk_ptr->in_buf_len = rem_len;
+    // Flash Sector Erase flag
+    rsi_chunk_ptr->flash_sector_erase_enable = flash_sector_erase_enable;
 
-      if (rem_len >= chunk_size) {
-
-        //Total chunck length
-        rsi_chunk_ptr->chunk_len = chunk_size;
-
-        // More chunks to send
-        rsi_chunk_ptr->more_chunks = 1;
-
-        // Copy the chunk
-        memcpy(rsi_chunk_ptr->input_data, write_data + offset, chunk_size);
-
-        // Move the offset by chunk size
-        offset += chunk_size;
-
-        // Subtract the rem_len by the chunk size
-        rem_len -= chunk_size;
-      } else {
-
-        rsi_chunk_ptr->chunk_len = rem_len;
-
-        // last chunk to send
-        rsi_chunk_ptr->more_chunks = 0;
-
-        // Copy the chunk
-        memcpy(rsi_chunk_ptr->input_data, write_data + offset, rem_len);
-
-        // Reset rem_len and offset
-        rem_len = 0;
-        offset  = 0;
-      }
+    if (flash_sector_erase_enable == 0) {
+      // Copy the chunk
+      memcpy(rsi_chunk_ptr->input_data, write_data, wr_data_len);
+    }
 #ifndef RSI_COMMON_SEM_BITMAP
-      rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
 #endif
-      // Send  antenna select command
-      status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_TA_M4_COMMANDS, pkt);
+    // Send  antenna select command
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_TA_M4_COMMANDS, pkt);
 
-      // Wait on common semaphore
-      rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_TA_M4_COMMAND_RESPONSE_WAIT_TIME);
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_TA_M4_COMMAND_RESPONSE_WAIT_TIME);
 
-      // Get common command response status
-      status = rsi_common_get_status();
+    // Get common command response status
+    status = rsi_common_get_status();
+
+    if (status != RSI_SUCCESS) {
+      // Return common command error
+      SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_COMMAND_ERROR_1, COMMON, LOG_ERROR, "status: %4x", status);
+      return status;
     }
 
     // Change common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
   } else {
     // Return common command error
-    SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    SL_PRINTF(SL_SI_CMD_M4_TA_SECURE_HANDSHAKE_COMMAND_ERROR_2, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
@@ -1007,8 +996,10 @@ int32_t rsi_wireless_deinit(void)
 #endif
 
   // Deinitializing SDIO Interface
+#ifndef LINUX_PLATFORM
 #if defined(RSI_SDIO_INTERFACE)
   rsi_sdio_deinit();
+#endif
 #endif
   // Initialize Device
 #ifdef RSI_ACTIVE_LOW
@@ -2399,6 +2390,110 @@ int32_t rsi_set_config(uint32_t code, uint8_t value)
   // Return the status
   return status;
 }
+
+#ifdef CHIP_917
+
+/*==============================================*/
+/**
+ * @brief      Verifies ECDSA 256 digital signature. This is a blocking API.
+ * @param[in]  signature        - The signature buffer
+ * @param[in]  signature_length - Length of the signature
+ * @param[in]  digest           - Digest of the message that needs to be verified
+ * @param[in]  digest_length    - Total digest length
+ * @param[in]  key              - The public key used to verify hash.
+ * @param[in]  key_length       - Total key length
+ *  @return     0              - Success \n
+ *             Non-Zero Value  - Failure
+ *
+ * @note Refer Error Codes section for above error codes \ref error-codes.
+ *
+ */
+int32_t rsi_ecdsa_256_verify_hash(uint8_t *signature,
+                                  uint16_t signature_length,
+                                  uint8_t *digest,
+                                  uint16_t digest_length,
+                                  uint8_t *key,
+                                  uint16_t key_length)
+{
+  rsi_pkt_t *pkt                            = NULL;
+  rsi_req_ecdsa_256_verify_t *rsi_ecdsa_ptr = NULL;
+  int32_t status                            = RSI_SUCCESS;
+
+  SL_PRINTF(SL_ECDSA_256_VERIFY_HASH_ENTRY, COMMON, LOG_INFO);
+
+  // Get common cb pointer
+  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
+
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+
+      //Change common state to allow state
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+      // Return packet allocation failure error
+      SL_PRINTF(SL_ECDSA_256_VERIFY_HASH_PKT_ALLOCATION_FAILURE, COMMON, LOG_ERROR);
+
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    memset(&pkt->data, 0, sizeof(rsi_req_ecdsa_256_verify_t));
+
+    rsi_ecdsa_ptr = (rsi_req_ecdsa_256_verify_t *)pkt->data;
+
+    // Public Key length
+    rsi_uint16_to_2bytes(rsi_ecdsa_ptr->key_length, key_length);
+
+    // digest length
+    rsi_uint16_to_2bytes(rsi_ecdsa_ptr->digest_length, digest_length);
+
+    // digest length
+    rsi_uint16_to_2bytes(rsi_ecdsa_ptr->signature_length, signature_length);
+
+    // digest
+    memcpy(rsi_ecdsa_ptr->digest, digest, digest_length);
+
+    // Public Key
+    memcpy(rsi_ecdsa_ptr->key, key, key_length);
+
+    // Copy the chunk
+    memcpy(rsi_ecdsa_ptr->signature, signature, signature_length);
+
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    // Send  antenna select command
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ECDSA_256_VERIFY_HASH, pkt);
+
+    // Wait on common semaphore
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, ECDSA_256_VERIFY_RESPONSE_WAIT_TIME);
+
+    // Get common command response status
+    status = rsi_common_get_status();
+
+    // Change common state to allow state
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+  } else {
+    // Return common command error
+    SL_PRINTF(SL_ECDSA_256_VERIFY_HASH_COMMAND_ERROR, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Get common command response status
+  status = rsi_common_get_status();
+
+  // Return status
+  SL_PRINTF(SL_ECDSA_256_VERIFY_HASH_EXIT, COMMON, LOG_INFO, "status: %4x", status);
+  return status;
+}
+#endif
+
 #ifdef RSI_ASSERT_API
 /*==============================================*/
 /**

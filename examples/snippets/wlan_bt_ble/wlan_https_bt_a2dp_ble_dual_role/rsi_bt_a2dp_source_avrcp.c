@@ -2752,7 +2752,7 @@ int32_t rsi_bt_app_task()
 #if INQUIRY_ENABLE
 #if !INQUIRY_CONNECTION_SIMULTANEOUS
         bool bt_device_found = false;
-        //! Check in all devices, whether the intended slave is present or not.
+        //! Check in all devices, whether the intended peripheral is present or not.
         for (int i = 0; i < inq_responses_count; i++) {
           if (memcmp(&rsi_inq_resp_list[i][0],
                      rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr1, RSI_BT_REMOTE_BD_ADDR),
@@ -2881,10 +2881,10 @@ int32_t rsi_bt_app_task()
           return status;
         }
 
-        /* Initiate Role Switch to Become Master */
+        /* Initiate Role Switch to Become Central */
         status = rsi_bt_get_local_device_role(remote_dev_addr, &local_dev_role);
-        if (local_dev_role != RSI_MASTER_ROLE) {
-          rsi_bt_set_local_device_role(remote_dev_addr, RSI_MASTER_ROLE, &local_dev_role);
+        if (local_dev_role != RSI_CENTRAL_ROLE) {
+          rsi_bt_set_local_device_role(remote_dev_addr, RSI_CENTRAL_ROLE, &local_dev_role);
         }
 #endif
         //! clear the connected event.
@@ -3282,10 +3282,10 @@ int32_t rsi_bt_app_task()
 #endif
         //! clear the a2dp start event.
         status = rsi_bt_get_local_device_role(remote_dev_addr, &local_dev_role);
-        if (local_dev_role == RSI_MASTER_ROLE) {
-          LOG_PRINT("\nIn MASTER Role\n");
+        if (local_dev_role == RSI_CENTRAL_ROLE) {
+          LOG_PRINT("\nIn CENTRAL Role\n");
         } else {
-          LOG_PRINT("\nIn SLAVE Role\n");
+          LOG_PRINT("\nIn PERIPHERAL Role\n");
         }
 
 #if (RSI_AUDIO_DATA_TYPE == PCM_AUDIO && !TA_BASED_ENCODER)

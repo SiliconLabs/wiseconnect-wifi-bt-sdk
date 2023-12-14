@@ -45,6 +45,9 @@
 #define HTTPS_CERT_INDEX_1 BIT(9)
 #define HTTPS_CERT_INDEX_2 BIT(10)
 
+// To indicate HTTPS socket about SNI hostname to be used during SSL handshake
+#define RSI_HTTPS_USE_SNI BIT(11)
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -1194,11 +1197,15 @@ typedef struct rsi_http_client_post_data_req_s {
 /******************************************************
  * *                      Macros
  * ******************************************************/
-
+#ifndef CHIP_9117
+#define RSI_EMB_MQTT_TOPIC_MAX_LEN    202 //122
+#define RSI_EMB_MQTT_USERNAME_MAX_LEN 122
+#else
 #define RSI_EMB_MQTT_TOPIC_MAX_LEN    62
+#define RSI_EMB_MQTT_USERNAME_MAX_LEN 62
+#endif
 #define RSI_EMB_MQTT_WILL_MSG_MAX_LEN 100
 #define RSI_EMB_MQTT_CLIENTID_MAX_LEN 62
-#define RSI_EMB_MQTT_USERNAME_MAX_LEN 62
 #define RSI_EMB_MQTT_PASSWORD_MAX_LEN 62
 #define RSI_TCP_MAX_SEND_SIZE         1460
 #define RSI_EMB_MQTT_PUB_MAX_LEN      RSI_TCP_MAX_SEND_SIZE
@@ -1210,7 +1217,7 @@ typedef struct rsi_http_client_post_data_req_s {
 #define RSI_EMB_MQTT_CLEAN_SESSION BIT(0)
 #define RSI_EMB_MQTT_SSL_ENABLE    BIT(1)
 #define RSI_EMB_MQTT_IPV6_ENABLE   BIT(2)
-#ifdef CHIP_9117
+#ifdef CHIP_917
 //! Here BIT(4,5,6,7) all four bit related to RSI_EMB_MQTT_TCP_MAX_RETRANSMISSION_CAP
 //! for example if BIT(4) set will treat it as 1 sec
 //! if BIT(5) set will treat as 2 sec
@@ -1363,7 +1370,7 @@ typedef struct rsi_emb_mqtt_client_init_s {
   uint8_t encrypt;
   // MQTT  Client port
   uint8_t client_port[4];
-#ifdef CHIP_9117
+#ifdef CHIP_917
   //! Capping tcp retransmission timeout
   uint8_t tcp_max_retransmission_cap_for_emb_mqtt;
 #endif
@@ -1372,6 +1379,15 @@ typedef struct rsi_emb_mqtt_client_init_s {
   uint8_t keep_alive_retries[2];
 #endif
 } rsi_emb_mqtt_client_init_t;
+
+typedef struct rsi_mqtt_rcv_pub_async_pkt_s {
+  //! MQTT FLags
+  uint16_t mqtt_flags;
+  uint16_t current_chunk_length;
+  uint16_t topic_length;
+  uint8_t topic[RSI_EMB_MQTT_TOPIC_MAX_LEN];
+
+} rsi_mqtt_rcv_pub_async_pkt_t;
 
 typedef struct rsi_req_emb_mqtt_command_s {
   // MQTT command type

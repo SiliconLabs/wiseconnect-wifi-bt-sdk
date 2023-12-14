@@ -159,18 +159,18 @@ class Decoder:
         if hdid >> 7:
             edid = self.get(8)
             did |= (edid << 12)
-        tsf = 0
         if tsf_present: 
             ltsf1 = self.get(8)
             ltsf2 = self.get(8)
             ltsf = (ltsf2 << 8) | ltsf1
-            htsf = 0
             if tsf_format:
                 htsf1 = self.get(8)
                 htsf2 = self.get(8) 
                 htsf = (htsf2 << 8) | htsf1
-            tsf = htsf << 16 | ltsf
-        self.cum_tsf += tsf
+                tsf = htsf << 16 | ltsf
+                self.cum_tsf = tsf
+            else:
+                self.cum_tsf += ltsf
 
         did = str(did)
         # print("DID:", did)

@@ -467,6 +467,34 @@ int32_t rsi_bt_vendor_ar_enable(uint16_t enable)
   SL_PRINTF(SL_RSI_BT_VENDOR_AR_ENABLE, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_vendor_ar_cmd, NULL);
 }
+
+/**
+ * @fn         rsi_bt_vendor_set_hapi_rect_val(uint8_t value)
+ * @brief      Issue vendor specific command for setting respective RECT defines in HAPI/DOTC. \n
+ *             This is a blocking API.
+ *             The division of rect_val is as follows - 
+ *               BITS[7:6] - RECT selection for LR (Default value -> 0b00), 
+ *               BITS[5:4] - RECT selection for LE 2 Mbps (Default value -> 0b00), 
+ *               BITS[3:2] - RECT selection for LE 1 Mbps (Default value -> 0b00),
+ *               BITS[1:0] - reserved (Default -> 0b01)
+ * @pre        Call \ref rsi_wireless_init() before calling this API.
+ * @param[in]  value - enables the respective RECT define in HAPI/DOTC. 
+ * @return     0		-	Success \n
+ *             Non-Zero Value	-	Failure
+ * 
+ * @note       Refer Error Codes section for common error codes \ref error-codes .
+ * 
+ */
+int32_t rsi_bt_vendor_set_hapi_rect_val(uint8_t value)
+{
+  SL_PRINTF(SL_RSI_BT_SET_HAPI_RECT_VALUE, BLUETOOTH, LOG_INFO);
+  rsi_bt_set_hapi_rect_val_t rsi_bt_set_hapi_rect_val = { 0 };
+  rsi_bt_set_hapi_rect_val.opcode[0]                  = (BT_VENDOR_SET_HAPI_RECT_VAL_OPCODE & 0xFF);
+  rsi_bt_set_hapi_rect_val.opcode[1]                  = ((BT_VENDOR_SET_HAPI_RECT_VAL_OPCODE >> 8) & 0xFF);
+  rsi_bt_set_hapi_rect_val.rect_val                   = value;
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_bt_set_hapi_rect_val, NULL);
+}
+
 /**
  * @fn         int32_t rsi_bt_vendor_dynamic_pwr(uint16_t enable,
  *                                  uint8_t *remote_addr,

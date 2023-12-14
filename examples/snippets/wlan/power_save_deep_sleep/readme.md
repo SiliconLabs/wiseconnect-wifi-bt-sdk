@@ -71,6 +71,19 @@ The Application is provided with the project folder containing Keil and Simplici
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
       - Project path:`<SDK>/examples/snippets/wlan/power_save_deep_sleep/projects/power_save_deep_sleep-brd2204a-gg11.slsproj`
 
+### **For Powersave functionality with NCP expansion (ACX) board**
+> **Note:** 
+   For using powersave functionality with NCP expansion (ACX) board, the following macro has to be enabled:
+
+  * While using the NCP expansion (ACX) board, the `EXP_BOARD=1` preprocessor symbol should be added to the   list of defined symbols in the preprocessor menu of project settings.
+
+    > - Open the project in Simplicity Studio
+    > - Right click on the project and choose 'Properties'
+    > - Go to 'C/C++ Build' | 'Settings' | 'GNU ARM C Compiler' | 'Preprocessor' and add the macro `EXP_BOARD=1`
+    > - Select 'Apply' and 'OK' to save the settings
+
+![Figure: Adding pre-processor symbol required for Expansion board](resources/readme/exp_board.png)
+
 ### 3.4 Bare Metal/RTOS Support 
 
 This application supports bare metal and RTOS environment. By default, the application project files (Keil and Simplicity studio) are provided with bare metal configuration in the SDK. 

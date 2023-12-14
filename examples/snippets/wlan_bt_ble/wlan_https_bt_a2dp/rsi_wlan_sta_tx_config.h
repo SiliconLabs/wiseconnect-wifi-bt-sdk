@@ -76,7 +76,7 @@
 /*=======================================================================*/
 #define RSI_FEATURE_BIT_MAP                                    \
   (FEAT_ULP_GPIO_BASED_HANDSHAKE | FEAT_DEV_TO_HOST_ULP_GPIO_1 \
-   | FEAT_SECURITY_OPEN)              //! To set wlan feature select bit map
+   | FEAT_SECURITY_PSK)               //! To set wlan feature select bit map
 #define RSI_TCP_IP_BYPASS RSI_DISABLE //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_FEATURE_BIT_MAP                                      \
   (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT \

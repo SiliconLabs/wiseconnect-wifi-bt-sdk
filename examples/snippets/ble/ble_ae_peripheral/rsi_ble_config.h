@@ -30,9 +30,9 @@
 
 #define RSI_BLE_SET_RAND_ADDR "11:44:33:44:55:66"
 
-#define CLEAR_WHITELIST              0x00
-#define ADD_DEVICE_TO_WHITELIST      0x01
-#define DELETE_DEVICE_FROM_WHITELIST 0x02
+#define CLEAR_ACCEPTLIST              0x00
+#define ADD_DEVICE_TO_ACCEPTLIST      0x01
+#define DELETE_DEVICE_FROM_ACCEPTLIST 0x02
 
 #define ALL_PHYS          0x00
 #define PRIMARY_ADV_PHY   0x01
@@ -45,7 +45,8 @@
 #define RSI_BLE_MAX_NBR_ATT_REC  80
 #define RSI_BLE_MAX_NBR_ATT_SERV 10
 
-#define RSI_BLE_MAX_NBR_SLAVES 3
+#define RSI_BLE_MAX_NBR_PERIPHERALS 3
+#define RSI_BLE_MAX_NBR_CENTRALS    0
 
 /*=======================================================================*/
 //! Advertising command parameters
@@ -132,11 +133,11 @@
 #define LE_BR_EDR_NOT_SUPPORTED 0x04
 
 //!Advertise filters
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY               0x00
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY        0x01
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST        0x02
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST 0x03
-#define SCAN_REQ_NOTIF_EN                             0x01
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY                 0x00
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY         0x01
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST         0x02
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST 0x03
+#define SCAN_REQ_NOTIF_EN                               0x01
 
 //! Address types
 #define LE_PUBLIC_ADDRESS            0x00
@@ -176,8 +177,8 @@
 #define SCAN_TYPE_PASSIVE 0x00
 
 //!Scan filters
-#define SCAN_FILTER_TYPE_ALL             0x00
-#define SCAN_FILTER_TYPE_ONLY_WHITE_LIST 0x01
+#define SCAN_FILTER_TYPE_ALL              0x00
+#define SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST 0x01
 
 #define RSI_SEL_INTERNAL_ANTENNA 0x00
 #define RSI_SEL_EXTERNAL_ANTENNA 0x01
@@ -199,8 +200,15 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef CHIP_9117
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_512K_M4SS_192K)
+#ifdef CHIP_917
+#ifdef RSI_M4_INTERFACE
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#else
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                                              \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC \
+   | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#endif
 #else
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
 #endif

@@ -148,6 +148,27 @@
   <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/azure_sdk/src/umqtt/inc"/>
   <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/azure_sdk/platform/silabs/inc"/>
   
+  
+  <file name="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" uri="sapi/rtos/freertos_wrapper/rsi_os_wrapper.c" />
+  <file name="sapi/rtos/freertos_wrapper/port.c" uri="sapi/rtos/freertos_wrapper/port.c" />
+  
+  <file name="sapi/rtos/freertos_wrapper/portmacro.h" uri="sapi/rtos/freertos_wrapper/portmacro.h" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/sapi/rtos/freertos_wrapper"/>
+  
+  <folder name="third_party/freertos/include" uri="third_party/freertos/include" includeAllFiles="true" includeAllFolders="true"/>
+  <file name="third_party/freertos/croutine.c" uri="third_party/freertos/croutine.c" />
+  <file name="third_party/freertos/event_groups.c" uri="third_party/freertos/event_groups.c" />
+  <file name="third_party/freertos/list.c" uri="third_party/freertos/list.c" />
+  <file name="third_party/freertos/queue.c" uri="third_party/freertos/queue.c" />
+  <file name="third_party/freertos/stream_buffer.c" uri="third_party/freertos/stream_buffer.c" />
+  <file name="third_party/freertos/tasks.c" uri="third_party/freertos/tasks.c" />
+  <file name="third_party/freertos/timers.c" uri="third_party/freertos/timers.c" />
+  <file name="third_party/freertos/portable/MemMang/heap_4.c" uri="third_party/freertos/portable/MemMang/heap_4.c" />
+  
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/include"/>
+  <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/portable"/>
+  
   <includePath uri="$(isCopySources?$(projectLocation)/azure_iot:./examples/snippets/wlan/cloud_apps/azure_iot)"/>
   
   <includePath uri="$(projectLocation)/platform/core"/>
@@ -157,8 +178,10 @@
    <macroDefinition name="RSI_DEBUG_PRINTS" />
    <macroDefinition name="RSI_WLAN_ENABLE" />
   
+   <macroDefinition name="RSI_CRYPTO_ENABLE" />
   
    <macroDefinition name="RSI_WLAN_API_ENABLE" />
+   <macroDefinition name="RSI_WITH_OS" />
   
    <macroDefinition name="NO_LOGGING" />
    <macroDefinition name="AZURE_ENABLE" />

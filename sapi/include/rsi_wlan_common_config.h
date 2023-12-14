@@ -34,8 +34,8 @@
 #include "rsi_user.h"
 #include <rsi_data_types.h>
 
-#ifdef CHIP_9117B0
-#define CHIP_9117 1
+#ifdef CHIP_917B0
+#define CHIP_917 1
 #endif
 
 /******************************************************
@@ -410,6 +410,10 @@ BIT[13-31] - Reserved
 #define RSI_MAX_STATIONS_SUPPORT 4
 #endif
 
+// This parameter is used to enable or disable beacon transmission, when stations are not connected
+#ifndef RSI_BEACON_STOP
+#define RSI_BEACON_STOP RSI_DISABLE
+#endif
 /*=======================================================================*/
 
 // Join command parameters
@@ -423,6 +427,18 @@ BIT[13-31] - Reserved
 // RSI_JOIN_FEAT_STA_BG_ONLY_MODE_ENABLE or RSI_JOIN_FEAT_LISTEN_INTERVAL_VALID
 #ifndef RSI_JOIN_FEAT_BIT_MAP
 #define RSI_JOIN_FEAT_BIT_MAP 0
+#endif
+
+#ifndef RSI_JOIN_FEAT_BIT_MAP_AP
+#define RSI_JOIN_FEAT_BIT_MAP_AP 0
+#endif
+
+#define TKIP_OR_CCMP 0
+#define CCMP_ONLY    1
+// Client/station encryption type. Used to enable CCMP_ONLY mode.
+// Allowed values are TKIP_OR_CCMP and CCMP_ONLY (above).
+#ifndef RSI_CLIENT_ENCRYPTION_TYPE
+#define RSI_CLIENT_ENCRYPTION_TYPE TKIP_OR_CCMP
 #endif
 
 //
@@ -476,7 +492,7 @@ BIT[13-31] - Reserved
 #define RSI_TX_TEST_NUM_PKTS 0
 #endif
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
 #ifndef RSI_11AX_ENABLE
 //11AX_ENABLE 0-disable, 1-enable
 #define RSI_11AX_ENABLE 0
@@ -598,7 +614,7 @@ BIT[13-31] - Reserved
 
 #define RSI_SSL_RELEASE_2_0 RSI_ENABLE
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
 #ifndef RSI_SSL_EXT_CIPHERS
 #define RSI_SSL_EXT_CIPHERS SSL_TLSV1_3_ALL_CIPHERS
 #endif
@@ -1300,5 +1316,16 @@ BIT[13-31] - Reserved
 #define TWT_SUPPORT        RSI_DISABLE
 /* 0 - NO ER_SU support, 1 - Use ER_SU rates along with Non_ER_SU rates, 2 - Use ER_SU rates only */
 #define CONFIG_ER_SU NO_ER_SU_SUPPORT
+/*========================================================================*/
+// Use case based TWT selection params
+/*========================================================================*/
+#define DEVICE_AVG_THROUGHPUT                20000
+#define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0
+#define TWT_TOLERABLE_DEVIATION              10
+#define TWT_DEFAULT_WAKE_INTERVAL_MS         1024     // in milli seconds
+#define TWT_DEFAULT_WAKE_DURATION_MS         8        // in milli seconds
+#define MAX_TX_AND_RX_LATENCY_LIMIT          22118400 // 6hrs in milli seconds
+#define MAX_BEACON_WAKE_UP_AFTER_SP \
+  2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
 /*========================================================================*/
 #endif

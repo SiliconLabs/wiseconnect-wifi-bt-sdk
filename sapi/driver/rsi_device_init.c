@@ -30,6 +30,7 @@
 #ifndef RSI_M4_INTERFACE
 #ifndef RSI_UART_INTERFACE
 #ifndef RSI_USB_INTERFACE
+#ifndef LINUX_PLATFORM
 
 #if RSI_FAST_FW_UP
 int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t size_param);
@@ -277,8 +278,14 @@ int16_t rsi_bl_upgrade_firmware(uint8_t *firmware_image, uint32_t fw_image_size,
   uint32_t boot_insn = 0, poll_resp = 0;
   rsi_timer_instance_t timer_instance;
 
+  //Buffer is a type casted pointer of the first 4096 byte fw file chunk
+  fwreq_t *fw = (fwreq_t *)firmware_image;
+
   // If it is a start of file set the boot cmd to pong valid
   if (flags & RSI_FW_START_OF_FILE) {
+    if (fw->image_size == 0 || fw->magic_no != FW_MAGIC_NO || fw->image_loc != FW_IMAGE_LOC) {
+      return RSI_ERROR_CORRUPTED_FIRMWARE;
+    }
     boot_cmd = RSI_HOST_INTERACT_REG_VALID | RSI_PONG_VALID;
   }
 
@@ -662,4 +669,5 @@ int16_t rsi_bl_module_power_cycle(void)
 
   return RSI_SUCCESS;
 }
+#endif
 #endif

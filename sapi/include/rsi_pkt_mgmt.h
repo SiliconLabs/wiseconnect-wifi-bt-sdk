@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 #include <rsi_os.h>
-#if ((defined RSI_SDIO_INTERFACE) && (defined CHIP_9117))
+#if ((defined RSI_SDIO_INTERFACE) && (defined CHIP_917))
 #define SIZE_OF_HEADROOM 216
 #else
 #define SIZE_OF_HEADROOM 0
@@ -42,7 +42,7 @@ typedef struct rsi_pkt_s {
   // next packet pointer
   struct rsi_pkt_s *next;
 
-#if ((defined RSI_SDIO_INTERFACE) && (defined CHIP_9117))
+#if ((defined RSI_SDIO_INTERFACE) && (defined CHIP_917))
   uint8_t headroom[SIZE_OF_HEADROOM];
 #endif
 

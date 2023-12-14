@@ -139,7 +139,7 @@ static rsi_ble_event_conn_status_t rsi_app_connected_device;
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device;
 static rsi_ble_ae_adv_report_t ble_app_ae_adv_report;
 
-rsi_semaphore_handle_t ble_slave_conn_sem;
+rsi_semaphore_handle_t ble_peripheral_conn_sem;
 rsi_semaphore_handle_t ble_main_task_sem;
 
 /*==============================================*/
@@ -344,7 +344,7 @@ void rsi_ble_simple_central_on_enhance_conn_status_event(rsi_ble_event_enhance_c
   //rsi_app_connected_device.status = resp_enh_conn->status;
   memcpy(&rsi_app_enhanced_connected_device, resp_enh_conn, sizeof(rsi_ble_event_enhance_conn_status_t));
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
-  rsi_semaphore_post(&ble_slave_conn_sem);
+  rsi_semaphore_post(&ble_peripheral_conn_sem);
 }
 
 /*==============================================*/
@@ -360,7 +360,7 @@ void rsi_ble_simple_central_on_conn_status_event(rsi_ble_event_conn_status_t *re
 {
   memcpy(&rsi_app_connected_device, resp_conn, sizeof(rsi_ble_event_conn_status_t));
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
-  rsi_semaphore_post(&ble_slave_conn_sem);
+  rsi_semaphore_post(&ble_peripheral_conn_sem);
 }
 
 /*==============================================*/
@@ -583,7 +583,7 @@ int32_t rsi_ble_central(void)
   //! initialize the event map
   rsi_ble_app_init_events();
   rsi_semaphore_create(&ble_main_task_sem, 0);
-  rsi_semaphore_create(&ble_slave_conn_sem, 0);
+  rsi_semaphore_create(&ble_peripheral_conn_sem, 0);
 
   // AE set scan params
   rsi_ble_ae_set_scan_params_t ae_set_scan_params          = { 0 };
@@ -840,7 +840,7 @@ int32_t rsi_ble_central(void)
           LOG_PRINT("connect status: 0x%lX\r\n", status);
         } else {
 
-          rsi_semaphore_wait(&ble_slave_conn_sem, 10000);
+          rsi_semaphore_wait(&ble_peripheral_conn_sem, 10000);
           temp_event_map1 = rsi_ble_app_get_event();
 
           if ((temp_event_map1 == -1) || (!(temp_event_map1 & RSI_APP_EVENT_CONNECTED))) {

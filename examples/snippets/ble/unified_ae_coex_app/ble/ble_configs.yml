@@ -1,0 +1,284 @@
+ble_events: 
+  event_adv_report: 
+    handler:   rsi_ble_event_adv_report
+  event_disconnect : 
+    handler : rsi_ble_event_disconnect
+  event_conn_status :
+    handler :  rsi_ble_event_conn_status
+  event_enhance_conn_status :
+    handler: rsi_ble_event_enhance_conn_status
+  event_mtu_exchange_information:
+    handler:  rsi_ble_event_mtu_exchange_information
+  event_mtu:
+    handler: rsi_ble_event_mtu
+  event_le_dev_buf_ind:
+    handler: rsi_ble_event_more_data_req
+  event_remote_features:
+    handler: rsi_ble_simple_peripheral_on_remote_features_event
+  event_data_length_update:
+    handler: rsi_ble_event_data_length_update
+  event_phy_update:
+    handler:  rsi_ble_event_phy_update
+  event_remote_conn_param_req:
+    handler:  rsi_ble_on_remote_conn_params_request_event
+  event_conn_update:
+    handler: ble_on_conn_update_complete_event
+  read_req:
+    handler: rsi_ble_read_req
+  event_error_resp:
+    handler:  rsi_ble_gatt_error_event
+  event_gatt_desc:
+    handler:  rsi_ble_event_gatt_desc
+  event_read_by_type1:
+    handler: rsi_ble_char_services_event
+  event_profile_by_uuid:
+    handler : rsi_ble_profile_event
+  event_profiles_list:
+    handler:  rsi_ble_event_profiles_list
+  event_write:
+    handler:  rsi_ble_on_gatt_write_event
+  event_prepare_write:
+    handler: rsi_ble_on_gatt_prepare_write_event
+  execute_write:
+    handler:  rsi_ble_on_execute_write_event
+  set_att_resp:
+    handler:  rsi_ble_on_event_write_resp
+  prepare_write_resp:
+    handler:  rsi_ble_prepare_write_resp
+  event_conn_update:
+    handler:  rsi_ble_event_conn_update
+  event_att_value:
+    handler: rsi_ble_on_read_resp_event
+  indication_confirmation:
+    handler: rsi_ble_event_indication_confirmation
+  ae_adv_report:
+    handler: rsi_ble_event_ext_adv_report
+  per_adv_sync_estbl:
+    handler: rsi_ble_event_extended_per_sync_establish
+  per_adv_report:
+    handler: rsi_ble_event_extended_per_adv_report
+  per_adv_sync_lost:
+    handler: rsi_ble_event_extended_per_sync_lost
+  scan_timeout:
+    handler: rsi_ble_event_extended_scan_timeout
+  adv_set_terminated:
+    handler: rsi_ble_on_terminate
+  scan_req_recvd:
+    handler: rsi_ble_event_extended_scan_req_received
+bt_events:
+  event_smp_req:
+    handler:  rsi_bt_event_smp_req
+  event_smp_resp:
+    handler:  rsi_bt_event_smp_resp
+  event_smp_passkey:
+    handler:  rsi_bt_event_smp_passkey
+  event_smp_failed:
+    handler:  rsi_bt_event_smp_failed
+  event_encryption_enabled:
+    handler:  rsi_bt_event_encryption_enabled
+  event_smp_passkey_display:
+    handler:  rsi_bt_event_smp_passkey_display
+  event_sc_passkey:
+    handler:  rsi_bt_event_sc_passkey
+  event_le_ltk_request:
+    handler:  rsi_bt_event_le_ltk_request
+  event_le_security_keys:
+    handler:  rsi_bt_event_le_security_keys
+dummy_events:
+  data_transmit:
+    handler: rsi_ble_event_data_transmit
+  smp_pending:
+    handler: rsi_ble_event_smp_pending
+  advertisement_restart:
+    handler: rsi_ble_event_advertisement_restart
+  scan_restart:
+    handler: rsi_ble_event_scan_restart
+  on_data_recieve:
+    handler: rsi_ble_event_on_data_recieve
+  conn_update_req:
+    handler: rsi_ble_event_conn_update_req
+  set_buffer_config:
+    handler: rsi_ble_event_set_buffer_config
+  select_data_transfer:
+    handler: rsi_ble_event_select_data_transfer
+  profile_discovery:
+    handler: rsi_ble_event_profile_discovery
+  profile_dummy:
+    handler: rsi_ble_event_profile_dummy
+user_interface:
+  ble:
+    commands:
+        req_adv:
+            module_handler : ble_module_req_adv_cmd_handler
+        req_scan:
+            module_handler : ble_module_req_scan_cmd_handler
+        req_conn:
+            module_handler : ble_module_req_conn_cmd_handler
+        req_adv_stop:
+            module_handler : ble_module_req_adv_stop_cmd_handler
+        req_scan_stop:
+            module_handler : ble_module_req_scan_stop_cmd_handler
+        req_disconnect:
+            module_handler : ble_module_req_disconnect_cmd_handler
+        get_dev_state:
+            module_handler : ble_module_get_dev_state_cmd_handler
+        cmd_conn_params_update:
+            module_handler : ble_module_cmd_conn_params_update_cmd_handler
+        req_start_encryption:
+            module_handler : ble_module_req_start_encryption_cmd_handler
+        req_smp_pair:
+            module_handler : ble_module_req_smp_pair_cmd_handler
+        smp_pair_response:
+            module_handler : ble_module_smp_pair_response_cmd_handler
+        smp_passkey:
+            module_handler : ble_module_smp_passkey_cmd_handler
+        req_profiles:
+            module_handler : ble_module_req_profiles_cmd_handler
+        req_profile:
+            module_handler : ble_module_req_profile_cmd_handler
+        req_char_services:
+            module_handler : ble_module_req_char_services_cmd_handler
+        req_inc_services:
+            module_handler : ble_module_req_inc_services_cmd_handler
+        req_read_by_uuid:
+            module_handler : ble_module_req_read_by_uuid_cmd_handler
+        req_desc:
+            module_handler : ble_module_req_desc_cmd_handler
+        req_read_val:
+            module_handler : ble_module_req_read_val_cmd_handler
+        req_multiple_read:
+            module_handler : ble_module_req_multiple_read_cmd_handler
+        req_long_read:
+            module_handler : ble_module_req_long_read_cmd_handler
+        req_write:
+            module_handler : ble_module_req_write_cmd_handler
+        req_write_no_ack:
+            module_handler : ble_module_req_write_no_ack_cmd_handler
+        req_long_write:
+            module_handler : ble_module_req_long_write_cmd_handler
+        req_prepare_write:
+            module_handler : ble_module_req_prepare_write_cmd_handler
+        req_execute_write:
+            module_handler : ble_module_req_execute_write_cmd_handler
+        add_service:
+            module_handler : ble_module_add_service_cmd_handler
+        add_attribute:
+            module_handler : ble_module_add_attribute_cmd_handler
+        set_local_att_value:
+            module_handler : ble_module_set_local_att_value_cmd_handler
+        get_local_att_value:
+            module_handler : ble_module_get_local_att_value_cmd_handler
+        cmd_notify:
+            module_handler : ble_module_cmd_notify_cmd_handler
+        cmd_indicate:
+            module_handler : ble_module_cmd_indicate_cmd_handler
+        set_advertise_data:
+            module_handler : ble_module_set_advertise_data_cmd_handler
+        get_le_ping:
+            module_handler : ble_module_get_le_ping_cmd_handler
+        set_le_ping:
+            module_handler : ble_module_set_le_ping_cmd_handler
+        set_random_address:
+            module_handler : ble_module_set_random_address_cmd_handler
+        encrypt:
+            module_handler : ble_module_encrypt_cmd_handler
+        cmd_read_resp:
+            module_handler : ble_module_cmd_read_resp_cmd_handler
+        set_scan_response_data:
+            module_handler : ble_module_set_scan_response_data_cmd_handler
+        le_white_list:
+            module_handler : ble_module_le_white_list_cmd_handler
+        cmd_remove_service:
+            module_handler : ble_module_cmd_remove_service_cmd_handler
+        cmd_remove_attribute:
+            module_handler : ble_module_cmd_remove_attribute_cmd_handler
+        process_resolv_list:
+            module_handler : ble_module_process_resolv_list_cmd_handler
+        get_resolving_list_size:
+            module_handler : ble_module_get_resolving_list_size_cmd_handler
+        set_address_resolution_enable:
+            module_handler : ble_module_set_address_resolution_enable_cmd_handler
+        req_read_phy:
+            module_handler : ble_module_req_read_phy_cmd_handler
+        req_set_phy:
+            module_handler : ble_module_req_set_phy_cmd_handler
+        set_data_len:
+            module_handler : ble_module_set_data_len_cmd_handler
+        read_max_data_len:
+            module_handler : ble_module_read_max_data_len_cmd_handler
+        set_privacy_mode:
+            module_handler : ble_module_set_privacy_mode_cmd_handler
+        cbfc_conn_req:
+            module_handler : ble_module_cbfc_conn_req_cmd_handler
+        cbfc_conn_resp:
+            module_handler : ble_module_cbfc_conn_resp_cmd_handler
+        cbfc_tx_data:
+            module_handler : ble_module_cbfc_tx_data_cmd_handler
+        cbfc_disconn:
+            module_handler : ble_module_cbfc_disconn_cmd_handler
+        le_ltk_req_reply:
+            module_handler : ble_module_le_ltk_req_reply_cmd_handler
+        rx_test_mode:
+            module_handler : ble_module_rx_test_mode_cmd_handler
+        tx_test_mode:
+            module_handler : ble_module_tx_test_mode_cmd_handler
+        end_test_mode:
+            module_handler : ble_module_end_test_mode_cmd_handler
+        per_tx_mode:
+            module_handler : ble_module_per_tx_mode_cmd_handler
+        per_rx_mode:
+            module_handler : ble_module_per_rx_mode_cmd_handler
+        cmd_att_error:
+            module_handler : ble_module_cmd_att_error_cmd_handler
+        req_profiles_async:
+            module_handler : ble_module_req_profiles_async_cmd_handler
+        req_profile_async:
+            module_handler : ble_module_req_profile_async_cmd_handler
+        get_charservices_async:
+            module_handler : ble_module_get_charservices_async_cmd_handler
+        get_includeservices_async:
+            module_handler : ble_module_get_includeservices_async_cmd_handler
+        readcharvaluebyuuid_async:
+            module_handler : ble_module_readcharvaluebyuuid_async_cmd_handler
+        get_attribute_async:
+            module_handler : ble_module_get_attribute_async_cmd_handler
+        get_descriptorvalue_async:
+            module_handler : ble_module_get_descriptorvalue_async_cmd_handler
+        get_multiplevalues_async:
+            module_handler : ble_module_get_multiplevalues_async_cmd_handler
+        get_longdescvalues_async:
+            module_handler : ble_module_get_longdescvalues_async_cmd_handler
+        set_descvalue_async:
+            module_handler : ble_module_set_descvalue_async_cmd_handler
+        set_preparewrite_async:
+            module_handler : ble_module_set_preparewrite_async_cmd_handler
+        execute_longdescwrite_async:
+            module_handler : ble_module_execute_longdescwrite_async_cmd_handler
+        set_smp_pairing_capability_data:
+            module_handler : ble_module_set_smp_pairing_capability_data_cmd_handler
+        conn_param_resp_cmd:
+            module_handler : ble_module_conn_param_resp_cmd_cmd_handler
+        cmd_indicate_confirmation:
+            module_handler : ble_module_cmd_indicate_confirmation_cmd_handler
+        mtu_exchange_request:
+            module_handler : ble_module_mtu_exchange_request_cmd_handler
+        cmd_set_wwo_resp_notify_buf_info:
+            module_handler : ble_module_cmd_set_wwo_resp_notify_buf_info_cmd_handler
+        cmd_write_resp:
+            module_handler : ble_module_cmd_write_resp_cmd_handler
+        cmd_prepare_write_resp:
+            module_handler : ble_module_cmd_prepare_write_resp_cmd_handler
+        cmd_set_local_irk:
+            module_handler : ble_module_cmd_set_local_irk_cmd_handler
+        cmd_set_prop_protocol_ble_bandedge_txpower:
+            module_handler : ble_module_cmd_set_prop_protocol_ble_bandedge_txpower_cmd_handler
+        cmd_mtu_exchange_resp:
+            module_handler : ble_module_cmd_mtu_exchange_resp_cmd_handler
+        cmd_set_ble_tx_power:
+            module_handler : ble_module_cmd_set_ble_tx_power_cmd_handler
+        cmd_indicate_sync:
+            module_handler : ble_module_cmd_indicate_sync_cmd_handler
+        prop_protocol_cmd:
+            module_handler : ble_module_prop_protocol_cmd_cmd_handler
+        prop_protocol_cmd_per:
+            module_handler : ble_module_prop_protocol_cmd_per_cmd_handler

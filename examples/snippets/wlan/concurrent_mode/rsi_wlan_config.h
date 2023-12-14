@@ -46,26 +46,36 @@
 //! To set custom feature select bit map
 #define RSI_CUSTOM_FEATURE_BIT_MAP 0
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (MEMORY_CONFIG | 0)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP 0
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
 #else
 //! To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP            (FEAT_SECURITY_PSK | FEAT_ULP_GPIO_BASED_HANDSHAKE)
+#define RSI_FEATURE_BIT_MAP        (FEAT_SECURITY_PSK | FEAT_ULP_GPIO_BASED_HANDSHAKE)
 
 //! TCP IP BYPASS feature check
-#define RSI_TCP_IP_BYPASS              RSI_DISABLE
+#define RSI_TCP_IP_BYPASS          RSI_DISABLE
 
 //! TCP/IP feature select bitmap for selecting TCP/IP features
-#define RSI_TCP_IP_FEATURE_BIT_MAP     (TCP_IP_FEAT_DHCPV4_SERVER | TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
+#define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_SERVER | TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_EXTENSION_VALID)
 
 //! To set custom feature select bit map
-#define RSI_CUSTOM_FEATURE_BIT_MAP     FEAT_CUSTOM_FEAT_EXTENTION_VALID
+#define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP CONFIG_FEAT_EXTENTION_VALID
 
@@ -258,6 +268,9 @@
 
 //! This parameter is used to configure maximum stations supported
 #define RSI_MAX_STATIONS_SUPPORT 4
+
+//! This parameter is used to enable or disable beacon transmission, when stations are not connected
+#define RSI_BEACON_STOP RSI_DISABLE
 /*=======================================================================*/
 
 //! Join command parameters
@@ -268,6 +281,10 @@
 
 //! RSI_JOIN_FEAT_STA_BG_ONLY_MODE_ENABLE or RSI_JOIN_FEAT_LISTEN_INTERVAL_VALID
 #define RSI_JOIN_FEAT_BIT_MAP 0
+
+//! For AP Join Feature Bit Map
+//! Only applicable in concurrent mode
+#define RSI_JOIN_FEAT_BIT_MAP_AP 0
 
 //!
 #define RSI_LISTEN_INTERVAL 0

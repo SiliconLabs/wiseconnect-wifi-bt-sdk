@@ -33,7 +33,16 @@
 //! Common include file
 #include <rsi_common_apis.h>
 #include <string.h>
-
+#ifdef RSI_M4_INTERFACE
+#include "rsi_board.h"
+#include "rsi_driver.h"
+#include "rsi_rtc.h"
+#include "rsi_chip.h"
+#include "rsi_wisemcu_hardware_setup.h"
+#include "rsi_m4.h"
+#include "rsi_ps_ram_func.h"
+#include "rsi_ds_timer.h"
+#endif
 #ifdef FW_LOGGING_ENABLE
 //! Memory length of driver updated for firmware logging
 #define BT_GLOBAL_BUFF_LEN (15000 + (FW_LOG_QUEUE_SIZE * MAX_FW_LOG_MSG_LEN))
@@ -145,7 +154,17 @@ void sl_fw_log_task(void);
 void rsi_wireless_driver_task(void);
 
 #endif
+/*=======================================================================*/
+//!    Powersave configurations
+/*=======================================================================*/
+#define ENABLE_POWER_SAVE 0 //! Set to 1 for powersave mode
 
+#if ENABLE_POWER_SAVE
+//! Power Save Profile Mode
+#define PSP_MODE RSI_SLEEP_MODE_2
+//! Power Save Profile type
+#define PSP_TYPE RSI_MAX_PSP
+#endif
 #define MITM_REQ 0x01
 
 //! BLE attribute service types uuid values
@@ -320,7 +339,69 @@ static const uint8_t hid_report_map[] = {
 };
 
 rsi_semaphore_handle_t ble_main_task_sem;
+/**
+ * @fn         rsi_ble_only_Trigger_M4_Sleep
+ * @brief      Keeps the M4 In the Sleep
+ * @param[in]  none
+ * @return    none.
+ * @section description
+ * This function is used to trigger sleep in the M4 and in the case of the retention submitting the buffer valid
+ * to the TA for the rx packets.
+ */
+#if M4_POWERSAVE_ENABLE
+void rsi_ble_only_Trigger_M4_Sleep(void)
+{
+  /* Configure Wakeup-Source */
+  RSI_PS_SetWkpSources(WIRELESS_BASED_WAKEUP);
+  /* sets the priority of an Wireless wakeup interrupt. */
+  NVIC_SetPriority(WIRELESS_WAKEUP_IRQHandler, WIRELESS_WAKEUP_IRQ_PRI);
+  NVIC_EnableIRQ(WIRELESS_WAKEUP_IRQHandler);
 
+#ifndef FLASH_BASED_EXECUTION_ENABLE
+  /* LDOSOC Default Mode needs to be disabled */
+  RSI_PS_LdoSocDefaultModeDisable();
+
+  /* bypass_ldorf_ctrl needs to be enabled */
+  RSI_PS_BypassLdoRfEnable();
+
+  RSI_PS_FlashLdoDisable();
+
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_48KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  /* Trigger M4 Sleep */
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           0,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           0,
+                           RSI_WAKEUP_WITH_RETENTION_WO_ULPSS_RAM);
+
+#else
+
+#ifdef COMMON_FLASH_EN
+  M4SS_P2P_INTR_SET_REG &= ~BIT(3);
+#endif
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           WKP_RAM_USAGE_LOCATION,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           IVT_OFFSET_ADDR,
+                           RSI_WAKEUP_FROM_FLASH_MODE);
+#endif
+#ifdef RSI_WITH_OS
+  /*  Setup the systick timer */
+  vPortSetupTimerInterrupt();
+#endif
+#ifdef DEBUG_UART
+  fpuInit();
+  DEBUGINIT();
+#endif
+}
+#endif
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -500,7 +581,7 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
 /**
  * @fn         rsi_ble_on_gatt_write_event
  * @brief      its invoked when write/notify/indication events are received.
- * @param[in]  event_id, it indicates write/notification event id.
+ * @param[in]  event_id contains the gatt_write event id (RSI_BLE_EVENT_GATT_WRITE).
  * @param[in]  rsi_ble_write, write event parameters.
  * @return     none.
  * @section description
@@ -517,12 +598,12 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_read_req_event
- * @brief      its invoked when read events are received.
- * @param[in]  event_id, it indicates write/notification event id.
+ * @brief      its invoked when gatt read events are received.
+ * @param[in]  event_id contains the gatt_read_req_event id
  * @param[in]  rsi_ble_read, read event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when read events are received
+ * This callback function is invoked when a gatt read request event is received
  */
 static void rsi_ble_on_read_req_event(uint16_t event_id, rsi_ble_read_req_t *rsi_ble_read_req)
 {
@@ -570,12 +651,12 @@ static void rsi_ble_on_char_services_event(uint16_t resp_status,
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_att_desc_event
- * @brief      its invoked when wr/noti/indi events are received.
+ * @brief      invoked when response is received for attribute descriptor
  * @param[in]  event_id, it indicates wr/noti/indi event id.
  * @param[in]  rsi_ble_resp_att_desc, wr/noti/indi event parameters.
  * @return     none.
  * @section description
- * this callback function is invoked when wr/noti/indi events are received
+ * this callback function is invoked when response is received for attribute descriptor
  */
 static void ble_on_att_desc_event(uint16_t resp_status, rsi_ble_resp_att_descs_t *rsi_ble_resp_att_desc)
 {
@@ -588,12 +669,12 @@ static void ble_on_att_desc_event(uint16_t resp_status, rsi_ble_resp_att_descs_t
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_request 
- * @brief      its invoked when smp request event is received.
+ * @brief      its invoked when an smp request event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when an SMP request event is received(we are in central mode)
+ * Note: Peripheral requested to start SMP request, we have to send SMP request command
  */
 static void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
@@ -605,12 +686,12 @@ static void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_response 
- * @brief      its invoked when smp response event is received.
+ * @brief      its invoked when an smp response event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode) 
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when an SMP response event is received(we are in Peripheral mode) 
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 static void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {
@@ -622,11 +703,11 @@ static void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_passkey 
- * @brief      its invoked when smp passkey event is received.
+ * @brief      its invoked when an smp passkey event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP passkey events is received
+ * This callback function is invoked when an SMP passkey event is received
  * Note: We have to send SMP passkey command
  */
 static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address)
@@ -639,11 +720,11 @@ static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_addres
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_passkey_display 
- * @brief      its invoked when smp passkey event is received.
+ * @brief      its invoked when an smp passkey event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP passkey events is received
+ * This callback function is invoked when an SMP passkey event is received
  * Note: We have to send SMP passkey command
  */
 static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display)
@@ -658,11 +739,11 @@ static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *s
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_failed 
- * @brief      its invoked when smp failed event is received.
+ * @brief      its invoked when an smp failed event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP failed events is received
+ * This callback function is invoked when an SMP failed event is received
  */
 static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address)
 {
@@ -675,11 +756,11 @@ static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *re
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_encrypt_started 
- * @brief      its invoked when encryption started event is received.
+ * @brief      its invoked when an encryption started event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when encryption started events is received
+ * This callback function is invoked when an encryption started event is received
  */
 static void rsi_ble_on_encrypt_started(uint16_t resp_status, rsi_bt_event_encryption_enabled_t *enc_enabled)
 {
@@ -696,7 +777,7 @@ static void rsi_ble_on_encrypt_started(uint16_t resp_status, rsi_bt_event_encryp
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_le_ltk_req_event
- * @brief      invoked when disconnection event is received
+ * @brief      invoked when ltk request event is received
  * @param[in]  resp_disconnect, disconnected remote device information
  * @param[in]  reason, reason for disconnection.
  * @return     none.
@@ -713,12 +794,12 @@ static void rsi_ble_on_le_ltk_req_event(rsi_bt_event_le_ltk_request_t *le_ltk_re
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_mtu_event
- * @brief      its invoked when write/notify/indication events are received.
+ * @brief      invoked  when an MTU size event is received
  * @param[in]  event_id, it indicates write/notification event id.
  * @param[in]  rsi_ble_write, write event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when write/notify/indication events are received
+ * This callback function is invoked when an MTU size event is received
  */
 static void rsi_ble_on_mtu_event(rsi_ble_event_mtu_t *rsi_ble_mtu)
 {
@@ -1367,6 +1448,14 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
   } else {
     LOG_PRINT("\nfirmware_version = %s", fmversion);
   }
+#if M4_POWERSAVE_ENABLE
+
+  //RSI_PS_FlashLdoEnable();
+  /* MCU Hardware Configuration for Low-Power Applications */
+  RSI_WISEMCU_HardwareSetup();
+  LOG_PRINT("\r\nRSI_WISEMCU_HardwareSetup Success\r\n");
+
+#endif
 #ifdef FW_LOGGING_ENABLE
   //! Set log levels for firmware components
   sl_set_fw_component_log_levels(&fw_component_log_level);
@@ -1495,7 +1584,35 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
     return status;
   }
 #endif
+#if ENABLE_POWER_SAVE
 
+  LOG_PRINT("\r\n Initiate module in to power save \r\n");
+  //! enable wlan radio
+  status = rsi_wlan_radio_init();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\n radio init failed \n");
+  }
+
+  //! initiating power save in BLE mode
+  status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+    return status;
+  }
+
+  //! initiating power save in wlan mode
+  status = rsi_wlan_power_save_profile(PSP_MODE, PSP_TYPE);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\n Failed to initiate power save in WLAN mode \r\n");
+    return status;
+  }
+
+  LOG_PRINT("\r\n Module is in power save \r\n");
+#endif
+#if M4_POWERSAVE_ENABLE
+  P2P_STATUS_REG &= ~M4_wakeup_TA;
+  // LOG_PRINT("\n RSI_BLE_REQ_PWRMODE\n ");
+#endif
   //! waiting for events from controller.
   while (1) {
     //! Application main loop
@@ -1505,7 +1622,17 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
     //! checking for events list
     event_id = rsi_ble_app_get_event();
     if (event_id == -1) {
-      rsi_semaphore_wait(&ble_main_task_sem, 0);
+#if M4_POWERSAVE_ENABLE
+      //! if events are not received loop will be continued.
+      if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
+        P2P_STATUS_REG &= ~M4_wakeup_TA;
+        rsi_ble_only_Trigger_M4_Sleep();
+      }
+#else
+      {
+        rsi_semaphore_wait(&ble_main_task_sem, 0);
+      }
+#endif
       continue;
     }
     switch (event_id) {
@@ -1544,6 +1671,24 @@ int32_t rsi_ble_hids_gatt_application(rsi_ble_hid_info_t *p_hid_info)
         if (app_state & BIT(REPORT_IN_NOTIFY_ENABLE)) {
           rsi_ble_app_clear_event(RSI_BLE_GATT_SEND_DATA);
         }
+#if ENABLE_POWER_SAVE
+
+        LOG_PRINT("\r\n keep module in to active state \r\n");
+        //! initiating Active mode in BT mode
+        status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+          return status;
+        }
+
+        //! initiating Active mode in WLAN mode
+        status = rsi_wlan_power_save_profile(RSI_ACTIVE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+          return status;
+        }
+
+#endif
         LOG_PRINT("\r\nModule got Disconnected\r\n");
         app_state = 0;
         app_state |= BIT(ADVERTISE);
@@ -1563,6 +1708,21 @@ scan:
         if (status != RSI_SUCCESS) {
           goto scan;
         }
+#endif
+#if ENABLE_POWER_SAVE
+
+        LOG_PRINT("\r\n keep module in to power save \r\n");
+        status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          return status;
+        }
+
+        status = rsi_wlan_power_save_profile(PSP_MODE, PSP_TYPE);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT("\r\n Failed to keep Module in power save \r\n");
+          return status;
+        }
+        LOG_PRINT("\r\n Module is in power save \r\n");
 #endif
       } break;
 
@@ -1584,7 +1744,7 @@ scan:
       } break;
 
       case RSI_BLE_EVENT_GATT_RD: {
-        //! event invokes when read events received
+        //! event invokes when an read event is received
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_GATT_RD);
@@ -1612,14 +1772,14 @@ scan:
       } break;
 
       case RSI_BLE_EVENT_MTU: {
-        //! event invokes when write/notification events received
+        //! event invokes when MTU event is received
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_MTU);
       } break;
 
       case RSI_BLE_EVENT_SMP_REQ: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_SMP_REQ);
@@ -1629,7 +1789,7 @@ scan:
       } break;
 
       case RSI_BLE_EVENT_SMP_RESP: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_SMP_RESP);
@@ -1639,7 +1799,7 @@ scan:
       } break;
 
       case RSI_BLE_EVENT_SMP_PASSKEY: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         if ((RSI_BLE_SMP_IO_CAPABILITY == 2) || (RSI_BLE_SMP_IO_CAPABILITY == 4)) {
           LOG_PRINT("\nEnter 6 digit passkey");
@@ -1659,7 +1819,7 @@ scan:
       } break;
 
       case RSI_BLE_EVENT_SMP_FAILED: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_EVENT_SMP_FAILED);
@@ -1672,7 +1832,7 @@ scan:
         rsi_ble_app_clear_event(RSI_BLE_EVENT_LTK_REQ);
         //rsi_6byte_dev_address_to_ascii (remote_dev_addr, temp_le_ltk_req.dev_addr);
 
-#if (ROLE == SLAVE)
+#if (ROLE == PERIPHERAL_ROLE)
         if ((temp_le_ltk_req.localediv == glbl_enc_enabled.localediv)
             && !((memcmp(temp_le_ltk_req.localrand, glbl_enc_enabled.localrand, 8)))) {
           LOG_PRINT("Positive reply\n");

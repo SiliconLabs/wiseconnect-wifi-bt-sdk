@@ -111,6 +111,29 @@ typedef enum rsi_power_save_profile_mode_e {
   RSI_SLEEP_MODE_10 = 10,
 } rsi_power_save_profile_mode_t;
 
+#ifdef CHIP_917
+typedef struct rsi_req_ecdsa_256_verify_s {
+
+  // total length of the digest
+  uint8_t digest_length[2];
+
+  //total length of the public key
+  uint8_t key_length[2];
+
+  // total length of the signature
+  uint8_t signature_length[2];
+
+  //public key
+  uint8_t key[ECDSA_VERIFY_KEY_LENGTH];
+
+  //digest
+  uint8_t digest[ECDSA_VERIFY_DIGEST_LENGTH];
+
+  //signature
+  uint8_t signature[ECDSA_VERIFY_SIGN_LENGTH];
+} rsi_req_ecdsa_256_verify_t;
+#endif
+
 // enumerations for power save profile types
 typedef enum rsi_power_save_profile_type_e {
   RSI_MAX_PSP  = 0,
@@ -176,7 +199,7 @@ extern int32_t rsi_get_ram_log(uint32_t addr, uint32_t length);
 extern int32_t rsi_driver_version(uint8_t *request);
 extern int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
 
-#define RSI_DRIVER_VERSION "2.8.2.27"
+#define RSI_DRIVER_VERSION "2.9.0.74"
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
 #endif

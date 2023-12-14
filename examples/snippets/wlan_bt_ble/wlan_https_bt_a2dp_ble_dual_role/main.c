@@ -113,9 +113,9 @@ uint8_t global_buf[GLOBAL_BUFF_LEN] = { 0 };
 uint8_t powersave_d = 0, ble_powersave_d = 0, wifi_powersave_d = 0;
 uint8_t tx_rx_Completed = 0;
 uint8_t loopback_done   = 0;
-#if (BLE_DUAL_MODE_BT_A2DP_SOURCE_WIFI_HTTP_S_RX || BLE_DUAL_MODE_BT_SPP_SLAVE)
-extern uint16_t num_of_conn_slaves;
-extern uint8_t num_of_conn_masters;
+#if (BLE_DUAL_MODE_BT_A2DP_SOURCE_WIFI_HTTP_S_RX || BLE_DUAL_MODE_BT_SPP_PERIPHERAL)
+extern uint16_t num_of_conn_peripherals;
+extern uint8_t num_of_conn_centrals;
 #endif
 
 #ifdef RSI_WITH_OS

@@ -46,8 +46,8 @@
 #include "rsi_emb_mqtt_client.h"
 #include "rsi_driver.h"
 //! Access point SSID to connect
-#define SSID "SILABS_AP"
-
+#define SSID                       "SILABS_AP"
+#define RSI_EMB_MQTT_TOPIC_MAX_LEN 202
 //! Security type
 #define SECURITY_TYPE RSI_WPA2
 
@@ -140,11 +140,23 @@ void rsi_emb_mqtt_remote_socket_terminate_handler(uint16_t status, uint8_t *buff
   UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
 }
-void rsi_emb_mqtt_pub_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
+void rsi_emb_mqtt_publish_receive_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
   UNUSED_PARAMETER(status);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_PARAMETER(buffer);       //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
+
+  char topic_name[RSI_EMB_MQTT_TOPIC_MAX_LEN];
+  rsi_mqtt_rcv_pub_async_pkt_t *rcv_data = (rsi_mqtt_rcv_pub_async_pkt_t *)buffer;
+  LOG_PRINT("\r\nMQTT Flags: %d\r\n", rcv_data->mqtt_flags);
+  LOG_PRINT("\r\nMQTT Message length: %d\r\n", rcv_data->current_chunk_length);
+  LOG_PRINT("\r\nMQTT Topic length: %d\r\n", rcv_data->topic_length);
+  strncpy(topic_name, (char *)rcv_data->topic, rcv_data->topic_length);
+  topic_name[rcv_data->topic_length] = '\0';
+  LOG_PRINT("\r\nMQTT Topic: %s\r\n", topic_name);
+  LOG_PRINT("\r\nMQTT Message: %s\r\n", rcv_data->topic + rcv_data->topic_length);
+  memset(buffer, 0, length);
+  UNUSED_PARAMETER(status);
 }
 void rsi_emb_mqtt_ka_timeout_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
 {
@@ -170,7 +182,6 @@ int32_t rsi_mqtt_client_app()
 
   rsi_mqtt_pubmsg_t publish_msg;
 
-#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -184,7 +195,7 @@ int32_t rsi_mqtt_client_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#endif
+
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
   //! Task created for Driver task
@@ -259,7 +270,7 @@ int32_t rsi_mqtt_client_app()
   //! Initialze remote terminate call back
   rsi_emb_mqtt_register_call_back(RSI_WLAN_NWK_EMB_MQTT_REMOTE_TERMINATE_CB,
                                   rsi_emb_mqtt_remote_socket_terminate_handler);
-  rsi_emb_mqtt_register_call_back(RSI_WLAN_NWK_EMB_MQTT_PUB_MSG_CB, rsi_emb_mqtt_pub_handler);
+  rsi_emb_mqtt_register_call_back(RSI_WLAN_NWK_EMB_MQTT_PUB_MSG_CB, rsi_emb_mqtt_publish_receive_handler);
   rsi_emb_mqtt_register_call_back(RSI_WLAN_NWK_EMB_MQTT_KEEPALIVE_TIMEOUT_CB, rsi_emb_mqtt_ka_timeout_handler);
 
   //! MQTT client initialisation
@@ -364,22 +375,6 @@ void main_loop(void)
 int main()
 {
   int32_t status = RSI_SUCCESS;
-#ifdef RSI_M4_INTERFACE
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! SiLabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t wlan_task_handle = NULL;

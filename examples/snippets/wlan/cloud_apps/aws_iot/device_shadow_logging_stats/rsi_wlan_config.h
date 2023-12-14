@@ -37,7 +37,7 @@
 //! opermode command paramaters
 /*=======================================================================*/
 //! To set wlan feature select bit map
-#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_OPEN | BIT(2) | BIT(4))
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | BIT(2) | BIT(4))
 
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
@@ -49,8 +49,13 @@
 //! To set custom feature select bit map ;
 #define RSI_CUSTOM_FEATURE_BIT_MAP (CUSTOM_FEAT_ASYNC_CONNECTION_STATUS | FEAT_CUSTOM_FEAT_EXTENTION_VALID)
 
+#ifdef RSI_M4_INTERFACE
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (BIT(1) | BIT(3) | BIT(19) | BIT(27) | MEMORY_CONFIG)
+#else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (RAM_LEVEL_NWP_MEDIUM_MCU_MEDIUM | BIT(1) | BIT(3) | BIT(19) | BIT(27))
+#endif
 
 #define RSI_EXT_TCPIP_FEATURE_BITMAP (BIT(16) | EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD | BIT(31))
 

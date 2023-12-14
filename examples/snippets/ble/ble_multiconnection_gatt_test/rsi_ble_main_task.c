@@ -66,16 +66,16 @@
 //   ! GLOBAL VARIABLES
 /*=======================================================================*/
 rsi_task_handle_t ble_app_task_handle[TOTAL_CONNECTIONS] = { NULL };
-uint8_t ble_conn_id = 0xFF, slave_connection_in_prgs = 0, slave_con_req_pending = 0;
+uint8_t ble_conn_id = 0xFF, peripheral_connection_in_prgs = 0, peripheral_con_req_pending = 0;
 uint16_t rsi_scan_in_progress;
 uint32_t ble_main_app_event_task_map;
 uint32_t ble_app_event_task_map[TOTAL_CONNECTIONS];
 uint32_t ble_app_event_task_map1[TOTAL_CONNECTIONS];
-uint8_t remote_device_role    = 0;
-uint8_t master_task_instances = 0, slave_task_instances = 0;
+uint8_t remote_device_role     = 0;
+uint8_t central_task_instances = 0, peripheral_task_instances = 0;
 volatile uint16_t rsi_disconnect_reason[TOTAL_CONNECTIONS] = { 0 };
-volatile uint8_t ix, conn_done, conn_update_done, conn_update_master_done, num_of_conn_masters = 0,
-                                                                           num_of_conn_slaves = 0;
+volatile uint8_t ix, conn_done, conn_update_done, conn_update_central_done, num_of_conn_centrals = 0,
+                                                                            num_of_conn_peripherals = 0;
 volatile uint16_t rsi_ble_att1_val_hndl;
 volatile uint16_t rsi_ble_att2_val_hndl;
 volatile uint16_t rsi_ble_att3_val_hndl;
@@ -83,8 +83,8 @@ static uint8_t remote_dev_addr[RSI_REM_DEV_ADDR_LEN]      = { 0 };
 static uint8_t remote_dev_addr_conn[RSI_REM_DEV_ADDR_LEN] = { 0 };
 static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
-static uint8_t master_conn_id = 0xff;
-static uint8_t slave_conn_id  = 0xff;
+static uint8_t central_conn_id    = 0xff;
+static uint8_t peripheral_conn_id = 0xff;
 
 #if (CONNECT_OPTION == CONN_BY_NAME)
 static uint8_t remote_name[RSI_REM_DEV_NAME_LEN];
@@ -99,14 +99,31 @@ rsi_semaphore_handle_t ble_conn_sem[TOTAL_CONNECTIONS];
 /*=======================================================================*/
 extern rsi_ble_conn_info_t rsi_ble_conn_info[];
 extern rsi_parsed_conf_t rsi_parsed_conf;
-extern rsi_semaphore_handle_t ble_main_task_sem, ble_slave_conn_sem;
+extern rsi_semaphore_handle_t ble_main_task_sem, ble_peripheral_conn_sem;
 #if ENABLE_POWER_SAVE
 extern bool powersave_cmd_given;
 #endif
 /*========================================================================*/
 //!  CALLBACK FUNCTIONS
 /*=======================================================================*/
-
+void rsi_ble_app_set_task_event(uint8_t conn_id, uint32_t event_num);
+void rsi_ble_app_set_event(uint32_t event_num);
+uint8_t rsi_check_dev_master_list(uint8_t *rem_dev_addr);
+uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr);
+void rsi_gatt_add_attribute_to_list(rsi_ble_t *p_val,
+                                    uint16_t handle,
+                                    uint16_t data_len,
+                                    uint8_t *data,
+                                    uuid_t uuid,
+                                    uint8_t char_prop);
+rsi_ble_att_list_t *rsi_gatt_get_attribute_from_list(rsi_ble_t *p_val, uint16_t handle);
+void rsi_ble_simple_peripheral_on_remote_features_event(rsi_ble_event_remote_features_t *rsi_ble_event_remote_features);
+void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report);
+void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event_phy_update_complete);
+void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_smp);
+void rsi_ble_set_event_based_on_conn(uint8_t conn_id, uint32_t event_num);
+int32_t rsi_ble_get_event_based_on_conn(uint8_t conn_id);
 /*=======================================================================*/
 //   ! EXTERN FUNCTIONS
 /*=======================================================================*/
@@ -211,11 +228,11 @@ static int32_t rsi_ble_app_get_event(void)
   for (ix = 0; ix < 64; ix++) {
     if (ix < 32) {
       if (ble_app_event_map & (1 << ix)) {
-        return ix;
+        return (int32_t)ix;
       }
     } else {
       if (ble_app_event_map1 & (1 << (ix - 32))) {
-        return ix;
+        return (int32_t)ix;
       }
     }
   }
@@ -223,35 +240,35 @@ static int32_t rsi_ble_app_get_event(void)
   return (-1);
 }
 
-uint8_t rsi_check_dev_master_list(uint8_t *rem_dev_addr)
+uint8_t rsi_check_dev_central_list(uint8_t *rem_dev_addr)
 {
-  uint8_t i                   = 0;
-  uint8_t master_device_found = NO_DEV_FOUND;
+  uint8_t i                    = 0;
+  uint8_t central_device_found = NO_DEV_FOUND;
 
-  //! check if master device is already connected
+  //! check if central device is already connected
   for (i = 0; i < TOTAL_CONNECTIONS; i++) {
     if (!memcmp(rsi_ble_conn_info[i].remote_dev_addr, rem_dev_addr, RSI_REM_DEV_ADDR_LEN)) {
-      master_device_found = DEV_CONNECTED;
+      central_device_found = DEV_CONNECTED;
       break;
     }
   }
 
   if (i == TOTAL_CONNECTIONS) {
-    master_device_found = DEV_NOT_CONNECTED;
+    central_device_found = DEV_NOT_CONNECTED;
   }
-  return master_device_found;
+  return central_device_found;
 }
 /*==============================================*/
 /**
  * @fn         rsi_check_dev_list
- * @brief      returns the status of slave devices state
+ * @brief      returns the status of peripheral devices state
  * @param[in]  remote_dev_name - remote device name.
  * 				adv_dev_addr - remote device address
  * @return     uint8_t
- *             NO_SLAVE_FOUND - slave address/name doesnt match
- *             SLAVE_FOUND   - slave address/name matches
- *             SLAVE_NOT_CONNECTED - slave address/name matches and slave not yet connected
- *             SLAVE_CONNECTED - slave address/name matches and slave already connected
+ *             NO_peripheral_FOUND - peripheral address/name doesnt match
+ *             peripheral_FOUND   - peripheral address/name matches
+ *             peripheral_NOT_CONNECTED - peripheral address/name matches and peripheral not yet connected
+ *             peripheral_CONNECTED - peripheral address/name matches and peripheral already connected
  *
  * @section description
  * This function is called when advertise report received and when received checks the address/name with configured names
@@ -263,24 +280,24 @@ uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
 #else
   UNUSED_PARAMETER(remote_dev_name); //This statement is added only to resolve compilation warning, value is unchanged
 #endif
-  uint8_t i                  = 0;
-  uint8_t slave_device_found = NO_DEV_FOUND;
+  uint8_t i                       = 0;
+  uint8_t peripheral_device_found = NO_DEV_FOUND;
 
 #if (CONNECT_OPTION == CONN_BY_NAME)
   if ((strcmp((const char *)remote_dev_name, RSI_REMOTE_DEVICE_NAME1)) == 0) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else if ((strcmp((const char *)remote_dev_name, RSI_REMOTE_DEVICE_NAME2)) == 0) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else if ((strcmp((const char *)remote_dev_name, RSI_REMOTE_DEVICE_NAME3)) == 0) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else
-    return slave_device_found;
+    return peripheral_device_found;
 
   //! check if remote device already connected or advertise report received- TODO .  Can check efficiently?
-  if (slave_device_found == DEV_FOUND) {
+  if (peripheral_device_found == DEV_FOUND) {
     for (i = 0; i < TOTAL_CONNECTIONS; i++) {
       if (!(strcmp((const char *)rsi_ble_conn_info[i].rsi_remote_name, (const char *)remote_dev_name))) {
-        slave_device_found = DEV_CONNECTED;
+        peripheral_device_found = DEV_CONNECTED;
 #if RSI_DEBUG_EN
         LOG_PRINT("\r\n Device %s already connected!!!\r\n", adv_dev_addr);
 #endif
@@ -290,19 +307,19 @@ uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
   }
 #else
   if (!strcmp(RSI_BLE_DEV_1_ADDR, (char *)adv_dev_addr)) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else if (!strcmp(RSI_BLE_DEV_2_ADDR, (char *)adv_dev_addr)) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else if (!strcmp(RSI_BLE_DEV_3_ADDR, (char *)adv_dev_addr)) {
-    slave_device_found = DEV_FOUND;
+    peripheral_device_found = DEV_FOUND;
   } else
-    return slave_device_found;
+    return peripheral_device_found;
 
   //! check if remote device already connected
-  if (slave_device_found == DEV_FOUND) {
+  if (peripheral_device_found == DEV_FOUND) {
     for (i = 0; i < TOTAL_CONNECTIONS; i++) {
       if (!memcmp(rsi_ble_conn_info[i].remote_dev_addr, adv_dev_addr, RSI_REM_DEV_ADDR_LEN)) {
-        slave_device_found = DEV_CONNECTED;
+        peripheral_device_found = DEV_CONNECTED;
 #if RSI_DEBUG_EN
         LOG_PRINT("\r\n Device %s already connected!!!\r\n", adv_dev_addr);
 #endif
@@ -313,10 +330,10 @@ uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
 
 #endif
   if (i == TOTAL_CONNECTIONS) {
-    slave_device_found = DEV_NOT_CONNECTED;
+    peripheral_device_found = DEV_NOT_CONNECTED;
   }
 
-  return slave_device_found;
+  return peripheral_device_found;
 }
 
 /*==============================================*/
@@ -703,8 +720,8 @@ void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_
   if (adv_report->report_type == 0x02)
     return; // return for NON CONN ADV PACKETS
 
-  //! Need to ignore advertising reports until one slave connection is completed successfully
-  if ((slave_connection_in_prgs) || (slave_con_req_pending)) {
+  //! Need to ignore advertising reports until one peripheral connection is completed successfully
+  if ((peripheral_connection_in_prgs) || (peripheral_con_req_pending)) {
     return;
   }
 
@@ -735,12 +752,12 @@ void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_
 #endif
     //! check if conn_id is valid
     if (ble_conn_id < TOTAL_CONNECTIONS) {
-      rsi_ble_conn_info[ble_conn_id].remote_device_role = SLAVE_ROLE; //! remote device is slave
+      rsi_ble_conn_info[ble_conn_id].remote_device_role = PERIPHERAL_ROLE; //! remote device is peripheral
       memcpy(&rsi_ble_conn_info[ble_conn_id].rsi_app_adv_reports_to_app,
              adv_report,
              sizeof(rsi_ble_event_adv_report_t));
-      slave_con_req_pending = 1;
-      slave_conn_id         = ble_conn_id;
+      peripheral_con_req_pending = 1;
+      peripheral_conn_id         = ble_conn_id;
       //! set common event
       rsi_ble_app_set_event(RSI_APP_EVENT_ADV_REPORT);
     } else {
@@ -764,27 +781,27 @@ void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_
  */
 static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
 {
-  uint8_t master_dev_found = NO_DEV_FOUND;
+  uint8_t central_dev_found = NO_DEV_FOUND;
 #if RSI_DEBUG_EN
   LOG_PRINT("\r\nIn on conn cb\r\n");
 #endif
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, resp_conn->dev_addr);
 
-  //! Check whether the received connected event came from remote slave or master
+  //! Check whether the received connected event came from remote peripheral or central
   remote_device_role = rsi_get_remote_device_role(remote_dev_addr_conn);
 
   if (resp_conn->status != 0) {
     //LOG_PRINT("\r\n On connect event status report : %d", resp_conn->status);
-    if (remote_device_role == SLAVE_ROLE) {
-      slave_connection_in_prgs = 0;
+    if (remote_device_role == PERIPHERAL_ROLE) {
+      peripheral_connection_in_prgs = 0;
     }
     //! Restarting scan
     rsi_ble_app_set_event(RSI_BLE_SCAN_RESTART_EVENT);
     return;
   }
 
-  if (remote_device_role == SLAVE_ROLE) //check for the connection is from slave or master
+  if (remote_device_role == PERIPHERAL_ROLE) //check for the connection is from peripheral or central
   {
     //! get conn_id
     ble_conn_id = rsi_get_ble_conn_id(remote_dev_addr_conn, NULL, 0);
@@ -792,24 +809,24 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
     //! copy to conn specific buffer
     memcpy(&rsi_ble_conn_info[ble_conn_id].conn_event_to_app, resp_conn, sizeof(rsi_ble_event_conn_status_t));
 
-    slave_connection_in_prgs = 0;
+    peripheral_connection_in_prgs = 0;
 
     //! set conn specific event
     rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_CONN_EVENT);
 
     //! unblock connection semaphore
-    rsi_semaphore_post(&ble_slave_conn_sem);
-  } else if (remote_device_role == MASTER_ROLE) {
-    master_dev_found = rsi_check_dev_master_list(remote_dev_addr_conn);
-    if (master_dev_found == DEV_NOT_CONNECTED) {
+    rsi_semaphore_post(&ble_peripheral_conn_sem);
+  } else if (remote_device_role == CENTRAL_ROLE) {
+    central_dev_found = rsi_check_dev_central_list(remote_dev_addr_conn);
+    if (central_dev_found == DEV_NOT_CONNECTED) {
       ble_conn_id = rsi_add_ble_conn_id(remote_dev_addr_conn, NULL, 0);
 
       //! check if conn_id is valid
       if (ble_conn_id < TOTAL_CONNECTIONS) {
-        rsi_ble_conn_info[ble_conn_id].remote_device_role = MASTER_ROLE; //! remote device is slave
+        rsi_ble_conn_info[ble_conn_id].remote_device_role = CENTRAL_ROLE; //! remote device is peripheral
         memcpy(&rsi_ble_conn_info[ble_conn_id].conn_event_to_app, resp_conn, sizeof(rsi_ble_event_conn_status_t));
         rsi_ble_conn_info[ble_conn_id].is_enhanced_conn = false;
-        master_conn_id                                  = ble_conn_id;
+        central_conn_id                                 = ble_conn_id;
         //! set common event
         rsi_ble_app_set_event(RSI_BLE_CONN_EVENT);
       } else {
@@ -839,26 +856,26 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
  */
 void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn)
 {
-  uint8_t master_dev_found = NO_DEV_FOUND;
+  uint8_t central_dev_found = NO_DEV_FOUND;
 #if RSI_DEBUG_EN
   LOG_PRINT("In on_enhance_conn cb\r\n");
 #endif
   //! convert to ascii
   rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, resp_enh_conn->dev_addr);
 
-  //! Check whether the received connected event came from remote slave or master
+  //! Check whether the received connected event came from remote peripheral or central
   remote_device_role = rsi_get_remote_device_role(remote_dev_addr_conn);
 
   if (resp_enh_conn->status != 0 && resp_enh_conn->status != 63) {
     LOG_PRINT("On enhanced connect event status report : %d \r\n", resp_enh_conn->status);
-    if (remote_device_role == SLAVE_ROLE) {
-      slave_connection_in_prgs = 0;
+    if (remote_device_role == PERIPHERAL_ROLE) {
+      peripheral_connection_in_prgs = 0;
     }
     rsi_ble_app_set_event(RSI_BLE_SCAN_RESTART_EVENT);
     return;
   }
 
-  if (remote_device_role == SLAVE_ROLE) //check for the connection is from slave or master
+  if (remote_device_role == PERIPHERAL_ROLE) //check for the connection is from peripheral or central
   {
     ble_conn_id = rsi_get_ble_conn_id(remote_dev_addr_conn, NULL, 0);
     //! copy to conn specific buffer
@@ -866,26 +883,26 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
            resp_enh_conn,
            sizeof(rsi_ble_event_enhance_conn_status_t));
 
-    slave_connection_in_prgs = 0;
+    peripheral_connection_in_prgs = 0;
 
     //! set conn specific event
     rsi_ble_app_set_task_event(ble_conn_id, RSI_BLE_ENHC_CONN_EVENT);
 
     //! unblock connection semaphore
-    rsi_semaphore_post(&ble_slave_conn_sem);
-  } else if (remote_device_role == MASTER_ROLE) {
-    master_dev_found = rsi_check_dev_master_list(remote_dev_addr_conn);
-    if (master_dev_found == DEV_NOT_CONNECTED) {
+    rsi_semaphore_post(&ble_peripheral_conn_sem);
+  } else if (remote_device_role == CENTRAL_ROLE) {
+    central_dev_found = rsi_check_dev_central_list(remote_dev_addr_conn);
+    if (central_dev_found == DEV_NOT_CONNECTED) {
       ble_conn_id = rsi_add_ble_conn_id(remote_dev_addr_conn, NULL, 0);
 
       //! check if conn_id is valid
       if (ble_conn_id < TOTAL_CONNECTIONS) {
-        rsi_ble_conn_info[ble_conn_id].remote_device_role = MASTER_ROLE; //! remote device is slave
+        rsi_ble_conn_info[ble_conn_id].remote_device_role = CENTRAL_ROLE; //! remote device is peripheral
         memcpy(&rsi_ble_conn_info[ble_conn_id].rsi_enhc_conn_status,
                resp_enh_conn,
                sizeof(rsi_ble_event_enhance_conn_status_t));
         rsi_ble_conn_info[ble_conn_id].is_enhanced_conn = true;
-        master_conn_id                                  = ble_conn_id;
+        central_conn_id                                 = ble_conn_id;
         //! set common event
         rsi_ble_app_set_event(RSI_BLE_ENHC_CONN_EVENT);
       } else {
@@ -993,10 +1010,10 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @fn         rsi_ble_on_write_resp
  * @brief      its invoked when write response received.
  * @param[in]  event_id, it indicates read event id.
- * @param[in]  rsi_ble_read_req, write respsonse event parameters.
+ * @param[in]  rsi_ble_event_set_att_rs, write respsonse event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when read events are received
+ * This callback function is invoked when an write response event is received
  */
 static void rsi_ble_on_event_write_resp(uint16_t event_status, rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rs)
 {
@@ -1076,12 +1093,12 @@ static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_gatt_prepare_write_event
- * @brief      its invoked when prepared write events are received.
- * @param[in]  event_id, it indicates write/notification event id.
+ * @brief      its invoked when prepared write event is received.
+ * @param[in]  event_id, it indicates prepare write event id.
  * @param[in]  rsi_ble_write, write event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when write/notify/indication events are received
+ * This callback function is invoked when prepare write event is received
  */
 static void rsi_ble_on_gatt_prepare_write_event(uint16_t event_id,
                                                 rsi_ble_event_prepare_write_t *rsi_app_ble_prepared_write_event)
@@ -1109,11 +1126,11 @@ static void rsi_ble_on_gatt_prepare_write_event(uint16_t event_id,
 /**
  * @fn         rsi_ble_on_gatt_execute_write_event
  * @brief      its invoked when prepared write events are received.
- * @param[in]  event_id, it indicates write/notification event id.
+ * @param[in]  event_id, it indicates execute write event id.
  * @param[in]  rsi_ble_write, write event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when write/notify/indication events are received
+ * This callback function is invoked when execute write event is received
  */
 static void rsi_ble_on_execute_write_event(uint16_t event_id, rsi_ble_execute_write_t *rsi_app_ble_execute_write_event)
 {
@@ -1139,12 +1156,12 @@ static void rsi_ble_on_execute_write_event(uint16_t event_id, rsi_ble_execute_wr
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_read_req_event
- * @brief      its invoked when read events are received.
+ * @brief      its invoked when read event is received.
  * @param[in]  event_id, it indicates read event id.
  * @param[in]  rsi_ble_read_req, read respsonse event parameters.
  * @return     none.
  * @section description
- * This callback function is invoked when read events are received
+ * This callback function is invoked when read event is received
  */
 static void rsi_ble_on_read_req_event(uint16_t event_id, rsi_ble_read_req_t *rsi_ble_read_req)
 {
@@ -1347,8 +1364,8 @@ void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when an SMP request event is received (we are in central mode).
+ * Note: peripheral requested to start SMP request, we have to send SMP request command
  */
 static void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_smp)
 {
@@ -1374,8 +1391,8 @@ static void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_smp)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode)
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when an SMP response event is received(we are in peripheral mode)
+ * Note: central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_smp)
 {
@@ -1401,7 +1418,7 @@ void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_smp)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP passkey events is received
+ * This callback function is invoked when an SMP passkey event is received
  * Note: We have to send SMP passkey command
  */
 static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *smp_pass_key)
@@ -1428,7 +1445,7 @@ static void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *smp_pass_key)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP passkey events is received
+ * This callback function is invoked when an SMP passkey display event is received
  * Note: We have to send SMP passkey command
  */
 static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display)
@@ -1453,7 +1470,7 @@ static void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *s
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP passkey events is received
+ * This callback function is invoked when an SMP passkey event is received
  * Note: We have to send SMP passkey command
  */
 static void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey)
@@ -1479,7 +1496,7 @@ static void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP failed events is received
+ * This callback function is invoked when an SMP failed event is received
  */
 static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address)
 {
@@ -1507,7 +1524,7 @@ static void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *re
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when encryption started events is received
+ * This callback function is invoked when encryption started event is received
  */
 static void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled)
 {
@@ -1536,7 +1553,7 @@ static void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_
  * @param[in]  reason, reason for disconnection.
  * @return     none.
  * @section description
- * This callback function indicates disconnected device information and status
+ * This callback function indicates LTK device information
  */
 static void rsi_ble_on_le_ltk_req_event(rsi_bt_event_le_ltk_request_t *le_ltk_req)
 {
@@ -1633,7 +1650,7 @@ static void rsi_ble_more_data_req_event(rsi_ble_event_le_dev_buf_ind_t *rsi_ble_
  * @param[in]  scmethod, 1 means Justworks and 2 means Passkey.
  * @return     none.
  * @section description
- * This callback function is invoked when SC Method events is received
+ * This callback function is invoked when an SC Method event is received
  */
 void rsi_ble_on_sc_method(rsi_bt_event_sc_method_t *scmethod)
 {
@@ -1749,24 +1766,24 @@ static int32_t rsi_ble_dual_role(void)
   //! assign the remote data transfer service and characteristic UUID's to local buffer
   for (uint8_t i = 0; i < TOTAL_CONNECTIONS; i++) {
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].tx_write_clientservice_uuid =
-      RSI_BLE_CLIENT_WRITE_SERVICE_UUID_M1;
-    rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].tx_write_client_char_uuid = RSI_BLE_CLIENT_WRITE_CHAR_UUID_M1;
+      RSI_BLE_CLIENT_WRITE_SERVICE_UUID_C1;
+    rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].tx_write_client_char_uuid = RSI_BLE_CLIENT_WRITE_CHAR_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].tx_wnr_client_service_uuid =
-      RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_M1;
+      RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].tx_wnr_client_char_uuid =
-      RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_M1;
+      RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].rx_indi_client_service_uuid =
-      RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_M1;
+      RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].rx_indi_client_char_uuid =
-      RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_M1;
+      RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].rx_notif_client_service_uuid =
-      RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_M1;
+      RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_C1;
     rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[i].rx_notif_client_char_uuid =
-      RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_M1;
+      RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_C1;
   }
 
-  //! Module advertises if master connections are configured
-  if (RSI_BLE_MAX_NBR_MASTERS > 0) {
+  //! Module advertises if central connections are configured
+  if (RSI_BLE_MAX_NBR_CENTRALS > 0) {
     //! prepare advertise data //local/device name
     adv[3] = strlen(RSI_BLE_APP_GATT_TEST) + 1;
     adv[4] = 9;
@@ -1783,8 +1800,8 @@ static int32_t rsi_ble_dual_role(void)
     LOG_PRINT("\r\n advertising started \r\n");
   }
 
-  //! Module scans if slave connections are configured
-  if (RSI_BLE_MAX_NBR_SLAVES > 0) {
+  //! Module scans if peripheral connections are configured
+  if (RSI_BLE_MAX_NBR_PERIPHERALS > 0) {
     //! start scanning
     status = rsi_ble_start_scanning();
     if (status != RSI_SUCCESS) {
@@ -1856,34 +1873,34 @@ void rsi_ble_main_app_task()
       case RSI_APP_EVENT_ADV_REPORT: {
         //! clear the advertise report event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_ADV_REPORT);
-        //! create task if max slave connections not reached
-        if (slave_task_instances < RSI_BLE_MAX_NBR_SLAVES) {
+        //! create task if max peripheral connections not reached
+        if (peripheral_task_instances < RSI_BLE_MAX_NBR_PERIPHERALS) {
           //! check for valid connection id
-          if ((slave_conn_id < TOTAL_CONNECTIONS) && (slave_con_req_pending == 1)) {
+          if ((peripheral_conn_id < TOTAL_CONNECTIONS) && (peripheral_con_req_pending == 1)) {
             //! store the connection identifier in individual connection specific buffer
-            rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[slave_task_instances].conn_id = slave_conn_id;
-            //! create task for processing new slave connection
+            rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[peripheral_task_instances].conn_id = peripheral_conn_id;
+            //! create task for processing new peripheral connection
             status = rsi_task_create((rsi_task_function_t)rsi_ble_task_on_conn,
-                                     (uint8_t *)"ble_slave_task",
+                                     (uint8_t *)"ble_peripheral_task",
                                      RSI_BLE_APP_TASK_SIZE,
-                                     &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[slave_task_instances],
+                                     &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[peripheral_task_instances],
                                      RSI_BLE_APP_TASK_PRIORITY,
-                                     &ble_app_task_handle[slave_conn_id]);
+                                     &ble_app_task_handle[peripheral_conn_id]);
             if (status != RSI_ERROR_NONE) {
-              LOG_PRINT("\r\n task%d failed to create, reason = %ld\r\n", slave_conn_id, status);
-              slave_con_req_pending = 0;
-              rsi_remove_ble_conn_id(rsi_ble_conn_info[slave_conn_id].remote_dev_addr);
+              LOG_PRINT("\r\n task%d failed to create, reason = %ld\r\n", peripheral_conn_id, status);
+              peripheral_con_req_pending = 0;
+              rsi_remove_ble_conn_id(rsi_ble_conn_info[peripheral_conn_id].remote_dev_addr);
               memset(&rsi_ble_conn_info[ble_conn_id].rsi_app_adv_reports_to_app, 0, sizeof(rsi_ble_event_adv_report_t));
               break;
             }
-            slave_task_instances++;
+            peripheral_task_instances++;
           } else {
             LOG_PRINT("in wrong state \r\n");
             while (1)
               ;
           }
         } else {
-          LOG_PRINT("\r\n Maximum slave connections reached\r\n");
+          LOG_PRINT("\r\n Maximum peripheral connections reached\r\n");
         }
       } break;
       case RSI_BLE_CONN_EVENT: {
@@ -1893,33 +1910,33 @@ void rsi_ble_main_app_task()
 #endif
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_CONN_EVENT);
-        if (remote_device_role == MASTER_ROLE) {
-          if (master_task_instances < RSI_BLE_MAX_NBR_MASTERS) {
+        if (remote_device_role == CENTRAL_ROLE) {
+          if (central_task_instances < RSI_BLE_MAX_NBR_CENTRALS) {
             //! check for valid connection id
-            if (master_conn_id < TOTAL_CONNECTIONS) {
+            if (central_conn_id < TOTAL_CONNECTIONS) {
               //! store the connection identifier in individual connection specific buffer
-              rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances]
-                .conn_id = master_conn_id;
+              rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_PERIPHERALS + central_task_instances]
+                .conn_id = central_conn_id;
 
-              //! create task for processing new master connection
-              status = rsi_task_create(
-                (rsi_task_function_t)rsi_ble_task_on_conn,
-                (uint8_t *)"ble_master_task",
-                RSI_BLE_APP_TASK_SIZE,
-                &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances],
-                RSI_BLE_APP_TASK_PRIORITY,
-                &ble_app_task_handle[master_conn_id]);
+              //! create task for processing new central connection
+              status = rsi_task_create((rsi_task_function_t)rsi_ble_task_on_conn,
+                                       (uint8_t *)"ble_central_task",
+                                       RSI_BLE_APP_TASK_SIZE,
+                                       &rsi_parsed_conf.rsi_ble_config
+                                          .rsi_ble_conn_config[RSI_BLE_MAX_NBR_PERIPHERALS + central_task_instances],
+                                       RSI_BLE_APP_TASK_PRIORITY,
+                                       &ble_app_task_handle[central_conn_id]);
               if (status != RSI_ERROR_NONE) {
-                LOG_PRINT("\r\n task%d failed to create\r\n", master_conn_id);
+                LOG_PRINT("\r\n task%d failed to create\r\n", central_conn_id);
                 //! remove device from local list
-                rsi_remove_ble_conn_id(rsi_ble_conn_info[master_conn_id].remote_dev_addr);
+                rsi_remove_ble_conn_id(rsi_ble_conn_info[central_conn_id].remote_dev_addr);
                 memset(&rsi_ble_conn_info[ble_conn_id].conn_event_to_app, 0, sizeof(rsi_ble_event_conn_status_t));
                 break;
               }
 
               //! clear the connection id as it is already used in creating task
-              master_conn_id = 0xff;
-              master_task_instances++;
+              central_conn_id = 0xff;
+              central_task_instances++;
             } else {
               //! unexpected state
               LOG_PRINT("invalid conn identifier \r\n");
@@ -1927,7 +1944,7 @@ void rsi_ble_main_app_task()
                 ;
             }
           } else {
-            LOG_PRINT("Max master connections reached\r\n");
+            LOG_PRINT("Max central connections reached\r\n");
           }
         } else {
           LOG_PRINT("check why this state occured?\r\n");
@@ -1941,26 +1958,26 @@ void rsi_ble_main_app_task()
 #endif
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_ENHC_CONN_EVENT);
-        if (remote_device_role == MASTER_ROLE) {
-          if (master_task_instances < RSI_BLE_MAX_NBR_MASTERS) {
+        if (remote_device_role == CENTRAL_ROLE) {
+          if (central_task_instances < RSI_BLE_MAX_NBR_CENTRALS) {
             //! check for valid connection id
-            if (master_conn_id < TOTAL_CONNECTIONS) {
+            if (central_conn_id < TOTAL_CONNECTIONS) {
               //! store the connection identifier in individual connection specific buffer
-              rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances]
-                .conn_id = master_conn_id;
+              rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_PERIPHERALS + central_task_instances]
+                .conn_id = central_conn_id;
               //LOG_PRINT("free bytes remaining before connection1 - %ld \r\n",xPortGetFreeHeapSize());
-              //! create task for processing new master connection
-              status = rsi_task_create(
-                (rsi_task_function_t)rsi_ble_task_on_conn,
-                (uint8_t *)"ble_master_task",
-                RSI_BLE_APP_TASK_SIZE,
-                &rsi_parsed_conf.rsi_ble_config.rsi_ble_conn_config[RSI_BLE_MAX_NBR_SLAVES + master_task_instances],
-                RSI_BLE_APP_TASK_PRIORITY,
-                &ble_app_task_handle[master_conn_id]);
+              //! create task for processing new central connection
+              status = rsi_task_create((rsi_task_function_t)rsi_ble_task_on_conn,
+                                       (uint8_t *)"ble_central_task",
+                                       RSI_BLE_APP_TASK_SIZE,
+                                       &rsi_parsed_conf.rsi_ble_config
+                                          .rsi_ble_conn_config[RSI_BLE_MAX_NBR_PERIPHERALS + central_task_instances],
+                                       RSI_BLE_APP_TASK_PRIORITY,
+                                       &ble_app_task_handle[central_conn_id]);
               if (status != RSI_ERROR_NONE) {
-                LOG_PRINT("\r\n task%d failed to create\r\n", master_conn_id);
+                LOG_PRINT("\r\n task%d failed to create\r\n", central_conn_id);
                 //! remove device from local list
-                rsi_remove_ble_conn_id(rsi_ble_conn_info[master_conn_id].remote_dev_addr);
+                rsi_remove_ble_conn_id(rsi_ble_conn_info[central_conn_id].remote_dev_addr);
                 memset(&rsi_ble_conn_info[ble_conn_id].rsi_enhc_conn_status,
                        0,
                        sizeof(rsi_ble_event_enhance_conn_status_t));
@@ -1968,8 +1985,8 @@ void rsi_ble_main_app_task()
               }
 
               //! clear the connection id as it is already used in creating task
-              master_conn_id = 0xff;
-              master_task_instances++;
+              central_conn_id = 0xff;
+              central_task_instances++;
             } else {
               //! unexpected state
               LOG_PRINT("invalid conn identifier \r\n");
@@ -1977,7 +1994,7 @@ void rsi_ble_main_app_task()
                 ;
             }
           } else {
-            LOG_PRINT("Max master connections reached\r\n");
+            LOG_PRINT("Max central connections reached\r\n");
           }
         } else {
           LOG_PRINT("check why this state occured?\r\n");
@@ -2031,7 +2048,7 @@ void rsi_ble_main_app_task()
       } break;
       case RSI_BLE_READ_REQ_EVENT: {
 #if RSI_DEBUG_EN
-        //! event invokes when write/notification events received
+        //! event invokes when read request event is received
         LOG_PRINT("\r\nIn on GATT rd evt\r\n");
 #endif
         //! clear the served event
@@ -2039,7 +2056,7 @@ void rsi_ble_main_app_task()
       } break;
       case RSI_BLE_MTU_EVENT: {
 #if RSI_DEBUG_EN
-        //! event invokes when write/notification events received
+        //! event invokes when an MTU event is received
         LOG_PRINT("\r\nIn on mtu evt\r\n");
 #endif
         //! clear the served event

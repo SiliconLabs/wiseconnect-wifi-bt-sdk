@@ -120,8 +120,12 @@ static int32_t rsi_fwup(uint8_t type, uint8_t *content, uint16_t length)
 int32_t rsi_fwup_start(uint8_t *rps_header)
 {
   int32_t status = RSI_SUCCESS;
+  fwreq_t *fw    = (fwreq_t *)rps_header;
   SL_PRINTF(SL_FWUP_START_ENTRY, FW_UPDATE, LOG_INFO);
 
+  if (fw->image_size == 0 || fw->magic_no != FW_MAGIC_NO || fw->image_loc != FW_IMAGE_LOC) {
+    return RSI_ERROR_CORRUPTED_FIRMWARE;
+  }
   status = rsi_fwup(RSI_FWUP_RPS_HEADER, rps_header, RSI_RPS_HEADER_SIZE);
   SL_PRINTF(SL_FWUP_START_EXIT, FW_UPDATE, LOG_INFO, "status: %4x", status);
   return status;

@@ -190,6 +190,8 @@ typedef struct rsi_bt_event_encryption_enabled_s {
 typedef struct rsi_bt_event_smp_req_s {
   /**address of remote device*/
   uint8_t dev_addr[6];
+  /**auth req of remote device*/
+  uint8_t auth_req;
 } rsi_bt_event_smp_req_t;
 
 //SMP Response event structure
@@ -263,11 +265,6 @@ typedef struct rsi_bt_event_sc_method_s {
      RSI_BT_LE_SC_PASSKEY   		0x02 */
   uint8_t sc_method;
 } rsi_bt_event_sc_method_t;
-
-typedef struct rsi_bt_event_ctkd_s {
-  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  uint8_t key[16];
-} rsi_ble_event_ctkd_t;
 
 // phy update complete event
 typedef struct rsi_ble_event_phy_update_s {
@@ -457,7 +454,12 @@ typedef struct rsi_ble_req_add_att_s {
   /** Attribute handle */
   uint16_t handle;
   /** If this variable is 1, Host has to maintain attributes and records in the application. \n
-      If 0, Stack will maintain the attributes and records */
+      If 0, Stack will maintain the attributes and records*/
+#define ATT_REC_MAINTAIN_IN_HOST BIT(0) /* Att record maintained by the stack */
+#define SEC_MODE_1_LEVEL_1       BIT(1) /* NO Auth & No Enc                   */
+#define SEC_MODE_1_LEVEL_2       BIT(2) /* UnAUTH with Enc                    */
+#define SEC_MODE_1_LEVEL_3       BIT(3) /* AUTH with Enc                      */
+#define SEC_MODE_1_LEVEL_4       BIT(4) /* AUTH LE_SC Pairing with Enc        */
   uint16_t config_bitmap;
   /** Attribute type UUID */
   uuid_t att_uuid;
@@ -586,7 +588,7 @@ typedef struct rsi_ble_prepare_write_resp_s {
   /**attribute value offset*/
   uint8_t offset[2];
   /**length of attribute value*/
-  uint16_t length;
+  uint8_t length;
   /**This contains the attribute value. The maximum value is 240, please refer RSI_DEV_ATT_LEN Macro*/
   uint8_t att_value[RSI_DEV_ATT_LEN];
 } rsi_ble_prepare_write_resp_t;
@@ -670,6 +672,9 @@ typedef struct rsi_ble_resp_local_att_value_s {
   uint8_t data[RSI_DEV_ATT_LEN];
 } rsi_ble_resp_local_att_value_t;
 
+typedef struct rsi_ble_event_rcp_rcvd_info_s {
+  uint8_t data[1024];
+} rsi_ble_event_rcp_rcvd_info_t;
 // GATT Event structures
 
 // GATT Write event structure
@@ -935,16 +940,18 @@ typedef struct rsi_ble_per_transmit_s {
        1  PLL_MODE1 */
   uint8_t pll_mode;
   /** Selection of RF type (internal/external) \n
-       0  BT_EXTERNAL_RF \n
-       1  BT_INTERNAL_RF (to be used by Default) 
-      @note  The above macros are applicable for both BT and BLE */
+       BIT[7:6] - RECT selection for BLR (Default value -> 0b00) \n 
+       BIT[5:4] - RECT selection for BLE 2 Mbps (Default value -> 0b00) \n
+       BIT[3:2] - RECT selection for BLE 1 Mbps (Default value -> 0b00) \n
+       BIT[1:0] - for rf_type(external - 0/internal - 1) (Default value -> 0b01)
+      @note  The above macros are applicable for BLE*/
   uint8_t rf_type;
   /** Selection of RF Chain (HP/LP) to be used \n
-       0  BT_HP_CHAIN \n
-       1  BT_LP_CHAIN 
+       2  BT_HP_CHAIN \n
+       3  BT_LP_CHAIN 
       @note  The above macros are applicable for both BT and BLE */
   uint8_t rf_chain;
-  /** Length of the packet to be transmitted*/
+  /** Length of the packet to be transmitted Max pkt_len to be transmitted is 255*/
   uint8_t pkt_len[2];
   /** Type of payload data sequence \n
        0x00  PRBS9 sequence �11111111100000111101... \n
@@ -957,13 +964,13 @@ typedef struct rsi_ble_per_transmit_s {
        0x07  Repeated '01010101' */
   uint8_t payload_type;
   /** Transmit Power \n 
-       Transmit power value for the rf_chain parameter set to the HP chain the values for the tx power indexes are 0 - 20. \n 
-       Transmit power value for the rf chain parameter set to LP chain and values are: \n
-       0 -31 o/p power equation is  -2+10log10(power_index/31) \n
-       32-63 o/p power equation is  \n
-       6 + 10log10((power_index -32)/31) \n
-       TX power for the BLE LP Chain :1 to 31 (0dBm Mode), 33 to 63 ( 10dBm Mode) \n
-       TX power for the BLE HP chain : 64 to 79 */
+      This field corresponds to the transmit power. The range for the Tx Power Index is 1 to 63 (0 and 32 are invalid.) \n
+        If rf chain is BT_HP_CHAIN \n
+            1 - 12 BLE - HP Mode \n
+            127 magic number for selecting maximum possible power output \n
+        If rf chain is BT_LP_CHAIN \n
+            1 - 31 BLE - 0 dBm Mode \n
+            33 - 63 BLE- 10 dBm Mode */
   uint8_t tx_power;
   /** Transmit mode to be used either Burst/Continuous \n
        0  BURST_MODE \n
@@ -1024,13 +1031,13 @@ typedef struct rsi_ble_per_receive_s {
       @note  The above macros are applicable for both BT and BLE */
   uint8_t rf_type;
   /** Selection of RF Chain (HP/LP) to be used \n
-       0  BT_HP_CHAIN \n
-       1  BT_LP_CHAIN 
+       2  BT_HP_CHAIN \n
+       3  BT_LP_CHAIN 
       @note  The above macros are applicable for both BT and BLE */
   uint8_t rf_chain;
   /** This field enables/disables the extended data length \n
-       0  Extended Data length disabled \n
-       1  Extended Data length enabled */
+       0  Extended Data length disabled (27 Bytes) \n
+       1  Extended Data length enabled (255 Bytes)*/
   uint8_t ext_data_len_indication;
   /** This field defines the loopback to be enable or disable \n
        0  LOOP_BACK_MODE_DISABLE \n
@@ -2563,6 +2570,7 @@ typedef void (*rsi_ble_on_mtu_exchange_info_t)(
  * This callback has to be registered using rsi_ble_enhanced_gap_extended_register_callbacks API \n
  */
 typedef void (*rsi_ble_on_remote_device_info_t)(uint16_t status, rsi_ble_event_remote_device_info_t *resp_buffer);
+typedef void (*rsi_ble_on_rcp_resp_rcvd_t)(uint16_t status, rsi_ble_event_rcp_rcvd_info_t *resp_buffer);
 
 /** @} */
 /******************************************************
@@ -2774,9 +2782,9 @@ int32_t rsi_ble_set_smp_pairing_cap_data(rsi_ble_set_smp_pairing_capabilty_data_
 int32_t rsi_ble_conn_param_resp(uint8_t *remote_dev_address, uint8_t status);
 int32_t rsi_ble_get_le_ping_timeout(uint8_t *remote_dev_address, uint16_t *time_out);
 int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_out);
-int32_t rsi_ble_clear_whitelist(void);
-int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type);
-int32_t rsi_ble_deletefrom_whitelist(int8_t *dev_address, uint8_t dev_addr_type);
+int32_t rsi_ble_clear_acceptlist(void);
+int32_t rsi_ble_addto_acceptlist(int8_t *dev_address, uint8_t dev_addr_type);
+int32_t rsi_ble_deletefrom_acceptlist(int8_t *dev_address, uint8_t dev_addr_type);
 int32_t rsi_ble_readphy(int8_t *remote_dev_address, rsi_ble_resp_read_phy_t *resp);
 int32_t rsi_ble_setphy(int8_t *remote_dev_address, uint8_t tx_phy, uint8_t rx_phy, uint16_t coded_phy);
 int32_t rsi_ble_conn_params_update(uint8_t *remote_dev_address,

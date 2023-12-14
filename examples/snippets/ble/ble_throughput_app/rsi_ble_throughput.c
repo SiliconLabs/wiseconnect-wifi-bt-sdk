@@ -22,7 +22,7 @@
  * @brief : This file contains example application for BLE Secure Connections
  * @section Description :
  * This application demonstrates how to configure the Silabs device in Central
- * mode and connects with remote slave device and how to enable SMP (Security
+ * mode and connects with remote Peripheral device and how to enable SMP (Security
  * Manager Protocol) pairing and a Secured passkey pairing.
  =================================================================================*/
 
@@ -129,7 +129,26 @@ static uint8_t remote_dev_bd_addr[6]   = { 0 };
 static uint8_t device_found            = 0;
 static uint8_t conn_params_updated     = 0;
 rsi_semaphore_handle_t ble_main_task_sem;
-
+/*==============================================================*/
+void main_loop(void);
+int32_t rsi_ble_throughput_test_app(void);
+void rsi_ble_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report);
+static void rsi_ble_on_gatt_write_event(uint16_t event_id, rsi_ble_event_write_t *rsi_ble_write);
+void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+//void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address);
+void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address);
+void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address);
+void rsi_ble_on_le_security_keys(rsi_bt_event_le_security_keys_t *rsi_ble_event_le_security_keys);
+void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display);
+void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey);
+void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled);
+void rsi_ble_data_length_change_event(rsi_ble_event_data_length_update_t *rsi_ble_data_length_update);
+void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event_phy_update_complete);
+void rsi_ble_on_conn_update_complete_event(rsi_ble_event_conn_update_t *rsi_ble_event_conn_update_complete,
+                                           uint16_t resp_status);
+void rsi_ble_simple_peripheral_on_remote_features_event(rsi_ble_event_remote_features_t *rsi_ble_event_remote_features);
+void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address);
+void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address);
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -210,7 +229,7 @@ static int32_t rsi_ble_app_get_event(void)
 
   for (ix = 0; ix < 32; ix++) {
     if (ble_app_event_map & (1 << ix)) {
-      return ix;
+      return (int32_t)ix;
     }
   }
 
@@ -280,8 +299,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when an SMP request event is received(we are in Central mode)
+ * Note: Peripheral requested to start SMP request, we have to send SMP request command
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
 {
@@ -298,8 +317,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *remote_dev_address)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode) 
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when an SMP response event is received(we are in Peripheral mode) 
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 {
@@ -312,7 +331,7 @@ void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *remote_dev_address)
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_passkey 
- * @brief      its invoked when smp passkey event is received.
+ * @brief      its invoked when an SMP passkey event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
@@ -330,7 +349,7 @@ void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *remote_dev_address)
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_passkey_display 
- * @brief      its invoked when smp passkey event is received.
+ * @brief      its invoked when an SMP passkey event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
@@ -364,7 +383,7 @@ void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey)
  * @param[in]  reason, reason for disconnection.
  * @return     none.
  * @section description
- * This callback function indicates disconnected device information and status
+ * This callback function indicates LTK device information
  */
 static void rsi_ble_on_le_ltk_req_event(rsi_bt_event_le_ltk_request_t *le_ltk_req)
 {
@@ -391,11 +410,11 @@ void rsi_ble_on_le_security_keys(rsi_bt_event_le_security_keys_t *rsi_ble_event_
 /*==============================================*/
 /**
  * @fn         rsi_ble_on_smp_failed 
- * @brief      its invoked when smp failed event is received.
+ * @brief      its invoked when an SMP failed event is received.
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP failed events is received
+ * This callback function is invoked when an SMP failed event is received
  */
 void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *remote_dev_address)
 {
@@ -780,8 +799,8 @@ int32_t rsi_ble_throughput_test_app(void)
 {
   int32_t status = 0;
   int32_t event_id;
-  uint8_t fmversion[20]   = { 0 };
   uint8_t adv[31]         = { 2, 1, 6 };
+  uint8_t fmversion[20]   = { 0 };
   uint8_t read_data1[232] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
     29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
@@ -923,7 +942,7 @@ int32_t rsi_ble_throughput_test_app(void)
   //! start addvertising
   status = rsi_ble_start_advertising();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n start advertising cmd failed with error code = %x \n", status);
+    LOG_PRINT("\n start advertising cmd failed with error code = %lX \n", status);
   } else {
     LOG_PRINT("\n Started Advertising \n");
   }
@@ -987,7 +1006,7 @@ int32_t rsi_ble_throughput_test_app(void)
         status = rsi_ble_mtu_exchange_event(remote_dev_address, MAX_MTU_SIZE);
         if (status != RSI_SUCCESS) {
 
-          LOG_PRINT("\n mtu request cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n mtu request cmd failed with error code = %lX \n", status);
         }
 
         //! initiating the SMP pairing process
@@ -1010,7 +1029,7 @@ int32_t rsi_ble_throughput_test_app(void)
         //! start addvertising
         status = rsi_ble_start_advertising();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n start advertising cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n start advertising cmd failed with error code = %lX \n", status);
         } else {
           LOG_PRINT("\n Started Advertising \n");
         }
@@ -1026,7 +1045,7 @@ int32_t rsi_ble_throughput_test_app(void)
       } break;
 #if SMP_ENABLE
       case RSI_BLE_SMP_REQ_EVENT: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_REQ_EVENT);
@@ -1034,12 +1053,12 @@ int32_t rsi_ble_throughput_test_app(void)
         //! initiating the SMP pairing process
         status = rsi_ble_smp_pair_request(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n smp pair request cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n smp pair request cmd failed with error code = %lX \n", status);
         }
       } break;
 
       case RSI_BLE_SMP_RESP_EVENT: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_RESP_EVENT);
@@ -1047,12 +1066,12 @@ int32_t rsi_ble_throughput_test_app(void)
         //! initiating the SMP pairing process
         status = rsi_ble_smp_pair_response(remote_dev_address, RSI_BLE_SMP_IO_CAPABILITY, MITM_REQ);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n smp pair response cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n smp pair response cmd failed with error code = %lX \n", status);
         }
       } break;
 
       case RSI_BLE_SMP_PASSKEY_EVENT: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_PASSKEY_EVENT);
@@ -1060,7 +1079,7 @@ int32_t rsi_ble_throughput_test_app(void)
         //! initiating the SMP pairing process
         status = rsi_ble_smp_passkey(remote_dev_address, RSI_BLE_SMP_PASSKEY);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n smp passkey cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n smp passkey cmd failed with error code = %lX \n", status);
         }
       } break;
       case RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT: {
@@ -1072,7 +1091,7 @@ int32_t rsi_ble_throughput_test_app(void)
         rsi_ble_app_clear_event(RSI_BLE_SC_PASSKEY_EVENT);
         status = rsi_ble_smp_passkey(remote_dev_address, numeric_value);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n secure connection passkey cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n secure connection passkey cmd failed with error code = %lX \n", status);
         }
       } break;
 
@@ -1080,12 +1099,12 @@ int32_t rsi_ble_throughput_test_app(void)
         rsi_ble_app_clear_event(RSI_BLE_LTK_REQ_EVENT);
         status = rsi_ble_ltk_req_reply(remote_dev_address, 0, NULL);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n Ltk req reply cmd failed with error code = %x \n", status);
+          LOG_PRINT("\n Ltk req reply cmd failed with error code = %lX \n", status);
         }
       } break;
 
       case RSI_BLE_SMP_FAILED_EVENT: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_FAILED_EVENT);
@@ -1106,7 +1125,7 @@ int32_t rsi_ble_throughput_test_app(void)
         if (remote_dev_feature.remote_features[0] & 0x20) {
           status = rsi_ble_set_data_len(remote_dev_address, TX_LEN, TX_TIME);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\n set data length cmd failed with error code = %x \n", status);
+            LOG_PRINT("\n set data length cmd failed with error code = %lX \n", status);
             rsi_ble_app_set_event(RSI_BLE_RECEIVE_REMOTE_FEATURES);
             //return status;
           }
@@ -1118,7 +1137,7 @@ int32_t rsi_ble_throughput_test_app(void)
               //retry the same command
               rsi_ble_app_set_event(RSI_APP_EVENT_DATA_LENGTH_CHANGE);
             } else {
-              LOG_PRINT("\n set phy cmd failed with error code = %x \n", status);
+              LOG_PRINT("\n set phy cmd failed with error code = %lX \n", status);
             }
           }
         } else {
@@ -1144,7 +1163,7 @@ int32_t rsi_ble_throughput_test_app(void)
               //retry the same command
               rsi_ble_app_set_event(RSI_APP_EVENT_DATA_LENGTH_CHANGE);
             } else {
-              LOG_PRINT("\n set phy cmd failed with error code = %x \n", status);
+              LOG_PRINT("\n set phy cmd failed with error code = %lX \n", status);
             }
           }
         } else {
@@ -1187,7 +1206,7 @@ int32_t rsi_ble_throughput_test_app(void)
 
         status = rsi_ble_set_wo_resp_notify_buf_info(remote_dev_address, DLE_BUFFER_MODE, DLE_BUFFER_COUNT);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n failed to set the buffer configuration mode, error:0x%x \r\n", status);
+          LOG_PRINT("\r\n failed to set the buffer configuration mode, error:0x%lX \r\n", status);
           break;
         } else {
           LOG_PRINT("\n Buf configuration done for notify and set_att cmds buf mode = %d , max buff count =%d \n",
@@ -1229,7 +1248,7 @@ int32_t rsi_ble_throughput_test_app(void)
                                               CONN_LATENCY,
                                               SUPERVISION_TIMEOUT);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n conn params update cmd failed with status = %x \r\n", status);
+            LOG_PRINT("\r\n conn params update cmd failed with status = 0x%lX \r\n", status);
           } else {
             conn_params_updated = 1;
           }
@@ -1246,7 +1265,7 @@ int32_t rsi_ble_throughput_test_app(void)
               rsi_ble_app_clear_event(RSI_DATA_TRANSMIT_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\n write with response failed with status = %x \r\n", status);
+              LOG_PRINT("\r\n write with response failed with status = 0x%lX \r\n", status);
               //! clear the served event
               rsi_ble_app_clear_event(RSI_DATA_TRANSMIT_EVENT);
             }

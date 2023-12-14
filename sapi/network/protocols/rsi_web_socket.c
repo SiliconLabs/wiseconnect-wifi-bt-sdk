@@ -261,7 +261,7 @@ int32_t rsi_web_socket_create(int8_t flags,
   rsi_driver_cb->wlan_cb->waiting_socket_id = sockID;
   socket_create->vap_id                     = rsi_socket_pool_non_rom[sockID].vap_id;
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
   rsi_uint16_to_2bytes(socket_create->tos, RSI_TOS);
 
   // Configure SSL extended ciphers bitmap

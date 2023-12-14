@@ -18,6 +18,7 @@
 #ifndef RSI_OS_H
 #define RSI_OS_H
 #include "rsi_error.h"
+#include "rsi_data_types.h"
 /******************************************************
  * *                      Macros
  * ******************************************************/

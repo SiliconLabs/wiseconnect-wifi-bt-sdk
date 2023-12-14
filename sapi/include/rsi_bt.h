@@ -25,14 +25,16 @@
 /******************************************************
  * *                      Macros
  * ******************************************************/
-#define RSI_MAX_PINCODE_REPLY_SIZE 17
-#define CHANNEL_MAP_LEN            10
+#define RSI_MAX_PINCODE_REPLY_SIZE        17
+#define CHANNEL_MAP_LEN                   10
+#define RSI_BLE_MAX_NUM_EXT_SMP_CALLBACKS 1
 
 #define BT_VENDOR_AVDTP_STATS_CMD_OPCODE        0xFC18
 #define BT_VENDOR_MEMORY_STATS_CMD_OPCODE       0xFC19
 #define BT_VENDOR_DYNAMIC_PWR_OPCODE            0xFC1C
 #define BT_VENDOR_AR_CMD_OPCODE                 0xFC1E
 #define BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE 0xFC21
+#define BT_VENDOR_SET_HAPI_RECT_VAL_OPCODE      0xFC23
 
 /* Packet Type/s */
 #define PTYPE_2DH1_MAY_NOT_BE_USED 0x0002
@@ -544,8 +546,14 @@ typedef enum rsi_bt_event_e {
   RSI_BT_EVENT_IAP2_RX_FILE_TRANSFER_DATA   = 0x153B,
 
   RSI_BT_EVENT_PKT_CHANGE = 0x153E,
-  RSI_BT_DISABLED_EVENT   = 0x153F
+  RSI_BT_DISABLED_EVENT   = 0x153F,
+  RSI_BT_EVENT_CTKD       = 0x1542
 } rsi_bt_event_t;
+
+// enumerations for call back types
+typedef enum rsi_bt_smp_callback_id_e {
+  RSI_BT_ON_CTKD = 1,
+} rsi_bt_smp_callback_id_t;
 
 /******************************************************
  * *                    Structures
@@ -1012,6 +1020,11 @@ typedef struct set_dynamic_pwr_index_s {
   dynamic_pwr_index_t dynamic_pwr_index;
 } set_dynamic_pwr_index_t;
 
+typedef struct rsi_bt_set_hapi_rect_val_s {
+  uint8_t opcode[2];
+  uint8_t rect_val;
+} rsi_bt_set_hapi_rect_val_t;
+
 // Dynamic tx_power_command
 typedef struct rsi_bt_vendor_dynamic_pwr_cmd_s {
   uint8_t opcode[2];
@@ -1159,11 +1172,17 @@ struct rsi_bt_classic_cb_s {
   rsi_bt_app_iap2_File_Transfer_rx_data_t bt_app_iap2_File_Transfer_rx_data;
   /* AR STATS Callbacks */
   rsi_bt_on_ar_stats_t bt_on_ar_stats_event;
+
+  /*SMP callbacks */
+  rsi_bt_on_ctkd_t bt_on_ctkd_event;
 };
 
 /******************************************************
  * * BT Classic internal function declarations
  * ******************************************************/
 void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_cb, uint16_t rsp_type, uint8_t *payload, uint16_t payload_length);
+void rsi_bt_clear_wait_bitmap(uint16_t protocol_type, uint8_t sem_type);
+void rsi_bt_set_wait_bitmap(uint16_t protocol_type, uint8_t sem_type);
+uint32_t rsi_get_bt_state(rsi_bt_cb_t *bt_cb);
 
 #endif

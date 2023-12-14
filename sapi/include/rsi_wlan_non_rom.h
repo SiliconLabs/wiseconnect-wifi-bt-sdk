@@ -42,13 +42,15 @@ typedef enum {
 
 #define RSI_SSL_HEADER_SIZE 90
 
-#define RSI_MAX_NUM_CALLBACKS 20
+#define RSI_MAX_NUM_CALLBACKS 22
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
 #define MAX_SIZE_OF_EXTENSION_DATA 256
 #else
 #define MAX_SIZE_OF_EXTENSION_DATA 64
 #endif
+
+#define RSI_STATUS int32_t
 
 typedef struct rsi_socket_info_non_rom_s {
   uint8_t max_tcp_retries;
@@ -75,7 +77,7 @@ typedef struct rsi_socket_info_non_rom_s {
   int32_t flags;
 
   // ssl version select bit map
-#ifdef CHIP_9117
+#ifdef CHIP_917
   uint32_t ssl_bitmap;
 #else
   uint8_t ssl_bitmap;
@@ -113,12 +115,12 @@ typedef struct rsi_socket_info_non_rom_s {
   uint8_t more_rx_data_pending;
 #endif
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
   uint16_t tos;
 #else
   uint32_t tos;
 #endif
-#ifdef CHIP_9117
+#ifdef CHIP_917
   //! max retransmission timeout value.
   uint8_t max_retransmission_timeout_value;
   uint16_t ssl_buff_len;
@@ -129,6 +131,13 @@ typedef struct rsi_tls_tlv_s {
   uint16_t type;
   uint16_t length;
 } rsi_tls_tlv_t;
+
+typedef struct rsi_req_set_sni_s {
+  uint16_t offset;
+  uint16_t protocol;
+  uint8_t tls_extension_data[MAX_SIZE_OF_EXTENSION_DATA];
+} rsi_req_set_sni_t;
+
 typedef struct rsi_req_tcp_window_update_s {
   // Socket ID
   uint32_t socket_id;
@@ -220,6 +229,14 @@ typedef struct rsi_callback_cb_s {
 
   //CSI data receive response handler
   void (*wlan_receive_csi_data_response_handler)(uint16_t status, uint8_t *buffer, const uint32_t length);
+
+  // Wi-Fi BTR 802.11 data receive response handler
+  void (*sl_wifi_btr_80211_data_receive_cb)(RSI_STATUS status,
+                                            uint8_t *buffer,
+                                            uint32_t length,
+                                            int8_t rssi,
+                                            uint32_t rate);
+  void (*sl_wifi_btr_80211_tx_data_status_cb)(uint16_t status, uint32_t token, uint8_t priority, uint32_t rate);
 } rsi_callback_cb_t;
 
 // enumerations for call back types
@@ -244,7 +261,9 @@ typedef enum rsi_callback_id_e {
   RSI_WLAN_ASSERT_NOTIFY_CB                 = 17,
   RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         = 18,
   RSI_WLAN_TWT_RESPONSE_CB                  = 19,
-  RSI_WLAN_RECEIVE_CSI_DATA                 = 20
+  RSI_WLAN_RECEIVE_CSI_DATA                 = 20,
+  SL_WIFI_BTR_DATA_RECEIVE_CB               = 21,
+  SL_WIFI_BTR_TX_DATA_STATUS_CB             = 22
 } rsi_callback_id_t;
 typedef struct rsi_nwk_callback_s {
 
@@ -382,7 +401,7 @@ typedef struct rsi_state_notification_s {
 
 /*==================================================*/
 #define WLAN_MODULE_STATES 11
-#define WLAN_REASON_CODES  50
+#define WLAN_REASON_CODES  51
 struct rsi_bit_2_string {
   uint8_t bit;
   char *string;
@@ -452,7 +471,8 @@ static const struct rsi_bit_2_string REASONCODE[WLAN_REASON_CODES] = {
   { 0x50, (char *)"Client Intermediate CA Invalid Length" },
   { 0x51, (char *)"FIPS Client Intermediate CA Invalid Length" },
   { 0x52, (char *)"Client Intermediate CA invalid Key Type" },
-  { 0x53, (char *)"Pem Error" }
+  { 0x53, (char *)"Pem Error" },
+  { 0x54, (char *)"Pathlen certificate is Invalid" }
 };
 
 int32_t rsi_socket_create_async(int32_t sockID, int32_t type, int32_t backlog);
@@ -475,6 +495,7 @@ int32_t rsi_socket_async_non_rom(int32_t protocolFamily,
                                  int32_t protocol,
                                  void (*callback)(uint32_t sock_no, uint8_t *buffer, uint32_t length));
 int32_t rsi_socket_listen(int32_t sockID, int32_t backlog);
+int32_t rsi_vap_sockets_shutdown(uint8_t vapID);
 int32_t rsi_socket_shutdown(int32_t sockID, int32_t how);
 int32_t rsi_select_get_status(int32_t selectid);
 void rsi_select_set_status(int32_t status, int32_t selectid);
@@ -562,6 +583,10 @@ typedef struct rsi_wlan_cb_non_rom_s {
 #define PING_RESPONSE_PENDING BIT(0)
 #define DNS_RESPONSE_PENDING  BIT(1)
 #define SNTP_RESPONSE_PENDING BIT(2)
+//! Tx Data format bitmaps
+#define MAC_INFO_ENABLE          BIT(0)
+#define BCAST_INDICATION         BIT(1)
+#define CONFIRM_REQUIRED_TO_HOST BIT(2)
 /*===================================================*/
 typedef struct rsi_rsp_waiting_cmds_s {
   uint16_t waiting_cmds;

@@ -40,20 +40,13 @@
  * *               Function Declarations
  * ******************************************************/
 int32_t rsi_mdnsd_init(uint8_t ip_version, uint16_t ttl, uint8_t *host_name);
-#ifndef CHIP_9117
+
 int32_t rsi_mdnsd_register_service(uint16_t port,
                                    uint16_t ttl,
                                    uint8_t more,
                                    uint8_t *service_ptr_name,
                                    uint8_t *service_name,
                                    uint8_t *service_text);
-#else
-int32_t rsi_mdnsd_register_service(uint16_t port,
-                                   uint16_t ttl,
-                                   uint8_t *type,
-                                   uint8_t *sub_type,
-                                   uint8_t *service_name,
-                                   uint8_t *service_text);
-#endif
+
 int32_t rsi_mdnsd_deinit(void);
 #endif

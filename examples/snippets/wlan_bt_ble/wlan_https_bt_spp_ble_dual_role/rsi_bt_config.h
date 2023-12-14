@@ -38,13 +38,13 @@
 //! BT_A2DP_SOURCE APP CONFIG defines
 /***********************************************************************************************************************************************/
 #define RSI_BT_REMOTE_BD_ADDR "EA:D1:01:01:82:4C"
-#define SPP_SLAVE             0
-#define SPP_MASTER            1
-#define SPP_MODE              SPP_SLAVE //! type of Module mode
-#if (SPP_MODE == SPP_MASTER)
-#define RSI_BT_LOCAL_NAME "SPP_MASTER"
+#define SPP_PERIPHERAL        0
+#define SPP_CENTRAL           1
+#define SPP_MODE              SPP_PERIPHERAL //! type of Module mode
+#if (SPP_MODE == SPP_CENTRAL)
+#define RSI_BT_LOCAL_NAME "SPP_CENTRAL"
 #else
-#define RSI_BT_LOCAL_NAME "SPP_SLAVE" //! Module name
+#define RSI_BT_LOCAL_NAME "SPP_PERIPHERAL" //! Module name
 #endif
 #define PIN_CODE "0000"
 

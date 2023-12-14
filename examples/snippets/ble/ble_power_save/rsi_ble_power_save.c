@@ -59,21 +59,6 @@
 #define GLOBAL_BUFF_LEN 15000
 #endif
 
-#ifdef RSI_M4_INTERFACE
-#ifdef COMMON_FLASH_EN
-#ifdef CHIP_9117_B0
-#define IVT_OFFSET_ADDR 0x81C2000 /*<!Application IVT location VTOR offset>        */
-#else
-#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
-#endif
-#else
-#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
-#endif
-#define WKP_RAM_USAGE_LOCATION 0x24061000 /*<! Bootloader RAM usage location !>*/
-
-#define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
-#endif
-
 #ifdef COMMON_FLASH_EN
 #define NWPAON_MEM_HOST_ACCESS_CTRL_CLEAR_1 (*(volatile uint32_t *)(0x41300000 + 0x4))
 #define M4SS_TASS_CTRL_SET_REG              (*(volatile uint32_t *)(0x24048400 + 0x34))
@@ -131,11 +116,11 @@ static rsi_ble_event_conn_status_t rsi_app_connected_device     = { 0 };
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
 uint8_t rsi_ble_states_bitmap;
 
-rsi_semaphore_handle_t ble_slave_conn_sem;
+rsi_semaphore_handle_t ble_peripheral_conn_sem;
 rsi_semaphore_handle_t ble_main_task_sem;
 static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
-volatile uint32_t msp_value, psp_value, control_reg_val, pendsv_pri, systic_pri;
+
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
@@ -151,34 +136,20 @@ volatile uint32_t msp_value, psp_value, control_reg_val, pendsv_pri, systic_pri;
 /*=======================================================================*/
 //   ! PROCEDURES
 /*=======================================================================*/
+void main_loop(void);
+int32_t rsi_ble_app_task(void);
+int32_t rsi_initiate_power_save(void);
+void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason);
+void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn);
+void rsi_ble_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report);
+void rsi_ble_app_set_event(uint32_t event_num);
+void M4_sleep_wakeup();
+void rsi_ble_only_Trigger_M4_Sleep(void);
+void IRQ026_Handler();
+void RSI_Save_Context(void);
 /*==============================================*/
 #ifdef RSI_M4_INTERFACE
-/**
-  * @fn           void RSI_Save_Context(void)
-  * @brief        This function is to save Stack pointer value and Control registers.
-  *
-  */
-void RSI_Save_Context(void)
-{
-  msp_value       = __get_MSP();
-  psp_value       = __get_PSP();
-  control_reg_val = __get_CONTROL();
-}
-
-/**
-  * @fn           void RSI_Restore_Context(void)
-  * @brief        This function is to Restore Stack pointer value and Control registers.
-  *
-  */
-STATIC INLINE void RSI_Restore_Context(void)
-{
-  __set_CONTROL(control_reg_val);
-  __set_PSP(psp_value);
-  __set_MSP(msp_value);
-  /* Make PendSV and SysTick the lowest priority interrupts. */
-  portNVIC_SHPR3_REG |= portNVIC_PENDSV_PRI;
-  portNVIC_SHPR3_REG |= portNVIC_SYSTICK_PRI;
-}
 void IRQ026_Handler()
 {
   volatile uint32_t wakeUpSrc = 0;
@@ -233,14 +204,8 @@ void rsi_ble_only_Trigger_M4_Sleep(void)
 #ifdef COMMON_FLASH_EN
   M4SS_P2P_INTR_SET_REG &= ~BIT(3);
 #endif
-#ifdef RSI_WITH_OS
-  /* Save Stack pointer value and Control registers */
-  RSI_Save_Context();
-#endif
   /* Configure RAM Usage and Retention Size */
-  //  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
-  RSI_PS_SetRamRetention(M4ULP_RAM16K_RETENTION_MODE_EN | ULPSS_RAM_RETENTION_MODE_EN | M4ULP_RAM_RETENTION_MODE_EN
-                         | M4SS_RAM_RETENTION_MODE_EN);
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
 
   RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
                            DISABLE_LF_MODE,
@@ -250,10 +215,6 @@ void rsi_ble_only_Trigger_M4_Sleep(void)
                            RSI_WAKEUP_FROM_FLASH_MODE);
 #endif
 #ifdef RSI_WITH_OS
-  /* Restore Stack pointer value and Control registers */
-  RSI_Restore_Context();
-  /* Enable M4_TA interrupt */
-  rsi_m4_ta_interrupt_init();
   /*  Setup the systick timer */
   vPortSetupTimerInterrupt();
 #endif
@@ -391,11 +352,11 @@ static int32_t rsi_ble_app_get_event(void)
   for (ix = 0; ix < 64; ix++) {
     if (ix < 32) {
       if (ble_app_event_map & (1 << ix)) {
-        return ix;
+        return (int32_t)ix;
       }
     } else {
       if (ble_app_event_map1 & (1 << (ix - 32))) {
-        return ix;
+        return (int32_t)ix;
       }
     }
   }
@@ -447,7 +408,7 @@ void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
   memcpy(&rsi_app_connected_device, resp_conn, sizeof(rsi_ble_event_conn_status_t));
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
   //! unblock connection semaphore
-  rsi_semaphore_post(&ble_slave_conn_sem);
+  rsi_semaphore_post(&ble_peripheral_conn_sem);
 }
 
 /*==============================================*/
@@ -464,7 +425,7 @@ void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, ui
 {
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
-  //! Comparing Remote slave bd address to check the scan bitmap
+  //! Comparing Remote peripheral bd address to check the scan bitmap
   if (!(memcmp(remote_dev_bd_addr, (uint8_t *)resp_disconnect->dev_addr, 6))) {
     CLR_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE);
   } else {
@@ -489,7 +450,7 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
   rsi_app_connected_device.status = resp_enh_conn->status;
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
   //! unblock connection semaphore
-  rsi_semaphore_post(&ble_slave_conn_sem);
+  rsi_semaphore_post(&ble_peripheral_conn_sem);
 }
 /*==============================================*/
 /**
@@ -545,7 +506,8 @@ int32_t rsi_ble_app_task(void)
   int32_t temp_event_map  = 0;
   int32_t temp_event_map1 = 0;
   uint8_t fmversion[20]   = { 0 };
-#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
+
+#if ((BLE_ROLE == PERIPHERAL_ROLE) || (BLE_ROLE == DUAL_ROLE))
   uint8_t adv[31] = { 2, 1, 6 };
 #endif
 #ifdef RSI_WITH_OS
@@ -659,27 +621,27 @@ int32_t rsi_ble_app_task(void)
   //! get the local device address(MAC address).
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n ble get local device address cmd failed with reason code : %x \n", status);
+    LOG_PRINT("\r\n ble get local device address cmd failed with reason code : 0x%lX \n", status);
     return status;
   }
 
   //! set the local device name
   status = rsi_bt_set_local_name((uint8_t *)RSI_BLE_LOCAL_NAME);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n ble set local name cmd failed with reason code : %x \n", status);
+    LOG_PRINT("\r\n ble set local name cmd failed with reason code : 0x%lX \n", status);
     return status;
   }
 
   //! get the local device name
   status = rsi_bt_get_local_name(&rsi_app_resp_get_local_name);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n ble get local name cmd failed with reason code : %x \n", status);
+    LOG_PRINT("\r\n ble get local name cmd failed with reason code :  0x%lX \n", status);
     return status;
   }
 
-  rsi_semaphore_create(&ble_slave_conn_sem, 0);
+  rsi_semaphore_create(&ble_peripheral_conn_sem, 0);
 
-#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
+#if ((BLE_ROLE == PERIPHERAL_ROLE) || (BLE_ROLE == DUAL_ROLE))
   //! prepare advertise data //local/device name
   adv[3] = strlen(RSI_BLE_LOCAL_NAME) + 1;
   adv[4] = 9;
@@ -692,13 +654,13 @@ int32_t rsi_ble_app_task(void)
   LOG_PRINT("\n Start advertising \n");
   status = rsi_ble_start_advertising();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n ble start advertising failed with reason code : %x \n", status);
+    LOG_PRINT("\r\n ble start advertising failed with reason code :  0x%lX\n", status);
     return status;
   }
   SET_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE);
 #endif
 
-#if ((BLE_ROLE == MASTER_ROLE) || (BLE_ROLE == DUAL_ROLE))
+#if ((BLE_ROLE == CENTRAL_ROLE) || (BLE_ROLE == DUAL_ROLE))
   //! start scanning
   LOG_PRINT("\n Start scanning \n");
   status = rsi_ble_start_scanning();
@@ -759,18 +721,18 @@ int32_t rsi_ble_app_task(void)
         //! initiate stop scanning command.
         status = rsi_ble_stop_scanning();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n ble stop scanning failed with reason code : %x \n", status);
+          LOG_PRINT("\r\n ble stop scanning failed with reason code :  0x%lX\n", status);
           return status;
         }
 
         //! initiating the connection with remote BLE device
         status = rsi_ble_connect(remote_addr_type, (int8_t *)remote_dev_bd_addr);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n ble connect command failed with reason code : %x \n", status);
+          LOG_PRINT("\r\n ble connect command failed with reason code :  0x%lX\n", status);
           return status;
         }
 
-        rsi_semaphore_wait(&ble_slave_conn_sem, 10000);
+        rsi_semaphore_wait(&ble_peripheral_conn_sem, 10000);
 #ifndef RSI_WITH_OS
         // need to give sufficient time to connect to remote device
         rsi_delay_ms(10000);
@@ -819,20 +781,20 @@ int32_t rsi_ble_app_task(void)
           return status;
         }
 #endif
-#if ((BLE_ROLE == SLAVE_ROLE) || (BLE_ROLE == DUAL_ROLE))
+#if ((BLE_ROLE == PERIPHERAL_ROLE) || (BLE_ROLE == DUAL_ROLE))
         if (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE))) {
           //! set device in advertising mode.
           LOG_PRINT("\n Start advertising \n");
 adv:
           status = rsi_ble_start_advertising();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n ble start advertising failed with reason code : %x \n", status);
+            LOG_PRINT("\r\n ble start advertising failed with reason code : 0x%lX \n", status);
             goto adv;
           }
           SET_BIT1(rsi_ble_states_bitmap, RSI_ADV_STATE);
         }
 #endif
-#if (((BLE_ROLE == MASTER_ROLE) || (BLE_ROLE == DUAL_ROLE)))
+#if (((BLE_ROLE == CENTRAL_ROLE) || (BLE_ROLE == DUAL_ROLE)))
         if (!(CHK_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE))) {
           device_found = 0;
           //! set device in  scanning mode.

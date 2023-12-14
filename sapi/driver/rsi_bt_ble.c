@@ -40,6 +40,8 @@
 
 #define BT_SEM     0x1
 #define BT_CMD_SEM 0x2
+
+/****************************************************************************************************************************/
 /** @addtogroup DRIVER14
 * @{
 */
@@ -63,11 +65,11 @@ void rsi_bt_clear_wait_bitmap(uint16_t protocol_type, uint8_t sem_type)
 #ifndef RSI_BT_SEM_BITMAP
   if (sem_type == BT_SEM) {
     if (protocol_type == RSI_PROTO_BT_COMMON) {
-      rsi_driver_cb_non_rom->bt_wait_bitmap &= ~BIT(1);
+      rsi_driver_cb_non_rom->bt_wait_bitmap &= (uint8_t)~BIT(1);
     } else if (protocol_type == RSI_PROTO_BT_CLASSIC) {
-      rsi_driver_cb_non_rom->bt_wait_bitmap &= ~BIT(2);
+      rsi_driver_cb_non_rom->bt_wait_bitmap &= (uint8_t)~BIT(2);
     } else if (protocol_type == RSI_PROTO_BLE) {
-      rsi_driver_cb_non_rom->bt_wait_bitmap &= ~BIT(3);
+      rsi_driver_cb_non_rom->bt_wait_bitmap &= (uint8_t)~BIT(3);
     }
 #ifdef RSI_PROP_PROTOCOL_ENABLE
     else if (protocol_type == RSI_PROTO_PROP_PROTOCOL) {
@@ -76,11 +78,11 @@ void rsi_bt_clear_wait_bitmap(uint16_t protocol_type, uint8_t sem_type)
 #endif
   } else if (sem_type == BT_CMD_SEM) {
     if (protocol_type == RSI_PROTO_BT_COMMON) {
-      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= ~BIT(1);
+      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= (uint8_t)~BIT(1);
     } else if (protocol_type == RSI_PROTO_BT_CLASSIC) {
-      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= ~BIT(2);
+      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= (uint8_t)~BIT(2);
     } else if (protocol_type == RSI_PROTO_BLE) {
-      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= ~BIT(3);
+      rsi_driver_cb_non_rom->bt_cmd_wait_bitmap &= (uint8_t)~BIT(3);
     }
 #ifdef RSI_PROP_PROTOCOL_ENABLE
     else if (protocol_type == RSI_PROTO_PROP_PROTOCOL) {
@@ -314,8 +316,8 @@ uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb)
            || ((rsp_type >= RSI_BT_EVT_PBAP_CONN) && (rsp_type <= RSI_BT_EVT_PBAP_DATA))
            || (rsp_type == RSI_BT_EVENT_HID_CONN) || (rsp_type == RSI_BT_EVENT_HID_RXDATA)
            || (rsp_type == RSI_BT_EVENT_PKT_CHANGE) || (rsp_type == RSI_BT_DISABLED_EVENT)
-           || (rsp_type == BT_VENDOR_DYNAMIC_PWR_OPCODE) || (rsp_type == RSI_BT_EVT_AR_STATS)
-           || (rsp_type == BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE)
+           || (rsp_type == RSI_BT_EVENT_CTKD) || (rsp_type == BT_VENDOR_DYNAMIC_PWR_OPCODE)
+           || (rsp_type == RSI_BT_EVT_AR_STATS) || (rsp_type == BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE)
            || ((rsp_type >= RSI_BT_REQ_A2DP_PCM_MP3_DATA_PREFILL_1)
                && (rsp_type <= RSI_BT_REQ_AVRCP_GET_TOT_NUM_ITEMS_RESP))
            || (rsp_type == RSI_BT_EVENT_L2CAP_CONN) || (rsp_type == RSI_BT_EVENT_L2CAP_RXDATA)
@@ -353,12 +355,13 @@ uint16_t rsi_bt_get_proto_type(uint16_t rsp_type, rsi_bt_cb_t **bt_cb)
            || (rsp_type == RSI_BLE_SET_ADVERTISE_DATA)
            || ((rsp_type >= RSI_BLE_GET_LE_PING) && (rsp_type <= RSI_BLE_CMD_READ_RESP))
            || (rsp_type == RSI_BLE_SET_SCAN_RESPONSE_DATA)
-           || ((rsp_type >= RSI_BLE_LE_WHITE_LIST) && (rsp_type <= RSI_BLE_CBFC_DISCONN))
+           || ((rsp_type >= RSI_BLE_LE_ACCEPT_LIST) && (rsp_type <= RSI_BLE_CBFC_DISCONN))
            || ((rsp_type >= RSI_BLE_LE_LTK_REQ_REPLY) && (rsp_type <= RSI_BLE_PER_RX_MODE))
            || (rsp_type == RSI_BLE_CMD_ATT_ERROR) || (rsp_type == RSI_BLE_CMD_SET_BLE_TX_POWER)
            || (rsp_type == RSI_BLE_CMD_INDICATE_SYNC) || (rsp_type == RSI_BLE_CMD_AE)
            || ((rsp_type >= RSI_BLE_REQ_PROFILES_ASYNC) && (rsp_type <= RSI_BLE_EXECUTE_LONGDESCWRITE_ASYNC))
            || (rsp_type == RSI_BLE_SET_SMP_PAIRING_CAPABILITY_DATA) || (rsp_type == RSI_BLE_REQ_SMP_PAIRING_FAILED)
+           || (rsp_type == RSI_BLE_REQ_HCI_RAW) || (rsp_type == RSI_BLE_EVENT_RCP_DATA_RCVD)
            || ((rsp_type >= RSI_BLE_CONN_PARAM_RESP_CMD) && (rsp_type <= RSI_BLE_CMD_MTU_EXCHANGE_RESP))
            || ((rsp_type >= RSI_BLE_EVENT_GATT_ERROR_RESPONSE) && (rsp_type <= RSI_BLE_EVENT_SCAN_REQ_RECVD))
            || (rsp_type == RSI_BLE_REQ_CONN_ENHANCE) || (rsp_type == RSI_BLE_EVENT_REMOTE_DEVICE_INFORMATION)
@@ -487,7 +490,7 @@ void rsi_bt_common_tx_done(rsi_pkt_t *pkt)
   rsp_type = rsi_bytes2R_to_uint16(host_desc + RSI_BT_RSP_TYPE_OFFSET);
 
   // Get the protocol Type
-  protocol_type = rsi_bt_get_proto_type(rsp_type, &bt_cb);
+  protocol_type = (uint8_t)rsi_bt_get_proto_type(rsp_type, &bt_cb);
 
   if (protocol_type == 0xFF) {
     return;
@@ -548,7 +551,7 @@ void rsi_bt_set_status(rsi_bt_cb_t *bt_cb, int32_t status)
  */
 uint32_t rsi_bt_get_status(rsi_bt_cb_t *bt_cb)
 {
-  return bt_cb->status;
+  return (uint32_t)bt_cb->status;
 }
 
 #ifdef RSI_BLE_ENABLE
@@ -566,7 +569,7 @@ void rsi_ble_update_le_dev_buf(rsi_ble_event_le_dev_buf_ind_t *rsi_ble_event_le_
   uint8_t inx        = 0;
   rsi_bt_cb_t *le_cb = rsi_driver_cb->ble_cb;
 
-  for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+  for (inx = 0; inx < (RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS); inx++) {
     if (!memcmp(rsi_ble_event_le_dev_buf_ind->remote_dev_bd_addr,
                 le_cb->remote_ble_info[inx].remote_dev_bd_addr,
                 RSI_DEV_ADDR_LEN)) {
@@ -593,7 +596,7 @@ void rsi_add_remote_ble_dev_info(rsi_ble_event_enhance_conn_status_t *remote_dev
   uint8_t inx        = 0;
   rsi_bt_cb_t *le_cb = rsi_driver_cb->ble_cb;
 
-  for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+  for (inx = 0; inx < (RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS); inx++) {
     if (!le_cb->remote_ble_info[inx].used) {
       memcpy(le_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_info->dev_addr, RSI_DEV_ADDR_LEN);
       le_cb->remote_ble_info[inx].used = 1;
@@ -622,7 +625,7 @@ void rsi_remove_remote_ble_dev_info(rsi_ble_event_disconnect_t *remote_dev_info)
   uint8_t inx        = 0;
   rsi_bt_cb_t *le_cb = rsi_driver_cb->ble_cb;
 
-  for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+  for (inx = 0; inx < (RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS); inx++) {
     if (!memcmp(remote_dev_info->dev_addr, le_cb->remote_ble_info[inx].remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
       memset(le_cb->remote_ble_info[inx].remote_dev_bd_addr, 0, RSI_DEV_ADDR_LEN);
       le_cb->remote_ble_info[inx].used                 = 0;
@@ -659,7 +662,7 @@ int32_t rsi_driver_process_bt_resp(
 
   SL_PRINTF(SL_RSI_DRIVER_PROCESS_BT_RESPONSE_TRIGGER, BLUETOOTH, LOG_INFO, "PROTOCOL_TYPE: %2x", protocol_type);
   uint16_t rsp_type  = 0;
-  int16_t status     = RSI_SUCCESS;
+  uint16_t status    = RSI_SUCCESS;
   uint8_t *host_desc = NULL;
   uint8_t *payload;
   uint16_t payload_length;
@@ -790,7 +793,7 @@ uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt)
   }
 
   // Get the protocol Type
-  protocol_type = rsi_bt_get_proto_type(rsp_type, &bt_cb);
+  protocol_type = (uint8_t)rsi_bt_get_proto_type(rsp_type, &bt_cb);
 
   SL_PRINTF(SL_RSI_BT_DRIVER_PROCESS_BT_RESP_HANDLER_TRIGGER, BLUETOOTH, LOG_INFO, "PROTOCOL_TYPE: %1x", protocol_type);
   if (protocol_type == 0xFF) {
@@ -799,7 +802,7 @@ uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt)
   // Call the corresponding protocol process rsp handler
   if (protocol_type == RSI_PROTO_BT_COMMON) {
     // Call BT common process rsp handler
-    status = rsi_driver_process_bt_resp(bt_cb, pkt, NULL, protocol_type);
+    status = (int16_t)rsi_driver_process_bt_resp(bt_cb, pkt, NULL, protocol_type);
   }
 #ifdef RSI_BT_ENABLE
   else if (protocol_type == RSI_PROTO_BT_CLASSIC) {
@@ -816,10 +819,10 @@ uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt)
 #ifdef RSI_BLE_ENABLE
   else {
     // Call BLE process response handler
-    status = rsi_driver_process_bt_resp(bt_cb, pkt, rsi_ble_callbacks_handler, protocol_type);
+    status = (int16_t)rsi_driver_process_bt_resp(bt_cb, pkt, rsi_ble_callbacks_handler, protocol_type);
   }
 #endif
-  return status;
+  return (uint16_t)status;
 }
 
 /**
@@ -1006,6 +1009,42 @@ void rsi_bt_gap_register_callbacks(rsi_bt_on_role_change_t bt_on_role_change_sta
   bt_specific_cb->bt_on_sniff_subrating_event            = bt_on_sniff_subrating_event;
   bt_specific_cb->bt_on_connection_initiated             = bt_on_connection_initiated;
 }
+
+/**
+ * @fn       uint16_t rsi_bt_smp_register_callbacks(uint16_t callback_id, void (*callback_handler_ptr)(uint16_t status,
+ *                                                uint8_t *buffer))
+ * @brief    Register the BT SMP call back functions.
+ * @param[in]  callback_id                       - This is the Id of the call back function Following ids are supported:
+ * @param[in]  void (*callback_handler_ptr)(void - This is the Call back handler
+ * @param[in]  status                            - status of the asynchronous response
+ * @param[in]  buffer                            - payload of the asynchronous response
+ * @return      0 - Success \n
+ *              -50 - Failure \n
+ *				If call_back_id is greater than the maximum callbacks to register, returns ref/ RSI_ERROR_BLE_INVALID_CALLBACK_CNT.
+ * @note        In callbacks, application should not initiate any TX operation to the module.
+ */
+uint32_t rsi_bt_smp_register_callbacks(uint16_t callback_id,
+                                       void (*callback_handler_ptr)(uint16_t status, uint8_t *buffer))
+{
+  // Get ble cb struct pointer
+  rsi_bt_classic_cb_t *bt_specific_cb = rsi_driver_cb->bt_classic_cb->bt_global_cb->bt_specific_cb;
+
+  if (callback_id > RSI_BLE_MAX_NUM_EXT_SMP_CALLBACKS) {
+    /*
+	*Return , if the callback number exceeds the RSI_BLE_MAX_NUM_CALLBACKS ,or
+	* the callback is already registered
+	*/
+    return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
+  }
+
+  if (callback_id == RSI_BT_ON_CTKD) {
+    /* Register join fail call back handler */
+    bt_specific_cb->bt_on_ctkd_event = (rsi_bt_on_ctkd_t)callback_handler_ptr; //(void *)
+  }
+
+  return RSI_SUCCESS;
+}
+
 /** @} */
 /** @addtogroup DRIVER14
 * @{
@@ -1544,9 +1583,9 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
   uint16_t sync_status = 0;
 
   // updating the response status;
-  status = bt_classic_cb->async_status;
+  status = (uint16_t)bt_classic_cb->async_status;
 
-  sync_status = rsi_bt_get_status(bt_classic_cb);
+  sync_status = (uint16_t)rsi_bt_get_status(bt_classic_cb);
 
   SL_PRINTF(SL_RSI_BT_CALLBACKS_HANDLER_STATUS, BLUETOOTH, LOG_INFO, "STATUS: %2x", status);
 
@@ -1638,7 +1677,7 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
       if (rsi_wlan_cb_non_rom->switch_proto_callback == NULL) {
         rsi_common_set_status((uint8_t)*payload);
 #ifndef RSI_COMMON_SEM_BITMAP
-        rsi_driver_cb_non_rom->common_wait_bitmap &= ~BIT(0);
+        rsi_driver_cb_non_rom->common_wait_bitmap &= (uint8_t)~BIT(0);
 #endif
         rsi_semaphore_post(&rsi_driver_cb_non_rom->common_cmd_sem);
       } else {
@@ -1646,6 +1685,11 @@ void rsi_bt_callbacks_handler(rsi_bt_cb_t *bt_classic_cb, uint16_t rsp_type, uin
       }
 
 #endif
+    } break;
+    case RSI_BT_EVENT_CTKD: {
+      if (bt_specific_cb->bt_on_ctkd_event != NULL) {
+        bt_specific_cb->bt_on_ctkd_event(status, (rsi_bt_event_ctkd_t *)payload);
+      }
     } break;
     case RSI_BT_EVT_CHIP_MEMORY_STATS: {
       if (bt_specific_cb->bt_on_chip_memory_stats_event != NULL) {
@@ -2481,6 +2525,9 @@ uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
     case RSI_BLE_ON_REMOTE_DEVICE_INFORMATION: {
       ble_specific_cb->ble_on_remote_device_info_event = (rsi_ble_on_remote_device_info_t)callback_handler_ptr;
     } break;
+    case RSI_BLE_ON_RCP_EVENT: {
+      ble_specific_cb->ble_on_rcp_resp_rcvd_event = (rsi_ble_on_rcp_resp_rcvd_t)callback_handler_ptr;
+    } break;
     default:
       LOG_PRINT("\nInvalid Callback ID\n");
       return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
@@ -2600,9 +2647,9 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
   uint8_t le_cmd_inuse_check    = 0;
 
   // updating the response status;
-  status = ble_cb->async_status;
+  status = (uint16_t)ble_cb->async_status;
 
-  sync_status = rsi_bt_get_status(ble_cb);
+  sync_status = (uint16_t)rsi_bt_get_status(ble_cb);
 
   SL_PRINTF(SL_RSI_BLE_CALLBACKS_HANDLER_STATUS, BLE, LOG_INFO, "STATUS: %2x", status);
 
@@ -2965,6 +3012,11 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
         ble_specific_cb->ble_ae_scan_req_recvd_event(status, (rsi_ble_scan_req_recvd_t *)payload);
       }
     } break;
+    case RSI_BLE_EVENT_RCP_DATA_RCVD: {
+      if (ble_specific_cb->ble_on_rcp_resp_rcvd_event != NULL) {
+        ble_specific_cb->ble_on_rcp_resp_rcvd_event(status, (rsi_ble_event_rcp_rcvd_info_t *)payload);
+      }
+    } break;
     default: {
     }
   }
@@ -2972,7 +3024,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
   if (le_cmd_inuse_check) {
     uint8_t inx                 = 0;
     uint8_t *remote_dev_bd_addr = (uint8_t *)payload;
-    for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+    for (inx = 0; inx < (RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS); inx++) {
       if (!memcmp(ble_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
         if (ble_cb->remote_ble_info[inx].cmd_in_use) {
           if ((rsp_type == RSI_BLE_EVENT_GATT_ERROR_RESPONSE)
@@ -3127,8 +3179,8 @@ uint16_t rsi_bt_prepare_common_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_
           memcpy(pkt->data, cmd_struct, payload_size);
           break;
 
-        case BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD:
-          payload_size = sizeof(rsi_ble_req_whitelist_using_payload_t);
+        case BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD:
+          payload_size = sizeof(rsi_ble_req_acceptlist_using_payload_t);
           memcpy(pkt->data, cmd_struct, payload_size);
           break;
         case BT_VENDOR_AR_CMD_OPCODE:
@@ -3141,6 +3193,14 @@ uint16_t rsi_bt_prepare_common_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_
           break;
         case BT_VENDOR_AFH_CLASSIFICATION_CMD_OPCODE:
           payload_size = sizeof(rsi_bt_vendor_afh_classification_cmd_t);
+          memcpy(pkt->data, cmd_struct, payload_size);
+          break;
+        case BT_VENDOR_SET_HAPI_RECT_VAL_OPCODE:
+          payload_size = sizeof(rsi_bt_set_hapi_rect_val_t);
+          memcpy(pkt->data, cmd_struct, payload_size);
+          break;
+        case BLE_VENDOR_FEATURE_BITMAP:
+          payload_size = sizeof(ble_vendor_feature_bitmap_t);
           memcpy(pkt->data, cmd_struct, payload_size);
           break;
         default:
@@ -3793,6 +3853,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
   uint8_t le_cmd_inuse_check  = 0;
   uint8_t le_buf_in_use_check = 0;
   uint8_t le_buf_config_check = 0;
+  uint8_t pkt_type            = 0;
   uint16_t expected_resp      = 0;
   uint8_t is_it_legacy_cmd    = 0;
   rsi_bt_cb_t *le_cb          = rsi_driver_cb->ble_cb;
@@ -3864,6 +3925,18 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
       memcpy(pkt->data, cmd_struct, payload_size);
     } break;
 
+    case RSI_BLE_REQ_HCI_RAW: {
+      payload_size = *((uint8_t *)cmd_struct + 3);
+      pkt_type     = *(uint8_t *)cmd_struct;
+      if (pkt_type == 0x01) {
+        payload_size += 3;
+      } else {
+        payload_size |= ((uint16_t)(*((uint8_t *)cmd_struct + 4)) << 8);
+        payload_size += 4;
+      }
+      memcpy(pkt->data, ((uint8_t *)cmd_struct + 1), payload_size);
+      le_cb->sync_rsp = 0;
+    } break;
       //GATT cases
     case RSI_BLE_REQ_PROFILES: {
       payload_size = sizeof(rsi_ble_req_profiles_list_t);
@@ -4017,8 +4090,8 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
       memcpy(pkt->data, cmd_struct, payload_size);
     } break;
 
-    case RSI_BLE_LE_WHITE_LIST: {
-      payload_size = sizeof(rsi_ble_white_list_t);
+    case RSI_BLE_LE_ACCEPT_LIST: {
+      payload_size = sizeof(rsi_ble_accept_list_t);
       memcpy(pkt->data, cmd_struct, payload_size);
     } break;
 
@@ -4264,7 +4337,7 @@ uint16_t rsi_bt_prepare_le_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_t *p
   if (le_buf_check || le_cmd_inuse_check || le_buf_in_use_check) {
     uint8_t inx                 = 0;
     uint8_t *remote_dev_bd_addr = (uint8_t *)cmd_struct;
-    for (inx = 0; inx < (RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS); inx++) {
+    for (inx = 0; inx < (RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS); inx++) {
       if (!memcmp(le_cb->remote_ble_info[inx].remote_dev_bd_addr, remote_dev_bd_addr, RSI_DEV_ADDR_LEN)) {
 
         /* ERROR PRONE : Do not changes if else checks order */
@@ -4470,6 +4543,9 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
 
     return status;
   }
+  if (cmd == RSI_BLE_REQ_HCI_RAW) {
+    host_desc[14] = *(uint8_t *)cmd_struct;
+  }
   // Fill payload length
   rsi_uint16_to_2bytes(host_desc, (payload_size & 0xFFF));
 
@@ -4519,7 +4595,7 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
     //LOG_PRINT("%s: Command ID:0x%x response timed-out with:%d\n",__func__, cmd, calculate_timeout_ms);
   }
   // Get command response status
-  status = rsi_bt_get_status(bt_cb);
+  status = (int32_t)rsi_bt_get_status(bt_cb);
 
   SL_PRINTF(SL_RSI_BT_COMMAND_RESPONSE_STATUS, BLUETOOTH, LOG_INFO, "STATUS: %4x", status);
   // Clear sync rsp variable

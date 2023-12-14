@@ -38,7 +38,7 @@ static const char* const JSON_NODE_DATE_TIME = "lastUpdatedDateTimeUtc";
 static const char* const JSON_NODE_ERROR_MSG = "errorMessage";
 static const char* const JSON_NODE_ERROR_CODE = "errorCode";
 static const char* const PROV_FAILED_STATUS = "failed";
-static const char* const PROV_BLACKLISTED_STATUS = "blacklisted";
+static const char* const PROV_REJECTLISTED_STATUS = "rejectlisted";
 static const char* const JSON_CUSTOM_DATA_TAG = "payload";
 static const char* const JSON_NODE_RETURNED_DATA = "payload";
 
@@ -230,9 +230,9 @@ static PROV_DEVICE_TRANSPORT_STATUS retrieve_status_type(const char* prov_status
     {
         result = PROV_DEVICE_TRANSPORT_STATUS_ERROR;
     }
-    else if (strcmp(prov_status, PROV_BLACKLISTED_STATUS) == 0)
+    else if (strcmp(prov_status, PROV_REJECTLISTED_STATUS) == 0)
     {
-        result = PROV_DEVICE_TRANSPORT_STATUS_BLACKLISTED;
+        result = PROV_DEVICE_TRANSPORT_STATUS_REJECTLISTED;
     }
     else if (strcmp(prov_status, PROV_DISABLE_STATUS) == 0)
     {
@@ -622,7 +622,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                 break;
             }
 
-            case PROV_DEVICE_TRANSPORT_STATUS_BLACKLISTED:
+            case PROV_DEVICE_TRANSPORT_STATUS_REJECTLISTED:
                 LogError("The device is unauthorized with service");
                 prov_info->error_reason = PROV_DEVICE_RESULT_ERROR;
                 free(result);

@@ -23,7 +23,7 @@
  *
  *  @brief : This file contains example application for BLE DUAL role.
  *
- *  @section Description  This application connects as a Central/Master with l2cap connection.
+ *  @section Description  This application connects as a Central with l2cap connection.
  *
  */
 
@@ -53,7 +53,7 @@ volatile uint64_t rsi_current_state[TOTAL_CONNECTIONS];
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
 /*=======================================================================*/
-extern volatile uint8_t num_of_conn_masters, num_of_conn_slaves;
+extern volatile uint8_t num_of_conn_centrals, num_of_conn_peripherals;
 extern volatile uint16_t rsi_ble_att1_val_hndl;
 extern volatile uint16_t rsi_ble_att2_val_hndl;
 extern volatile uint16_t rsi_ble_att3_val_hndl;
@@ -63,12 +63,12 @@ extern volatile uint16_t rsi_disconnect_reason[TOTAL_CONNECTIONS];
 extern rsi_ble_conn_info_t rsi_ble_conn_info[];
 extern rsi_ble_req_adv_t change_adv_param;
 extern rsi_ble_req_scan_t change_scan_param;
-extern uint8_t slave_connection_in_prgs, slave_con_req_pending;
+extern uint8_t peripheral_connection_in_prgs, peripheral_con_req_pending;
 extern rsi_task_handle_t ble_app_task_handle[TOTAL_CONNECTIONS];
-extern uint8_t master_task_instances, slave_task_instances;
+extern uint8_t central_task_instances, peripheral_task_instances;
 extern rsi_ble_t att_list;
 extern rsi_semaphore_handle_t ble_conn_sem[TOTAL_CONNECTIONS];
-extern rsi_semaphore_handle_t ble_slave_conn_sem;
+extern rsi_semaphore_handle_t ble_peripheral_conn_sem;
 extern uint8_t rsi_ble_states_bitmap;
 
 /*========================================================================*/
@@ -191,7 +191,7 @@ int32_t rsi_ble_check_bitmap_based_on_conn(uint8_t conn_id, uint32_t event_num)
  * @param[in]  parameters - connection specific configurations which are selected at compile/run time
  * @return     none
  * @section description
- * This function process configured ble slave and master connections
+ * This function process configured ble peripheral and central connections
  */
 
 void rsi_ble_task_on_conn(void *parameters)
@@ -273,15 +273,15 @@ void rsi_ble_task_on_conn(void *parameters)
   //! create semaphore for each connection
   status = rsi_semaphore_create(&ble_conn_sem[l_conn_id], 0);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n semaphore creation failed for slave%d \r\n", l_conn_id);
+    LOG_PRINT("\r\n semaphore creation failed for peripheral%d \r\n", l_conn_id);
     return;
   }
 
-  //! if connection is from remote slave devices, set advertising event for processing further activities in this connection
-  if (l_conn_id < RSI_BLE_MAX_NBR_SLAVES) {
+  //! if connection is from remote peripheral devices, set advertising event for processing further activities in this connection
+  if (l_conn_id < RSI_BLE_MAX_NBR_PERIPHERALS) {
     rsi_ble_app_set_task_event(l_conn_id, RSI_APP_EVENT_ADV_REPORT);
   }
-  //! if connection is from remote master devices, set connection event for processing further activities in this connection
+  //! if connection is from remote central devices, set connection event for processing further activities in this connection
   else {
     if (rsi_ble_conn_info[l_conn_id].is_enhanced_conn) {
       rsi_ble_app_set_task_event(l_conn_id, RSI_BLE_ENHC_CONN_EVENT);
@@ -325,16 +325,16 @@ void rsi_ble_task_on_conn(void *parameters)
             CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
         }
-        slave_con_req_pending    = 0;
-        slave_connection_in_prgs = 1;
+        peripheral_con_req_pending    = 0;
+        peripheral_connection_in_prgs = 1;
         status = rsi_ble_connect_with_params(rsi_ble_conn_info[l_conn_id].rsi_app_adv_reports_to_app.dev_addr_type,
                                              (int8_t *)rsi_ble_conn_info[l_conn_id].rsi_app_adv_reports_to_app.dev_addr,
                                              LE_SCAN_INTERVAL_CONN,
                                              LE_SCAN_WINDOW_CONN,
-                                             M2S12_CONNECTION_INTERVAL_MAX,
-                                             M2S12_CONNECTION_INTERVAL_MIN,
-                                             M2S12_CONNECTION_LATENCY,
-                                             M2S12_SUPERVISION_TIMEOUT);
+                                             C2P12_CONNECTION_INTERVAL_MAX,
+                                             C2P12_CONNECTION_INTERVAL_MIN,
+                                             C2P12_CONNECTION_LATENCY,
+                                             C2P12_SUPERVISION_TIMEOUT);
         LOG_PRINT("\r\n connecting to device :  %s -conn%d \n",
                   (int8_t *)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
                   l_conn_id);
@@ -344,7 +344,7 @@ void rsi_ble_task_on_conn(void *parameters)
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
         }
 
-        rsi_semaphore_wait(&ble_slave_conn_sem, 10000);
+        rsi_semaphore_wait(&ble_peripheral_conn_sem, 10000);
 
         event_id = rsi_ble_get_event_based_on_conn(l_conn_id);
 
@@ -354,10 +354,10 @@ void rsi_ble_task_on_conn(void *parameters)
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\r\n ble connect cancel cmd status = %x \n", status);
           } else {
-            num_of_conn_slaves++;
+            num_of_conn_peripherals++;
             rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_DISCONN_EVENT);
           }
-          slave_connection_in_prgs = 0;
+          peripheral_connection_in_prgs = 0;
         }
 
       } break;
@@ -375,32 +375,32 @@ void rsi_ble_task_on_conn(void *parameters)
         if (ble_conn_conf->profile_discovery) {
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_REQ_GATT_PROFILE);
         }
-        //! add device to whitelist
-        if (ble_conn_conf->add_to_whitelist) {
-          //! clear the whitelist completely
-          status = rsi_ble_clear_whitelist();
+        //! add device to acceptlist
+        if (ble_conn_conf->add_to_acceptlist) {
+          //! clear the acceptlist completely
+          status = rsi_ble_clear_acceptlist();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n Failed to clear the white list, error: 0x%x -conn%d\r\n", status, l_conn_id);
+            LOG_PRINT("\r\n Failed to clear the accept list, error: 0x%x -conn%d\r\n", status, l_conn_id);
             break;
           }
-          status = rsi_ble_addto_whitelist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
+          status = rsi_ble_addto_acceptlist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
           rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n Failed to add the device:%s to whitelist -conn%d\r\n", str_remote_address, l_conn_id);
+            LOG_PRINT("\r\n Failed to add the device:%s to acceptlist -conn%d\r\n", str_remote_address, l_conn_id);
             break;
           }
-          LOG_PRINT("\r\n device %s added to whitelist -conn%d \r\n", str_remote_address, l_conn_id);
+          LOG_PRINT("\r\n device %s added to acceptlist -conn%d \r\n", str_remote_address, l_conn_id);
         }
 
-        //! check if connection is from remote master device
-        if (l_conn_id >= RSI_BLE_MAX_NBR_SLAVES) {
-          num_of_conn_masters++;
+        //! check if connection is from remote central device
+        if (l_conn_id >= RSI_BLE_MAX_NBR_PERIPHERALS) {
+          num_of_conn_centrals++;
           // By default advertising role will be disabled in the firmware once remote device got connected.
           CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
 
-          LOG_PRINT("\r\n Number of master devices connected:%d -conn%d\r\n", num_of_conn_masters, l_conn_id);
+          LOG_PRINT("\r\n Number of central devices connected:%d -conn%d\r\n", num_of_conn_centrals, l_conn_id);
 
-          if ((num_of_conn_masters < RSI_BLE_MAX_NBR_MASTERS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
+          if ((num_of_conn_centrals < RSI_BLE_MAX_NBR_CENTRALS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
             //! advertise device with default interval
             status = rsi_ble_start_advertising();
             if (status != RSI_SUCCESS) {
@@ -411,7 +411,7 @@ void rsi_ble_task_on_conn(void *parameters)
           }
 
           //! if max connections reached, advertise module with non connectable advertising interval of 211.25ms
-          else if ((num_of_conn_masters == RSI_BLE_MAX_NBR_MASTERS)
+          else if ((num_of_conn_centrals == RSI_BLE_MAX_NBR_CENTRALS)
                    & (!CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE))) {
             status = rsi_ble_start_advertising_with_values(&change_adv_param);
             if (status != RSI_SUCCESS) {
@@ -422,11 +422,12 @@ void rsi_ble_task_on_conn(void *parameters)
           }
           LOG_PRINT("\r\n advertising device -conn%d\n", l_conn_id);
         } else {
-          //! assuming that connection is from remote slave device
-          num_of_conn_slaves++;
-          LOG_PRINT("\r\n Number of slave devices connected:%d \n", num_of_conn_slaves);
+          //! assuming that connection is from remote peripheral device
+          num_of_conn_peripherals++;
+          LOG_PRINT("\r\n Number of peripheral devices connected:%d \n", num_of_conn_peripherals);
 
-          if ((num_of_conn_slaves < RSI_BLE_MAX_NBR_SLAVES) & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
+          if ((num_of_conn_peripherals < RSI_BLE_MAX_NBR_PERIPHERALS)
+              & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
             LOG_PRINT("\r\n Start scanning - conn%d\n", l_conn_id);
             status = rsi_ble_start_scanning();
             if (status != RSI_SUCCESS) {
@@ -437,7 +438,8 @@ void rsi_ble_task_on_conn(void *parameters)
           }
 
           //! do background scan with interval of 33.125ms and window 14.375ms
-          else if ((num_of_conn_slaves == RSI_BLE_MAX_NBR_SLAVES) & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
+          else if ((num_of_conn_peripherals == RSI_BLE_MAX_NBR_PERIPHERALS)
+                   & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
             LOG_PRINT("\r\n Start scanning - conn%d\n", l_conn_id);
             //! open scan channel with interval of 33.125ms, window 14.375ms
             status = rsi_ble_start_scanning_with_values(&change_scan_param);
@@ -473,28 +475,28 @@ void rsi_ble_task_on_conn(void *parameters)
         if (ble_conn_conf->profile_discovery) {
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_REQ_GATT_PROFILE);
         }
-        //! add device to whitelist
-        if (ble_conn_conf->add_to_whitelist) {
-          //! clear the whitelist completely
-          status = rsi_ble_clear_whitelist();
+        //! add device to acceptlist
+        if (ble_conn_conf->add_to_acceptlist) {
+          //! clear the acceptlist completely
+          status = rsi_ble_clear_acceptlist();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n Failed to clear the white list, error: 0x%x -conn%d\r\n", status, l_conn_id);
+            LOG_PRINT("\r\n Failed to clear the accept list, error: 0x%x -conn%d\r\n", status, l_conn_id);
           }
-          status = rsi_ble_addto_whitelist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
+          status = rsi_ble_addto_acceptlist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
           rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\n Failed to add the device:%s to whitelist -conn%d\r\n", str_remote_address, l_conn_id);
+            LOG_PRINT("\r\n Failed to add the device:%s to acceptlist -conn%d\r\n", str_remote_address, l_conn_id);
           }
-          LOG_PRINT("\r\n device %s added to whitelist -conn%d \r\n", str_remote_address, l_conn_id);
+          LOG_PRINT("\r\n device %s added to acceptlist -conn%d \r\n", str_remote_address, l_conn_id);
         }
 
-        //! check if connection is from remote master device
-        if (l_conn_id >= RSI_BLE_MAX_NBR_SLAVES) {
-          num_of_conn_masters++;
+        //! check if connection is from remote central device
+        if (l_conn_id >= RSI_BLE_MAX_NBR_PERIPHERALS) {
+          num_of_conn_centrals++;
           // By default advertising role will be disabled in the firmware once remote device got connected.
           CLR_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE);
 
-          LOG_PRINT("\r\n Number of master devices connected:%d -conn%d\n", num_of_conn_masters, l_conn_id);
+          LOG_PRINT("\r\n Number of central devices connected:%d -conn%d\n", num_of_conn_centrals, l_conn_id);
 
           //! advertise device with default interval
           if (CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
@@ -507,7 +509,7 @@ void rsi_ble_task_on_conn(void *parameters)
             }
           }
 
-          if ((num_of_conn_masters < RSI_BLE_MAX_NBR_MASTERS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
+          if ((num_of_conn_centrals < RSI_BLE_MAX_NBR_CENTRALS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
             //! advertise device with default interval
             status = rsi_ble_start_advertising();
             if (status != RSI_SUCCESS) {
@@ -519,7 +521,8 @@ void rsi_ble_task_on_conn(void *parameters)
           }
 
           //! if max connections reached, advertise module with non connectable advertising interval of 211.25ms
-          else if ((num_of_conn_masters == RSI_BLE_MAX_NBR_MASTERS) & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
+          else if ((num_of_conn_centrals == RSI_BLE_MAX_NBR_CENTRALS)
+                   & !CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
             status = rsi_ble_start_advertising_with_values(&change_adv_param);
             if (status != RSI_SUCCESS) {
               LOG_PRINT("\r\n advertising with values failed with status = 0x%x -conn%d \n", status, l_conn_id);
@@ -530,11 +533,12 @@ void rsi_ble_task_on_conn(void *parameters)
           }
           LOG_PRINT("\r\n advertising device -conn%d\n", l_conn_id);
         } else {
-          //! assuming that connection is from remote slave device
-          num_of_conn_slaves++;
-          LOG_PRINT("\r\n Number of slave devices connected:%d \n", num_of_conn_slaves);
+          //! assuming that connection is from remote peripheral device
+          num_of_conn_peripherals++;
+          LOG_PRINT("\r\n Number of peripheral devices connected:%d \n", num_of_conn_peripherals);
 
-          if ((num_of_conn_slaves < RSI_BLE_MAX_NBR_SLAVES) & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
+          if ((num_of_conn_peripherals < RSI_BLE_MAX_NBR_PERIPHERALS)
+              & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
             LOG_PRINT("\r\n Start scanning - conn%d\n", l_conn_id);
             status = rsi_ble_start_scanning();
             if (status != RSI_SUCCESS) {
@@ -545,7 +549,8 @@ void rsi_ble_task_on_conn(void *parameters)
           }
 
           //! do background scan with interval of 33.125ms and window 14.375ms
-          else if ((num_of_conn_slaves == RSI_BLE_MAX_NBR_SLAVES) & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
+          else if ((num_of_conn_peripherals == RSI_BLE_MAX_NBR_PERIPHERALS)
+                   & !CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
             LOG_PRINT("\r\n Start scanning - conn%d\n", l_conn_id);
             //! open scan channel with interval of 33.125ms, window 14.375ms
             status = rsi_ble_start_scanning_with_values(&change_scan_param);
@@ -704,7 +709,7 @@ void rsi_ble_task_on_conn(void *parameters)
                         l_conn_id);
               return;
             }
-            //! copy retrieved profiles in local master buffer
+            //! copy retrieved profiles in local central buffer
             for (i = 0; i < no_of_profiles; i++) {
               memcpy(&rsi_ble_profile_list_by_conn.profile_desc[i + total_remote_profiles],
                      &rsi_ble_conn_info[l_conn_id].get_allprofiles.profile_desc[i],
@@ -818,7 +823,7 @@ void rsi_ble_task_on_conn(void *parameters)
         if (prof_evt_cnt < total_remote_profiles) {
           //! clear the served event
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_PROFILE);
-          //! copy to master buffer
+          //! copy to central buffer
           memcpy(&rsi_ble_profile_list_by_conn.profile_info_uuid[prof_evt_cnt],
                  &rsi_ble_conn_info[l_conn_id].get_profile,
                  sizeof(rsi_ble_event_profile_by_uuid_t));
@@ -1230,22 +1235,22 @@ void rsi_ble_task_on_conn(void *parameters)
         if (ble_conn_conf->buff_mode_sel.buffer_mode == 1) {
           if ((rsi_ble_conn_info[l_conn_id].conn_update_resp.conn_interval) <= 12) {
             //! Updated Feasible Buffer Count based on the Connection Interval
-            if (rsi_ble_conn_info[l_conn_id].remote_device_role == MASTER_ROLE) {
+            if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
               ble_conn_conf->buff_mode_sel.buffer_cnt = 3;
             }
           } else if ((rsi_ble_conn_info[l_conn_id].conn_update_resp.conn_interval) <= 40) {
             //! Updated Feasible Buffer Count based on the Connection Interval
-            if (rsi_ble_conn_info[l_conn_id].remote_device_role == MASTER_ROLE) {
+            if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
               ble_conn_conf->buff_mode_sel.buffer_cnt = 5;
             }
           } else {
             //! Updated Feasible Buffer Count based on the Connection Interval
-            if (rsi_ble_conn_info[l_conn_id].remote_device_role == MASTER_ROLE) {
+            if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
               ble_conn_conf->buff_mode_sel.buffer_cnt = 7;
             }
           }
 
-          if (rsi_ble_conn_info[l_conn_id].remote_device_role == MASTER_ROLE) {
+          if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
             // take backup of the Data transfer bitmap
             if (rsi_ble_check_bitmap_based_on_conn(l_conn_id, RSI_DATA_RECEIVE_EVENT)) {
               rsi_rx_from_rem_dev = true;
@@ -1301,15 +1306,15 @@ void rsi_ble_task_on_conn(void *parameters)
 	  after scanning/advertising is enabled for new connection */
         task_to_be_deleted = ble_app_task_handle[l_conn_id];
 
-        //! check whether disconnection is from master
-        if (l_conn_id >= RSI_BLE_MAX_NBR_SLAVES) {
-          LOG_PRINT("\r\n master is disconnected, reason : 0x%x -conn%d \r\n",
+        //! check whether disconnection is from central
+        if (l_conn_id >= RSI_BLE_MAX_NBR_PERIPHERALS) {
+          LOG_PRINT("\r\n central is disconnected, reason : 0x%x -conn%d \r\n",
                     rsi_disconnect_reason[l_conn_id],
                     l_conn_id);
           //! decrement the task count
-          master_task_instances--;
-          num_of_conn_masters--;
-          if (num_of_conn_masters < RSI_BLE_MAX_NBR_MASTERS) {
+          central_task_instances--;
+          num_of_conn_centrals--;
+          if (num_of_conn_centrals < RSI_BLE_MAX_NBR_CENTRALS) {
             if (CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {
               status = rsi_ble_stop_advertising();
               if (status != RSI_SUCCESS) {
@@ -1333,11 +1338,11 @@ void rsi_ble_task_on_conn(void *parameters)
             LOG_PRINT("\r\n advertising started -conn%d \n", l_conn_id);
           }
         } else {
-          LOG_PRINT("\r\n slave is disconnected, reason : 0x%x -conn%d \r\n",
+          LOG_PRINT("\r\n peripheral is disconnected, reason : 0x%x -conn%d \r\n",
                     rsi_disconnect_reason[l_conn_id],
                     l_conn_id);
-          slave_task_instances--;
-          num_of_conn_slaves--;
+          peripheral_task_instances--;
+          num_of_conn_peripherals--;
           //rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
           if (CHK_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE)) {
             status = rsi_ble_stop_scanning();
@@ -1359,8 +1364,8 @@ void rsi_ble_task_on_conn(void *parameters)
         }
         rsi_disconnect_reason[l_conn_id] = 0;
 
-        LOG_PRINT("\r\n Number of connected master devices:%d\n", num_of_conn_masters);
-        LOG_PRINT("\r\n Number of connected slave devices:%d\n", num_of_conn_slaves);
+        LOG_PRINT("\r\n Number of connected central devices:%d\n", num_of_conn_centrals);
+        LOG_PRINT("\r\n Number of connected peripheral devices:%d\n", num_of_conn_peripherals);
 
         memset(&rsi_ble_conn_info[l_conn_id], 0, sizeof(rsi_ble_conn_info_t));
 
@@ -2057,7 +2062,7 @@ void rsi_ble_task_on_conn(void *parameters)
       } break;
 
       case RSI_BLE_SMP_FAILED_EVENT: {
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_FAILED_EVENT);

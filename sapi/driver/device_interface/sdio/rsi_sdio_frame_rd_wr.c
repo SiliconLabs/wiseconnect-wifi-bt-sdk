@@ -61,7 +61,7 @@ int16_t rsi_frame_read(uint8_t *read_buff)
   if (retval != RSI_SUCCESS) {
     return retval;
   }
-#ifdef CHIP_9117B0
+#ifdef CHIP_917B0
   no_of_blocks = (response & 0xFF);
 #else
   no_of_blocks = (response & 0x1F);
@@ -93,7 +93,7 @@ int16_t rsi_frame_write(rsi_frame_desc_t *uFrameDscFrame, uint8_t *payloadparam,
   uint16_t size_of_headroom = 0;
 
   queue_type = (uFrameDscFrame->frame_len_queue_no[1] >> 4);
-#ifdef CHIP_9117
+#ifdef CHIP_917
   if ((queue_type == RSI_WLAN_DATA_Q) || (queue_type == RSI_WLAN_MGMT_Q)) {
     size_of_headroom = SIZE_OF_HEADROOM;
   }

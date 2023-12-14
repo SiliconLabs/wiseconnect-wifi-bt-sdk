@@ -31,7 +31,14 @@
 #include <rsi_common_apis.h>
 
 #ifdef RSI_M4_INTERFACE
+#include "rsi_rtc.h"
 #include "rsi_board.h"
+#include "rsi_driver.h"
+#include "rsi_chip.h"
+#include "rsi_wisemcu_hardware_setup.h"
+#include "rsi_m4.h"
+#include "rsi_ps_ram_func.h"
+#include "rsi_ds_timer.h"
 #endif
 #ifdef FW_LOGGING_ENABLE
 //! Firmware logging includes
@@ -100,6 +107,14 @@ void sl_fw_log_task(void);
 #endif
 
 void rsi_wireless_driver_task(void);
+void main_loop(void);
+int32_t rsi_ble_lr_2mbps(void);
+void rsi_ble_phy_update_complete_event(rsi_ble_event_phy_update_t *rsi_ble_event_phy_update_complete);
+void rsi_ble_simple_central_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason);
+void rsi_ble_simple_central_on_conn_status_event(rsi_ble_event_conn_status_t *resp_conn);
+void rsi_ble_simple_central_on_adv_report_event(rsi_ble_event_adv_report_t *adv_report);
+void rsi_ble_simple_central_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+void rsi_ble_app_set_event(uint32_t event_num);
 
 #endif
 
@@ -128,6 +143,69 @@ uint8_t str_remote_address[RSI_REM_DEV_ADDR_LEN] = { '\0' };
 rsi_semaphore_handle_t ble_main_task_sem;
 static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
+/**
+ * @fn         rsi_ble_only_Trigger_M4_Sleep
+ * @brief      Keeps the M4 In the Sleep
+ * @param[in]  none
+ * @return    none.
+ * @section description
+ * This function is used to trigger sleep in the M4 and in the case of the retention submitting the buffer valid
+ * to the TA for the rx packets.
+ */
+#if M4_POWERSAVE_ENABLE
+void rsi_ble_only_Trigger_M4_Sleep(void)
+{
+  /* Configure Wakeup-Source */
+  RSI_PS_SetWkpSources(WIRELESS_BASED_WAKEUP);
+  /* sets the priority of an Wireless wakeup interrupt. */
+  NVIC_SetPriority(WIRELESS_WAKEUP_IRQHandler, WIRELESS_WAKEUP_IRQ_PRI);
+  NVIC_EnableIRQ(WIRELESS_WAKEUP_IRQHandler);
+
+#ifndef FLASH_BASED_EXECUTION_ENABLE
+  /* LDOSOC Default Mode needs to be disabled */
+  RSI_PS_LdoSocDefaultModeDisable();
+
+  /* bypass_ldorf_ctrl needs to be enabled */
+  RSI_PS_BypassLdoRfEnable();
+
+  RSI_PS_FlashLdoDisable();
+
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_48KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  /* Trigger M4 Sleep */
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           0,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           0,
+                           RSI_WAKEUP_WITH_RETENTION_WO_ULPSS_RAM);
+
+#else
+
+#ifdef COMMON_FLASH_EN
+  M4SS_P2P_INTR_SET_REG &= ~BIT(3);
+#endif
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           WKP_RAM_USAGE_LOCATION,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           IVT_OFFSET_ADDR,
+                           RSI_WAKEUP_FROM_FLASH_MODE);
+#endif
+#ifdef RSI_WITH_OS
+  /*  Setup the systick timer */
+  vPortSetupTimerInterrupt();
+#endif
+#ifdef DEBUG_UART
+  fpuInit();
+  DEBUGINIT();
+#endif
+}
+#endif
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -209,7 +287,7 @@ static int32_t rsi_ble_app_get_event(void)
       }
     } else {
       if (ble_app_event_map1 & (1 << (ix - 32))) {
-        return ix;
+        return (int32_t)ix;
       }
     }
   }
@@ -384,6 +462,14 @@ int32_t rsi_ble_central(void)
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+#if M4_POWERSAVE_ENABLE
+
+  //RSI_PS_FlashLdoEnable();
+  /* MCU Hardware Configuration for Low-Power Applications */
+  RSI_WISEMCU_HardwareSetup();
+  LOG_PRINT("\r\nRSI_WISEMCU_HardwareSetup Success\r\n");
+
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -476,6 +562,10 @@ int32_t rsi_ble_central(void)
 
 #endif
 
+#if M4_POWERSAVE_ENABLE
+  P2P_STATUS_REG &= ~M4_wakeup_TA;
+  // LOG_PRINT("\n RSI_BLE_REQ_PWRMODE\n ");
+#endif
   while (1) {
     //! Application main loop
 #ifndef RSI_WITH_OS
@@ -485,8 +575,17 @@ int32_t rsi_ble_central(void)
     //! checking for received events
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
-      //! if events are not received, loop will be continued
-      rsi_semaphore_wait(&ble_main_task_sem, 0);
+#if M4_POWERSAVE_ENABLE
+      //! if events are not received loop will be continued.
+      if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
+        P2P_STATUS_REG &= ~M4_wakeup_TA;
+        rsi_ble_only_Trigger_M4_Sleep();
+      }
+#else
+      {
+        rsi_semaphore_wait(&ble_main_task_sem, 0);
+      }
+#endif
       continue;
     }
 

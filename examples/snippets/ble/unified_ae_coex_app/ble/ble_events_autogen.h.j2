@@ -1,0 +1,247 @@
+#ifndef BLE_AUTO_GEN_H
+#define BLE_AUTO_GEN_H
+#include "rsi_driver.h"
+#include "event_loop.h"
+#include "ble_private.h"
+
+#ifdef FRDM_K28F
+#define APP_WEAK __attribute__((weak))
+#else
+#ifdef MXRT_595s
+#define APP_WEAK __weak
+#else
+#define APP_WEAK __attribute__((weak))
+#endif
+#endif
+
+void sl_btc_ble_gap_register_callbacks_wrapper();
+void sl_btc_ble_gatt_register_callbacks_wrapper();
+void sl_btc_ble_gatt_extended_register_callbacks_wrapper();
+void sl_btc_ble_gap_extended_register_callbacks_wrapper();
+void sl_btc_ble_smp_register_callbacks_wrapper();
+void sl_btc_ble_smp_extended_register_callbacks_wrapper();
+void sl_btc_ble_adv_extended_register_callbacks_wrapper();
+
+void rsi_ble_event_smp_pending_driver_callback(uint8_t *conn_id);
+
+//! Enumerations
+enum ble_enum_ids {
+{% for ble_event, details in ble_events.items() %}
+	{{ ble_event }}_event_id,
+{% endfor %}
+{% for bt_event, details in bt_events.items() %}
+	{{ bt_event }}_event_id,
+{% endfor %}
+{% for dummy_event, details in dummy_events.items() %}
+	{{ dummy_event }}_event_id,
+{% endfor %}
+	max_ble_event_id
+};
+
+//! structures
+{% for ble_event, details in ble_events.items() %}
+{% if ble_event == 'indication_confirmation' %}
+{% else %}
+typedef struct rsi_ble_{{ ble_event }}_msg_s {
+	void *next;
+	uint16_t status;
+	void (*free_callback)(void *);
+	{% if ble_event != 'ble_event_inquiry_complete' %}
+	rsi_ble_{{ ble_event }}_t rsi_ble_{{ ble_event }};
+	{% endif  %}
+} rsi_ble_{{ ble_event }}_msg_t;
+{% endif  %}
+{% endfor %}
+{% for bt_event, details in bt_events.items() %}
+typedef struct rsi_ble_{{ bt_event }}_msg_s {
+	void *next;
+	uint16_t status;
+	void (*free_callback)(void *);
+	{% if bt_event != 'bt_event_inquiry_complete' %}
+	rsi_bt_{{ bt_event }}_t rsi_ble_{{ bt_event }};
+	{% endif  %}
+} rsi_ble_{{ bt_event }}_msg_t;
+{% endfor %}
+
+{% macro render_driver_callback_function(ble_event, value) %}
+/*==============================================*/
+
+{% if value == 'common_event_status_last' %}
+void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, uint16_t status);
+{% elif value == 'common_event_status_first' %}
+void rsi_ble_{{ ble_event }}_driver_callback(uint16_t status, rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }});
+{% elif value == 'common_event_status_none' %}
+void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }});
+{% elif value == 'indication_confirmation' %}
+void rsi_ble_event_indication_confirmation_driver_callback(uint16_t status, rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rsp);
+{% else %}
+void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }});
+{% endif %}
+
+{% endmacro %}
+
+//! function declarations
+{% for ble_event, callback in ble_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if ble_event == 'event_conn_update' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'event_disconnect' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'event_remote_conn_param_req' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'set_att_resp' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_prepare_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'execute_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'read_req' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_profiles_list' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_profile_by_uuid' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_read_by_type1' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_att_value' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_error_resp' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}		
+	{% elif ble_event == 'ae_adv_report' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_sync_estbl' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_report' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_sync_lost' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'scan_timeout' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'adv_set_terminated' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'scan_req_recvd' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'indication_confirmation' %}
+		{{ render_driver_callback_function(ble_event, 'indication_confirmation') -}}          
+	{% else %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_none') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+
+{% for ble_event, details in ble_events.items() %}
+void {{ details["handler"] }}_wrapper(void *msg);
+{% endfor %}
+
+{% for ble_event, details in ble_events.items() %}
+void {{ details["handler"] }}(uint16_t status, void *ble_event_data);
+{% endfor %}
+void sl_ble_register_callbacks_wrapper();
+
+//! Extern functions
+{% for ble_event, details in ble_events.items() %}
+extern void {{ details["handler"] }}(uint16_t status, void *ble_event_data);
+
+
+{% endfor %}
+
+{% macro render_driver_callback_function3(dummy_event, value) %}
+/*==============================================*/
+{% if value == 'uint' %}
+void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t *conn_id);
+{% elif value == 'uint_without_ptr' %}
+void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t conn_id);
+{% elif value == 'void' %}
+void rsi_ble_event_{{ dummy_event }}_driver_callback(void);
+{% elif value == 'profile_dummy' %}
+void rsi_ble_event_{{ dummy_event }}_driver_callback(profile_dummy_data_t *profile_dummy_data);
+{% else %}
+void rsi_ble_event_{{ dummy_event }}_driver_callback(rsi_ble_{{ dummy_event }}_t *rsi_ble_{{ dummy_event }});
+{% endif %}
+
+{% endmacro %}
+//! function declarations
+{% for dummy_event, callback in dummy_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if dummy_event == 'data_transmit' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint_without_ptr') -}}
+	{% elif dummy_event == 'event_smp_pending' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'advertisement_restart' %}
+		{{ render_driver_callback_function3(dummy_event, 'void') -}}
+	{% elif dummy_event == 'scan_restart' %}
+		{{ render_driver_callback_function3(dummy_event, 'void') -}}
+	{% elif dummy_event == 'event_on_data_recieve' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_conn_update_req' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_set_buffer_config' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_select_data_transfer' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_profile_discovery' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'profile_dummy' %}
+	void rsi_ble_event_profile_dummy_driver_callback(profile_dummy_data_t *profile_dummy_data);           
+	{% else %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+{% for dummy_event, details in dummy_events.items() %}
+void {{ details["handler"] }}(uint16_t status, void *event_data);
+{% endfor %}
+
+
+//! Extern functions
+{% for dummy_event, details in dummy_events.items() %}
+extern void {{ details["handler"] }}(uint16_t status, void *event_data);
+{% endfor %}
+
+{% macro render_driver_callback_function2(bt_event, value) %}
+/*==============================================*/
+
+{% if value == 'common_event_status_last' %}
+void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, uint16_t status);
+{% elif value == 'common_event_status_first' %}
+void rsi_ble_{{ bt_event }}_driver_callback(uint16_t status, rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }});
+{% elif value == 'common_event_status_none' %}
+void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }});
+{% else %}
+void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }});
+{% endif %}
+
+{% endmacro %}
+
+{% for bt_event, callback in bt_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if bt_event == 'event_encryption_enabled' %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_first') -}}
+	{% elif bt_event == 'event_smp_failed' %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_first') -}}
+	{% else %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_none') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+
+{% for bt_event, details in bt_events.items() %}
+void {{ details["handler"] }}_wrapper(void *msg);
+{% endfor %}
+
+{% for bt_event, details in bt_events.items() %}
+void {{ details["handler"] }}(uint16_t status, void *bt_event_data);
+{% endfor %}
+void sl_ble_register_callbacks_wrapper();
+
+//! Extern functions
+{% for bt_event, details in bt_events.items() %}
+extern void {{ details["handler"] }}(uint16_t status, void *bt_event_data);
+{% endfor %}
+extern generic_event_handler_lut_entry_t ble_events_lut[];
+#endif

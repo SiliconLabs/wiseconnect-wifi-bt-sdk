@@ -157,7 +157,7 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_uint32_to_4bytes(rsi_opermode->custom_feature_bit_map,
                            (FEAT_CUSTOM_FEAT_EXTENTION_VALID | RSI_CUSTOM_FEATURE_BIT_MAP));
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
       rsi_uint32_to_4bytes(rsi_opermode->ext_custom_feature_bit_map, (RSI_EXT_CUSTOM_FEATURE_BIT_MAP));
 #else //defaults
 #ifdef RSI_M4_INTERFACE
@@ -199,7 +199,7 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
         //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
         rsi_opermode->bt_feature_bit_map[3] |= 0x80;
         rsi_uint32_to_4bytes(rsi_opermode->ble_feature_bit_map,
-                             ((RSI_BLE_MAX_NBR_SLAVES << 12) | (RSI_BLE_MAX_NBR_MASTERS << 27)
+                             ((RSI_BLE_MAX_NBR_PERIPHERALS << 12) | (RSI_BLE_MAX_NBR_CENTRALS << 27)
                               | (RSI_BLE_MAX_NBR_ATT_SERV << 8) | RSI_BLE_MAX_NBR_ATT_REC));
 
         /*Enable BLE custom feature bitmap*/
@@ -359,12 +359,18 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = rsi_bytes2R_to_uint16(host_desc);
     } break;
 #endif
+#ifdef CHIP_917
+    case RSI_COMMON_REQ_ECDSA_256_VERIFY_HASH: {
+      // check status
+      payload_size = sizeof(rsi_req_ecdsa_256_verify_t);
+    } break;
+#endif
     case RSI_COMMON_REQ_TA_M4_COMMANDS: {
 #ifdef RSI_M4_INTERFACE
-#ifdef CHIP_9117
+#ifdef CHIP_917
       rsi_req_ta2m4_t *ta2m4 = (rsi_req_ta2m4_t *)pkt->data;
       if (ta2m4->sub_cmd == RSI_WRITE_TO_COMMON_FLASH) {
-        payload_size = ta2m4->chunk_len + (sizeof(rsi_req_ta2m4_t) - RSI_MAX_CHUNK_SIZE);
+        payload_size = ta2m4->in_buf_len + (sizeof(rsi_req_ta2m4_t) - RSI_MAX_CHUNK_SIZE);
       } else
 #endif
       {
@@ -611,6 +617,12 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
         }
       }
 
+    } break;
+#endif
+#ifdef CHIP_917
+    case RSI_COMMON_RSP_ECDSA_256_VERIFY_HASH: {
+      // check status
+      status = rsi_bytes2R_to_uint16(host_desc + RSI_STATUS_OFFSET);
     } break;
 #endif
 #ifdef RSI_WAC_MFI_ENABLE

@@ -115,16 +115,7 @@
 
 //! set sleep timer  enable or disable
 #define SET_SLEEP_TIME RSI_DISABLE
-#ifdef RSI_M4_INTERFACE
-#ifdef COMMON_FLASH_EN
-#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
-#else
-#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
-#endif
-#define WKP_RAM_USAGE_LOCATION 0x24061000 /*<!Bootloader RAM usage location upon wake up  */
 
-#define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
-#endif
 //! Sleep Timer value in seconds,Minimum value is 1sec, and maximum value is 2100seconds.
 #define SLEEP_TIME 30
 
@@ -152,7 +143,7 @@ int32_t rsi_powersave_profile_app()
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
-#ifndef RSI_M4_INTERFACE
+
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -167,7 +158,7 @@ int32_t rsi_powersave_profile_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#endif
+
 #ifdef RSI_M4_INTERFACE
   RSI_WISEMCU_HardwareSetup();
 #endif
@@ -331,29 +322,8 @@ int main()
   int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
-
-  rsi_task_handle_t wlan_task_handle = NULL;
-
-#endif
-#ifdef RSI_M4_INTERFACE
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! SiLabs module initialization
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
-#endif
-
-#ifdef RSI_WITH_OS
   //! OS case
+  rsi_task_handle_t wlan_task_handle = NULL;
   //! Task created for WLAN task
   rsi_task_create((rsi_task_function_t)(int32_t)rsi_powersave_profile_app,
                   (uint8_t *)"wlan_task",

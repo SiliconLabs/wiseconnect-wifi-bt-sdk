@@ -44,10 +44,11 @@
 //! BLE_DUAL_MODE_BT_A2DP_SOURCE_WIFI_HTTP_S_RX SAPI BLE CONFIG DEFINES
 /***********************************************************************************************************************************************/
 /***********************************************************************************************************************************************/
-//Max 3 (slave + master) devices can be configured due to memory constarints in STM32
-#define RSI_BLE_APP_GATT_TEST   (void *)"SI_COEX_MAX_DEMO" //! local device name
-#define RSI_BLE_MAX_NBR_SLAVES  1
-#define RSI_BLE_MAX_NBR_MASTERS 1
+//Max 3 (peripheral + central) devices can be configured due to memory constarints in STM32
+#define RSI_BLE_APP_GATT_TEST       (void *)"SI_COEX_MAX_DEMO" //! local device name
+#define RSI_BLE_MAX_NBR_PERIPHERALS 1
+#define RSI_BLE_MAX_NBR_CENTRALS    1
+
 #ifdef RSI_M4_INTERFACE
 #define RSI_BLE_MAX_NBR_ATT_REC 20
 /* Number of BLE notifications */
@@ -57,7 +58,7 @@
 /* Number of BLE notifications */
 #define RSI_BLE_NUM_CONN_EVENTS 20
 #endif
-#define TOTAL_CONNECTIONS RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS
+#define TOTAL_CONNECTIONS RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS
 
 #define CONN_BY_ADDR   1
 #define CONN_BY_NAME   2
@@ -68,8 +69,8 @@
 //! Remote Device Name to connect
 /***********************************************************************************************************************************************/
 #define RSI_REMOTE_DEVICE_NAME1 "SILABS_DEV" //"Hotspot"//"Skv"//"Hotspot"
-#define RSI_REMOTE_DEVICE_NAME2 "slave22"
-#define RSI_REMOTE_DEVICE_NAME3 "slave3"
+#define RSI_REMOTE_DEVICE_NAME2 "PERIPHERAL22"
+#define RSI_REMOTE_DEVICE_NAME3 "PERIPHERAL3"
 #else
 
 #define RSI_BLE_DEV_ADDR_TYPE \
@@ -85,227 +86,227 @@
 /***********************************************************************************************************************************************/
 //! BLE connection specific configurations
 /***********************************************************************************************************************************************/
-/*=================Master1 configurations=====================*/
+/*=================CENTRAL1 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_M1 0
-// Add remote device to whitelist
-#define ADD_TO_WHITELIST_M1 0
+#define SMP_ENABLE_C1 0
+// Add remote device to acceptlist
+#define ADD_TO_ACCEPTLIST_C1 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_M1 1
+#define PROFILE_QUERY_C1 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_M1 1
+#define DATA_TRANSFER_C1 1
 //!configure below macros to select type of data transfer
 //! set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_M1 0
+#define RX_NOTIFICATIONS_FROM_C1 0
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_M1 0
+#define RX_INDICATIONS_FROM_C1 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_M1 1
+#define TX_NOTIFICATIONS_TO_C1 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_M1 0
+#define TX_WRITES_TO_C1 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_M1 0
+#define TX_WRITES_NO_RESP_TO_C1 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_M1 0
+#define TX_INDICATIONS_TO_C1 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_M1 0
-#if DLE_ON_M1
-#define DLE_BUFFER_MODE_M1      1
-#define DLE_BUFFER_COUNT_M1     2
-#define RSI_BLE_MAX_DATA_LEN_M1 230
+#define DLE_ON_C1 0
+#if DLE_ON_C1
+#define DLE_BUFFER_MODE_C1      1
+#define DLE_BUFFER_COUNT_C1     2
+#define RSI_BLE_MAX_DATA_LEN_C1 230
 #else
-#define DLE_BUFFER_MODE_M1      0
-#define DLE_BUFFER_COUNT_M1     2
-#define RSI_BLE_MAX_DATA_LEN_M1 20 //! max data length
+#define DLE_BUFFER_MODE_C1      0
+#define DLE_BUFFER_COUNT_C1     2
+#define RSI_BLE_MAX_DATA_LEN_C1 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_M1            36 //! for conn interval of 45ms
-#define CONN_LATENCY_M1             0
-#define CONN_SUPERVISION_TIMEOUT_M1 400
+#define CONN_INTERVAL_C1            36 //! for conn interval of 45ms
+#define CONN_LATENCY_C1             0
+#define CONN_SUPERVISION_TIMEOUT_C1 400
 
-/*=================Master2 configurations=====================*/
+/*=================CENTRAL2 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_M2 0
-// Add remote device to whitelist
-#define ADD_TO_WHITELIST_M2 0
+#define SMP_ENABLE_C2 0
+// Add remote device to acceptlist
+#define ADD_TO_ACCEPTLIST_C2 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_M2 1
+#define PROFILE_QUERY_C2 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_M2 1
+#define DATA_TRANSFER_C2 1
 //!configure below macros to select type of data transfer
 //! set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_M2 0
+#define RX_NOTIFICATIONS_FROM_C2 0
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_M2 0
+#define RX_INDICATIONS_FROM_C2 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_M2 1
+#define TX_NOTIFICATIONS_TO_C2 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_M2 0
+#define TX_WRITES_TO_C2 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_M2 0
+#define TX_WRITES_NO_RESP_TO_C2 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_M2 0
-//#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_M2      		0x180D                          //! Heart Rate service uuid
-//#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_M2				0x2A39							//! Heart Rate control Point
-//#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_M2   	0x1802                          //! Immediate Alert service uuid
-//#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_M2   	0x2A06                          //! Alert level char uuid
-//#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_M2    	0x1809                          //! Health thermometer Alert service uuid
-//#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_M2   		0x2902                          //! Temperature measurement
-//#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_M2	0x180D                          //! Heart Rate service uuid
-//#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_M2		0x2A37							//! Heart Rate measurement
+#define TX_INDICATIONS_TO_C2 0
+//#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_C2      		0x180D                          //! Heart Rate service uuid
+//#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_C2				0x2A39							//! Heart Rate control Point
+//#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_C2   	0x1802                          //! Immediate Alert service uuid
+//#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_C2   	0x2A06                          //! Alert level char uuid
+//#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_C2    	0x1809                          //! Health thermometer Alert service uuid
+//#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_C2   		0x2902                          //! Temperature measurement
+//#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_C2	0x180D                          //! Heart Rate service uuid
+//#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_C2		0x2A37							//! Heart Rate measurement
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_M2 0
-#if DLE_ON_M2
-#define DLE_BUFFER_MODE_M2      1
-#define DLE_BUFFER_COUNT_M2     2
-#define RSI_BLE_MAX_DATA_LEN_M2 230
+#define DLE_ON_C2 0
+#if DLE_ON_C2
+#define DLE_BUFFER_MODE_C2      1
+#define DLE_BUFFER_COUNT_C2     2
+#define RSI_BLE_MAX_DATA_LEN_C2 230
 #else
-#define DLE_BUFFER_MODE_M2      0
-#define DLE_BUFFER_COUNT_M2     2
-#define RSI_BLE_MAX_DATA_LEN_M2 20 //! max data length
+#define DLE_BUFFER_MODE_C2      0
+#define DLE_BUFFER_COUNT_C2     2
+#define RSI_BLE_MAX_DATA_LEN_C2 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_M2            400 //! for conn interval of 500ms
-#define CONN_LATENCY_M2             0
-#define CONN_SUPERVISION_TIMEOUT_M2 400
+#define CONN_INTERVAL_C2            400 //! for conn interval of 500ms
+#define CONN_LATENCY_C2             0
+#define CONN_SUPERVISION_TIMEOUT_C2 400
 
-/*=================Slave1 configurations=====================*/
+/*=================PERIPHERAL1 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S1 0
-// Add remote device to whitelist
-#define ADD_TO_WHITELIST_S1 0
+#define SMP_ENABLE_P1 0
+// Add remote device to acceptlist
+#define ADD_TO_ACCEPTLIST_P1 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S1 1
+#define PROFILE_QUERY_P1 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S1 1
+#define DATA_TRANSFER_P1 1
 //!configure below macros to select type of data transfer
 //! set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S1 1
+#define RX_NOTIFICATIONS_FROM_P1 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S1 0
+#define RX_INDICATIONS_FROM_P1 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S1 0
+#define TX_NOTIFICATIONS_TO_P1 0
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S1 0
+#define TX_WRITES_TO_P1 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S1 0
+#define TX_WRITES_NO_RESP_TO_P1 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S1 0
-//#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_S1      		0x180D                          //! Heart Rate service uuid
-//#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_S1				0x2A39							//! Heart Rate control Point
-//#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_S1   	0x1802                          //! Immediate Alert service uuid
-//#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_S1   	0x2A06                          //! Alert level char uuid
-//#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_S1    	0x1809                          //! Health thermometer Alert service uuid
-//#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_S1   		0x2902                          //! Temperature measurement
-//#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_S1	0x180D                          //! Heart Rate service uuid
-//#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_S1		0x2A37							//! Heart Rate measurement
+#define TX_INDICATIONS_TO_P1 0
+//#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_P1      		0x180D                          //! Heart Rate service uuid
+//#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_P1				0x2A39							//! Heart Rate control Point
+//#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_P1   	0x1802                          //! Immediate Alert service uuid
+//#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_P1   	0x2A06                          //! Alert level char uuid
+//#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_P1    	0x1809                          //! Health thermometer Alert service uuid
+//#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_P1   		0x2902                          //! Temperature measurement
+//#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_P1	0x180D                          //! Heart Rate service uuid
+//#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_P1		0x2A37							//! Heart Rate measurement
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S1 0
-#if DLE_ON_S1
-#define DLE_BUFFER_MODE_S1      1
-#define DLE_BUFFER_COUNT_S1     2
-#define RSI_BLE_MAX_DATA_LEN_S1 230
+#define DLE_ON_P1 0
+#if DLE_ON_P1
+#define DLE_BUFFER_MODE_P1      1
+#define DLE_BUFFER_COUNT_P1     2
+#define RSI_BLE_MAX_DATA_LEN_P1 230
 #else
-#define DLE_BUFFER_MODE_S1      0
-#define DLE_BUFFER_COUNT_S1     2
-#define RSI_BLE_MAX_DATA_LEN_S1 20 //! max data length
+#define DLE_BUFFER_MODE_P1      0
+#define DLE_BUFFER_COUNT_P1     2
+#define RSI_BLE_MAX_DATA_LEN_P1 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S1            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S1             0
-#define CONN_SUPERVISION_TIMEOUT_S1 400
+#define CONN_INTERVAL_P1            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P1             0
+#define CONN_SUPERVISION_TIMEOUT_P1 400
 
-/*=================Slave2 configurations=====================*/
+/*=================PERIPHERAL2 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S2 0
-// Add remote device to whitelist
-#define ADD_TO_WHITELIST_S2 0
+#define SMP_ENABLE_P2 0
+// Add remote device to acceptlist
+#define ADD_TO_ACCEPTLIST_P2 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S2 1
+#define PROFILE_QUERY_P2 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S2 1
+#define DATA_TRANSFER_P2 1
 //!configure below macros to select type of data transfer
 //! set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S2 1
+#define RX_NOTIFICATIONS_FROM_P2 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S2 0
+#define RX_INDICATIONS_FROM_P2 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S2 0
+#define TX_NOTIFICATIONS_TO_P2 0
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S2 0
+#define TX_WRITES_TO_P2 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S2 0
+#define TX_WRITES_NO_RESP_TO_P2 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S2 0
+#define TX_INDICATIONS_TO_P2 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S2 0
-#if DLE_ON_S2
-#define DLE_BUFFER_MODE_S2      1
-#define DLE_BUFFER_COUNT_S2     2
-#define RSI_BLE_MAX_DATA_LEN_S2 230
+#define DLE_ON_P2 0
+#if DLE_ON_P2
+#define DLE_BUFFER_MODE_P2      1
+#define DLE_BUFFER_COUNT_P2     2
+#define RSI_BLE_MAX_DATA_LEN_P2 230
 #else
-#define DLE_BUFFER_MODE_S2      0
-#define DLE_BUFFER_COUNT_S2     2
-#define RSI_BLE_MAX_DATA_LEN_S2 20 //! max data length
+#define DLE_BUFFER_MODE_P2      0
+#define DLE_BUFFER_COUNT_P2     2
+#define RSI_BLE_MAX_DATA_LEN_P2 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S2            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S2             0
-#define CONN_SUPERVISION_TIMEOUT_S2 400
+#define CONN_INTERVAL_P2            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P2             0
+#define CONN_SUPERVISION_TIMEOUT_P2 400
 
-/*=================Slave3 configurations=====================*/
+/*=================PERIPHERAL3 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S3 0
-// Add remote device to whitelist
-#define ADD_TO_WHITELIST_S3 0
+#define SMP_ENABLE_P3 0
+// Add remote device to acceptlist
+#define ADD_TO_ACCEPTLIST_P3 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S3 1
+#define PROFILE_QUERY_P3 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S3 1
+#define DATA_TRANSFER_P3 1
 //!configure below macros to select type of data transfer
 //! set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S3 1
+#define RX_NOTIFICATIONS_FROM_P3 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S3 0
+#define RX_INDICATIONS_FROM_P3 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S3 0
+#define TX_NOTIFICATIONS_TO_P3 0
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S3 0
+#define TX_WRITES_TO_P3 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S3 0
+#define TX_WRITES_NO_RESP_TO_P3 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S3 0
+#define TX_INDICATIONS_TO_P3 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S3 0
-#if DLE_ON_S3
-#define DLE_BUFFER_MODE_S3      1
-#define DLE_BUFFER_COUNT_S3     2
-#define RSI_BLE_MAX_DATA_LEN_S3 230
+#define DLE_ON_P3 0
+#if DLE_ON_P3
+#define DLE_BUFFER_MODE_P3      1
+#define DLE_BUFFER_COUNT_P3     2
+#define RSI_BLE_MAX_DATA_LEN_P3 230
 #else
-#define DLE_BUFFER_MODE_S3      0
-#define DLE_BUFFER_COUNT_S3     2
-#define RSI_BLE_MAX_DATA_LEN_S3 20 //! max data length
+#define DLE_BUFFER_MODE_P3      0
+#define DLE_BUFFER_COUNT_P3     2
+#define RSI_BLE_MAX_DATA_LEN_P3 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S3            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S3             0
-#define CONN_SUPERVISION_TIMEOUT_S3 400
+#define CONN_INTERVAL_P3            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P3             0
+#define CONN_SUPERVISION_TIMEOUT_P3 400
 
-#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_M1         0x180D //! Heart Rate service uuid
-#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_M1            0x2A39 //! Heart Rate control Point
-#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_M1 0x1802 //! Immediate Alert service uuid
-#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_M1    0x2A06 //! Alert level char uuid
-#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_M1   0x1809 //! Health thermometer Alert service uuid
-#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_M1      0x2A1C //! Temperature measurement
-#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_M1 0x180D //! Heart Rate service uuid
-#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_M1    0x2A37 //! Heart Rate measurement
+#define RSI_BLE_CLIENT_WRITE_SERVICE_UUID_C1         0x180D //! Heart Rate service uuid
+#define RSI_BLE_CLIENT_WRITE_CHAR_UUID_C1            0x2A39 //! Heart Rate control Point
+#define RSI_BLE_CLIENT_WRITE_NO_RESP_SERVICE_UUID_C1 0x1802 //! Immediate Alert service uuid
+#define RSI_BLE_CLIENT_WRITE_NO_RESP_CHAR_UUID_C1    0x2A06 //! Alert level char uuid
+#define RSI_BLE_CLIENT_INIDCATIONS_SERVICE_UUID_C1   0x1809 //! Health thermometer Alert service uuid
+#define RSI_BLE_CLIENT_INIDCATIONS_CHAR_UUID_C1      0x2A1C //! Temperature measurement
+#define RSI_BLE_CLIENT_NOTIFICATIONS_SERVICE_UUID_C1 0x180D //! Heart Rate service uuid
+#define RSI_BLE_CLIENT_NOTIFICATIONS_CHAR_UUID_C1    0x2A37 //! Heart Rate measurement
 
 #define RSI_DEBUG_EN                            0 //! To get deep understanding of BLE execution flow Enable this macro to get debug logs
 #define RSI_BLE_GATT_ASYNC_ENABLE               1
 #define RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST 1
 #define RSI_BLE_MTU_EXCHANGE_FROM_HOST          1
 #define MAX_MTU_SIZE                            240
-#define UPDATE_CONN_PARAMETERS                  0 //! To update connection parameters of remote master connection
+#define UPDATE_CONN_PARAMETERS                  0 //! To update connection parameters of remote central connection
 #define MITM_ENABLE                             1
 #define RSI_BLE_MAX_CHAR_DESCRIPTORS            5
 #define RSI_MAX_PROFILE_CNT                     8
@@ -314,11 +315,11 @@
 #define RESOLVE_ENABLE                          0
 #define LOCAL_MTU_SIZE                          232
 
-#define SLAVE1  0
-#define SLAVE2  1
-#define SLAVE3  2
-#define MASTER1 RSI_BLE_MAX_NBR_SLAVES
-#define MASTER2 RSI_BLE_MAX_NBR_SLAVES + 1
+#define PERIPHERAL1 0
+#define PERIPHERAL2 1
+#define PERIPHERAL3 2
+#define CENTRAL1    RSI_BLE_MAX_NBR_PERIPHERALS
+#define CENTRAL2    RSI_BLE_MAX_NBR_PERIPHERALS + 1
 
 /***********************************************************************************************************************************************/
 //! application events list
@@ -363,7 +364,7 @@ typedef enum rsi_ble_state_e {
   RSI_CONN_UPDATE_REQ_EVENT,
   RSI_BLE_WRITE_EVENT_RESP,
   RSI_BLE_GATT_INDICATION_CONFIRMATION,
-  RSI_BLE_REQ_WHITELIST,
+  RSI_BLE_REQ_ACCEPTLIST,
   RSI_BLE_APP_USER_INPUT,
   RSI_BLE_SELECT_DATATRANSFER,
 } rsi_ble_state_t;
@@ -371,7 +372,7 @@ typedef enum rsi_ble_state_e {
 typedef struct rsi_ble_conn_config_s {
   uint8_t conn_id;
   bool smp_enable;
-  bool add_to_whitelist;
+  bool add_to_acceptlist;
   bool profile_discovery;
   bool data_transfer;
   //	bool bidir_datatransfer;
@@ -526,13 +527,13 @@ typedef struct rsi_ble_s {
 #define LE_SCAN_WINDOW_CONN   0x0050
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
+//! Connection parameters for RSI as central to remote device as peripheral connection
 /***********************************************************************************************************************************************/
-#define M2S12_CONNECTION_INTERVAL_MIN 0x00C8
-#define M2S12_CONNECTION_INTERVAL_MAX 0x00C8
+#define C2P12_CONNECTION_INTERVAL_MIN 0x00C8
+#define C2P12_CONNECTION_INTERVAL_MAX 0x00C8
 
-#define M2S12_CONNECTION_LATENCY  0x0000
-#define M2S12_SUPERVISION_TIMEOUT (4 * M2S12_CONNECTION_INTERVAL_MIN)
+#define C2P12_CONNECTION_LATENCY  0x0000
+#define C2P12_SUPERVISION_TIMEOUT (4 * C2P12_CONNECTION_INTERVAL_MIN)
 
 /***********************************************************************************************************************************************/
 
@@ -597,10 +598,17 @@ typedef struct rsi_ble_s {
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID
 
 //! To set Extended custom feature select bit map
-#ifdef CHIP_9117
+#ifdef CHIP_917
+#ifdef RSI_M4_INTERFACE
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
-  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC)
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#else
+//! To set Extended custom feature select bit map
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP                                              \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | RAM_LEVEL_NWP_ADV_MCU_BASIC \
+   | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#endif
 #else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
@@ -628,7 +636,7 @@ typedef struct rsi_ble_s {
 //! including the common defines
 #include "rsi_wlan_common_config.h" /* TESTAPPS_WLAN_HTTPS_BT_SPP_BLE_MULTICONNECTION_RSI_WLAN_CONFIG_H_ */
 #include "rsi_ble_common_config.h"
-#endif /* SAPIS_EXAMPLES_RSI_DEMO_APPS_INC_RSI_BLE_COMMON_BLE_MULTI_SLAVE_MASTER_H */
+#endif /* SAPIS_EXAMPLES_RSI_DEMO_APPS_INC_RSI_BLE_COMMON_BLE_MULTI_PERIPHERAL_CENTRAL_H */
 
 #ifdef FW_LOGGING_ENABLE
 /*=======================================================================*/

@@ -22,7 +22,7 @@
  * @brief : This file contains example application for BLE Secure Connections
  * @section Description :
  * This application demonstrates how to configure the SiLabs device in Central
- * mode and connects with remote slave device and how to enable SMP (Security
+ * mode and connects with remote Peripheral device and how to enable SMP (Security
  * Manager Protocol) pairing and a Secured passkey pairing.
  =================================================================================*/
 
@@ -42,6 +42,13 @@
 
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
+#include "rsi_rtc.h"
+#include "rsi_driver.h"
+#include "rsi_chip.h"
+#include "rsi_wisemcu_hardware_setup.h"
+#include "rsi_m4.h"
+#include "rsi_ps_ram_func.h"
+#include "rsi_ds_timer.h"
 #endif
 #ifdef FW_LOGGING_ENABLE
 //! Firmware logging includes
@@ -146,6 +153,84 @@ static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
 #define MITM_REQ 0x01
 
+/****************************************************************************************************************/
+void main_loop(void);
+int32_t rsi_ble_smp_test_app(void);
+void rsi_ble_on_encrypt_started(uint16_t status, rsi_bt_event_encryption_enabled_t *enc_enabled);
+void rsi_ble_on_smp_failed(uint16_t status, rsi_bt_event_smp_failed_t *event_smp_failed);
+void rsi_ble_on_le_security_keys(rsi_bt_event_le_security_keys_t *rsi_ble_event_le_security_keys);
+void rsi_ble_on_sc_passkey(rsi_bt_event_sc_passkey_t *sc_passkey);
+void rsi_ble_on_smp_passkey_display(rsi_bt_event_smp_passkey_display_t *smp_passkey_display);
+void rsi_ble_on_smp_passkey(rsi_bt_event_smp_passkey_t *event_smp_passkey);
+void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *bt_event_smp);
+void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *event_smp_req);
+void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn);
+void rsi_ble_app_set_event(uint32_t event_num);
+/*==============================================*/
+
+/**
+ * @fn         rsi_ble_only_Trigger_M4_Sleep
+ * @brief      Keeps the M4 In the Sleep
+ * @param[in]  none
+ * @return    none.
+ * @section description
+ * This function is used to trigger sleep in the M4 and in the case of the retention submitting the buffer valid
+ * to the TA for the rx packets.
+ */
+#if M4_POWERSAVE_ENABLE
+void rsi_ble_only_Trigger_M4_Sleep(void)
+{
+  /* Configure Wakeup-Source */
+  RSI_PS_SetWkpSources(WIRELESS_BASED_WAKEUP);
+  /* sets the priority of an Wireless wakeup interrupt. */
+  NVIC_SetPriority(WIRELESS_WAKEUP_IRQHandler, WIRELESS_WAKEUP_IRQ_PRI);
+  NVIC_EnableIRQ(WIRELESS_WAKEUP_IRQHandler);
+
+#ifndef FLASH_BASED_EXECUTION_ENABLE
+  /* LDOSOC Default Mode needs to be disabled */
+  RSI_PS_LdoSocDefaultModeDisable();
+
+  /* bypass_ldorf_ctrl needs to be enabled */
+  RSI_PS_BypassLdoRfEnable();
+
+  RSI_PS_FlashLdoDisable();
+
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_48KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  /* Trigger M4 Sleep */
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           0,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           0,
+                           RSI_WAKEUP_WITH_RETENTION_WO_ULPSS_RAM);
+
+#else
+
+#ifdef COMMON_FLASH_EN
+  M4SS_P2P_INTR_SET_REG &= ~BIT(3);
+#endif
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
+
+  RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
+                           DISABLE_LF_MODE,
+                           WKP_RAM_USAGE_LOCATION,
+                           (uint32_t)RSI_PS_RestoreCpuContext,
+                           IVT_OFFSET_ADDR,
+                           RSI_WAKEUP_FROM_FLASH_MODE);
+#endif
+#ifdef RSI_WITH_OS
+  /*  Setup the systick timer */
+  vPortSetupTimerInterrupt();
+#endif
+#ifdef DEBUG_UART
+  fpuInit();
+  DEBUGINIT();
+#endif
+}
+#endif
 /*==============================================*/
 /**
  * @fn         rsi_ble_app_init_events
@@ -218,7 +303,7 @@ static void rsi_ble_app_clear_event(uint32_t event_num)
  */
 static int32_t rsi_ble_app_get_event(void)
 {
-  uint32_t ix;
+  int32_t ix;
 
   for (ix = 0; ix < 64; ix++) {
     if (ix < 32) {
@@ -298,8 +383,8 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP request events is received(we are in Master mode)
- * Note: slave requested to start SMP request, we have to send SMP request command
+ * This callback function is invoked when SMP request events is received(we are in Central mode)
+ * Note: Peripheral requested to start SMP request, we have to send SMP request command
  */
 void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *event_smp_req)
 {
@@ -316,8 +401,8 @@ void rsi_ble_on_smp_request(rsi_bt_event_smp_req_t *event_smp_req)
  * @param[in]  remote_dev_address, it indicates remote bd address.
  * @return     none.
  * @section description
- * This callback function is invoked when SMP response events is received(we are in slave mode) 
- * Note: Master initiated SMP protocol, we have to send SMP response command
+ * This callback function is invoked when SMP response events is received(we are in Peripheral mode) 
+ * Note: Central initiated SMP protocol, we have to send SMP response command
  */
 void rsi_ble_on_smp_response(rsi_bt_event_smp_resp_t *bt_event_smp)
 {
@@ -498,6 +583,14 @@ int32_t rsi_ble_smp_test_app(void)
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+#if M4_POWERSAVE_ENABLE
+
+  //RSI_PS_FlashLdoEnable();
+  /* MCU Hardware Configuration for Low-Power Applications */
+  RSI_WISEMCU_HardwareSetup();
+  LOG_PRINT("\r\nRSI_WISEMCU_HardwareSetup Success\r\n");
+
+#endif
   //! WC initialization
   status = rsi_wireless_init(0, RSI_OPERMODE_WLAN_BLE);
   if (status != RSI_SUCCESS) {
@@ -607,7 +700,10 @@ int32_t rsi_ble_smp_test_app(void)
   }
 
   LOG_PRINT("\r\n Module is in power save \r\n");
-
+#if M4_POWERSAVE_ENABLE
+  P2P_STATUS_REG &= ~M4_wakeup_TA;
+  // LOG_PRINT("\n RSI_BLE_REQ_PWRMODE\n ");
+#endif
 #endif
 
   //! waiting for events from controller.
@@ -621,7 +717,17 @@ int32_t rsi_ble_smp_test_app(void)
     event_id = rsi_ble_app_get_event();
 
     if (event_id == -1) {
-      rsi_semaphore_wait(&ble_main_task_sem, 0);
+#if M4_POWERSAVE_ENABLE
+      //! if events are not received loop will be continued.
+      if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (!rsi_driver_cb->scheduler_cb.event_map)) {
+        P2P_STATUS_REG &= ~M4_wakeup_TA;
+        rsi_ble_only_Trigger_M4_Sleep();
+      }
+#else
+      {
+        rsi_semaphore_wait(&ble_main_task_sem, 0);
+      }
+#endif
       continue;
     }
 
@@ -703,7 +809,7 @@ int32_t rsi_ble_smp_test_app(void)
 
       case RSI_BLE_SMP_REQ_EVENT: {
         LOG_PRINT("\r\nIn SMP request event\r\n");
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         pairing_info_available = 0;
 
@@ -719,7 +825,7 @@ int32_t rsi_ble_smp_test_app(void)
 
       case RSI_BLE_SMP_RESP_EVENT: {
         LOG_PRINT("\r\nIn SMP response event\r\n");
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_RESP_EVENT);
@@ -735,7 +841,7 @@ int32_t rsi_ble_smp_test_app(void)
 
       case RSI_BLE_SMP_PASSKEY_EVENT: {
         LOG_PRINT("\r\nIn SMP passkey event\r\n");
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         //! clear the served event
         rsi_ble_app_clear_event(RSI_BLE_SMP_PASSKEY_EVENT);
@@ -766,7 +872,7 @@ int32_t rsi_ble_smp_test_app(void)
         rsi_ble_app_clear_event(RSI_BLE_LTK_REQ_EVENT);
         if (pairing_info_available) {
           status = rsi_ble_ltk_req_reply(remote_dev_address,
-                                         (1 | encrypt_keys.enabled | (encrypt_keys.sc_enable << 7)),
+                                         ((uint8_t)(1 | encrypt_keys.enabled | (encrypt_keys.sc_enable << 7))),
                                          encrypt_keys.localltk);
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\n ltk req reply cmd failed with reason = %lx \n", status);
@@ -789,7 +895,7 @@ int32_t rsi_ble_smp_test_app(void)
 
       case RSI_BLE_SMP_FAILED_EVENT: {
         LOG_PRINT("\r\nIn SMP failed event\r\n");
-        //! initiate SMP protocol as a Master
+        //! initiate SMP protocol as a Central
 
         pairing_info_available = 0;
         //! clear the served event

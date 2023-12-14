@@ -107,17 +107,6 @@
 // Wireless driver task stack size
 #define RSI_DRIVER_TASK_STACK_SIZE 500
 
-#ifdef RSI_M4_INTERFACE
-#ifdef COMMON_FLASH_EN
-#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
-#else
-#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
-#endif
-#define WKP_RAM_USAGE_LOCATION 0x24061000 /*<!Bootloader RAM usage location upon wake up  */
-
-#define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
-#endif
-
 // Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
@@ -183,6 +172,8 @@ void M4_sleep_wakeup()
                            RSI_WAKEUP_WITH_RETENTION_WO_ULPSS_RAM);
 
 #else
+  /* Configure RAM Usage and Retention Size */
+  RSI_WISEMCU_ConfigRamRetention(WISEMCU_192KB_RAM_IN_USE, WISEMCU_RETAIN_DEFAULT_RAM_DURING_SLEEP);
   /* Trigger M4 Sleep*/
   RSI_WISEMCU_TriggerSleep(SLEEP_WITH_RETENTION,
                            DISABLE_LF_MODE,
@@ -206,7 +197,6 @@ int32_t application()
   uint8_t dhcp_mode = (RSI_DHCP | RSI_DHCP_UNICAST_OFFER);
 #endif
 
-#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -220,7 +210,6 @@ int32_t application()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_M4_INTERFACE
   /* MCU Hardware Configuration for Low-Power Applications */
@@ -379,22 +368,6 @@ int32_t application()
 // main function definition
 int main(void)
 {
-#ifdef RSI_M4_INTERFACE
-  int32_t status = RSI_SUCCESS;
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;

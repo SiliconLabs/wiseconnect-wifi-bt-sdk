@@ -40,11 +40,11 @@
 //! BT_SPP APP CONFIG defines
 /***********************************************************************************************************************************************/
 #define RSI_BT_REMOTE_BD_ADDR (void *)"EA:D1:01:01:82:4C"
-#define SPP_SLAVE             0
-#define SPP_MASTER            1
-#define SPP_MODE              SPP_SLAVE //! type of Module mode
-#if (SPP_MODE == SPP_MASTER)
-#define RSI_BT_LOCAL_NAME (void *)"SPP_MASTER"
+#define SPP_PERIPHERAL        0
+#define SPP_CENTRAL           1
+#define SPP_MODE              SPP_PERIPHERAL //! type of Module mode
+#if (SPP_MODE == SPP_CENTRAL)
+#define RSI_BT_LOCAL_NAME (void *)"SPP_CENTRAL"
 #define INQUIRY_ENABLE    0 //! To scan for device and connect
 #if INQUIRY_ENABLE
 #define MAX_NO_OF_RESPONSES 10
@@ -53,7 +53,7 @@
 #define MAX_NAME_LENGTH     10
 #endif
 #else
-#define RSI_BT_LOCAL_NAME (void *)"SPP_SLAVE" //! Module name
+#define RSI_BT_LOCAL_NAME (void *)"SPP_PERIPHERAL" //! Module name
 #endif
 #define PIN_CODE "0000"
 

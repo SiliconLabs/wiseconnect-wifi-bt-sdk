@@ -27,10 +27,10 @@
 #include <rsi_bt.h>
 #include <stdio.h>
 #include "rsi_driver.h"
-#define SPP_SLAVE  0
-#define SPP_MASTER 1
+#define SPP_PERIPHERAL 0
+#define SPP_CENTRAL    1
 
-#define SPP_MODE                     SPP_SLAVE
+#define SPP_MODE                     SPP_PERIPHERAL
 #define BT_THROUGHPUT_ENABLE_LOGGING 0 // enable macro for SPP prints on console
 
 #define RSI_BT_LOCAL_NAME      "BT_DUAL_MODE"
@@ -407,11 +407,11 @@ void rsi_ble_app_send_to_bt(uint8_t data_type, uint8_t *app_data, uint16_t app_d
 /*==============================================*/
 /**
  * @fn         rsi_bt_app_init
- * @brief      Tests the BT Classic SPP Slave role.
+ * @brief      Tests the BT Classic SPP peripheral role.
  * @param[in]  none
   * @return    none.
  * @section description
- * This function is used to test the SPP Slave role.
+ * This function is used to test the SPP peripheral role.
  */
 int32_t rsi_bt_app_init(void)
 {
@@ -471,7 +471,7 @@ int32_t rsi_bt_app_init(void)
   strcpy((char *)&eir_data[5], RSI_BT_LOCAL_NAME);
   //! set eir data
   rsi_bt_set_eir_data(eir_data, strlen(RSI_BT_LOCAL_NAME) + 5);
-#if (SPP_MODE != SPP_MASTER)
+#if (SPP_MODE != SPP_CENTRAL)
   //! start the discover mode
   status = rsi_bt_start_discoverable();
   if (status != RSI_SUCCESS) {
@@ -507,7 +507,7 @@ int32_t rsi_bt_app_init(void)
   //! register the SPP profile callback's
   rsi_bt_spp_register_callbacks(rsi_bt_app_on_spp_connect, rsi_bt_app_on_spp_disconnect, rsi_bt_app_on_spp_data_rx);
 
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
     //return status;
@@ -522,7 +522,7 @@ int32_t rsi_bt_app_task()
   int32_t status         = 0;
   int32_t temp_event_map = 0;
 
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
   int32_t tx_ix           = 0;
   uint8_t spp_tx_data_len = 0;
 #endif
@@ -569,7 +569,7 @@ int32_t rsi_bt_app_task()
 
       //! clear the authentication complete event.
       rsi_bt_app_clear_event(RSI_APP_EVENT_AUTH_COMPLT);
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
       rsi_delay_ms(500);
       status = rsi_bt_spp_connect(remote_dev_addr);
       if (status != RSI_SUCCESS) {
@@ -582,7 +582,7 @@ int32_t rsi_bt_app_task()
 
       //! clear the disconnected event.
       rsi_bt_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
       status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
       if (status != RSI_SUCCESS) {
         //return status;
@@ -612,7 +612,7 @@ int32_t rsi_bt_app_task()
 
       //! clear the spp connected event.
       rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_CONN);
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
       strcpy((char *)data, "spp_test_sample_1");
       spp_tx_data_len       = strlen((char *)data);
       data[spp_tx_data_len] = (tx_ix++) % 10;
@@ -633,7 +633,7 @@ int32_t rsi_bt_app_task()
       //! clear the spp receive event.
       rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_RX);
 
-#if (SPP_MODE != SPP_MASTER)
+#if (SPP_MODE != SPP_CENTRAL)
       rsi_bt_spp_transfer(remote_dev_addr, data, data_len);
 #else
       strcpy((char *)data, "spp_test_sample_1");

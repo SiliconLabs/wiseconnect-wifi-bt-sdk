@@ -58,40 +58,40 @@
 #define LE_SCAN_WINDOW_CONN   0x0050
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as slave to remote device as master connection
+//! Connection parameters for RSI as peripheral to remote device as central connection
 /***********************************************************************************************************************************************/
-#define S2M_CONNECTION_INTERVAL_MIN 0x00C8
-#define S2M_CONNECTION_INTERVAL_MAX 0x00C8
+#define P2M_CONNECTION_INTERVAL_MIN 0x00C8
+#define P2M_CONNECTION_INTERVAL_MAX 0x00C8
 
-#define S2M_CONNECTION_LATENCY  0x0000
-#define S2M_SUPERVISION_TIMEOUT (4 * S2M_CONNECTION_INTERVAL_MAX)
-
-/***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
-/***********************************************************************************************************************************************/
-#define M2S12_CONNECTION_INTERVAL_MIN 0x00C8
-#define M2S12_CONNECTION_INTERVAL_MAX 0x00C8
-
-#define M2S12_CONNECTION_LATENCY  0x0000
-#define M2S12_SUPERVISION_TIMEOUT (4 * M2S12_CONNECTION_INTERVAL_MIN)
+#define P2M_CONNECTION_LATENCY  0x0000
+#define P2M_SUPERVISION_TIMEOUT (4 * P2M_CONNECTION_INTERVAL_MAX)
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
+//! Connection parameters for RSI as central to remote device as peripheral connection
 /***********************************************************************************************************************************************/
-#define M2S34_CONNECTION_INTERVAL_MIN 0x0190
-#define M2S34_CONNECTION_INTERVAL_MAX 0x0190
+#define C2P12_CONNECTION_INTERVAL_MIN 0x00C8
+#define C2P12_CONNECTION_INTERVAL_MAX 0x00C8
 
-#define M2S34_CONNECTION_LATENCY  0x0000
-#define M2S34_SUPERVISION_TIMEOUT (4 * M2S34_CONNECTION_INTERVAL_MIN)
+#define C2P12_CONNECTION_LATENCY  0x0000
+#define C2P12_SUPERVISION_TIMEOUT (4 * C2P12_CONNECTION_INTERVAL_MIN)
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
+//! Connection parameters for RSI as central to remote device as peripheral connection
 /***********************************************************************************************************************************************/
-#define M2S56_CONNECTION_INTERVAL_MIN 0x0320
-#define M2S56_CONNECTION_INTERVAL_MAX 0x0320
+#define C2P34_CONNECTION_INTERVAL_MIN 0x0190
+#define C2P34_CONNECTION_INTERVAL_MAX 0x0190
 
-#define M2S56_CONNECTION_LATENCY  0x0000
-#define M2S56_SUPERVISION_TIMEOUT (4 * M2S56_CONNECTION_INTERVAL_MIN)
+#define C2P34_CONNECTION_LATENCY  0x0000
+#define C2P34_SUPERVISION_TIMEOUT (4 * C2P34_CONNECTION_INTERVAL_MIN)
+
+/***********************************************************************************************************************************************/
+//! Connection parameters for RSI as central to remote device as peripheral connection
+/***********************************************************************************************************************************************/
+#define C2S56_CONNECTION_INTERVAL_MIN 0x0320
+#define C2S56_CONNECTION_INTERVAL_MAX 0x0320
+
+#define C2S56_CONNECTION_LATENCY  0x0000
+#define C2S56_SUPERVISION_TIMEOUT (4 * C2S56_CONNECTION_INTERVAL_MIN)
 
 /***********************************************************************************************************************************************/
 

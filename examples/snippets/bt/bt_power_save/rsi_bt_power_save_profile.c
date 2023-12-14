@@ -44,8 +44,8 @@
 #define BT_GLOBAL_BUFF_LEN 15000
 #endif
 
-#define SPP_SLAVE  0
-#define SPP_MASTER 1
+#define SPP_PERIPHERAL 0
+#define SPP_CENTRAL    1
 
 #ifdef FW_LOGGING_ENABLE
 /*=======================================================================*/
@@ -61,11 +61,11 @@ rsi_task_handle_t fw_log_task_handle = NULL;
 void sl_fw_log_callback(uint8_t *log_message, uint16_t log_message_length);
 void sl_fw_log_task(void);
 #endif
-#define SPP_MODE                     SPP_SLAVE
+#define SPP_MODE                     SPP_PERIPHERAL
 #define BT_THROUGHPUT_ENABLE_LOGGING 0 //enable macro for SPP prints on console
 
-#if (SPP_MODE == SPP_MASTER)
-#define RSI_BT_LOCAL_NAME "BT_SPP_MASTER_POWER_SAVE"
+#if (SPP_MODE == SPP_CENTRAL)
+#define RSI_BT_LOCAL_NAME "BT_SPP_CENTRAL_POWER_SAVE"
 #define INQUIRY_ENABLE    0 //! To scan for device and connect
 #if INQUIRY_ENABLE
 #define MAX_NO_OF_RESPONSES 10
@@ -74,7 +74,7 @@ void sl_fw_log_task(void);
 #define MAX_NAME_LENGTH     10
 #endif
 #else
-#define RSI_BT_LOCAL_NAME "BT_SPP_SLAVE_POWER_SAVE"
+#define RSI_BT_LOCAL_NAME "BT_SPP_PERIPHERAL_POWER_SAVE"
 #endif
 
 #define PIN_CODE       "4321"
@@ -156,7 +156,7 @@ rsi_semaphore_handle_t bt_main_task_sem;
 static uint32_t ble_app_event_map;
 static uint32_t ble_app_event_map1;
 
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
 static uint8_t inq_responses_count;
 uint8_t rsi_inq_resp_list[MAX_NO_OF_RESPONSES][RSI_DEV_ADDR_LEN] = { 0 };
 uint8_t rsi_inq_resp_list_name_length[MAX_NAME_LENGTH]           = { 0 };
@@ -559,7 +559,7 @@ void rsi_bt_on_sniff_subrating(uint16_t resp_status, rsi_bt_event_sniff_subratin
   LOG_PRINT("mode_change_event: str_conn_bd_addr: %s\r\n",
             rsi_6byte_dev_address_to_ascii(str_conn_bd_addr, mode_change->dev_addr));
 }
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
 /*==============================================*/
 /**
  * @fn         rsi_bt_inq_response
@@ -679,14 +679,14 @@ void switch_proto_async(uint16_t mode, uint8_t *bt_disabled_status)
 
 /*==============================================*/
 /**
- * @fn         rsi_bt_spp_slave
- * @brief      Tests the BT Classic SPP Slave role.
+ * @fn         rsi_bt_spp_peripheral
+ * @brief      Tests the BT Classic SPP Peripheral role.
  * @param[in]  none
  * @return    none.
  * @section description
- * This function is used to test the SPP Slave role.
+ * This function is used to test the SPP Peripheral role.
  */
-int32_t rsi_bt_spp_slave(void)
+int32_t rsi_bt_spp_peripheral(void)
 {
   int32_t status          = 0;
   int32_t temp_event_map  = 0;
@@ -703,7 +703,7 @@ int32_t rsi_bt_spp_slave(void)
   sl_fw_log_level_t fw_component_log_level;
 #endif
 
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
   int32_t tx_ix           = 0;
   uint8_t spp_tx_data_len = 0;
 #endif
@@ -787,7 +787,7 @@ int32_t rsi_bt_spp_slave(void)
                                 rsi_bt_app_on_conn,
                                 rsi_bt_on_unbond_status, //
                                 rsi_bt_app_on_disconn,
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
                                 rsi_bt_inq_response,      //NULL, //scan_resp
                                 rsi_remote_name_response, //NULL, //remote_name_req
 #else
@@ -799,7 +799,7 @@ int32_t rsi_bt_spp_slave(void)
                                 rsi_bt_on_confirm_request, //confirm req
                                 rsi_bt_app_on_pincode_req,
                                 rsi_bt_on_passkey_request, //passkey request
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
                                 rsi_bt_inquiry_complete, //NULL, //inquiry complete
 #else
                                 NULL,
@@ -845,7 +845,7 @@ int32_t rsi_bt_spp_slave(void)
   strcpy((char *)&eir_data[5], RSI_BT_LOCAL_NAME);
   //! set eir data
   rsi_bt_set_eir_data(eir_data, strlen(RSI_BT_LOCAL_NAME) + 5);
-#if (SPP_MODE != SPP_MASTER)
+#if (SPP_MODE != SPP_CENTRAL)
   //! start the discover mode
   status = rsi_bt_start_discoverable();
   if (status != RSI_SUCCESS) {
@@ -880,7 +880,7 @@ int32_t rsi_bt_spp_slave(void)
   LOG_PRINT("spp init success\n");
   //! register the SPP profile callback's
   rsi_bt_spp_register_callbacks(rsi_bt_app_on_spp_connect, rsi_bt_app_on_spp_disconnect, rsi_bt_app_on_spp_data_rx);
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
   inq_responses_count = 0;
   //! Start inquiry
   status = rsi_bt_inquiry(INQUIRY_TYPE, INQUIRY_DURATION, MAX_NO_OF_RESPONSES);
@@ -890,7 +890,7 @@ int32_t rsi_bt_spp_slave(void)
   LOG_PRINT("\r\n Inquiry started with duration : %d \n", INQUIRY_DURATION);
 #endif
 
-#if ((SPP_MODE == SPP_MASTER) && (!INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (!INQUIRY_ENABLE))
   status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
   if (status != RSI_SUCCESS) {
     LOG_PRINT("rsi_bt_connect: failed status 0x%x", status);
@@ -926,7 +926,7 @@ int32_t rsi_bt_spp_slave(void)
         //! clear the connected event.
         LOG_PRINT("\n Unbond status EVENT \n");
         rsi_bt_app_clear_event(RSI_APP_EVENT_UNBOND_STATUS);
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
         /* Initialize BT connect only if auth resp status is success */
         if (auth_resp_status == 0) {
           status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
@@ -966,7 +966,7 @@ int32_t rsi_bt_spp_slave(void)
 
         //! clear the authentication complete event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_AUTH_COMPLT);
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
         rsi_delay_ms(500);
         status = rsi_bt_spp_connect(remote_dev_addr);
         if (status != RSI_SUCCESS) {
@@ -995,7 +995,7 @@ int32_t rsi_bt_spp_slave(void)
         power_save_given = 0;
 
 #endif
-#if (SPP_MODE == SPP_MASTER)
+#if (SPP_MODE == SPP_CENTRAL)
         LOG_PRINT("Looking for Device\r\n");
         status = rsi_bt_connect(rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR));
         if (status != RSI_SUCCESS) {
@@ -1025,7 +1025,7 @@ int32_t rsi_bt_spp_slave(void)
         //! clear the spp connected event.
         rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_CONN);
 
-#if 0 //(SPP_MODE == SPP_MASTER)
+#if 0 //(SPP_MODE == SPP_CENTRAL)
         strcpy((char *)data, "spp_test_sample_1");
         spp_tx_data_len       = strlen((char *)data);
         data[spp_tx_data_len] = (tx_ix++) % 10;
@@ -1054,7 +1054,7 @@ int32_t rsi_bt_spp_slave(void)
         rsi_bt_app_clear_event(RSI_APP_EVENT_SPP_RX);
 
         //! SPP data transfer (loop back)
-#if (SPP_MODE != SPP_MASTER)
+#if (SPP_MODE != SPP_CENTRAL)
         rsi_bt_spp_transfer(remote_dev_addr, data, data_len);
 #else
         strcpy((char *)data, "spp_test_sample_1");
@@ -1136,7 +1136,7 @@ int32_t rsi_bt_spp_slave(void)
         LOG_PRINT("SNIFF SUBRATING IS COMPLETED\n");
       } break;
 
-#if ((SPP_MODE == SPP_MASTER) && (INQUIRY_ENABLE))
+#if ((SPP_MODE == SPP_CENTRAL) && (INQUIRY_ENABLE))
       case RSI_APP_EVENT_REMOTE_NAME_REQ: {
         rsi_bt_app_clear_event(RSI_APP_EVENT_REMOTE_NAME_REQ);
         uint8_t inq_triggered = 0;
@@ -1159,7 +1159,7 @@ int32_t rsi_bt_spp_slave(void)
       case RSI_APP_EVENT_INQUIRY_COMPLT: {
         rsi_bt_app_clear_event(RSI_APP_EVENT_INQUIRY_COMPLT);
         uint8_t bt_device_found = 0;
-        //! Check in all devices, whether the intended slave is present or not.
+        //! Check in all devices, whether the intended peripheral is present or not.
         for (int i = 0; i < inq_responses_count; i++) {
           if (memcmp(&rsi_inq_resp_list[i][0],
                      rsi_ascii_dev_address_to_6bytes_rev(remote_dev_addr, REMOTE_BD_ADDR),
@@ -1231,7 +1231,7 @@ int main(void)
   intialize_bt_stack(STACK_BT_MODE);
 
   //! Call BLE Peripheral application
-  status = rsi_bt_spp_slave();
+  status = rsi_bt_spp_peripheral();
 
   //! Application main loop
   main_loop();
@@ -1251,7 +1251,7 @@ int main(void)
 
   //! OS case
   //! Task created for BLE task
-  rsi_task_create((rsi_task_function_t)(int32_t)rsi_bt_spp_slave,
+  rsi_task_create((rsi_task_function_t)(int32_t)rsi_bt_spp_peripheral,
                   (uint8_t *)"bt_task",
                   RSI_BT_TASK_STACK_SIZE,
                   NULL,

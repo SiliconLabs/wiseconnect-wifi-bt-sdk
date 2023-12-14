@@ -69,21 +69,6 @@
 #define GLOBAL_BUFF_LEN 15000
 #endif
 
-#ifdef RSI_M4_INTERFACE
-#ifdef COMMON_FLASH_EN
-#ifdef CHIP_9117_B0
-#define IVT_OFFSET_ADDR 0x81C2000 /*<!Application IVT location VTOR offset>        */
-#else
-#define IVT_OFFSET_ADDR 0x8212000 /*<!Application IVT location VTOR offset>        */
-#endif
-#else
-#define IVT_OFFSET_ADDR 0x8012000 /*<!Application IVT location VTOR offset>        */
-#endif
-#define WKP_RAM_USAGE_LOCATION 0x24061000 /*<! Bootloader RAM usage location !>*/
-
-#define WIRELESS_WAKEUP_IRQHandler NPSS_TO_MCU_WIRELESS_INTR_IRQn
-#endif
-
 #ifdef COMMON_FLASH_EN
 #define NWPAON_MEM_HOST_ACCESS_CTRL_CLEAR_1 (*(volatile uint32_t *)(0x41300000 + 0x4))
 #define M4SS_TASS_CTRL_SET_REG              (*(volatile uint32_t *)(0x24048400 + 0x34))
@@ -230,6 +215,7 @@ int32_t rsi_wlan_ble_app_init(void)
   uint8_t fmversion[20]              = { 0 };
   rsi_task_handle_t wlan_task_handle = NULL;
   rsi_task_handle_t ble_task_handle  = NULL;
+  uint8_t fmversion[20]              = { 0 };
 #ifdef FW_LOGGING_ENABLE
   //Fw log component level
   sl_fw_log_level_t fw_component_log_level;

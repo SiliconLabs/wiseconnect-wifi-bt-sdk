@@ -34,8 +34,8 @@
 
 #define RSI_REM_DEV_ADDR_LEN 18
 #define RSI_REM_DEV_NAME_LEN 31
-#define MASTER_ROLE          2
-#define SLAVE_ROLE           1
+#define CENTRAL_ROLE         2
+#define PERIPHERAL_ROLE      1
 #define NO_DEV_FOUND         0
 #define DEV_FOUND            1
 #define DEV_CONNECTED        2
@@ -48,7 +48,7 @@
 typedef struct rsi_ble_conn_info_s {
   uint8_t conn_id;
   uint8_t conn_status;
-  uint8_t remote_device_role; //! 1 - remote device is slave, 2 - remote device is master
+  uint8_t remote_device_role; //! 1 - remote device is peripheral, 2 - remote device is central
   uint8_t remote_dev_addr[RSI_REM_DEV_ADDR_LEN];
   rsi_ble_event_remote_features_t remote_dev_feature;    //! -- rsi_ble_simple_peripheral_on_remote_features_event()
   rsi_ble_event_adv_report_t rsi_app_adv_reports_to_app; //! -- rsi_ble_simple_central_on_adv_report_event()

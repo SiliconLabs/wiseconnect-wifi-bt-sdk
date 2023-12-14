@@ -1071,8 +1071,8 @@ int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_o
 
 /*==============================================*/
 /**
- * @fn         int32_t rsi_ble_clear_whitelist(void)
- * @brief      Clear all the BD address present in white list. This is a Blocking API
+ * @fn         int32_t rsi_ble_clear_acceptlist(void)
+ * @brief      Clear all the BD address present in accept list. This is a Blocking API
  * @pre        Call \ref rsi_wireless_init() before calling this API.
  * @param[in]  void
  * @return     0 - Success \n
@@ -1082,21 +1082,21 @@ int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_o
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
 
-int32_t rsi_ble_clear_whitelist(void)
+int32_t rsi_ble_clear_acceptlist(void)
 {
-  SL_PRINTF(SL_RSI_BLE_CLEAR_WHITELIST_TRIGGER, BLE, LOG_INFO);
-  rsi_ble_white_list_t le_whitelist = { 0 };
-  le_whitelist.addordeltowhitlist   = CLEAR_WHITELIST;
+  SL_PRINTF(SL_RSI_BLE_CLEAR_ACCEPTLIST_TRIGGER, BLE, LOG_INFO);
+  rsi_ble_accept_list_t le_acceptlist = { 0 };
+  le_acceptlist.addordeltoacceptlist  = CLEAR_ACCEPTLIST;
 
-  return rsi_bt_driver_send_cmd(RSI_BLE_LE_WHITE_LIST, &le_whitelist, NULL);
+  return rsi_bt_driver_send_cmd(RSI_BLE_LE_ACCEPT_LIST, &le_acceptlist, NULL);
 }
 
 /*==============================================*/
 /**
- * @fn         int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
- * @brief      Add BD address to white list. This is a Blocking API
+ * @fn         int32_t rsi_ble_addto_acceptlist(int8_t *dev_address, uint8_t dev_addr_type)
+ * @brief      Add BD address to accept list. This is a Blocking API
  * @pre        Call \ref rsi_wireless_init() before calling this API.
- * @param[in]  dev_address - Address of the device which is going to add in white list
+ * @param[in]  dev_address - Address of the device which is going to add in accept list
  * @param[in]  dev_addr_type - address type of BD address
  * @return     0 - Success \n
  *             Non-Zero Value - Failure \n
@@ -1105,27 +1105,27 @@ int32_t rsi_ble_clear_whitelist(void)
  * @note       Maximum number of device address that firmware can store is 10. \n Refer Error Codes section for above error codes \ref error-codes .
  */
 
-int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
+int32_t rsi_ble_addto_acceptlist(int8_t *dev_address, uint8_t dev_addr_type)
 {
 
-  SL_PRINTF(SL_RSI_BLE_ADD_TO_WHITELIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
-  rsi_ble_white_list_t le_whitelist = { 0 };
-  le_whitelist.addordeltowhitlist   = ADD_DEVICE_TO_WHITELIST;
+  SL_PRINTF(SL_RSI_BLE_ADD_TO_ACCEPTLIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
+  rsi_ble_accept_list_t le_acceptlist = { 0 };
+  le_acceptlist.addordeltoacceptlist  = ADD_DEVICE_TO_ACCEPTLIST;
 #ifdef BD_ADDR_IN_ASCII
-  rsi_ascii_dev_address_to_6bytes_rev(le_whitelist.dev_addr, dev_address);
+  rsi_ascii_dev_address_to_6bytes_rev(le_acceptlist.dev_addr, dev_address);
 #else
-  memcpy(le_whitelist.dev_addr, dev_address, 6);
+  memcpy(le_acceptlist.dev_addr, dev_address, 6);
 #endif
-  le_whitelist.bdaddressType = dev_addr_type;
+  le_acceptlist.bdaddressType = dev_addr_type;
 
-  return rsi_bt_driver_send_cmd(RSI_BLE_LE_WHITE_LIST, &le_whitelist, NULL);
+  return rsi_bt_driver_send_cmd(RSI_BLE_LE_ACCEPT_LIST, &le_acceptlist, NULL);
 }
 /*==============================================*/
 /**
- * @fn         int32_t rsi_ble_deletefrom_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
- * @brief      Delete particular BD address from white list. This is a Blocking API
- * @pre        \ref rsi_ble_addto_whitelist() API needs to be called before this API.
- * @param[in]  dev_address - Address of the device which is going to delete from white list
+ * @fn         int32_t rsi_ble_deletefrom_acceptlist(int8_t *dev_address, uint8_t dev_addr_type)
+ * @brief      Delete particular BD address from accept list. This is a Blocking API
+ * @pre        \ref rsi_ble_addto_acceptlist() API needs to be called before this API.
+ * @param[in]  dev_address - Address of the device which is going to delete from accept list
  * @param[in]  dev_addr_type - address type of BD address
  * @return     0 - Success \n
  *             Non-Zero Value - Failure \n
@@ -1134,20 +1134,20 @@ int32_t rsi_ble_addto_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
 
-int32_t rsi_ble_deletefrom_whitelist(int8_t *dev_address, uint8_t dev_addr_type)
+int32_t rsi_ble_deletefrom_acceptlist(int8_t *dev_address, uint8_t dev_addr_type)
 {
 
-  SL_PRINTF(SL_RSI_BLE_DELETEFROM_WHITELIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
-  rsi_ble_white_list_t le_whitelist = { 0 };
-  le_whitelist.addordeltowhitlist   = DELETE_DEVICE_FROM_WHITELIST;
+  SL_PRINTF(SL_RSI_BLE_DELETEFROM_ACCEPTLIST, BLE, LOG_INFO, "DEVICE_ADDRESS_TYPE: %1x", dev_addr_type);
+  rsi_ble_accept_list_t le_acceptlist = { 0 };
+  le_acceptlist.addordeltoacceptlist  = DELETE_DEVICE_FROM_ACCEPTLIST;
 #ifdef BD_ADDR_IN_ASCII
-  rsi_ascii_dev_address_to_6bytes_rev(le_whitelist.dev_addr, dev_address);
+  rsi_ascii_dev_address_to_6bytes_rev(le_acceptlist.dev_addr, dev_address);
 #else
-  memcpy(le_whitelist.dev_addr, dev_address, 6);
+  memcpy(le_acceptlist.dev_addr, dev_address, 6);
 #endif
-  le_whitelist.bdaddressType = dev_addr_type;
+  le_acceptlist.bdaddressType = dev_addr_type;
 
-  return rsi_bt_driver_send_cmd(RSI_BLE_LE_WHITE_LIST, &le_whitelist, NULL);
+  return rsi_bt_driver_send_cmd(RSI_BLE_LE_ACCEPT_LIST, &le_acceptlist, NULL);
 }
 
 /*==============================================*/
@@ -1638,11 +1638,11 @@ int32_t rsi_ble_vendor_rf_type(uint8_t ble_power_index)
 }
 
 /**
- * @fn         int32_t rsi_ble_white_list_using_adv_data(uint8_t enable,
+ * @fn         int32_t rsi_ble_accept_list_using_adv_data(uint8_t enable,
  *                                                    uint8_t data_compare_index,
  *                                                    uint8_t len_for_compare_data,
  *                                                    uint8_t *payload)
- * @brief      Give vendor-specific command to set the whitelist feature based on
+ * @brief      Give vendor-specific command to set the acceptlist feature based on
  *             the advertisers advertising payload. This is a Blocking API
  * @pre        Call \ref rsi_wireless_init() before calling this API.
  * @param[in]  enable - enable/disable
@@ -1657,27 +1657,27 @@ int32_t rsi_ble_vendor_rf_type(uint8_t ble_power_index)
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
 
-int32_t rsi_ble_white_list_using_adv_data(uint8_t enable,
-                                          uint8_t data_compare_index,
-                                          uint8_t len_for_compare_data,
-                                          uint8_t *payload)
+int32_t rsi_ble_accept_list_using_adv_data(uint8_t enable,
+                                           uint8_t data_compare_index,
+                                           uint8_t len_for_compare_data,
+                                           uint8_t *payload)
 {
 
-  SL_PRINTF(SL_RSI_BLE_WHITELIST_USING_ADV_DATA, BLE, LOG_INFO);
-  rsi_ble_req_whitelist_using_payload_t whitelist_using_payload;
-  memset(&whitelist_using_payload, 0, sizeof(whitelist_using_payload));
+  SL_PRINTF(SL_RSI_BLE_ACCEPTLIST_USING_ADV_DATA, BLE, LOG_INFO);
+  rsi_ble_req_acceptlist_using_payload_t acceptlist_using_payload;
+  memset(&acceptlist_using_payload, 0, sizeof(acceptlist_using_payload));
 
-  whitelist_using_payload.opcode[0] = (BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD & 0xFF);
-  whitelist_using_payload.opcode[1] = ((BLE_VENDOR_WHITELIST_USING_ADV_DATA_PAYLOAD >> 8) & 0xFF);
+  acceptlist_using_payload.opcode[0] = (BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD & 0xFF);
+  acceptlist_using_payload.opcode[1] = ((BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD >> 8) & 0xFF);
 
-  whitelist_using_payload.enable               = enable;
-  whitelist_using_payload.total_len            = 31;
-  whitelist_using_payload.data_compare_index   = data_compare_index;
-  whitelist_using_payload.len_for_compare_data = len_for_compare_data;
+  acceptlist_using_payload.enable               = enable;
+  acceptlist_using_payload.total_len            = 31;
+  acceptlist_using_payload.data_compare_index   = data_compare_index;
+  acceptlist_using_payload.len_for_compare_data = len_for_compare_data;
 
-  memcpy(whitelist_using_payload.adv_data_payload, payload, 31);
+  memcpy(acceptlist_using_payload.adv_data_payload, payload, 31);
 
-  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &whitelist_using_payload, NULL);
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &acceptlist_using_payload, NULL);
 }
 
 /*==============================================*/
@@ -2317,6 +2317,27 @@ int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_p
   rf_path_comp.rx_path_value = rx_path_value;
   //! Send write rf path compensation cmd
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_WRITE_RF_PATH_COMP, &rf_path_comp, NULL);
+}
+/**
+ * @fn         int32_t rsi_ble_vendor_feature_bitmap(uint32_t bitmap)
+ * @brief      Vendor specific BLE command to set bitmap 
+ * @pre        Call \ref rsi_wireless_init() before calling this API.
+ * @param[in]  bitmap 
+ *             BIT(0) - enable/disable BLE scan responses
+ *             other - reserved for future use
+ * @return     0 - Success \n
+ *             Non-Zero Value - Failure
+ */
+
+int32_t rsi_ble_vendor_feature_bitmap(uint32_t bitmap)
+{
+  ble_vendor_feature_bitmap_t ble_vendor_feature_bitmap;
+  memset(&ble_vendor_feature_bitmap, 0, sizeof(ble_vendor_feature_bitmap_t));
+
+  ble_vendor_feature_bitmap.opcode[0] = (BLE_VENDOR_FEATURE_BITMAP & 0xFF);
+  ble_vendor_feature_bitmap.opcode[1] = ((BLE_VENDOR_FEATURE_BITMAP >> 8) & 0xFF);
+  ble_vendor_feature_bitmap.bitmap    = bitmap;
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &ble_vendor_feature_bitmap, NULL);
 }
 /** @} */
 #endif

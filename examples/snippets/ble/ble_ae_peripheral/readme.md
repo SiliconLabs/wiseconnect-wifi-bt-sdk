@@ -18,8 +18,8 @@ Before running the application, the user will need the following things to setup
    - [STM32F411 Nucleo](https://st.com/)
 - BLE peripheral device
 	
-![figureSetup Diagram for AE Peripheral Example using RS9116 EVK](./resources/ae_peripheral.png) 
-![figureSetup Diagram for AE Peripheral Example using RS9116 ACX Expansion board](./resources/ac1-ae-peripheral.png) 
+![figureSetup Diagram for AE Peripheral Example using RS9116 EVK](resources/readme/ae_peripheral.png) 
+![figureSetup Diagram for AE Peripheral Example using RS9116 ACX Expansion board](resources/readme/ac1-ae-peripheral.png) 
 
 
    			
@@ -64,7 +64,7 @@ The Application is provided with the project folder containing Keil and Simplici
 		- If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/_internal/Wireless_Examples/ble/ble_ae_peripheral/projects/ble_ae_peripheral-brd4180b-mg21.slsproj` 
         - User can find the Radio Board version as given below 
 
-![EFR Radio Boards](./resources/radio-board.png)
+![EFR Radio Boards](resources/readme/radio-board.png)
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
@@ -254,7 +254,7 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
    
 3. After successful program execution the prints in docklight looks as shown below.   
      
-![Prints in docklight window](./resources/ae_logs.png) 
+![Prints in docklight window](resources/readme/ae_logs.png) 
 
 ## Compressed Debug Logging
 

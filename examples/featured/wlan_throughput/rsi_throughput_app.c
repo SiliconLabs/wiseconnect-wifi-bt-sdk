@@ -226,6 +226,9 @@ void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
   UNUSED_PARAMETER(buffer);
 
   num_bytes += length;
+#ifdef LINUX_PLATFORM
+  measure_throughput(length, 1);
+#else
 //! Measure throughput for every interval
 #if CONTINUOUS_THROUGHPUT
   //! compute throughput for every interval of THROUGHPUT_AVG_TIME
@@ -242,6 +245,7 @@ void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
     t_end      = rsi_hal_gettickcount();
     data_recvd = 1;
   }
+#endif
 #endif
 #endif
 }
@@ -395,7 +399,6 @@ int32_t application()
   uint16_t i              = 0;
   uint32_t total_bytes_tx = 0, tt_start = 0, tt_end = 0, pkt_cnt = 0;
 
-#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -409,7 +412,7 @@ int32_t application()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
+
 #ifdef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
   tick_count_s = 10;
@@ -1135,22 +1138,6 @@ void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const
 // main function definition
 int main(void)
 {
-#ifdef RSI_M4_INTERFACE
-  int32_t status = RSI_SUCCESS;
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;

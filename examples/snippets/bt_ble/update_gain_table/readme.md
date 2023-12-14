@@ -109,8 +109,8 @@ int32_t rsi_bt_cmd_update_gain_table_offset_or_max_pwr(uint8_t node_id,
 ---
 
 * for ACX module
-* BT power offset like < CHANNEL_NUM >, <1M_OFFSET>, <2M_OFFSET>, <3M_oFFSET>
-* BLE power offset like < CHANNEL_NUM >, <1M_OFFSET>, <2M_OFFSET>, <500kbps_oFFSET>, <125kbps_oFFSET>
+* BT power offset like <CHANNEL_NUM>, <1M_OFFSET>, <2M_OFFSET>, <3M_oFFSET>
+* BLE power offset like <CHANNEL_NUM>, <1M_OFFSET>, <2M_OFFSET>, <500kbps_oFFSET>, <125kbps_oFFSET>
 
 ---
 

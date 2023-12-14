@@ -68,16 +68,6 @@
 #define BLE_PERIPHERAL_MODE_ENABLE 1 // Enabling peripheral mode
 #endif
 /*=======================================================================*/
-// BLE Attribute Security Define
-/*=======================================================================*/
-#define ATT_REC_MAINTAIN_IN_HOST BIT(0) /* Att record maintained by the stack */
-#define SEC_MODE_1_LEVEL_1       BIT(1) /* NO Auth & No Enc                   */
-#define SEC_MODE_1_LEVEL_2       BIT(2) /* UnAUTH with Enc                    */
-#define SEC_MODE_1_LEVEL_3       BIT(3) /* AUTH with Enc                      */
-#define SEC_MODE_1_LEVEL_4       BIT(4) /* AUTH LE_SC Pairing with Enc        */
-#define ON_BR_EDR_LINK_ONLY      BIT(5)
-#define ON_LE_LINK_ONLY          BIT(6)
-/*=======================================================================*/
 // Max Tx data length and Tx timeout values
 /*=======================================================================*/
 #ifndef TX_LEN
@@ -177,14 +167,14 @@
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 #endif
 
-#ifndef CLEAR_WHITELIST
-#define CLEAR_WHITELIST 0x00
+#ifndef CLEAR_ACCEPTLIST
+#define CLEAR_ACCEPTLIST 0x00
 #endif
-#ifndef ADD_DEVICE_TO_WHITELIST
-#define ADD_DEVICE_TO_WHITELIST 0x01
+#ifndef ADD_DEVICE_TO_ACCEPTLIST
+#define ADD_DEVICE_TO_ACCEPTLIST 0x01
 #endif
-#ifndef DELETE_DEVICE_FROM_WHITELIST
-#define DELETE_DEVICE_FROM_WHITELIST 0x02
+#ifndef DELETE_DEVICE_FROM_ACCEPTLIST
+#define DELETE_DEVICE_FROM_ACCEPTLIST 0x02
 #endif
 
 #ifndef ALL_PHYS
@@ -206,11 +196,11 @@
 #define RSI_BLE_MAX_NBR_ATT_SERV 10
 #endif
 
-#ifndef RSI_BLE_MAX_NBR_SLAVES
-#define RSI_BLE_MAX_NBR_SLAVES 3
+#ifndef RSI_BLE_MAX_NBR_PERIPHERALS
+#define RSI_BLE_MAX_NBR_PERIPHERALS 3
 #endif
-#ifndef RSI_BLE_MAX_NBR_MASTERS
-#define RSI_BLE_MAX_NBR_MASTERS 2
+#ifndef RSI_BLE_MAX_NBR_CENTRALS
+#define RSI_BLE_MAX_NBR_CENTRALS 2
 #endif
 #ifndef RSI_BLE_NUM_CONN_EVENTS
 #define RSI_BLE_NUM_CONN_EVENTS 20
@@ -305,14 +295,14 @@
 #ifndef ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY
 #define ALLOW_SCAN_REQ_ANY_CONN_REQ_ANY 0x00
 #endif
-#ifndef ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_ANY 0x01
+#ifndef ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ANY 0x01
 #endif
-#ifndef ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST
-#define ALLOW_SCAN_REQ_ANY_CONN_REQ_WHITE_LIST 0x02
+#ifndef ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST
+#define ALLOW_SCAN_REQ_ANY_CONN_REQ_ACCEPT_LIST 0x02
 #endif
-#ifndef ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST
-#define ALLOW_SCAN_REQ_WHITE_LIST_CONN_REQ_WHITE_LIST 0x03
+#ifndef ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST
+#define ALLOW_SCAN_REQ_ACCEPT_LIST_CONN_REQ_ACCEPT_LIST 0x03
 #endif
 
 #ifndef RSI_BLE_ADV_FILTER_TYPE
@@ -370,8 +360,8 @@
 #ifndef SCAN_FILTER_TYPE_ALL
 #define SCAN_FILTER_TYPE_ALL 0x00
 #endif
-#ifndef SCAN_FILTER_TYPE_ONLY_WHITE_LIST
-#define SCAN_FILTER_TYPE_ONLY_WHITE_LIST 0x01
+#ifndef SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST
+#define SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST 0x01
 #endif
 
 #ifndef RSI_BLE_SCAN_TYPE

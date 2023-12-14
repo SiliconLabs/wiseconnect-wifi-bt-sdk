@@ -79,7 +79,7 @@
 // Enable or disable receive stats
 #define RECEIVE_STATS 0
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
 // User mask shall be in the range 0-31
 #define RSI_USER_MASK 0
 #endif
@@ -101,10 +101,13 @@ void rsi_wlan_stats_receive_handler(uint16_t status, uint8_t *buffer, const uint
   UNUSED_PARAMETER(buffer);
   UNUSED_CONST_PARAMETER(length);
 
-  stats_received++;
-
-  rsi_per_stats_rsp_t *stats = (rsi_per_stats_rsp_t *)buffer;
-  LOG_PRINT("CRC PASS %4d | CRC FAIL %4d | RSSI %4d |\r\n", stats->crc_pass, stats->crc_fail, stats->cal_rssi);
+  if (status == 0) {
+    stats_received++;
+    rsi_per_stats_rsp_t *stats = (rsi_per_stats_rsp_t *)buffer;
+    LOG_PRINT("CRC PASS %4d | CRC FAIL %4d | RSSI %4d |\r\n", stats->crc_pass, stats->crc_fail, stats->cal_rssi);
+  } else {
+    LOG_PRINT("\r\nTransmit Test start failed, Error Code : 0x%lX\r\n", status);
+  }
   // For the buffer parameters information is available in SAPI documentation
   if (stats_received == 100) {
     stop_receiving_stats = 1;
@@ -116,7 +119,6 @@ int32_t application()
 {
   int32_t status = RSI_SUCCESS;
 
-#ifndef RSI_M4_INTERFACE
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -130,7 +132,6 @@ int32_t application()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t driver_task_handle = NULL;
@@ -232,22 +233,6 @@ int32_t application()
 // main function definition
 int main(void)
 {
-#ifdef RSI_M4_INTERFACE
-  int32_t status = RSI_SUCCESS;
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;

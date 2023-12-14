@@ -2,7 +2,7 @@
 
 ## 1. Purpose / Scope
 
-This application demonstrates the procedure to calibrate the carrier frequency offset, Tx gain offset and few more parameters and update them to the Flash/Efuse. Customers need to calibrate these two parameters on their platforms after chip integration.
+This application demonstrates the procedure to calibrate the carrier frequency offset, EVM offset, Tx gain offset and few more parameters and update them to the Flash/Efuse. Customers need to calibrate these two parameters on their platforms after chip integration.
 
 ## 2. Prerequisites / Setup Requirements
 
@@ -295,7 +295,7 @@ Using rsi_calib_write command the calibrated XO Ctune and calculated gain offset
    ||||	0 - Skip high sub-band gain-offset update
    |            |   7         |  SELECT_GAIN_OFFSETS_1P8V | 1 - Update gain offsets for 1.8 V 
    ||||	0 - Update gain offsets for 3.3 V
-   |            |   31-4      |                        |	Reserved for future use
+   |            |   31-8      |                        |	Reserved for future use
    |gain_offset_low | gain_offset as observed in dBm in channel-1 | |
    |gain_offset_mid | gain_offset as observed in dBm in channel-6 | |
    |gain_offset_high| gain_offset as observed in dBm in channel-11 | |
@@ -326,6 +326,278 @@ For 2 GHz band, the gain offset has to calibrated for three channels, viz. chann
 The application reads the updated calibration values for verification by using `rsi_calib_read` command and displays.
 
 ![calib data](resources/readme/image_c11.png)
+
+### EVM Offset Correction
+
+EVM offset correction will be done by using the rsi_evm_offset command. This command is used during the RF calibration process and requires PER mode transmissions to be initiated prior. This command sends evm_offset (deviation) as observed on the signal analyzer.
+
+**Note:**
+After this command is send, application is required to restart the transmission for the EVM offset correction to reflect.
+
+### EVM offset setting procedure
+
+1. Configure the RF parameters in the SAPI code, like frequency, data rate and set power index to 127.
+   
+2. Change the #define RSI_TX_TEST_POWER 18 to #define RSI_TX_TEST_POWER 127 in rsi_calib_app.c for EVM offset calibration.
+
+3. Load the SAPI code onto your host microcontroller. 
+Load the firmware file onto the WMS chip.
+
+4. Select the port on which the host is connected to communicate with the WMS chip and send commands.
+
+5. Tune the EVM offset using rsi_evm_offset command. Refer to the section below for setting the parameters.
+
+6. Write the EVM offsets into the flash using rsi_evm_write command. Refer to the section below for setting the parameters.
+
+7. Reset the WMS module to verify the changes.
+
+### Below Section about setting parameters in rsi_evm_offset and rsi_evm_write
+
+Prototype :  
+> `rsi_evm_offset =<index>, <evm_offset> <CR><LF>`  
+>
+> Here index is used to update the evm_offset_cust[index] range from 0 to 4
+> 
+     0 - customer_evm_offset_11B
+     1 - customer_evm_offset_11G_6M_24M
+     2 - customer_evm_offset_11G_36M_54M_11N_MCS4_MCS6
+     3 - customer_evm_offset_11N_MCS0_MCS3
+     4 - customer_evm_offset_11N_MCS7
+   
+> Here evm_offset means EVM offset value
+
+Examples :
+> `rsi_evm_offset=0,10<CR><LF>`
+>
+> `rsi_evm_offset=0,-10<CR><LF>` 
+
+![CLI commands](resources/readme/image_c14.png)
+
+> **Note:** evm_offset can be either +ve or -ve. When user enters the evm offset as observed on signal analyzer (+ve/-ve), a small EVM offset correction is done. User needs to iterate this till the EVM offset is within the limits
+
+#### Update EVM Offset
+
+Using rsi_evm_write command the calibrated calculated EVM offset can be updated to target memory (Flash).
+
+   ```sh
+   Prototype :
+rsi_evm_write=<target>,<flags>,<evm_offset_0>,<evm_offset_1>,<evm_offset_2>,<evm_offset_3>,<evm_offset_4>
+   ```
+>Here Target means based on value need to write into on Flash/Efuse
+
+>0 - Efuse
+
+>1 - Flash
+
+Note:Efuse not supported .
+
+>Here flag means based on flag value will update corresponding index
+
+**Parameters**
+
+ Bit |	MACRO 		           |	Description
+ :---|:---------------------:|:---------------------------------------------------
+ 0   |	EVM_OFFSET_CUST_0     |	1 - Update customer_evm_offset_11B rate calibration data \n	0 - Skip evm_offset update
+ 1   |	EVM_OFFSET_CUST_1     |	1 - Update customer_evm_offset_11G_6M_24M rate calibration data \n 0 - Skip evm_offset update
+ 2   |	EVM_OFFSET_CUST_2     | 1 - Update customer_evm_offset_11G_36M_54M_11N_MCS4_MCS6 rate calibration data \n0 - Skip evm_offset update
+ 3   | EVM_OFFSET_CUST_3     | 1 - Update customer_evm_offset_11N_MCS0_MCS3 rate calibration data \n	0 - Skip evm_offset update
+ 4   | EVM_OFFSET_CUST_4     | 1 - Update customer_evm_offset_11N_MCS7 rate calibration data \n	0 - Skip evm_offset update
+ 31-5|                       | Reserved
+
+Example for rsi_evm_write :
+ 
+To update EVM offset into flash use the command below.
+
+  > `rsi_evm_write=1,31,-20,-10,10,20,-7 <CR><LF>`
+
+> NOTE : 
+> In the above example,
+> 
+> The flag value is 31 (In binary : 11111) - it should update all EVM offset values to flash.
+ 
+> If flag value is 3 (In binary : 0011) - it should update EVM offset value of -20 and -10.
+
+> If flag value is 4 (binary : 0100) - it should update EVM offset value of 10 etc.
+
+![CLI commands](resources/readme/image_c15.png)
+
+> NOTE : 
+> The evm_offset can be negative but not a floating value.
+> Once the EVM offset is corrected after multiple tries, rsi_evm_write  commands has to be given once for all to write the values to flash.
+
+### Examples with Pics.
+### Customer_evm_offset_11B:
+
+Change the below macros in rsi_calib_app.c for EVM offset calibration.
+
+```c
+#define RSI_TX_TEST_POWER                         127
+```
+  
+To set transmit data rate.
+
+```c
+#define RSI_TX_TEST_RATE                          RSI_RATE_1
+```
+**Before EVM offset correction**
+
+For 1Mbps, the RMS EVM average is 10.78% and the average burst power is 16.3dB.
+For the same case the spectral emission mask limit is failing as shown below.
+
+![Before EVM offset correction](resources/readme/image_c16.png)
+![Before EVM offset correction](resources/readme/image_c17.png)
+
+**Commands**
+
+The following are the commands used for this case.
+
+![CLI commands](resources/readme/image_c18.png)
+
+**After EVM offset correction**
+
+After setting the EVM offset the RMS EVM average value changes to 6.14% and average burst power reduces to 11.4dB.
+The spectral emission mask is now passing as shown below.
+
+![Figure :](resources/readme/image_c19.png)
+![Figure :](resources/readme/image_c20.png)
+
+### Customer_evm_offset_11G_6M_24M:
+
+Change the below macros in rsi_calib_app.c for EVM offset calibration.
+
+```c
+#define RSI_TX_TEST_POWER                         127
+```
+  
+To set transmit data rate.
+
+```c
+#define RSI_TX_TEST_RATE                          RSI_RATE_6
+```
+**Before EVM offset correction**
+
+For 6Mbps, the RMS EVM average is -9.8dB and the average burst power is 16.7dB.
+For the same case the spectral emission mask limit is failing as shown below.
+
+![Figure :](resources/readme/image_c21.png)
+![Figure :](resources/readme/image_c22.png)
+
+**Commands**
+
+The following are the commands used for this case.
+
+![CLI commands](resources/readme/image_c23.png)
+
+**After EVM offset correction**
+
+After setting the EVM offset the RMS EVM average value changes to -13.5dB  and average burst power reduces to 12.4dB.
+The spectral emission mask is now passing as shown below
+
+![Figure :](resources/readme/image_c24.png)
+![Figure :](resources/readme/image_c25.png)
+
+
+### Customer_evm_offset_11G_36M_54M_11N_MCS4_MCS6:
+
+Change the below macros in rsi_calib_app.c for EVM offset calibration.
+
+```c
+#define RSI_TX_TEST_POWER                         127
+```
+  
+To set transmit data rate.
+
+```c
+#define RSI_TX_TEST_RATE                          RSI_RATE_54
+```
+**Before EVM offset correction**
+
+For 54Mbps, the RMS EVM average is -18.9dB which below the limit, and the average burst power is 12.8dB. For this case spectral emission mask will generally pass and hence is not shown. 
+
+
+![Figure :](resources/readme/image_c26.png)
+
+**Commands**
+
+The following are the commands used for this case.
+
+
+![CLI commands:](resources/readme/image_c27.png)
+
+**After EVM offset correction**
+
+After setting the EVM offset the RMS EVM average value changes to -26.6dB and average burst power reduces to 8.3dB.
+
+![Figure :](resources/readme/image_c28.png)
+
+
+### Customer_evm_offset_11N_MCS0_MCS3:
+
+Change the below macros in rsi_calib_app.c for EVM offset calibration.
+
+```c
+#define RSI_TX_TEST_POWER                         127
+```
+  
+To set transmit data rate.
+
+```c
+#define RSI_TX_TEST_RATE                          RSI_RATE_MCS0
+```
+
+**Before EVM offset correction**
+
+For MCS0, the RMS EVM average is -18.9dB, and the average burst power is 11.7dB. 
+For the same case the spectral emission mask limit is failing as shown below.
+
+![Figure :](resources/readme/image_c29.png)
+![Figure :](resources/readme/image_c30.png)
+
+**Commands**
+
+The following are the commands used for this case.
+
+
+![CLI commands:](resources/readme/image_c31.png)
+
+**After EVM offset correction**
+
+After setting the EVM offset the RMS EVM average value changes to -15dB and average burst power reduces to 4.6dB.
+The spectral emission mask is now passing as shown below.
+
+![Figure :](resources/readme/image_c32.png)
+
+
+### Customer_evm_offset_11N_MCS7:
+
+Change the below macros in rsi_calib_app.c for EVM offset calibration.
+
+```c
+#define RSI_TX_TEST_POWER                         127
+```
+  
+To set transmit data rate.
+
+```c
+#define RSI_TX_TEST_RATE                          RSI_RATE_MCS7
+```
+**Before EVM offset correction**
+
+For MCS7, the RMS EVM average is -16.3dB which below the limit, and the average burst power is 12dB. For this case spectral emission mask will generally pass and hence is not shown. 
+
+![Figure :](resources/readme/image_c33.png)
+
+**Commands**
+
+The following are the commands used for this case.
+
+![CLI commands :](resources/readme/image_c34.png)
+
+**After EVM offset correction**
+
+After setting the EVM offset the RMS EVM average value changes to -28dB and average burst power reduces to 6.7dB.
+
+![Figure :](resources/readme/image_c35.png)
 
 ### Spectrum Analyzer Settings
 **Below are the necessary settings to see Polar Graph Spectrum Analyzer settings**

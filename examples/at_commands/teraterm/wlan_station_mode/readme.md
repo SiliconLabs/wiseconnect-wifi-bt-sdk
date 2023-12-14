@@ -51,7 +51,7 @@ The module responds with information of the Access Point scanned. The data recei
 The pop up window would display "Device is now listening for TCP connections on address x.x.x.x and port y". Here x.x.x.x Ip address of the Module and 'y' is the port number of the Module Socket.
 ![Server IP address and port number confirmation message](./resources/station-mode-prompt-tcp-connection.png)
 
-**STEP 13.** Open a TCP client socket on a remote peer and connect to the server socket by giving the server IP and port number.
+**STEP 13.** Open a TCP client socket on a remote peer and connect to the server socket. Users can use "TCP/UDP test tool" application to open the TCP client socket. Enter the server IP and port number that we got from the above pop-up in the remote peer application (here TCP/UDP test tool) in the appropriate fields provided. Note that the remote peer should be connected to the same network to which module is connected.
 
 **STEP 14.** Observe that the following message is printed on the terminal window, once the TCP connection is set up with the remote peer.
 

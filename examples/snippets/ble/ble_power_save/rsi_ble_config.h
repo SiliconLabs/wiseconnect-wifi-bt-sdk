@@ -32,12 +32,12 @@
 #define RSI_BLE_DEV_ADDR "11:11:11:11:11:11"
 
 //! Remote Device Name to connect
-#define RSI_REMOTE_DEVICE_NAME "SLAVE"
+#define RSI_REMOTE_DEVICE_NAME "SILABS"
 
-#define SLAVE_ROLE  0
-#define MASTER_ROLE 1
-#define DUAL_ROLE   2
-#define BLE_ROLE    SLAVE_ROLE
+#define PERIPHERAL_ROLE 0
+#define CENTRAL_ROLE    1
+#define DUAL_ROLE       2
+#define BLE_ROLE        PERIPHERAL_ROLE
 
 #define SET_BIT1(state_map, pos) (state_map |= (1 << pos))
 #define CLR_BIT1(state_map, pos) (state_map &= (~(1 << pos)))
@@ -64,9 +64,9 @@
 
 #define RSI_BLE_SET_RAND_ADDR "00:23:A7:12:34:56"
 
-#define CLEAR_WHITELIST              0x00
-#define ADD_DEVICE_TO_WHITELIST      0x01
-#define DELETE_DEVICE_FROM_WHITELIST 0x02
+#define CLEAR_ACCEPTLIST              0x00
+#define ADD_DEVICE_TO_ACCEPTLIST      0x01
+#define DELETE_DEVICE_FROM_ACCEPTLIST 0x02
 
 #define ALL_PHYS 0x00
 
@@ -74,8 +74,8 @@
 
 #define RSI_OPERMODE_WLAN_BLE 13
 
-#define RSI_BLE_MAX_NBR_SLAVES  1
-#define RSI_BLE_MAX_NBR_MASTERS 1
+#define RSI_BLE_MAX_NBR_PERIPHERALS 1
+#define RSI_BLE_MAX_NBR_CENTRALS    1
 
 #ifdef RSI_M4_INTERFACE
 #define RSI_BLE_MAX_NBR_ATT_REC 20
@@ -141,10 +141,18 @@
 
 #define RSI_CUSTOM_FEATURE_BIT_MAP FEAT_CUSTOM_FEAT_EXTENTION_VALID //! To set custom feature select bit map
 
-#ifdef CHIP_9117
+#ifdef CHIP_917
+#ifdef RSI_M4_INTERFACE
 //! To set Extended custom feature select bit map
 //! BLE_POWER_SAVE application will work on EXT_FEAT_384K_MODE memory.
-#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE)
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | MEMORY_CONFIG | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#else
+//! To set Extended custom feature select bit map
+//! BLE_POWER_SAVE application will work on EXT_FEAT_384K_MODE memory.
+#define RSI_EXT_CUSTOM_FEATURE_BIT_MAP \
+  (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0)
+#endif
 #else
 //! To set Extended custom feature select bit map
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)

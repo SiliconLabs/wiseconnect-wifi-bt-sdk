@@ -56,6 +56,11 @@
 #include "string.h"
 
 #include "rsi_driver.h"
+
+#ifndef RSI_CONFIGURE_IPV6
+#define RSI_CONFIGURE_IPV6 1
+#endif
+
 //! Access point SSID to be created
 #define SSID "SILABS_AP"
 
@@ -111,7 +116,7 @@
 #define NUMBER_OF_PACKETS 1000
 
 //! Receive data length
-#define RECV_BUFFER_SIZE 1000
+#define RECV_BUFFER_SIZE 1450
 
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
@@ -130,10 +135,24 @@
 
 #define SOCKET_ASYNC_FEATURE 1
 
+//! To turnoff the AP at the end
+#define AP_TURN_OFF 1
+
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 
+//! Receive buffer
+uint8_t recv_buffer[RECV_BUFFER_SIZE];
+
 uint8_t station_mac[6];
+uint32_t received_length      = 0;
+volatile int32_t packet_count = 0;
+
+#ifdef RSI_WITH_OS
+#if SOCKET_ASYNC_FEATURE
+rsi_semaphore_handle_t ap_start_app;
+#endif
+#endif
 
 //! This callback function is called when Station is connected.
 //! Buffer has the MAC address of the station connected
@@ -155,9 +174,6 @@ void stations_disconnect_notify_handler(uint16_t status, uint8_t *buffer, const 
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
 }
 
-uint32_t received_length = 0;
-int32_t packet_count     = 0;
-
 //! Call back for Socket Async
 void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
 {
@@ -166,6 +182,20 @@ void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
   UNUSED_PARAMETER(length);  //This statement is added only to resolve compilation warning, value is unchanged
   received_length += length;
   packet_count++;
+}
+
+void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const uint32_t length)
+{
+  UNUSED_PARAMETER(status);
+  UNUSED_PARAMETER(buffer);
+  UNUSED_CONST_PARAMETER(length);
+  LOG_PRINT("\r\nRemote socket terminated\r\n");
+
+#ifdef RSI_WITH_OS
+#if SOCKET_ASYNC_FEATURE
+  rsi_semaphore_post(&ap_start_app);
+#endif
+#endif
 }
 
 extern int rsi_inet_pton6(const char *src, const char *src_endp, unsigned char *dst, unsigned int *ptr_result);
@@ -201,15 +231,8 @@ int32_t rsi_ap_start()
   //! Register callbacks for Station conencted and disconnected events
   rsi_wlan_register_callbacks(RSI_STATIONS_CONNECT_NOTIFY_CB, stations_connect_notify_handler);
   rsi_wlan_register_callbacks(RSI_STATIONS_DISCONNECT_NOTIFY_CB, stations_disconnect_notify_handler);
+  rsi_wlan_register_callbacks(RSI_REMOTE_SOCKET_TERMINATE_CB, rsi_remote_socket_terminate_handler);
 
-  //! SiLabs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
 #ifdef RSI_WITH_OS
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
@@ -219,6 +242,14 @@ int32_t rsi_ap_start()
                   RSI_DRIVER_TASK_PRIORITY,
                   &driver_task_handle);
 #endif
+  //! SiLabs module intialisation
+  status = rsi_device_init(LOAD_NWP_FW);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nDevice Initialization Success\r\n");
+  }
   //! WC initialization
   status = rsi_wireless_init(6, 0);
   if (status != RSI_SUCCESS) {
@@ -327,7 +358,16 @@ int32_t rsi_ap_start()
     LOG_PRINT("\r\nSocket Accept Success\r\n");
   }
 
+#ifdef RSI_WITH_OS
+#if SOCKET_ASYNC_FEATURE
+  rsi_semaphore_wait(&ap_start_app, 0);
+#endif
+#endif
+
 #if !SOCKET_ASYNC_FEATURE
+  uint32_t recv_size = 0;
+  memset(recv_buffer, 0, RECV_BUFFER_SIZE);
+
   while (packet_count < NUMBER_OF_PACKETS) {
     recv_size = RECV_BUFFER_SIZE;
 
@@ -352,6 +392,12 @@ int32_t rsi_ap_start()
     packet_count++;
   }
 
+#else
+  while (packet_count < NUMBER_OF_PACKETS) {
+  }
+
+#endif
+
   //! Disconnect the station which is connected
   status = rsi_wlan_disconnect_stations(station_mac);
   if (status != RSI_SUCCESS) {
@@ -359,6 +405,17 @@ int32_t rsi_ap_start()
     return status;
   } else {
     LOG_PRINT("\r\nStations Disconnect Success\r\n");
+  }
+
+#if AP_TURN_OFF
+
+  //! Stop Access point
+  status = rsi_wlan_ap_stop();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nAP Stop Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nAP Stop Success\r\n");
   }
 
 #endif

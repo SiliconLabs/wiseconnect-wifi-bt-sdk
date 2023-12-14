@@ -315,7 +315,7 @@ void FLEXCOMM0_IRQHandler(void)
     }
 #endif
     #if BLE_MULTI_SLAVE_MASTER
-    //! garmin use-case
+    //! wearables use-case
     if(demoRingBuffer[rxIndex - 1] == '\n')
     {
     	//! disable uart interrupt
@@ -327,7 +327,7 @@ void FLEXCOMM0_IRQHandler(void)
     }
 #endif
 #if BT_HFP_HF_ROLE
-    //! garmin hfp use-case
+    //! wearables hfp use-case
     if(demoRingBuffer[rxIndex - 1] == '\n')
     {
     	//! disable uart interrupt

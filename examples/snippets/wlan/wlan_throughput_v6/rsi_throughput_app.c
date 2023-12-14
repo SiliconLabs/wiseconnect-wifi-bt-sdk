@@ -61,6 +61,10 @@
 #include "rsi_chip.h"
 #endif
 
+#ifndef RSI_CONFIGURE_IPV6
+#define RSI_CONFIGURE_IPV6 1
+#endif
+
 // Access point SSID to connect
 #define SSID "SILABS_AP"
 
@@ -206,22 +210,14 @@ void switch_m4_frequency(void);
 #define RSI_SSL_BIT_ENABLE 0
 
 // Throughput parameters
-#ifdef FLOAT_PRINT_BYPASS
 uint64_t num_bits = 0;
-#else
-uint32_t num_bits           = 0;
-#endif
 uint32_t xfer_time;
 uint32_t t_start = 0;
 uint32_t t_end;
 float throughput;
 
 volatile uint8_t data_recvd = 0;
-#ifdef FLOAT_PRINT_BYPASS
 volatile uint64_t num_bytes = 0;
-#else
-volatile uint32_t num_bytes = 0;
-#endif
 
 // Memory to initialize driv
 uint8_t global_buf[GLOBAL_BUFF_LEN];
@@ -282,21 +278,12 @@ void socket_async_recive(uint32_t sock_no, uint8_t *buffer, uint32_t length)
  *====================================================*/
 void compute_throughput(void)
 {
-  num_bits  = num_bytes * 8;                               // number of bits
-  xfer_time = ((t_end - t_start) / (1000 * tick_count_s)); // data transfer time
-#ifdef FLOAT_PRINT_BYPASS
-  uint32_t throughput;
-  throughput = (((float)(num_bits) / xfer_time) / 1000000); //Throughput calculation
-#ifdef RSI_DEBUG_PRINTS
-  LOG_PRINT("throughput in mbps=%d \r\n", (throughput));
-  LOG_PRINT("Time taken in sec: %lu \r\n", xfer_time);
-#endif
-#else
+  num_bits   = num_bytes * 8;                               // number of bits
+  xfer_time  = ((t_end - t_start) / (1000 * tick_count_s)); // data transfer time
   throughput = (((float)(num_bits) / xfer_time) / 1000000); //Throughput calculation
 #ifdef RSI_DEBUG_PRINTS
   LOG_PRINT("throughput in mbps=%f \r\n", (throughput));
   LOG_PRINT("Time taken in sec: %lu \r\n", xfer_time);
-#endif
 #endif
 }
 
@@ -371,19 +358,11 @@ void measure_throughput(uint32_t pkt_length, uint32_t tx_rx)
  *====================================================*/
 void measure_throughput(uint32_t total_bytes, uint32_t start_time, uint32_t end_time)
 {
-#ifdef FLOAT_PRINT_BYPASS
-  uint32_t through_put;
-  through_put = ((float)(total_bytes * 8) / ((end_time - start_time) / tick_count_s));
-  through_put /= 1000;
-  LOG_PRINT("\r\nThroughput in mbps is : %d\r\n", through_put);
-  LOG_PRINT("Time taken in sec: %lu \r\n", (uint32_t)((end_time - start_time) / (1000 * tick_count_s)));
-#else
   float through_put;
   through_put = ((float)(total_bytes * 8) / ((end_time - start_time) / tick_count_s));
   through_put /= 1000;
   LOG_PRINT("\r\nThroughput in mbps is : %3.2f\r\n", through_put);
   LOG_PRINT("Time taken in sec: %lu \r\n", (uint32_t)((end_time - start_time) / (1000 * tick_count_s)));
-#endif
 }
 #endif
 
@@ -410,9 +389,9 @@ int32_t application()
 #else
   uint32_t ip_buff[13];
   unsigned char hex_addr[RSI_IPV6_ADDRESS_LENGTH] = { 0 };
-  unsigned char link_local_addr[46]               = { 0 };
-  unsigned char global_addr[46]                   = { 0 };
-  unsigned char gateway6[46]                      = { 0 };
+  unsigned char link_local_addr[46] = { 0 };
+  unsigned char global_addr[46] = { 0 };
+  unsigned char gateway6[46] = { 0 };
   uint32_t server_addr_6[4];
 #endif
 #if !SOCKET_ASYNC_FEATURE
@@ -442,8 +421,6 @@ int32_t application()
   uint16_t i              = 0;
   uint32_t total_bytes_tx = 0, tt_start = 0, tt_end = 0, pkt_cnt = 0;
 
-#ifndef RSI_M4_INTERFACE
-
   // Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -457,7 +434,6 @@ int32_t application()
     return status;
   }
   LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 
 #ifdef RSI_M4_INTERFACE
 #ifdef RSI_WITH_OS
@@ -542,10 +518,10 @@ int32_t application()
 #endif
 #else
 #ifdef RSI_CONFIGURE_IPV6
-  status            = rsi_inet_pton6(DEVICE_IP6, DEVICE_IP6 + strlen(DEVICE_IP6), hex_addr, ip_addr);
-  status            = rsi_inet_pton6(GATEWAY6, GATEWAY6 + strlen(GATEWAY6), hex_addr, gateway);
+  status = rsi_inet_pton6(DEVICE_IP6, DEVICE_IP6 + strlen(DEVICE_IP6), hex_addr, ip_addr);
+  status = rsi_inet_pton6(GATEWAY6, GATEWAY6 + strlen(GATEWAY6), hex_addr, gateway);
 #endif
-  status            = rsi_config_ipaddress(RSI_IP_VERSION,
+  status = rsi_config_ipaddress(RSI_IP_VERSION,
                                 RSI_STATIC,
                                 (uint8_t *)&ip_addr,
                                 (uint8_t *)&network_mask,
@@ -631,7 +607,7 @@ int32_t application()
         // Measure throughput if avg time is reached
         if ((rsi_hal_gettickcount() - tt_start) >= THROUGHPUT_AVG_TIME) {
           // store the time after sending data
-          tt_end         = rsi_hal_gettickcount();
+          tt_end = rsi_hal_gettickcount();
           total_bytes_tx = pkt_cnt * BUF_SIZE;
           // Measure throughput for every interval of THROUGHPUT_AVG_TIME
 #if CONTINUOUS_THROUGHPUT
@@ -639,8 +615,8 @@ int32_t application()
           measure_throughput(total_bytes_tx, tt_start, tt_end);
           // reset to initial value
           total_bytes_tx = 0;
-          pkt_cnt        = 0;
-          tt_start       = rsi_hal_gettickcount();
+          pkt_cnt = 0;
+          tt_start = rsi_hal_gettickcount();
 #else
           LOG_PRINT("\r\nUDP TX completed\r\n");
           // Measure throughput
@@ -840,15 +816,15 @@ int32_t application()
         // Measure throughput if avg time is reached
         if ((rsi_hal_gettickcount() - tt_start) >= THROUGHPUT_AVG_TIME) {
           // store the time after sending data
-          tt_end         = rsi_hal_gettickcount();
+          tt_end = rsi_hal_gettickcount();
           total_bytes_tx = pkt_cnt * BUF_SIZE;
 #if CONTINUOUS_THROUGHPUT
           // Measure throughput
           measure_throughput(total_bytes_tx, tt_start, tt_end);
           // reset to initial value
           total_bytes_tx = 0;
-          pkt_cnt        = 0;
-          tt_start       = rsi_hal_gettickcount();
+          pkt_cnt = 0;
+          tt_start = rsi_hal_gettickcount();
 #else
           rsi_shutdown(client_socket, 0);
           LOG_PRINT("\r\nTCP TX completed \r\n");
@@ -1095,7 +1071,7 @@ int32_t application()
 #if CONTINUOUS_THROUGHPUT
         if ((rsi_hal_gettickcount() - t_start) >= THROUGHPUT_AVG_TIME) {
           // take the current time
-          t_end          = rsi_hal_gettickcount();
+          t_end = rsi_hal_gettickcount();
           total_bytes_tx = pkt_cnt * BUF_SIZE;
           measure_throughput(total_bytes_tx, t_start, t_end);
           pkt_cnt = 0;
@@ -1105,14 +1081,14 @@ int32_t application()
         // measure throughput if pkt_cnt reaches max transmit packets
         if (pkt_cnt == MAX_TX_PKTS) {
           // take the current time
-          t_end          = rsi_hal_gettickcount();
+          t_end = rsi_hal_gettickcount();
           total_bytes_tx = pkt_cnt * BUF_SIZE;
           rsi_shutdown(client_socket, 0);
           LOG_PRINT("SSL client closed\n");
           LOG_PRINT("\r\nSSL TX completed \r\n");
           measure_throughput(total_bytes_tx, t_start, t_end);
           total_bytes_tx = 0;
-          pkt_cnt        = 0;
+          pkt_cnt = 0;
           break;
         }
 #endif
@@ -1266,22 +1242,6 @@ void rsi_remote_socket_terminate_handler(uint16_t status, uint8_t *buffer, const
 // main function definition
 int main(void)
 {
-#ifdef RSI_M4_INTERFACE
-  int32_t status = RSI_SUCCESS;
-  // Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  // Silicon labs module intialisation
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
-    return status;
-  }
-  LOG_PRINT("\r\nDevice Initialization Success\r\n");
-#endif
 #ifdef RSI_WITH_OS
   rsi_task_handle_t application_handle = NULL;
 

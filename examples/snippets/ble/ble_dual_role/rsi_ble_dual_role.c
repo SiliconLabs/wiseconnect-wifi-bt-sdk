@@ -18,8 +18,8 @@
 /*================================================================================
  * @brief : This file contains example application for BLE Dual Role
  * @section Description :
- * This application demonstrates how to connect with multiple(6) slaves as silabs
- * module in central mode and connect with multiple(2) masters as silabs module
+ * This application demonstrates how to connect with multiple(6) peripherals as silabs
+ * module in central mode and connect with multiple(2) centrals as silabs module
  * in peripheral mode.
  =================================================================================*/
 
@@ -74,8 +74,8 @@
 //! Maximum number of advertise reports to hold
 #define NO_OF_ADV_REPORTS 8
 
-//! Maximum number of multiple slaves supported.
-#define MAX_NUM_OF_SLAVES 6
+//! Maximum number of multiple peripherals supported.
+#define MAX_NUM_OF_PERIPHERALS 6
 
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000
@@ -121,11 +121,11 @@ static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
 static uint16_t rsi_scan_in_progress;
 static uint16_t rsi_app_no_of_adv_reports_rcvd = 0;
 //! global variables
-uint8_t conn_dev_addr[18]   = { 0 };
-uint8_t remote_dev_addr[6]  = { 0 };
-uint16_t num_of_conn_slaves = 0;
-uint8_t num_of_conn_masters = 0;
-uint16_t conn_req_pending   = 0;
+uint8_t conn_dev_addr[18]        = { 0 };
+uint8_t remote_dev_addr[6]       = { 0 };
+uint16_t num_of_conn_peripherals = 0;
+uint8_t num_of_conn_centrals     = 0;
+uint16_t conn_req_pending        = 0;
 static rsi_ble_event_adv_report_t rsi_app_adv_reports_to_app[NO_OF_ADV_REPORTS];
 static rsi_ble_event_conn_status_t conn_event_to_app[10];
 static rsi_ble_event_disconnect_t disconn_event_to_app;
@@ -313,7 +313,7 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
         memcpy(conn_event_to_app[ix].dev_addr, resp_enh_conn->dev_addr, RSI_DEV_ADDR_LEN);
         conn_event_to_app[ix].status = resp_enh_conn->status;
 
-        num_of_conn_masters++;
+        num_of_conn_centrals++;
         break;
       }
     }
@@ -358,7 +358,7 @@ static void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
       rsi_6byte_dev_address_to_ascii(str_conn_device, (uint8_t *)conn_event_to_app[ix].dev_addr);
       if (!strcmp((char *)str_conn_device, RSI_BLE_DEV_ADDR)) {
         memcpy(&conn_event_to_app[ix], resp_conn, sizeof(rsi_ble_event_conn_status_t));
-        num_of_conn_masters++;
+        num_of_conn_centrals++;
         break;
       }
     }
@@ -406,7 +406,7 @@ static void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconn
       rsi_6byte_dev_address_to_ascii(str_conn_device, (uint8_t *)conn_event_to_app[ix].dev_addr);
       if (!strcmp((char *)str_conn_device, (const char *)str_disconn_device)) {
         memset(&conn_event_to_app[ix], 0, sizeof(rsi_ble_event_conn_status_t));
-        num_of_conn_masters--;
+        num_of_conn_centrals--;
         break;
       }
     }
@@ -601,7 +601,7 @@ int32_t rsi_ble_dual_role(void)
 
         LOG_PRINT("\n Advertise report received \n");
         if (conn_req_pending == 0) {
-          if ((num_of_conn_slaves - 2) < MAX_NUM_OF_SLAVES) {
+          if ((num_of_conn_peripherals - 2) < MAX_NUM_OF_PERIPHERALS) {
             if ((!strcmp((char *)conn_dev_addr, RSI_BLE_DEV_1_ADDR))
                 || (!strcmp((char *)conn_dev_addr, RSI_BLE_DEV_2_ADDR))
                 || (!strcmp((char *)conn_dev_addr, RSI_BLE_DEV_3_ADDR))
@@ -630,21 +630,21 @@ int32_t rsi_ble_dual_role(void)
       } break;
 
       case RSI_BLE_CONN_EVENT: {
-        num_of_conn_slaves++;
+        num_of_conn_peripherals++;
 
         LOG_PRINT("\n Device connected \n ");
-        LOG_PRINT("\n Number of devices connected:%d \n", num_of_conn_slaves);
+        LOG_PRINT("\n Number of devices connected:%d \n", num_of_conn_peripherals);
 
         conn_req_pending = 0;
 
         rsi_ble_app_clear_event(RSI_BLE_CONN_EVENT);
-        if (num_of_conn_masters < 2) {
+        if (num_of_conn_centrals < 2) {
           status = rsi_ble_start_advertising();
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\n status is = %lx \n ", status);
           }
         }
-        if ((num_of_conn_slaves - 2) < MAX_NUM_OF_SLAVES) {
+        if ((num_of_conn_peripherals - 2) < MAX_NUM_OF_PERIPHERALS) {
           LOG_PRINT("\n Start scanning \n");
           rsi_app_no_of_adv_reports_rcvd = 0;
           status                         = rsi_ble_start_scanning();
@@ -656,10 +656,10 @@ int32_t rsi_ble_dual_role(void)
       } break;
 
       case RSI_BLE_DISCONN_EVENT: {
-        num_of_conn_slaves--;
+        num_of_conn_peripherals--;
 
         LOG_PRINT("\n Device disconnected\n ");
-        LOG_PRINT("\n Number of connected devices:%d\n", num_of_conn_slaves);
+        LOG_PRINT("\n Number of connected devices:%d\n", num_of_conn_peripherals);
 
 #if ENABLE_POWER_SAVE
 
@@ -679,7 +679,7 @@ int32_t rsi_ble_dual_role(void)
         }
 
 #endif
-        if (num_of_conn_masters < 2) {
+        if (num_of_conn_centrals < 2) {
           status = rsi_ble_start_advertising();
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\n status is = %lx \n ", status);

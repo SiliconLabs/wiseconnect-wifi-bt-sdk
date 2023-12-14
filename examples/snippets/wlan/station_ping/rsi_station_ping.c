@@ -132,6 +132,10 @@
 //! Memory to initialize driver
 uint8_t global_buf[GLOBAL_BUFF_LEN];
 volatile uint8_t ping_rsp_received;
+#ifdef RSI_WITH_OS
+rsi_semaphore_handle_t ping_sem;
+#endif
+
 uint64_t ip_to_reverse_hex(char *ip);
 void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uint16_t length);
 
@@ -165,7 +169,6 @@ int32_t rsi_station_ping_app()
   rsi_task_handle_t driver_task_handle = NULL;
 #endif
 
-#ifndef RSI_M4_INTERFACE
   //! Driver initialization
   status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
   if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
@@ -180,9 +183,11 @@ int32_t rsi_station_ping_app()
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#endif
 
 #ifdef RSI_WITH_OS
+  //! Create ping semaphore
+  rsi_semaphore_create(&ping_sem, 0);
+
   //! Task created for Driver task
   rsi_task_create((rsi_task_function_t)rsi_wireless_driver_task,
                   (uint8_t *)"driver_task",
@@ -292,8 +297,7 @@ int32_t rsi_station_ping_app()
     //! wait for Driver task to complete
     main_loop();
 #else
-    while (!ping_rsp_received)
-      ;
+    rsi_semaphore_wait(&ping_sem, 0);
 #endif
   }
 
@@ -324,27 +328,8 @@ int main()
   int32_t status = RSI_SUCCESS;
 
 #ifdef RSI_WITH_OS
-  rsi_task_handle_t wlan_task_handle = NULL;
-#endif
-#ifdef RSI_M4_INTERFACE
-  //! Driver initialization
-  status = rsi_driver_init(global_buf, GLOBAL_BUFF_LEN);
-  if ((status < 0) || (status > GLOBAL_BUFF_LEN)) {
-    return status;
-  }
-
-  //! Silabs module initialization
-  status = rsi_device_init(LOAD_NWP_FW);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nDevice Initialization Failed\r\n");
-    return status;
-  } else {
-    LOG_PRINT("\r\nDevice Initialization Success\r\n");
-  }
-#endif
-
-#ifdef RSI_WITH_OS
   //! OS case
+  rsi_task_handle_t wlan_task_handle = NULL;
   //! Task created for WLAN task
   rsi_task_create((rsi_task_function_t)(int32_t)rsi_station_ping_app,
                   (uint8_t *)"wlan_task",
@@ -374,6 +359,9 @@ void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uin
   UNUSED_CONST_PARAMETER(buffer); //This statement is added only to resolve compilation warning, value is unchanged
   UNUSED_CONST_PARAMETER(length); //This statement is added only to resolve compilation warning, value is unchanged
   ping_rsp_received = 1;
+#ifdef RSI_WITH_OS
+  rsi_semaphore_post(&ping_sem);
+#endif
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nPing Failed, Error Code : 0x%lX\r\n", status);
   } else {

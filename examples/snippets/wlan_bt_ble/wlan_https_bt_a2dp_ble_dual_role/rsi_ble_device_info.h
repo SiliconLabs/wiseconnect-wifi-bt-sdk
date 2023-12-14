@@ -33,19 +33,19 @@
 #include "rsi_ble_apis.h"
 #include <rsi_ble_config.h>
 
-#define RSI_REM_DEV_ADDR_LEN 18
-#define RSI_REM_DEV_NAME_LEN 31
-#define MASTER_ROLE          2
-#define SLAVE_ROLE           1
-#define NO_SLAVE_FOUND       0
-#define SLAVE_FOUND          1
-#define SLAVE_CONNECTED      2
-#define SLAVE_NOT_CONNECTED  3
+#define RSI_REM_DEV_ADDR_LEN     18
+#define RSI_REM_DEV_NAME_LEN     31
+#define CENTRAL_ROLE             2
+#define PERIPHERAL_ROLE          1
+#define NO_PERIPHERAL_FOUND      0
+#define PERIPHERAL_FOUND         1
+#define PERIPHERAL_CONNECTED     2
+#define PERIPHERAL_NOT_CONNECTED 3
 
 typedef struct rsi_ble_conn_info_s {
   uint8_t conn_id;
   uint8_t conn_status;
-  uint8_t remote_device_role; //! 1 - remote device is slave, 2 - remote device is master
+  uint8_t remote_device_role; //! 1 - remote device is peripheral, 2 - remote device is central
   uint8_t remote_dev_addr[RSI_REM_DEV_ADDR_LEN];
   rsi_ble_event_remote_features_t remote_dev_feature;    //! -- rsi_ble_simple_peripheral_on_remote_features_event()
   rsi_ble_event_adv_report_t rsi_app_adv_reports_to_app; //! -- rsi_ble_simple_central_on_adv_report_event()
@@ -146,5 +146,5 @@ uint8_t rsi_get_remote_device_role(uint8_t remote_dev_addr[RSI_REM_DEV_ADDR_LEN]
 uint8_t rsi_remove_ble_conn_id(uint8_t remote_dev_addr[RSI_REM_DEV_ADDR_LEN]);
 uint8_t rsi_check_ble_conn_status(uint8_t connection_id);
 
-//#endif /* APPS_DEMO_BLE_MULTI_SLAVE_MASTER_DEMO_47_RSI_BLE_DEVICE_INFO_H_ */
+//#endif /* APPS_DEMO_BLE_MULTI_PERIPHERAL_CENTRAL_DEMO_47_RSI_BLE_DEVICE_INFO_H_ */
 #endif
