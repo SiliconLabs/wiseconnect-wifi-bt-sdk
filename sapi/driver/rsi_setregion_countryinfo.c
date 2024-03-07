@@ -151,12 +151,21 @@ void extract_setregionap_country_info(rsi_req_set_region_ap_t *rsi_set_region_ap
         rsi_set_region_ap->no_of_rules[0]                 = 1;
         rsi_set_region_ap->channel_info[0].first_channel  = 1;
         rsi_set_region_ap->channel_info[0].no_of_channels = 13;
-        rsi_set_region_ap->channel_info[0].max_tx_power   = 27;
+        rsi_set_region_ap->channel_info[0].max_tx_power   = 23;
       } else {
-        rsi_set_region_ap->no_of_rules[0]                 = 1;
-        rsi_set_region_ap->channel_info[0].first_channel  = 149;
+        rsi_set_region_ap->no_of_rules[0]                 = 4;
+        rsi_set_region_ap->channel_info[0].first_channel  = 36;
         rsi_set_region_ap->channel_info[0].no_of_channels = 4;
-        rsi_set_region_ap->channel_info[0].max_tx_power   = 29;
+        rsi_set_region_ap->channel_info[0].max_tx_power   = 23;
+        rsi_set_region_ap->channel_info[1].first_channel  = 52;
+        rsi_set_region_ap->channel_info[1].no_of_channels = 4;
+        rsi_set_region_ap->channel_info[1].max_tx_power   = 20;
+        rsi_set_region_ap->channel_info[2].first_channel  = 100;
+        rsi_set_region_ap->channel_info[2].no_of_channels = 11;
+        rsi_set_region_ap->channel_info[2].max_tx_power   = 20;
+        rsi_set_region_ap->channel_info[3].first_channel  = 149;
+        rsi_set_region_ap->channel_info[3].no_of_channels = 5;
+        rsi_set_region_ap->channel_info[3].max_tx_power   = 23;
       }
     }
 

@@ -353,8 +353,13 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
 
           // Enable or Disable instant bg scan
           rsi_uint16_to_2bytes(rsi_bg_scan->enable_instant_bgscan, 1);
-        }
+        } else if (pkt->data[1] == 0) {
+          // Enable or Disable bg scan
+          rsi_uint16_to_2bytes(rsi_bg_scan->bgscan_enable, 0);
 
+          // Enable or Disable instant bg scan
+          rsi_uint16_to_2bytes(rsi_bg_scan->enable_instant_bgscan, 0);
+        }
       } else {
         // Enable or Disable bg scan
         rsi_uint16_to_2bytes(rsi_bg_scan->bgscan_enable, RSI_BG_SCAN_ENABLE);

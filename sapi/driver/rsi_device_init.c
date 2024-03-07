@@ -90,21 +90,6 @@ int16_t rsi_secure_ping_pong_wr(uint32_t ping_pong, uint8_t *src_addr, uint16_t 
 /** @addtogroup DRIVER6
 * @{
 */
-/*===========================================================*/
-/**
- * @fn          int16_t rsi_bl_module_power_cycle(void)
- * @brief       Power cycles the module. This API is valid only if there is a power gate, external to the module, 
- *              which is controlling the power to the module using a GPIO signal of the MCU.
- * @pre         \ref rsi_driver_init() must be called before this API. 
- * @param[in]   void 
- * @return      0              - Success \n 
- * @return      Non-Zero Value - Failure
- * @note        **Precondition** - \ref rsi_driver_init() must be called before this API.
- */
-/** @} */
-/** @addtogroup DRIVER5
-* @{
-*/
 /*==============================================*/
 /**
  * @fn          int16_t rsi_bl_waitfor_boardready(void)
@@ -619,12 +604,12 @@ int32_t rsi_get_ram_dump(uint32_t addr, uint16_t length, uint8_t *buf)
 /*===========================================================*/
 /**
  * @fn          int16_t rsi_bl_module_power_cycle(void)
- * @brief       Power cycle the module.This API is valid only if there is a power gate, external to the module,which is controlling the power 
- *              to the module using a GPIO signal of the MCU.
- * @pre         \ref rsi_driver_init() must be called before this API. 
+ * @brief       Power cycles the module. This API is valid only if there is a power gate, external to the module, 
+ *              which is controlling the power to the module using a GPIO signal of the MCU.
  * @param[in]   void 
  * @return      0              - Success \n 
- *              Non-Zero Value - Failure
+ * @return      Non-Zero Value - Failure
+ * @note        **Precondition** - \ref rsi_driver_init() must be called before this API.
  */
 
 int16_t rsi_bl_module_power_cycle(void)

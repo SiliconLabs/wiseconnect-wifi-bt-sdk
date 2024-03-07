@@ -439,6 +439,8 @@ start:
   status = rsi_mqtt_connect(rsi_mqtt_client, 0, clientID, NULL, NULL);
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\nConnect to the MQTT broker/server Failed, Error Code : 0x%lX\r\n", status);
+    //! Shut Down the port
+    mqtt_disconnect(rsi_mqtt_client->mqtt_client.ipstack);
     return status;
   } else {
     LOG_PRINT("\r\nConnect to the MQTT broker/server Success\r\n");
@@ -447,6 +449,9 @@ start:
   //! Subscribe to the topic given
   status = rsi_mqtt_subscribe(rsi_mqtt_client, QOS, (int8_t *)RSI_MQTT_TOPIC, rsi_message_received);
   if (status != RSI_SUCCESS) {
+    if (rsi_wlan_get_status() != RSI_SUCCESS) {
+      status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    }
     LOG_PRINT("\r\nSubscription to Topic Failed, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
@@ -483,7 +488,9 @@ start:
   //! Publish message on the topic
   status = rsi_mqtt_publish(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC, &publish_msg);
   if (status != RSI_SUCCESS) {
-    status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    if (rsi_wlan_get_status() != RSI_SUCCESS) {
+      status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    }
     LOG_PRINT("\r\nPublish to Topic Failed, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
@@ -494,6 +501,9 @@ start:
     //! Recv data published on the subscribed topic
     status = rsi_mqtt_poll_for_recv_data(rsi_mqtt_client, 60000);
     if (status != RSI_SUCCESS) {
+      if (rsi_wlan_get_status() != RSI_SUCCESS) {
+        status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+      }
       //! Error in receiving
       LOG_PRINT("\r\nReceive Data Failed, Error Code : 0x%lX\r\n", status);
       return status;
@@ -506,6 +516,9 @@ start:
   //! UnSubscribe to the topic given
   status = rsi_mqtt_unsubscribe(rsi_mqtt_client, (int8_t *)RSI_MQTT_TOPIC);
   if (status != RSI_SUCCESS) {
+    if (rsi_wlan_get_status() != RSI_SUCCESS) {
+      status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    }
     LOG_PRINT("\r\nUnsubscription to Topic Failed, Error Code : 0x%lX\r\n", status);
     return status;
   } else {
@@ -515,7 +528,12 @@ start:
   //! Disconnect to the MQTT broker
   status = rsi_mqtt_disconnect(rsi_mqtt_client);
   if (status != RSI_SUCCESS) {
+    if (rsi_wlan_get_status() != RSI_SUCCESS) {
+      status = rsi_wlan_socket_get_status(rsi_mqtt_client->mqtt_client.ipstack->my_socket);
+    }
     LOG_PRINT("\r\nDisconnect to the MQTT broker Failed, Error Code : 0x%lX\r\n", status);
+    // Shut Down the port
+    mqtt_disconnect(rsi_mqtt_client->mqtt_client.ipstack);
     return status;
   } else {
     LOG_PRINT("\r\nDisconnect to the MQTT broker Success\r\n");

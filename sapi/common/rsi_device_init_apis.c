@@ -262,7 +262,7 @@ int32_t rsi_device_init(uint8_t select_option)
 
 int32_t rsi_device_deinit(void)
 {
-#ifdef RSI_WITH_OS
+#if (RSI_WITH_OS && (defined RSI_WLAN_ENABLE))
   int32_t status = RSI_SUCCESS;
 #endif
   SL_PRINTF(SL_DEVICE_DEINIT_ENTRY, COMMON, LOG_INFO);

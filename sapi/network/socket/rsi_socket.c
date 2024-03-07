@@ -262,8 +262,8 @@ int32_t rsi_listen(int32_t sockID, int32_t backlog)
  * @param[in]  sockID         - Socket descriptor ID
  * @param[in]  ClientAddress  - Remote peer address
  * @param[in]  addressLength  - Length of the address measured in bytes
- * @return 	   0              - Success \n
- * @return 	   Non-Zero Value - Failure
+ * @return 	   > 0            - Client socket ID \n
+ * @return 	   <= 0           - Failure
  * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.
  *
  */
@@ -505,8 +505,8 @@ int32_t rsi_accept_non_rom(int32_t sockID, struct rsi_sockaddr *ClientAddress, i
  * @param[in]  sockID          - Socket descriptor
  * @param[in]  ClientAddress   - Remote peer address
  * @param[in]  addressLength   - Length of the address measured in bytes
- * @return 	   0               - Success \n
- * @return 	   Non-Zero Value  - Failure
+ * @return 	   > 0             - Client socket ID \n
+ * @return 	   <= 0            - Failure
  * @note       **Precondition** - \ref rsi_listen() API needs to be called before this API.
  *
  *
@@ -2000,8 +2000,8 @@ uint8_t calculate_buffers_required(uint8_t type, uint16_t length)
  * @param[out]  dest_port      - Port number of remote peer
  * @param[out]  ip_addr        - Remote peer address
  * @param[out]  ip_version     - 4 - IPV4.  \n  6 - IPV6 
- * @return      0              - Success \n
- * @return      Non-Zero Value - Failure
+ * @return      > 0            - Client socket ID \n
+ * @return      <= 0           - Failure
  * @note        When attempting to connect multiple clients to the server socket opened on module, i.e., when the backlog parameter is used in rsi_listen() API. rsi_accept_async() has to be called again for each of the client connections. \n
  *              The API calling has to be repeated for the next client connection, only after the connection process of the previous client is complete.
  * @note        When using multiple client/server sockets, the following macros have to be updated in the wlan_config.h file, in TCP_IP_FEATURE_BIT_MAP - If TCP_IP_TOTAL_SOCKETS_x flag is used, then firmware allocates memory for x sockets. If TCP_IP_TOTAL_SOCKETS_x flag is not passed, then a default value of 10 sockets is used.

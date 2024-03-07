@@ -46,7 +46,10 @@
  * @param[in]  password            - Password of the MQTT client which is also credential for MQTT server as an authentication
  * @return     0                   - Success  \n
  * @return     Negative Value      - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
- * @note       RSI_EMB_MQTT_KEEPALIVE_RETRIES  - Configures the MQTT Keep-alive retries in case the MQTT Ping response is not received from the MQTT broker within the command acknowledgement time during the MQTT Keep-alive handshake. This is an optional parameter which can be configured in rsi_wlan_config.h. If this is not configured, then its default value is 0. In that case, firmware will not retry MQTT Ping internally and notify the host of MQTT Keepalive timeout.                               
+ * @note       RSI_EMB_MQTT_KEEPALIVE_RETRIES  - Configures the MQTT Keep-alive retries in case the MQTT Ping response is not received from the MQTT broker within the command acknowledgement time (35 seconds) during the MQTT Keep-alive process.
+ * @note       which can be configured in rsi_wlan_config.h.
+ * @note       In this case the device notifies AT+RSI_MQTT_KA_TIMEOUT to the host.The MQTT Keep Alive retries happen every 35 seconds until MQTT Ping response is received for MQTT Ping request or until all the MQTT Keep Alive retries elapse.
+ * @note       This is an optional parameter. If not configured, the default value is 0. In this case, device will not perform MQTT Keep Alive retries, however the MQTT Keep Alive process keeps happening (until MQTT connection is terminated) every Keep Alive Time period configured by the host.                               
  * @note       **Precondition**    - \ref rsi_config_ipaddress() API needs to be called before this API. 
  * @note       Refer to \ref error-codes for the description of above error codes.
  *

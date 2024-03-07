@@ -24,8 +24,8 @@
 #define REGION_EU        2
 #define REGION_JP        3
 #define REGION_INDIA     4
-#define REGION_SINGAPORE 5
-#define REGION_KOREA     6
+#define REGION_KOREA     5
+#define REGION_SINGAPORE 6
 
 void extract_setregionap_country_info(rsi_req_set_region_ap_t *);
 #endif

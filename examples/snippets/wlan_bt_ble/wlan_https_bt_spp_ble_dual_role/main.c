@@ -310,7 +310,6 @@ void rsi_common_app_task(void)
   ble_main_app_task_handle = NULL;
   bt_app_task_handle       = NULL;
   wlan_app_task_handle     = NULL;
-  uint8_t fmversion[20]    = { 0 };
 
 #ifdef FW_LOGGING_ENABLE
   //Fw log component level

@@ -291,7 +291,10 @@ int MQTTYield(Client* c, int timeout_ms)
     countdown_ms_mqtt(&timer, timeout_ms);
     while (!expired(&timer))
     {
-      if((timeout_ms/1000) > c->keepAliveInterval){
+      if(c->keepAliveInterval < ((c->command_timeout_ms)/1000)){
+        //! configure the timer1 as command timeout time
+        timer1.end_time = c->command_timeout_ms + rsi_timer_read_counter();
+      }else if((timeout_ms/1000) > c->keepAliveInterval){
           int left = left_ms_mqtt(&timer);
           if( left > (c->keepAliveInterval * 1000))
             {

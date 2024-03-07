@@ -259,8 +259,10 @@ int ConnectNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src_p
 	if(rc == -1)
 	{
       status = rsi_wlan_get_nwk_status();
-      //! Shut Down the port
-      mqtt_disconnect(n);
+	  if(status == 0){
+		status= rsi_wlan_socket_get_status(n->my_socket);
+		  return status;
+	  }
 	}
   return status;
 

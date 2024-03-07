@@ -258,8 +258,6 @@ int32_t rsi_mqtt_disconnect(rsi_mqtt_client_info_t *rsi_mqtt_client)
   }
   // Call MQTT disconnect
   status = MQTTDisconnect(&rsi_mqtt_client->mqtt_client);
-  // Shut Down the port
-  mqtt_disconnect(rsi_mqtt_client->mqtt_client.ipstack);
   SL_PRINTF(SL_MQTT_CLIENT_DISCONNECT_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }

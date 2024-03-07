@@ -95,6 +95,18 @@
   <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/include"/>
   <includePath uri="$(isCopySources?$(projectLocation):.)/third_party/freertos/portable"/>
   
+  <folder name="sapi/logging" uri="sapi/logging" includeAllFiles="true" includeAllFolders="true"/>
+  <folder name="utilities/advanced_logging/firmware_logging" uri="utilities/advanced_logging/firmware_logging" includeAllFiles="true" includeAllFolders="true"/>
+  
+  <file name="sapi/logging/sl_app_logging.c" uri="sapi/logging/sl_app_logging.c" />
+  <file name="sapi/logging/sleep_wakeup_logging.c" uri="sapi/logging/sleep_wakeup_logging.c" />
+  <file name="sapi/logging/sl_fw_logging.c" uri="sapi/logging/sl_fw_logging.c" />
+  <file name="utilities/advanced_logging/firmware_logging/firmware_logging_utils.c" uri="utilities/advanced_logging/firmware_logging/firmware_logging_utils.c" />
+  
+  
+  
+  
+  
   <includePath uri="$(isCopySources?$(projectLocation)/station_ping:./examples/snippets/wlan/station_ping)"/>
   
   <includePath uri="$(projectLocation)/platform/core"/>

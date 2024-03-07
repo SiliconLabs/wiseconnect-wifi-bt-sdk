@@ -560,32 +560,36 @@ void rsi_tx_event_handler(void)
     rsi_driver_cb_non_rom->driver_timer_start = 0;
 #endif
 
-    if (rsi_common_cb->power_save.power_save_enable) {
-#if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
-
-      // Keep Sleep confirm GPIO low
-      rsi_allow_sleep();
-
-#elif defined(RSI_M4_INTERFACE) && (RSI_HAND_SHAKE_TYPE == M4_BASED)
-      rsi_allow_sleep();
-#elif (RSI_HAND_SHAKE_TYPE == MSG_BASED)
-
-      if (rsi_common_cb->power_save.module_state == RSI_SLP_RECEIVED) {
-        // Send ACK if POWERMODE 3 and 9,incase of powermode 2 and 8 make GPIO low
-        if (rsi_frame_write((rsi_frame_desc_t *)rsi_sleep_ack, NULL, 0)) {
-          // Handle failure
-        }
-        rsi_mask_event(RSI_TX_EVENT);
-        rsi_common_cb->power_save.module_state = RSI_SLP_ACK_SENT;
-      }
-#endif
-    }
-
 #ifndef RSI_M4_INTERFACE
     // signal semaphore incase of packet having async response
     rsi_common_packet_transfer_done(pkt);
 #endif
+    // Clear Tx event as there are no pending packets in the queues
     rsi_clear_event(RSI_TX_EVENT);
+
+    if (rsi_common_cb->power_save.power_save_enable) {
+#if ((RSI_HAND_SHAKE_TYPE == GPIO_BASED) || (defined(RSI_M4_INTERFACE) && (RSI_HAND_SHAKE_TYPE == M4_BASED)))
+
+      // Keep Sleep confirm GPIO low
+      rsi_allow_sleep();
+
+#elif (RSI_HAND_SHAKE_TYPE == MSG_BASED)
+
+      if (rsi_common_cb->power_save.module_state == RSI_SLP_RECEIVED) {
+        rsi_mask_event(RSI_TX_EVENT);
+
+        // exit critical section as rsi_frame_write requires interrupts to be enabled for packet transfer
+        rsi_critical_section_exit(xflags);
+
+        // Send ACK if POWERMODE 3 and 9,incase of powermode 2 and 8 make GPIO low
+        if (rsi_frame_write((rsi_frame_desc_t *)rsi_sleep_ack, NULL, 0)) {
+          // Handle failure
+        }
+        rsi_common_cb->power_save.module_state = RSI_SLP_ACK_SENT;
+        return;
+      }
+#endif
+    }
     rsi_critical_section_exit(xflags);
   }
 }

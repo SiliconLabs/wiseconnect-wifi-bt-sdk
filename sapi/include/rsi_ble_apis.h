@@ -1109,10 +1109,10 @@ typedef struct rsi_ble_ae_adv_report_s {
   */
   uint8_t tx_power;
   /** 
-    uint8_t RSSI , this parameter contains the RSSI value, excluding any constant tone Extension. 
+    int8_t RSSI , this parameter contains the RSSI value, excluding any constant tone Extension. 
      RSSI ranges from -127 to +20 and it's units is in dBm
   */
-  uint8_t RSSI;
+  int8_t RSSI;
   /** uint16_t Periodic_Advertising_Interval , This parameter specifies the interval between the periodic advertising events */
   uint16_t per_adv_interval;
   /**

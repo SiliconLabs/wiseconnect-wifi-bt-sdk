@@ -885,6 +885,34 @@
             
            </Files>
          </Group>
+        
+        <Group><GroupName>sapi/logging</GroupName>
+           <Files>
+        
+             <File>
+                <FileName>sl_app_logging.c</FileName>
+                <FileType>1</FileType>
+                <FilePath>../../../../../sapi/logging/sl_app_logging.c</FilePath>
+             </File>
+             <File>
+                <FileName>sleep_wakeup_logging.c</FileName>
+                <FileType>1</FileType>
+                <FilePath>../../../../../sapi/logging/sleep_wakeup_logging.c</FilePath>
+             </File>
+             <File>
+                <FileName>sl_fw_logging.c</FileName>
+                <FileType>1</FileType>
+                <FilePath>../../../../../sapi/logging/sl_fw_logging.c</FilePath>
+             </File>
+             <File>
+                <FileName>firmware_logging_utils.c</FileName>
+                <FileType>1</FileType>
+                <FilePath>../../../../../utilities/advanced_logging/firmware_logging/firmware_logging_utils.c</FilePath>
+             </File>
+             
+           </Files>
+         </Group>
+        
       </Groups>
     </Target>
   </Targets>
