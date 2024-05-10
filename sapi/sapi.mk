@@ -238,7 +238,9 @@ bt_SOURCES = $(RSI_SDK_PATH)/sapi/bluetooth/rsi_bt_gap_apis.c \
              $(RSI_SDK_PATH)/sapi/bluetooth/rsi_bt_avrcp_apis.c \
              $(BT_COMMON_SOURCES)
 
-crypto_SOURCES = $(RSI_SDK_PATH)/sapi/crypto/rsi_crypto.c
+crypto_SOURCES = $(RSI_SDK_PATH)/sapi/crypto/rsi_crypto.c \
+                 $(RSI_SDK_PATH)/sapi/crypto/rsi_side_band_crypto.c
+
 
 azure_SOURCES = $(RSI_SDK_PATH)/third_party/azure_sdk/src/iothub_client/src/iothub_client_core_ll.c \
                 $(RSI_SDK_PATH)/third_party/azure_sdk/src/iothub_client/src/iothub_device_client_ll.c \

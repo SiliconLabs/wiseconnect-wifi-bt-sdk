@@ -68,6 +68,14 @@
   ((((((uint32_t)(sizeof(rsi_pkt_pool_t))) + 3) & ~3)) \
    + ((RSI_COMMON_CMD_LEN + sizeof(void *)) * RSI_COMMON_TX_POOL_PKT_COUNT))
 
+#ifdef SIDE_BAND_CRYPTO
+#define RSI_CRYPTO_CMD_LEN 1600
+// pool size of crypto command packets
+#define RSI_CRYPTO_POOL_SIZE                           \
+  ((((((uint32_t)(sizeof(rsi_pkt_pool_t))) + 3) & ~3)) \
+   + ((RSI_CRYPTO_CMD_LEN + sizeof(void *)) * RSI_CRYPTO_TX_POOL_PKT_COUNT))
+#endif
+
 // Max packet length of ssl rx packet
 #define RSI_SSL_RECV_BUFFER_LENGTH 0
 
@@ -359,6 +367,7 @@
 #define RSI_WLAN_NON_PREF_CHAN_WAIT_TIME               ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define SL_WIFI_BTR_SET_CHANNEL_RESPONSE_WAIT_TIME     ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define SL_WIFI_BTR_SEND_80211_DATA_RESPONSE_WAIT_TIME ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME      ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 // WIFI BLOCKED timeout defines
 #define RSI_ACCEPT_RESPONSE_WAIT_TIME          (RSI_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF)
@@ -367,6 +376,7 @@
 #define RSI_GPIO_WAIT_TIME                     10000
 #define RSI_RX_EVENT_WAIT_TIME                 DEFAULT_TIMEOUT
 #define RSI_COMMON_SEND_CMD_RESPONSE_WAIT_TIME ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_CRYPTO_SEND_CMD_RESPONSE_WAIT_TIME ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_WLAN_SEND_CMD_RESPONSE_WAIT_TIME   ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_NWK_SEND_CMD_RESPONSE_WAIT_TIME    ((250000 * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_GPIO_CONFIG_RESP_WAIT_TIME         ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
@@ -401,6 +411,9 @@
 //Antenna Output power in dBm
 #define RSI_MIN_OUTPUT_POWER_IN_DBM -8
 #define RSI_MAX_OUTPUT_POWER_IN_DBM 15
+
+// To select UART_1 for ram_log output
+#define UART_1_FOR_RAM_LOG BIT(0)
 
 /********TA GPIO defines ******************************/
 //! GPIO address
@@ -581,6 +594,9 @@ typedef enum ta_m4_commands_e {
   RSI_ENABLE_XTAL = 5,
 #ifdef CHIP_917
   RSI_WRITE_TO_COMMON_FLASH = 6,
+#ifdef SIDE_BAND_CRYPTO
+  RSI_ENABLE_SIDE_BAND = 7,
+#endif
 #endif
 } ta_m4_commands_t;
 //  M4 and TA secure handshake request structure.
@@ -807,6 +823,33 @@ typedef struct rsi_common_cb_s {
 #endif
 } rsi_common_cb_t;
 
+#ifdef SIDE_BAND_CRYPTO
+// driver common block structure
+typedef struct rsi_crypto_cb_s {
+
+  // driver common block status
+  volatile int32_t status;
+
+  // driver common block mutex
+  rsi_mutex_handle_t crypto_mutex;
+
+  // driver common block semaphore
+  rsi_semaphore_handle_t crypto_sem;
+
+  // driver common block tx pool
+  rsi_pkt_pool_t crypto_tx_pool;
+
+  // power save backups
+  uint8_t crypto_hold_power_save;
+
+  // buffer pointer given by application to driver
+  uint8_t *crypto_buffer;
+
+  // buffer length given by application to driver
+  uint32_t crypto_buffer_length;
+} rsi_crypto_cb_t;
+#endif
+
 typedef enum {
   ALLOW  = 0,
   IN_USE = 1,
@@ -820,7 +863,10 @@ typedef enum {
   RX_EVENT_CMD = 5,
   BT_CMD       = 6,
 #ifdef RSI_PROP_PROTOCOL_ENABLE
-  PROP_PROTOCOL_CMD = 7
+  PROP_PROTOCOL_CMD = 7,
+#endif
+#ifdef SIDE_BAND_CRYPTO
+  CRYPTO_CMD = 8,
 #endif
 } command_type;
 
@@ -887,6 +933,9 @@ typedef struct rsi_driver_cb_non_rom {
   rsi_semaphore_handle_t wlan_cmd_sem;
   rsi_semaphore_handle_t common_cmd_sem;
   rsi_semaphore_handle_t common_cmd_send_sem;
+#ifdef SIDE_BAND_CRYPTO
+  rsi_semaphore_handle_t crypto_cmd_sem;
+#endif
   rsi_semaphore_handle_t wlan_cmd_send_sem;
   rsi_semaphore_handle_t nwk_cmd_send_sem;
   rsi_semaphore_handle_t send_data_sem;
@@ -894,6 +943,9 @@ typedef struct rsi_driver_cb_non_rom {
   uint8_t wlan_wait_bitmap;
   uint8_t send_wait_bitmap;
   uint8_t common_wait_bitmap;
+#ifdef SIDE_BAND_CRYPTO
+  uint8_t crypto_wait_bitmap;
+#endif
   uint8_t zigb_wait_bitmap;
   uint8_t bt_wait_bitmap;
   uint8_t bt_cmd_wait_bitmap;

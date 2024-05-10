@@ -47,8 +47,6 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
-// Memory length for driver
-#define BT_GLOBAL_BUFF_LEN 15000
 
 // application defines
 
@@ -708,7 +706,7 @@ void rsi_ble_configurator_init(void)
   // set device in advertising mode.
   status = rsi_ble_start_advertising();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n rsi_ble_start_advertising cmd failed : %x", status);
+    LOG_PRINT("\n rsi_ble_start_advertising cmd failed : %lu", status);
   } else {
     LOG_PRINT("\n rsi_ble_start_advertising cmd success \n");
   }
@@ -758,7 +756,7 @@ void rsi_ble_configurator_task(void)
         //MTU exchange
         status = rsi_ble_mtu_exchange_event(conn_event_to_app.dev_addr, BLE_MTU_SIZE);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n rsi_ble_mtu_exchange_event command failed : %x", status);
+          LOG_PRINT("\n rsi_ble_mtu_exchange_event command failed : %ld", status);
         } else {
           LOG_PRINT("\n rsi_ble_mtu_exchange_event command success \n");
         }

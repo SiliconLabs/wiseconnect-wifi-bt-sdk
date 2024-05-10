@@ -1909,13 +1909,12 @@ static int32_t rsi_ble_dual_role(void)
 
       //! set advertise data
       rsi_ble_set_advertise_data(adv, strlen(RSI_BLE_APP_GATT_TEST) + 5);
-      uint8_t dummy_remote_dev_addr[6] = { 0x00, 0x00, 0x00, 0x11, 0x22, 0x33 };
 
-      status = rsi_ble_set_ble_tx_power(ADV_ROLE, dummy_remote_dev_addr, 4);
+      status = rsi_ble_set_ble_tx_power(4);
       if (status != RSI_SUCCESS) {
-        LOG_PRINT("\nSET BLE TX POWER FOR ADV_ROLE FAILED : 0x%x\n", status);
+        LOG_PRINT("\nSET BLE TX POWER FAILED : 0x%x\n", status);
       } else {
-        LOG_PRINT("\nSET BLE TX POWER FOR ADV_ROLE SUCCESS : 0x%x\n", status);
+        LOG_PRINT("\nSET BLE TX POWER SUCCESS : 0x%x\n", status);
       }
       //! set device in advertising mode.
       if (!CHK_BIT(rsi_ble_states_bitmap, RSI_ADV_STATE)) {

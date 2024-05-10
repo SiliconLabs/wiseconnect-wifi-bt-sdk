@@ -74,8 +74,12 @@ typedef unsigned long long int 	uint64_t;
 #endif
 
 #ifndef RSI_M4_INTERFACE
+#ifndef STATIC
 #define STATIC static
+#endif
+#ifndef INLINE
 #define INLINE inline
+#endif
 #endif
 /******************************************************
  * *                    Structures

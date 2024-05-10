@@ -130,7 +130,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
     // Copy MQTT Keep Alive period
     rsi_uint16_to_2bytes(mqtt_ops->keep_alive_interval, keep_alive_interval);
 
-#ifndef CHIP_9117
+#ifndef CHIP_917
     // Copy MQTT Keep Alive retries
     rsi_uint16_to_2bytes(mqtt_ops->keep_alive_retries, RSI_EMB_MQTT_KEEPALIVE_RETRIES);
 #endif
@@ -233,6 +233,7 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
  *                                                  #define RSI_TCP_IP_FEATURE_BIT_MAP (TCP_IP_FEAT_DHCPV4_CLIENT | TCP_IP_FEAT_SSL | TCP_IP_FEAT_DNS_CLIENT). \n
  *                                                  Load the related SSL Certificates in the module using rsi_wlan_set_certificate() API.
  * @note        Refer to \ref error-codes for the description of above error codes. \n
+ * @note        Length of the topic Length should not exceed 200 bytes excluding NULL termination character.
  *
  */
 
@@ -335,6 +336,7 @@ int32_t rsi_emb_mqtt_connect(uint8_t mqtt_flags, int8_t *will_topic, uint16_t wi
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
  * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Length of the topic Length should not exceed 200 bytes excluding NULL termination character.
  */
 int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
 {
@@ -465,6 +467,7 @@ int32_t rsi_emb_mqtt_publish(int8_t *topic, rsi_mqtt_pubmsg_t *publish_msg)
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
  * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Length of the topic Length should not exceed 200 bytes excluding NULL termination character.
  */
 int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
 {
@@ -567,6 +570,7 @@ int32_t rsi_emb_mqtt_subscribe(uint8_t qos, int8_t *topic)
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xffffffe0) \n
  * @note       **Precondition** - \ref rsi_emb_mqtt_connect() API needs to be called before this API.
  * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Length of the topic Length should not exceed 200 bytes excluding NULL termination character.
  */
 
 int32_t rsi_emb_mqtt_unsubscribe(int8_t *topic)

@@ -99,6 +99,52 @@ int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb)
 #endif
   return retval;
 }
+
+#ifdef SIDE_BAND_CRYPTO
+/*==============================================*/
+/**
+ * @fn         int8_t rsi_crypto_cb_init(rsi_crypto_cb_t *crypto_cb)
+ * @brief      Initialize crypto control block structure
+ * @param[in]  crypto_cb - pointer to crypto cb structure
+ * @return     0              - Success \n
+ * @return     Non-Zero Value - Failure
+ */
+/// @private
+int8_t rsi_crypto_cb_init(rsi_crypto_cb_t *crypto_cb)
+{
+  int8_t retval = RSI_ERR_NONE;
+
+  // validate input parameter
+  if (crypto_cb == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  // Initializes crypto status
+  crypto_cb->status = RSI_SUCCESS;
+
+  // Creates crypto mutex
+  rsi_mutex_create(&crypto_cb->crypto_mutex);
+
+  // Creates tx mutex
+  rsi_mutex_create(&rsi_driver_cb_non_rom->tx_mutex);
+
+#if defined(RSI_DEBUG_PRINTS) || defined(FW_LOGGING_ENABLE)
+  // Creates debug prints mutex
+  rsi_mutex_create(&rsi_driver_cb_non_rom->debug_prints_mutex);
+#endif
+
+  // Creates crypto cmd mutex
+  retval = rsi_semaphore_create(&rsi_driver_cb_non_rom->crypto_cmd_sem, 0);
+  if (retval != RSI_ERROR_NONE) {
+    return RSI_ERROR_SEMAPHORE_CREATE_FAILED;
+  }
+  rsi_semaphore_post(&rsi_driver_cb_non_rom->crypto_cmd_sem);
+
+  return retval;
+}
+
+#endif
+
 /*==============================================*/
 /**
  * @fn          int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
@@ -1475,6 +1521,28 @@ int32_t rsi_check_and_update_cmd_state(uint8_t cmd_type, uint8_t cmd_state)
         rsi_semaphore_post(&rsi_driver_cb_non_rom->nwk_cmd_send_sem);
       }
     } break;
+#endif
+#ifdef SIDE_BAND_CRYPTO
+    case CRYPTO_CMD: {
+      if (cmd_state == IN_USE) {
+#ifndef RSI_CRYPTO_SEM_BITMAP
+        rsi_driver_cb_non_rom->crypto_wait_bitmap |= BIT(1);
+#endif
+        // common semaphore
+        status =
+          rsi_wait_on_crypto_semaphore(&rsi_driver_cb_non_rom->crypto_cmd_sem, RSI_CRYPTO_SEND_CMD_RESPONSE_WAIT_TIME);
+        if (status != RSI_ERROR_NONE) {
+          return RSI_ERROR_COMMON_CMD_IN_PROGRESS;
+        }
+      } else if (cmd_state == ALLOW) {
+#ifndef RSI_COMMON_SEM_BITMAP
+        rsi_driver_cb_non_rom->crypto_wait_bitmap &= ~BIT(1);
+#endif
+        // common semaphore post
+        rsi_semaphore_post(&rsi_driver_cb_non_rom->crypto_cmd_sem);
+      }
+    } break;
+
 #endif
     default:
       status = RSI_ERROR_INVALID_PARAM;

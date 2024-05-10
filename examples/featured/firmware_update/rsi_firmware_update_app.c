@@ -359,7 +359,7 @@ int32_t application()
 #endif
         status = rsi_wireless_deinit();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%1X\r\n", status);
+          LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%ld\r\n", status);
           return status;
         }
 
@@ -403,7 +403,7 @@ int main(void)
   rsi_task_handle_t application_handle = NULL;
 
   // Create application task
-  rsi_task_create((rsi_task_function_t)application,
+  rsi_task_create((rsi_task_function_t)(int32_t)application,
                   (uint8_t *)"application_task",
                   RSI_APPLICATION_TASK_STACK_SIZE,
                   NULL,

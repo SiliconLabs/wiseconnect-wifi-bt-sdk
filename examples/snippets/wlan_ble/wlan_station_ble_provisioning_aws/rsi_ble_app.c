@@ -46,8 +46,6 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
-//! Memory length for driver
-#define BT_GLOBAL_BUFF_LEN 15000
 
 //! application defines
 

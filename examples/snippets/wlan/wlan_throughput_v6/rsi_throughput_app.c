@@ -541,12 +541,15 @@ int32_t application()
 
 #else
   LOG_PRINT("RSI_STA IP ADDR \r\n");
-  LOG_PRINT("prefix length : %d\r\n", ip_buff[0]);
+  LOG_PRINT("prefix length : %ld\r\n", ip_buff[0]);
   LOG_PRINT("linklocaladdr: %s\r\n", link_local_addr);
   LOG_PRINT("global addr:   %s\r\n", global_addr);
   LOG_PRINT("gateway addr:  %s\r\n", gateway6);
 
-  status = rsi_inet_pton6(SERVER_IP_ADDRESS, SERVER_IP_ADDRESS + strlen(SERVER_IP_ADDRESS), hex_addr, server_addr_6);
+  status = rsi_inet_pton6(SERVER_IP_ADDRESS,
+                          SERVER_IP_ADDRESS + strlen(SERVER_IP_ADDRESS),
+                          hex_addr,
+                          (unsigned int *)server_addr_6);
 #endif
 
   for (i = 0; i < BUF_SIZE; i++) {

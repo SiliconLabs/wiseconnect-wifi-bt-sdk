@@ -292,6 +292,8 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 	- If RESET pin is not connected from EFX32 to RS9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Free run the project
    
+- Successful build output will show as below.
+   
 ## 6. Program the device
 
 - Once the build was successfull, right click on project and click on Debug As->Silicon Labs ARM Program as shown in below image.

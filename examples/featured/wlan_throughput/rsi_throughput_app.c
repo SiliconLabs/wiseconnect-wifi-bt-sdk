@@ -266,7 +266,7 @@ void compute_throughput(void)
   uint32_t throughput;
   throughput = (((float)(num_bits) / xfer_time) / 1000000); //Throughput calculation
 #ifdef RSI_DEBUG_PRINTS
-  LOG_PRINT("throughput in mbps=%d \r\n", (throughput));
+  LOG_PRINT("throughput in mbps=%lu \r\n", (throughput));
   LOG_PRINT("Time taken in sec: %lu \r\n", xfer_time);
 #endif
 #else
@@ -351,9 +351,9 @@ void measure_throughput(uint32_t total_bytes, uint32_t start_time, uint32_t end_
 {
 #ifdef FLOAT_PRINT_BYPASS
   uint32_t through_put;
-  through_put = ((float)(total_bytes * 8) / ((end_time - start_time) / tick_count_s));
+  through_put = ((total_bytes * 8) / ((end_time - start_time) / tick_count_s));
   through_put /= 1000;
-  LOG_PRINT("\r\nThroughput in mbps is : %d\r\n", through_put);
+  LOG_PRINT("throughput in mbps=%lu \r\n", through_put);
   LOG_PRINT("Time taken in sec: %lu \r\n", (uint32_t)((end_time - start_time) / (1000 * tick_count_s)));
 #else
   float through_put;

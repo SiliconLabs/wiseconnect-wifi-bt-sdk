@@ -198,6 +198,19 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
   rsi_pkt_pool_init(&rsi_driver_cb->common_cb->common_tx_pool, buffer, RSI_COMMON_POOL_SIZE, RSI_COMMON_CMD_LEN);
   buffer += RSI_COMMON_POOL_SIZE;
 
+#ifdef SIDE_BAND_CRYPTO
+  // Designate memory for crypto_cb
+  rsi_driver_cb->crypto_cb = (rsi_crypto_cb_t *)buffer;
+  buffer += sizeof(rsi_crypto_cb_t);
+
+  // Initialize crypto cb
+  rsi_crypto_cb_init(rsi_driver_cb->crypto_cb);
+
+  // Designate pool for crypto block
+  rsi_pkt_pool_init(&rsi_driver_cb->crypto_cb->crypto_tx_pool, buffer, RSI_CRYPTO_POOL_SIZE, RSI_CRYPTO_CMD_LEN);
+  buffer += RSI_CRYPTO_POOL_SIZE;
+#endif
+
   // Designate memory for wlan block
   rsi_driver_cb->wlan_cb = (rsi_wlan_cb_t *)buffer;
   buffer += sizeof(rsi_wlan_cb_t);
@@ -2149,6 +2162,8 @@ int32_t rsi_get_ram_log(uint32_t addr, uint32_t length)
     ram->addr = addr;
     // Length
     ram->length = length;
+    // Bit Map
+    ram->uartSel = RAM_DUMP_SEL_BITMAP;
 #ifndef RSI_COMMON_SEM_BITMAP
     rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
 #endif

@@ -141,6 +141,10 @@ typedef struct global_cb_s {
 
   struct rsi_m4ta_desc_s *rx_desc;
 
+#ifdef SIDE_BAND_CRYPTO
+  struct rsi_m4ta_desc_s *crypto_desc;
+#endif
+
   volatile uint8_t submit_rx_pkt_to_ta;
 
 } global_cb_t;
@@ -151,6 +155,9 @@ extern rsi_socket_info_t *rsi_socket_pool;
 #ifdef RSI_M4_INTERFACE
 extern rsi_m4ta_desc_t tx_desc[2];
 extern rsi_m4ta_desc_t rx_desc[2];
+#ifdef SIDE_BAND_CRYPTO
+extern rsi_m4ta_desc_t crypto_desc[2];
+#endif
 #endif
 
 #if defined(A11_ROM)

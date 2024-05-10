@@ -2400,6 +2400,12 @@ typedef struct rsi_bt_event_avrcp_get_tot_num_items_s {
 typedef struct rsi_bt_event_ctkd_s {
   /*remote device address*/
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
+  /*remote device address type*/
+  uint8_t dev_addr_type;
+  /*Identity address of remote device*/
+  uint8_t Identity_addr[RSI_DEV_ADDR_LEN];
+  /*Identity adrress type of remote device*/
+  uint8_t Identity_addr_type;
   /*derived linkkey from ltk*/
   uint8_t key[16];
 } rsi_bt_event_ctkd_t;

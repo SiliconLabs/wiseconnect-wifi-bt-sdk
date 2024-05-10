@@ -48,6 +48,13 @@ typedef struct {
 #define RX_LDMA_CHANNEL   0
 #define TX_LDMA_CHANNEL   1
 
+#define BRD4180B_CLI_ENABLED                    0            //Enable this to use CLI using UARTDRV on brd4180b board
+#define BRD4180B_DEBUG_PRINTS_PERIPHERAL        USART1
+#define BRD4180B_DEBUG_PRINTS_PERIPHERAL_NO     1
+#define BRD4180B_DEBUG_PRINTS_TX_PIN            PIN(A, 0)
+#define BRD4180B_CLI_DEBUG_PRINTS_ENABLED       0            //Enable this for debug prints on USART1
+#define BRD4180B_CLI_USE_VCOM                   0            //Enable this to use uart cli over vcom, Disable to use USART0 breakout pins for cli
+#define DEBUG_PRINTS_CLOCK            CONCAT_EXPAND(cmuClock_USART, BRD4180B_DEBUG_PRINTS_PERIPHERAL_NO)
 
 #define COM_PORT_PERIPHERAL        USART0
 #define COM_PORT_PERIPHERAL_NO     0

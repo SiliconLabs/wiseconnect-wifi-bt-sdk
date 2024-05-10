@@ -363,7 +363,7 @@ void rsi_ping_response_handler(uint16_t status, const uint8_t *buffer, const uin
   rsi_semaphore_post(&ping_sem);
 #endif
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nPing Failed, Error Code : 0x%lX\r\n", status);
+    LOG_PRINT("Ping Failed, Error Code : %d\r\n", status);
   } else {
     LOG_PRINT("\r\nPing Success\r\n");
   }

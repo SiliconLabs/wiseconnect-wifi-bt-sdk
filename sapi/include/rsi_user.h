@@ -84,6 +84,11 @@
 // Max packets in common control tx pool
 #define RSI_COMMON_TX_POOL_PKT_COUNT 1
 
+#ifdef SIDE_BAND_CRYPTO
+// Max packets in crypto control tx pool
+#define RSI_CRYPTO_TX_POOL_PKT_COUNT 1
+#endif
+
 // Max packets
 
 #define RSI_DRIVER_RX_POOL_PKT_COUNT 1

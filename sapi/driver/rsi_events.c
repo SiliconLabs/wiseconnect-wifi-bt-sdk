@@ -298,6 +298,12 @@ void rsi_events_init(void)
   // Initialze TX event
   rsi_register_event(RSI_TX_EVENT, rsi_tx_event_handler);
 
+#ifdef SIDE_BAND_CRYPTO
+  // Initialze CRYPTO events
+  rsi_register_event(RSI_CRYPTO_TX_EVENT, rsi_crypto_event_tx_handler);
+  rsi_register_event(RSI_CRYPTO_RX_EVENT, rsi_crypto_event_rx_handler);
+#endif
+
 #ifndef RSI_M4_INTERFACE
 #ifdef RSI_WLAN_ENABLE
   // Initialze Socket event

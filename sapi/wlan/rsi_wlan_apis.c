@@ -65,25 +65,6 @@ uint16_t get_seq_ctrl(uint8_t is_mcast)
   return is_mcast ? mcast_pkt_count++ : ucast_pkt_count++;
 }
 
-void dump_encap_pkt(uint8_t *pkt, uint32_t hdr_len, uint32_t payload_len, uint32_t payload_dump_len)
-{
-  uint32_t len = 0;
-  LOG_PRINT("%02x %02x | ", pkt[0], pkt[1]);                                               /* FC */
-  LOG_PRINT("%02x %02x | ", pkt[2], pkt[3]);                                               /* Dur */
-  LOG_PRINT("%x:%x:%x:%x:%x:%x | ", pkt[4], pkt[5], pkt[6], pkt[7], pkt[8], pkt[9]);       /* Addr1/RA */
-  LOG_PRINT("%x:%x:%x:%x:%x:%x | ", pkt[10], pkt[11], pkt[12], pkt[13], pkt[14], pkt[15]); /* Addr2/TA*/
-  LOG_PRINT("%x:%x:%x:%x:%x:%x | ", pkt[16], pkt[17], pkt[18], pkt[19], pkt[20], pkt[21]); /* Addr3/DA */
-  LOG_PRINT("%02x %02x | ", pkt[22], pkt[23]);                                             /* Seq Ctrl */
-  if ((pkt[1] & BIT(0)) && (pkt[1] & BIT(1)))                                              /* Addr4 */
-    LOG_PRINT("%x:%x:%x:%x:%x:%x | ", pkt[24], pkt[25], pkt[26], pkt[27], pkt[28], pkt[29]);
-  if (pkt[0] & BIT(7)) /* QoS Ctrl */
-    LOG_PRINT("%02x %02x | ", pkt[30], pkt[31]);
-  len = payload_len < payload_dump_len ? payload_len : payload_dump_len;
-  for (int i = hdr_len; i < hdr_len + len; i++) /* Data */
-    LOG_PRINT("%02x ", pkt[i]);
-  LOG_PRINT("|\r\n");
-}
-
 int32_t encapsulate_tx_data_packet(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk, uint8_t *pkt_data, uint32_t *mac_hdr_len)
 {
   uint16_t seq_ctrl = 0;
@@ -91,16 +72,16 @@ int32_t encapsulate_tx_data_packet(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk, uin
   uint32_t qos_ctrl_off = MAC80211_HDR_MIN_LEN;
 
   if (data_ctrlblk == NULL)
-    return RSI_ERROR_INVALID_PARAM;
+    return RSI_ERROR_INVALID_PACKET;
 
-  if (IS_AUTO_RATE(data_ctrlblk->ctrl_flags))
-    return RSI_ERROR_INVALID_PARAM;
+  if (IS_MAC_ZERO(data_ctrlblk->addr1))
+    return RSI_ERROR_INVALID_MAC_ADDRESS;
 
   *mac_hdr_len = MAC80211_HDR_MIN_LEN;
 
   if (IS_QOS_PKT(data_ctrlblk->ctrl_flags) && !IS_BCAST_MCAST_MAC(data_ctrlblk->addr1[0])) {
     if (data_ctrlblk->priority > 3)
-      return RSI_ERROR_INVALID_PARAM;
+      return RSI_ERROR_INVALID_QOS_PRIORITY;
     *mac_hdr_len += MAC80211_HDR_QOS_CTRL_LEN;
   }
 
@@ -2946,8 +2927,7 @@ int32_t rsi_calib_read(uint8_t target, rsi_calib_read_t *calib_data)
 int32_t rsi_calibrate_dpd(uint8_t dpd_power_inx)
 {
   rsi_pkt_t *pkt;
-  int32_t status     = RSI_SUCCESS;
-  uint8_t rsi_vap_id = 0;
+  int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_WLAN_AP_STOP_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
@@ -3386,7 +3366,7 @@ int32_t rsi_wlan_ap_stop(void)
     rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
 #endif
     // Send disconnect command
-    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_AP_STOP, pkt);
+    status = rsi_driver_wlan_send_cmd((rsi_wlan_cmd_request_t)RSI_WLAN_REQ_AP_STOP, pkt);
 
     // Wait on WLAN semaphore
     rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_DISCONNECT_RESPONSE_WAIT_TIME);
@@ -4779,8 +4759,8 @@ int32_t rsi_wlan_buffer_config(void)
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  * @note       DFS channels are not supported in AP mode.
  * @note       For AP mode with WPA3 security, only SAE-H2E method is supported. SAE Hunting-and-Pecking method is not supported.
- *             TKIP encryption mode is not supported. Encryption mode is automatically configured to RSI_CCMP.
- *             PMKSA is not supported in WPA3 AP mode.
+ * @note       In WPA3(Personal or Personal transition) security mode, TKIP encryption mode is not supported. Encryption mode is automatically configured to RSI_CCMP.
+ * @note       Transition Disable Indication(TDI) is supported in WPA3 (Personal or Personal Transition) security in AP mode. In order to enable TDI, bit 4 of encryption_mode should be set.
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
@@ -7290,7 +7270,7 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
 }
 /*==============================================*/
 /**
- * @brief   	  Generate PMK if PSK and SSID are provided. This is a blocking API.
+ * @brief   	  Generate and configure PMK if PSK and SSID are provided. This is a blocking API.
  * @param[in]   type   - Possible values of this field are 1, 2, and 3, but we only pass 3 for generation of PMK.
  * @param[in]   psk    - Expected parameters are pre-shared key(PSK) of the access point
  * @param[in]   ssid   - Contain the SSID of the access point, this field will be valid only if TYPE value is 3.
@@ -7299,7 +7279,7 @@ int32_t rsi_wlan_enable_auto_config(uint8_t enable, uint32_t type)
  * @param[out]  32-byte PMK
  * @return	    0              - Success (If type value is 3) \n
  * @return	    Non-Zero Value - Failure (**Possible Error Codes** - 0x0021,0x0025,0x0026,0x0028,0x002C,0x0039,0x003a,0x003b) \n
- * @note 		    **Precondition** - \ref rsi_wlan_connect() API needs to be called before this API.
+ * @note        **Precondition** - This API should be called before \ref rsi_wlan_connect()
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -7840,25 +7820,49 @@ uint16_t rsi_wlan_register_callbacks(uint32_t callback_id,
     }
   } else if (callback_id == RSI_WLAN_TWT_RESPONSE_CB) {
     rsi_wlan_cb_non_rom->callback_list.twt_response_handler = callback_handler_ptr;
-  } else if (callback_id == SL_WIFI_BTR_DATA_RECEIVE_CB) {
-    if (rsi_driver_cb->wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
-      LOG_PRINT("Invalid state. Command only supported in Wi-Fi BTR opermode\r\n");
-      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
-    }
-    // Register handler for asynchronous data received in BTR mode
-    // If registered, RSI_WLAN_DATA_RECEIVE_NOTIFY_CB will not be used as SL_WIFI_BTR_DATA_RECEIVE_CB takes precedence.
-    rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_data_receive_cb = callback_handler_ptr;
-  } else if (callback_id == SL_WIFI_BTR_TX_DATA_STATUS_CB) {
-    if (rsi_driver_cb->wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
-      LOG_PRINT("Invalid state. Command only supported in Wi-Fi BTR opermode\r\n");
-      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
-    }
-    rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_tx_data_status_cb = callback_handler_ptr;
   }
   SL_PRINTF(SL_WLAN_REGISTER_CALLBACKS_EXIT, WLAN, LOG_INFO);
   return 0;
 }
 /** @} */
+
+uint16_t rsi_wlan_register_btr_data_receive_callbacks(
+  uint32_t callback_id,
+  void (*callback_handler_ptr)(RSI_STATUS status, uint8_t *buffer, uint32_t length, int8_t rssi, uint32_t rate))
+{
+  if (callback_id == SL_WIFI_BTR_DATA_RECEIVE_CB) {
+    if (rsi_driver_cb->wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
+      SL_PRINTF(SL_WLAN_BTR_MODE_CB_1,
+                WLAN,
+                LOG_ERROR,
+                "Invalid state %d. Command only supported in Wi-Fi BTR opermode\r\n",
+                rsi_driver_cb->wlan_cb->state);
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
+    // Register handler for asynchronous data received in BTR mode
+    // If registered, RSI_WLAN_DATA_RECEIVE_NOTIFY_CB will not be used as SL_WIFI_BTR_DATA_RECEIVE_CB takes precedence.
+    rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_data_receive_cb = callback_handler_ptr;
+  }
+  return 0;
+}
+
+uint16_t rsi_wlan_register_btr_tx_data_status_callbacks(
+  uint32_t callback_id,
+  void (*callback_handler_ptr)(uint16_t status, uint32_t token, uint8_t priority, uint32_t rate))
+{
+  if (callback_id == SL_WIFI_BTR_TX_DATA_STATUS_CB) {
+    if (rsi_driver_cb->wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
+      SL_PRINTF(SL_WLAN_BTR_MODE_CB_2,
+                WLAN,
+                LOG_ERROR,
+                "Invalid state %d. Command only supported in Wi-Fi BTR opermode\r\n",
+                rsi_driver_cb->wlan_cb->state);
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
+    rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_tx_data_status_cb = callback_handler_ptr;
+  }
+  return 0;
+}
 
 /** @addtogroup NETWORK5
 * @{
@@ -8723,57 +8727,68 @@ int32_t rsi_evm_write(uint8_t target,
 /** @addtogroup WLAN_BTR
  * @{
  */
-
+#ifdef CHIP_917
 /**
- * @brief Configure channel and tx power from the host. This is a blocking API.
- *
- * @pre This API shall be called after \ref rsi_wlan_radio_init.
+ * @brief Configure channel from the host. This is a blocking API.
  *
  * @param[in] channel_info Application shall decide the \ref sl_wifi_channel_s channel at which device operates and transmits frames.
  *             | \ref sl_wifi_channel_s | Description
  *             |:-----------------------|:-----------------------------------------------------------
  *             |channel                 | Primary channel number. Valid channels are 1-14.
- *             |band                    | Wi-Fi Band as per \ref sl_wifi_band_t. Valid band is SL_WIFI_BAND_2_4GHZ.
- *             |bandwidth               | Wi-Fi Bandwidth as per \ref sl_wifi_bandwidth_t. Valid bandwidth is SL_WIFI_BANDWIDTH_20MHz.
+ *             |band                    | Reserved
+ *             |bandwidth               | Reserved
  * @param[in]  tx_power Reserved.
  *
  * @return    0 - Success
- * @return    Non-Zero Value - Failure. Refer Error Codes section for error codes \ref error-codes.
+ * @return    Non-Zero Value - Failure. Possible Error Codes:
+ * @return    `0xFFFFFFFD` - Command given in wrong state
+ * @return    `0xFFFFFFFC` - Packet allocation failure
+ * @return    `0xFFFFFFC4` - RSI_ERROR_INVALID_CHANNEL
+ * @return    Refer to \ref error-codes for a full list of errors.
+ *
+ * @note This API is only supported in Wi-Fi Basic Tranceiver opermode (7).
+ * @note This API shall be called after \ref rsi_wlan_radio_init.
+ * @note `Wi-Fi Basic Tranceiver mode - Tx/Rx application` example can be used as reference for this API.
+ * @note Sample command usage:
+ * @code
+ * // Initialize channel
+ * sl_wifi_channel_t channel_info;
+ * channel_info.channel   = 14;
+ *
+ * // Set channel
+ * sl_wifi_btr_set_channel(channel_info, 0);
+ * @endcode
  */
 RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_power)
 {
+  UNUSED_PARAMETER(tx_power); //to avoid compilation warnings
   rsi_pkt_t *pkt;
   int32_t status = RSI_SUCCESS;
   sl_wifi_btr_set_channel_t *btr_chan_info;
 
-  SL_PRINTF(SL_WLAN_TX_TEXT_START_ENTRY, WLAN, LOG_INFO);
+  SL_PRINTF(SL_WLAN_BTR_MODE_SET_CHAN_ENTRY, WLAN, LOG_INFO);
   // Get WLAN CB structure pointer
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   if (wlan_cb->opermode != WLAN_BTR_MODE) {
-    LOG_PRINT("Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n", wlan_cb->opermode);
+    SL_PRINTF(SL_WLAN_BTR_MODE_SET_CHAN_ERR1,
+              WLAN,
+              LOG_ERROR,
+              "Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   if ((wlan_cb->state != RSI_WLAN_STATE_INIT_DONE) && (wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE)) {
-    LOG_PRINT("Command given in wrong state: %d\r\n", wlan_cb->state);
+    SL_PRINTF(SL_WLAN_BTR_MODE_SET_CHAN_ERR2, WLAN, LOG_ERROR, "Command given in wrong state: %d\r\n", wlan_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
-  if (channel_info.band != SL_WIFI_BAND_2_4GHZ) {
-    LOG_PRINT("Invalid band. Only SL_SI91X_WIFI_BAND_2_4GHZ(0) supported.\r\n");
-    return RSI_ERROR_INVALID_PARAM;
-  }
+  if ((channel_info.channel < 1) || (channel_info.channel > 14))
+    return RSI_ERROR_INVALID_CHANNEL;
 
-  if (channel_info.bandwidth != SL_WIFI_BANDWIDTH_20MHz) {
-    LOG_PRINT("Invalid bandwidth. Only SL_WIFI_BANDWIDTH_20MHz(1) supported.\r\n");
-    return RSI_ERROR_INVALID_PARAM;
-  }
-
-  if ((channel_info.channel < 1) || (channel_info.channel > 14)) {
-    LOG_PRINT("Invalid channel\r\n");
-    return RSI_ERROR_INVALID_PARAM;
-  }
+  channel_info.band      = SL_WIFI_BAND_2_4GHZ;
+  channel_info.bandwidth = SL_WIFI_BANDWIDTH_20MHz;
 
   status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
   if (status == RSI_SUCCESS) {
@@ -8786,11 +8801,11 @@ RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_po
       // Change the WLAN CMD state to allow
       rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
       // Return packet allocation failure error
-      SL_PRINTF(SL_WLAN_TX_TEXT_START_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      SL_PRINTF(SL_WLAN_BTR_MODE_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    // Fill TX test info parameters
+    // Fill channel info parameters
     btr_chan_info = (sl_wifi_btr_set_channel_t *)pkt->data;
 
     // Memset the PKT
@@ -8804,7 +8819,7 @@ RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_po
     rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
 #endif
     // Send command
-    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_SET_CHANNEL, pkt);
+    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_REQ_SET_CHANNEL, pkt);
 
     // Wait on WLAN semaphore
     rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, SL_WIFI_BTR_SET_CHANNEL_RESPONSE_WAIT_TIME);
@@ -8816,12 +8831,12 @@ RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_po
 
   } else {
     // Return WLAN command error
-    SL_PRINTF(SL_WLAN_TX_TEXT_START_WLAN_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    SL_PRINTF(SL_WLAN_BTR_MODE_SET_CHAN_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
     return status;
   }
 
   // Return status if error in sending command occurs
-  SL_PRINTF(SL_WLAN_TX_TEXT_START_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
+  SL_PRINTF(SL_WLAN_BTR_MODE_SET_CHAN_EXIT, WLAN, LOG_INFO, "status: %4x", status);
   return status;
 }
 
@@ -8832,11 +8847,13 @@ RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_po
  * @param[in] payload      Pointer to payload (encrypted by host) to be sent to LMAC.
  * @param[in] payload_len  Length of the payload. Valid range is 1 - 2020 bytes.
  *
- * @return    0 - Success \n
- * @return    Non-Zero Value - Failure. Refer \ref error-codes section for error codes.
- *
- * @note On chip MAC level encryption is not supported in BTR mode.
- * @note Once this functions returns, the calling API is responsible for freeing data_ctrlblk and payload.
+ * @return    0 - Success
+ * @return    Non-Zero Value - Failure. Possible Error Codes:
+ * @return    `0xFFFFFFFD` - Command given in wrong state
+ * @return    `0xFFFFFFFC` - Packet allocation failure
+ * @return    `0xFFFFFFE6` - Invalid Packet error
+ * @return    `0xFFFFFFC3` - `RSI_ERROR_INVALID_DATA_RATE`
+ * @return    Refer to \ref error-codes for a full list of errors.
  *
  * #### Format of encapsulated data sent to LMAC ####
  * | Field name | Frame Control  | Duration | Addr1 | Addr2 | Adddr3 | Seq Ctrl | Addr4                  | QoS ctrl              | Payload (LLC + Data)  |
@@ -8859,8 +8876,28 @@ RSI_STATUS sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_po
  * | `RSI_RATE_48`      | 0x88  | 48           |
  * | `RSI_RATE_54`      | 0x8c  | 54           |
  *
+ * @note This API is only supported in Wi-Fi Basic Tranceiver opermode (7).
+ * @note Once this functions returns, the calling API is responsible for freeing data_ctrlblk and payload.
+ * @note On chip MAC level encryption is not supported in BTR mode.
+ * @note This is not a blocking API. Callback SL_WIFI_BTR_TX_DATA_STATUS_CB can be registered to get the status report from firmware.
  * @note Only 11b/g rates shall be supported.
  * @note It is recommended to use basic rate for multicast/broadcast packets.
+ * @note `Wi-Fi Basic Tranceiver mode - Tx/Rx application` example can be used as reference for this API.
+ * @note Sample command usage:
+ * @code
+ * // Prepare payload
+ * <Prepare data payload in "payload" buffer>
+ * Initialise data control block (sl_wifi_btr_data_ctrlblk_t);
+ * data_ctrlblk->ctrl_flags = BIT(0) | BIT(1) | BIT(5); // Enable 4-addr MAC hdr, QoS frame, send status report for data packet
+ * data_ctrlblk->priority = 2;                          // Voice priority queue
+ * data_ctrlblk->rate = RSI_RATE_36;
+ * data_ctrlblk->token = token;
+ * <Fill data_ctrlblk addr1, addr2, addr3 and addr4(optionally) with 6 byte RA, TA, DA and SA MAC addresses respectively>
+ *
+ *
+ * // Call API to encapsulate the data with 802.11 MAC header and send it to MAC layer.
+ * sl_wifi_btr_send_80211_data(data_ctrlblk, payload, payload_len);
+ * @endcode
  */
 RSI_STATUS sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk, uint8_t *payload, uint16_t payload_len)
 {
@@ -8872,29 +8909,43 @@ RSI_STATUS sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk,
   uint8_t ext_desc_size;
   rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
+  SL_PRINTF(SL_WLAN_BTR_MODE_TX_ENTRY, WLAN, LOG_INFO);
+
   if (wlan_cb->opermode != WLAN_BTR_MODE) {
-    LOG_PRINT("Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n", wlan_cb->opermode);
+    SL_PRINTF(SL_WLAN_BTR_MODE_TX_ERR1,
+              WLAN,
+              LOG_ERROR,
+              "Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
   if (wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
-    LOG_PRINT("Command given in invalid state: %d\r\n", wlan_cb->state);
+    SL_PRINTF(SL_WLAN_BTR_MODE_TX_ERR2, WLAN, LOG_ERROR, "Command given in invalid state: %d\r\n", wlan_cb->state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
 
-  if ((!payload_len) || (payload_len > MAX_PAYLOAD_LEN))
-    return RSI_ERROR_INVALID_PARAM;
+  if ((!payload_len) || (payload_len > MAX_PAYLOAD_LEN)) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_TX_ERR3,
+              WLAN,
+              LOG_ERROR,
+              "Invalid payload length. Supported range is 1 - %d\r\n",
+              MAX_PAYLOAD_LEN);
+    return RSI_ERROR_INVALID_PACKET;
+  }
 
   if ((data_ctrlblk == NULL) || (payload == NULL))
-    return RSI_ERROR_INVALID_PARAM;
+    return RSI_ERROR_INVALID_PACKET;
 
-  if (validate_datarate(data_ctrlblk->rate))
-    return RSI_ERROR_INVALID_PARAM;
+  if (!IS_AUTO_RATE(data_ctrlblk->ctrl_flags)) {
+    if (validate_datarate(data_ctrlblk->rate))
+      return RSI_ERROR_INVALID_DATA_RATE;
+  }
 
   // Allocate packet to send data
   pkt = rsi_pkt_alloc(&rsi_driver_cb->wlan_cb->wlan_tx_pool);
   if (pkt == NULL) {
-    SL_PRINTF(SL_WLAN_SEND_DATA_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+    SL_PRINTF(SL_WLAN_BTR_MODE_TX_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
     //Changing the wlan cmd state to allow
     return RSI_ERROR_PKT_ALLOCATION_FAILURE;
   }
@@ -8903,8 +8954,6 @@ RSI_STATUS sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk,
   pkt_offset    = pkt->data + ext_desc_size;
   status        = encapsulate_tx_data_packet(data_ctrlblk, pkt_offset, &mac_hdr_len);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("Invalid packet format: %ld\r\n", status);
-    // Free the packet
     rsi_pkt_free(&wlan_cb->wlan_tx_pool, pkt);
     return status;
   }
@@ -8912,7 +8961,9 @@ RSI_STATUS sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk,
   memset(pkt_offset + mac_hdr_len, 0, payload_len);
   memcpy(pkt_offset + mac_hdr_len, payload, payload_len);
 
-  dump_encap_pkt(pkt_offset, mac_hdr_len, payload_len, 9);
+#ifdef TX_RX_FRAME_DUMP_BYTE_COUNT
+  dump_80211_pkt(pkt_offset, mac_hdr_len + payload_len, TX_RX_FRAME_DUMP_BYTE_COUNT);
+#endif
 
   // Get host descriptor pointer
   host_desc = pkt->desc;
@@ -8959,9 +9010,354 @@ RSI_STATUS sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk,
   status = rsi_wlan_get_status();
   rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   // Return status
-  SL_PRINTF(SL_WLAN_SEND_DATA_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+  SL_PRINTF(SL_WLAN_BTR_MODE_TX_EXIT, WLAN, LOG_INFO, "status: %4x", status);
 
   return status;
 }
+
+/**
+* @brief - When new peer is added to the network, application shall call this API to update peer information to the MAC layer. 
+*          Similarly, the API can be called to delete the peer information from MAC layer.
+*   
+* @param[in] flags - Bit 0 shall be set to add the peer, else reset to 0 to delete the peer. 
+* @param[in] peer_mac_address - MAC address of peer to be added or deleted.
+* @param[in] peer_supported_rate_bitmap - Rate bitmap of peer station.
+* 
+* | peer_supported_rate_bitmap | Data rate |
+* | :--------------------------| :---------|
+* | BIT(0)                     | 1 Mbps    |
+* | BIT(1)                     | 2 Mbps    |
+* | BIT(2)                     | 5.5 Mbps  |
+* | BIT(3)                     | 11 Mbps   |
+* | BIT(4)                     | 6 Mbps    |
+* | BIT(5)                     | 9 Mbps    |
+* | BIT(6)                     | 12 Mbps   |
+* | BIT(7)                     | 18 Mbps   |
+* | BIT(8)                     | 24 Mbps   |
+* | BIT(9)                     | 36 Mbps   |
+* | BIT(10)                    | 48 Mbps   |
+* | BIT(11)                    | 54 Mbps   |
+* | BIT(12:31)                 | Reserved  |
+*
+* @return 0 - Success
+*      Non-Zero Value - Failure
+*
+* @note This is a blocking API.
+* @note Status SL_STATUS_UNKNOWN_PEER (0x3) will be returned for any Tx packets queued for a peer that was not added or was deleted before the data packet was sent out.
+*/
+RSI_STATUS sl_wifi_btr_peer_list_update(sl_wifi_btr_peer_update_t peer)
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_WLAN_BTR_MODE_PEER_ENTRY, WLAN, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->opermode != WLAN_BTR_MODE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_PEER_ERR1,
+              WLAN,
+              LOG_ERROR,
+              "\r\nInvalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_PEER_ERR2, WLAN, LOG_ERROR, "\r\nCommand given in wrong state: %d\r\n", wlan_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if ((peer.flags & BTR_PEER_ADD) && !peer.peer_supported_rate_bitmap) {
+    char *log_str = "peer_supported_rate_bitmap";
+    SL_PRINTF(SL_WLAN_BTR_MODE_PEER_ERR3, WLAN, LOG_ERROR, "Invalid param: %s", log_str);
+    return RSI_ERROR_INVALID_DATA_RATE;
+  }
+
+  if (IS_MAC_ZERO(peer.peer_mac_address))
+    return RSI_ERROR_INVALID_MAC_ADDRESS;
+
+  if (IS_BCAST_MCAST_MAC(peer.peer_mac_address[0]))
+    return RSI_ERROR_INVALID_MAC_ADDRESS;
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BTR_MODE_PEER_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Copy peer info
+    memcpy(&pkt->data, &peer, sizeof(sl_wifi_btr_peer_update_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send command
+    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_REQ_PEER_LIST_UPDATE, pkt);
+
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BTR_MODE_PEER_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_BTR_MODE_PEER_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+  return status;
+}
+
+int32_t sl_wifi_btr_multicast_filter(sl_wifi_btr_mcast_filter_t mcast)
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_ENTRY, WLAN, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->opermode != WLAN_BTR_MODE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_ERR1,
+              WLAN,
+              LOG_ERROR,
+              "Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_ERR2,
+              WLAN,
+              LOG_ERROR,
+              "Command given in wrong state: %d\r\n",
+              wlan_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (mcast.flags & BTR_MCAST_FILTER_EN) {
+    if ((!mcast.num_of_mcast_addr) || mcast.num_of_mcast_addr > 2) {
+      char *log_str = "MAC address count. Valid values are 1, 2";
+      SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_ERR3, WLAN, LOG_ERROR, "Invalid param: %s", log_str);
+      return RSI_ERROR_INVALID_PARAM;
+    }
+    for (int i = 0; i < mcast.num_of_mcast_addr; i++) {
+      if (IS_MAC_ZERO(mcast.mac[i]))
+        return RSI_ERROR_INVALID_MAC_ADDRESS;
+    }
+  }
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Fill multicast filtering params
+    memcpy(&pkt->data, &mcast, sizeof(sl_wifi_btr_mcast_filter_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send command
+    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_REQ_SET_MCAST_FILTER, pkt);
+
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_BTR_MODE_MCAST_FILTER_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+  return status;
+}
+
+RSI_STATUS sl_wifi_btr_flush_data()
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_ENTRY, WLAN, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->opermode != WLAN_BTR_MODE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_ERR1,
+              WLAN,
+              LOG_ERROR,
+              "Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (wlan_cb->state != SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_ERR2, WLAN, LOG_ERROR, "Command given in wrong state: %d\r\n", wlan_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send command
+    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_REQ_FLUSH_DATA_Q, pkt);
+
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_BTR_MODE_FLUSH_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+  return status;
+}
+
+RSI_STATUS sl_wifi_btr_config_params(sl_wifi_btr_config_params_t *config_params)
+{
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+
+  SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_ENTRY, WLAN, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+
+  if (wlan_cb->state != RSI_WLAN_STATE_INIT_DONE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_ERR1, WLAN, LOG_ERROR, "Command given in wrong state %d\r\n", wlan_cb->state);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (wlan_cb->opermode != WLAN_BTR_MODE) {
+    SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_ERR2,
+              WLAN,
+              LOG_ERROR,
+              "Invalid mode: %d. Command only supported in Wi-Fi BTR opermode(7)\r\n",
+              wlan_cb->opermode);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  if (config_params->set) {
+    if ((!config_params->retransmit_count) || (config_params->retransmit_count > MAX_RETRANSMIT_COUNT)) {
+      char *log_str = "retransmit count";
+      SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_ERR3, WLAN, LOG_ERROR, "Invalid param: %s", log_str);
+      return RSI_ERROR_INVALID_BTR_CONFIG;
+    }
+    for (uint8_t i = 0; i < 4; i++) {
+      if ((config_params->cw_params[i].cwmin > MAX_CW_EXPN_COUNT)
+          || (config_params->cw_params[i].cwmax > MAX_CW_EXPN_COUNT)
+          || (config_params->cw_params[i].aifsn > MAX_AIFSN)) {
+        char *log_str = "contention params";
+        SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_ERR4, WLAN, LOG_ERROR, "Invalid param: %s", log_str);
+        return RSI_ERROR_INVALID_BTR_CONFIG;
+      }
+    }
+  }
+
+  status = rsi_check_and_update_cmd_state(WLAN_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    if (!config_params->set) {
+      // Attach the buffer given by user
+      wlan_cb->app_buffer = (uint8_t *)config_params;
+
+      // Length of the buffer provided by user
+      wlan_cb->app_buffer_length = sizeof(sl_wifi_btr_config_params_t);
+    }
+
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change the WLAN CMD state to allow
+      rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_PKT_ALLOCATION_FAILURE, WLAN, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Fill BTR config params
+    memcpy(&pkt->data, config_params, sizeof(sl_wifi_btr_config_params_t));
+
+#ifndef RSI_WLAN_SEM_BITMAP
+    rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
+#endif
+    // Send command
+    status = rsi_driver_wlan_send_cmd(SL_WIFI_BTR_REQ_CONFIG_PARAMS, pkt);
+
+    // Wait on WLAN semaphore
+    rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME);
+
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_status();
+    // Change the WLAN CMD state to allow
+    rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
+
+  } else {
+    // Return WLAN command error
+    SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_COMMAND_ERROR, WLAN, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_BTR_MODE_CONFIG_EXIT, WLAN, LOG_INFO, "status: %4x", status);
+  return status;
+}
+#endif //CHIP_917
 /** @} */
 /*! @endcond */

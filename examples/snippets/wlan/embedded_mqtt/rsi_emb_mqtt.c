@@ -48,6 +48,7 @@
 //! Access point SSID to connect
 #define SSID                       "SILABS_AP"
 #define RSI_EMB_MQTT_TOPIC_MAX_LEN 202
+
 //! Security type
 #define SECURITY_TYPE RSI_WPA2
 

@@ -457,10 +457,8 @@ typedef struct rsi_ble_set_prop_protocol_ble_bandedge_tx_power_s {
 #define CONN_ROLE             0x04
 // Set BLE tx power per role cmd_ix=0x012D
 typedef struct rsi_ble_set_ble_tx_power_s {
-  uint8_t role;
-  //Address of the device
-  uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  uint8_t tx_power;
+  //int8, tx power value
+  int8_t tx_power;
 } rsi_ble_set_ble_tx_power_t;
 
 //Scan response data command structure

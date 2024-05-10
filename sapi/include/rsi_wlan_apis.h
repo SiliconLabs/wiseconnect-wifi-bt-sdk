@@ -124,6 +124,9 @@
 //To enable certificate pathlength feature
 #define TLS_PATH_LENGTH_SUPPORT BIT(11)
 
+//To enable support for long sized ICMP packets. Max 1472 Bytes for IPv4 and Max 1452 Bytes for IPv6.
+#define FEAT_LONG_ICMP_PACKET BIT(12)
+
 // Secure Attestation
 #define FEAT_SECURE_ATTESTATION BIT(30)
 /*=========================================================================*/
@@ -1827,6 +1830,36 @@ typedef struct sl_wifi_channel_s {
   sl_wifi_band_t band;           ///< Wi-Fi Radio Band
   sl_wifi_bandwidth_t bandwidth; ///< Channel bandwidth
 } sl_wifi_channel_t;
+
+typedef struct sl_wifi_btr_peer_update_s {
+  uint8_t flags;
+  uint8_t peer_mac_address[6];
+  uint32_t peer_supported_rate_bitmap;
+} sl_wifi_btr_peer_update_t;
+
+typedef struct sl_wifi_btr_mcast_filter_s {
+  uint8_t flags;
+  uint8_t num_of_mcast_addr;
+  uint8_t mac[2][6];
+} sl_wifi_btr_mcast_filter_t;
+
+typedef struct sl_wifi_btr_cw_params_s {
+  uint8_t
+    cwmin; ///< Min contention window size. Value is calculated from 2n - 1 where exponent shall be provided as the input. Valid values for exponent N are 0 - 10
+  uint8_t
+    cwmax; ///< Max contention window size. Value is calculated from 2n - 1 where exponent shall be provided as the input. Valid values for exponent N are 0 - 10.
+  uint8_t aifsn; ///< AIFSN. Valid range is 2 to 15.
+  uint8_t reserved;
+} sl_wifi_btr_cw_params_t;
+
+typedef struct sl_wifi_btr_config_params_s {
+  uint8_t set; ///< Set or get BTR config params
+  uint8_t
+    retransmit_count; ///< Retransmit count. Common across all peers and access categories and valid only for unicast data frames
+  uint16_t flags; ///< Reserved
+  sl_wifi_btr_cw_params_t
+    cw_params[4]; ///< CW params for respective queues. AC index: Best Effort - 0, Background - 1, Video - 2, Voice - 3
+} sl_wifi_btr_config_params_t;
 
 /*! @endcond WLAN_BTR_MODE */
 /** @} */

@@ -21,6 +21,9 @@
 #include "em_gpio.h"
 #include "em_ldma.h"
 #include "rsi_board_configuration.h"
+#if BRD4180B_CLI_ENABLED
+#include "sl_spidrv_instances.h"
+#endif
 
 #define LDMA_MAX_TRANSFER_LENGTH		4096
 #define LDMA_DESCRIPTOR_ARRAY_LENGTH	(LDMA_MAX_TRANSFER_LENGTH / 2048)
@@ -42,6 +45,33 @@ LDMA_Descriptor_t ldmaRXDescriptor[LDMA_DESCRIPTOR_ARRAY_LENGTH];
 LDMA_TransferCfg_t ldmaRXConfig;
 volatile uint8_t rx_done;
 
+#if BRD4180B_CLI_ENABLED
+// use SPI handle for EXP header
+#define SPI_HANDLE                  sl_spidrv_exp_handle
+
+// Flag to signal that transfer is complete
+static volatile bool transfer_complete = false;
+
+// Callback fired when data is transmitted
+void transfer_callback(SPIDRV_HandleData_t *handle,
+                       Ecode_t transfer_status,
+                       int items_transferred)
+{
+  (void)&handle;
+  (void)items_transferred;
+
+  // Post semaphore to signal to application
+  // task that transfer is successful
+  if (transfer_status == ECODE_EMDRV_SPIDRV_OK) {
+      transfer_complete = true;
+  }
+}
+
+void spidrv_init(void)
+{
+  sl_spidrv_init_instances();
+}
+#endif
 
 /*==================================================================*/
 /**
@@ -83,6 +113,7 @@ void cs_disable(void)
  */
 int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_length, uint8_t mode)
 {
+
   UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warnings, value is unchanged
   int i = 0;
   if (tx_buff == NULL) {
@@ -90,7 +121,8 @@ int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_l
   } else if (rx_buff == NULL) {
     rx_buff = (uint8_t*)&dummy;
   }
-  
+
+#if !BRD4180B_CLI_ENABLED
   //Configure LDMA Tx and Rx descriptors
   if (transfer_length <= 2048) {
 	// Configure Tx descriptor. Source is tx_buff, destination is USART2_TXDATA, length is transfer_length
@@ -119,18 +151,31 @@ int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_l
   rx_done = 0;
 
   // Start both channels
-  LDMA_StartTransfer(RX_LDMA_CHANNEL, &ldmaRXConfig, &ldmaRXDescriptor);
-  LDMA_StartTransfer(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
+  LDMA_StartTransfer(RX_LDMA_CHANNEL, &ldmaRXConfig, (LDMA_Descriptor_t*)&ldmaRXDescriptor);
+  LDMA_StartTransfer(TX_LDMA_CHANNEL, &ldmaTXConfig, (LDMA_Descriptor_t*)&ldmaTXDescriptor);
 
   // Wait in EM1 until all data is received
   while (!rx_done);
   
   return 0;
+#else
+  Ecode_t ecode;
+  transfer_complete = false;
+  ecode = SPIDRV_MTransfer(SPI_HANDLE, tx_buff, rx_buff, transfer_length, transfer_callback);
+  EFM_ASSERT(ecode == ECODE_OK);
+
+  // wait for transfer to complete
+  while (!transfer_complete) ;
+
+  return 0;
+#endif
 }
 
 /**************************************************************************//**
  * @brief LDMA IRQHandler
  *****************************************************************************/
+//Adding guard to fix multiple definition error on enabling uart cli
+#if !BRD4180B_CLI_ENABLED
 void LDMA_IRQHandler()
 {
   uint32_t flags = LDMA_IntGet();
@@ -152,4 +197,4 @@ void LDMA_IRQHandler()
   if (flags & LDMA_IF_ERROR)
     __BKPT(0);
 }
-
+#endif

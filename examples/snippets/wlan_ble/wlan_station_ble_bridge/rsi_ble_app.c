@@ -42,8 +42,6 @@
 #ifdef RSI_M4_INTERFACE
 #include "rsi_board.h"
 #endif
-//! Memory length for driver
-#define BT_GLOBAL_BUFF_LEN 15000
 
 //! BLE attribute service types uuid values
 #define RSI_BLE_CHAR_SERV_UUID   0x2803
@@ -473,6 +471,7 @@ void rsi_ble_app_init(void)
 {
   uint8_t adv[31] = { 2, 1, 6 };
   int32_t status  = 0;
+  UNUSED_PARAMETER(status);
 
   //!  initializing the application events map
   rsi_ble_app_init_events();

@@ -2600,7 +2600,7 @@ void ble_module_cmd_set_ble_tx_power_cmd_handler(generic_command_message_t *gene
 {
   //! Add handling here
     int32_t status;
-    status = rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8_t tx_power);
+    status = rsi_ble_set_ble_tx_power(int8_t tx_power);
     if (status != RSI_SUCCESS) {
       LOG_PRINT("\r\n ble_module_cmd_set_ble_tx_power_cmd_handler : error status 0x%lx \n", status);
     } else {

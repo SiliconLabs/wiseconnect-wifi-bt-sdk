@@ -32,6 +32,9 @@
 #include "sl_device_init_lfxo_config.h"
 #include "sl_device_init_emu_config.h"
 #include "rsi_board_configuration.h"
+#if BRD4180B_CLI_ENABLED
+#include "gpiointerrupt.h"
+#endif // BRD4180B_CLI_ENABLED
 
 #ifndef WEAK
 #define WEAK  __attribute__((weak))
@@ -50,6 +53,23 @@ void rsi_calib_uart_recv_isr(uint8_t cmd_char);
 
 //! packet pending interrupt priority
 #define	PACKET_PENDING_INT_PRI	3
+#if BRD4180B_CLI_ENABLED
+typedef void (* UserIntCallBack_t)(void);
+UserIntCallBack_t call_back;
+void brd4180b_uart_cli_init(void);
+void sl_uartdrv_init_instances(void);
+void spidrv_init(void);
+static void rsi_hal_debug_port_init(void);
+void brd4180b_uart_cli_init(void)
+{
+  sl_uartdrv_init_instances();
+}
+void gpio_interrupt() {
+	if(call_back!=NULL)
+		(*call_back)();
+	GPIO_IntClear(0xAAAA);
+}
+#endif // BRD4180B_CLI_ENABLED
 
 /**************************************************************************//**
  * @brief
@@ -270,13 +290,24 @@ void rsi_hal_board_init(void)
 
 //  swo_setup();
   // Initialize GPIO and USART0
+#if !BRD4180B_CLI_ENABLED
   initGpio();
   initUsart2();
   initLdma();
+#else
+  spidrv_init();
+  unsigned int interrupt;
+#if BRD4180B_CLI_DEBUG_PRINTS_ENABLED
+  rsi_hal_debug_port_init();
+#endif // BRD4180B_CLI_DEBUG_PRINTS_ENABLED
+#endif // BRD4180B_CLI_ENABLED
 #ifndef RSI_HAL_NO_COM_PORT
   rsi_hal_com_port_init();
 
-#if defined(SL_BOARD_ENABLE_VCOM_PIN)
+#if defined(SL_BOARD_ENABLE_VCOM_PIN) && !BRD4180B_CLI_ENABLED
+  GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PIN.port, SL_BOARD_ENABLE_VCOM_PIN.pin, gpioModePushPull, 1);
+#endif
+#if BRD4180B_CLI_USE_VCOM
   GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PIN.port, SL_BOARD_ENABLE_VCOM_PIN.pin, gpioModePushPull, 1);
 #endif
 #endif
@@ -290,10 +321,19 @@ void rsi_hal_board_init(void)
   
   // Configure interrupt pin
   GPIO_PinModeSet(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, gpioModeInput, 0);
+#if BRD4180B_CLI_ENABLED
+  interrupt = GPIOINT_CallbackRegisterExt(INTERRUPT_PIN.pin,
+		                          (GPIOINT_IrqCallbackPtrExt_t)gpio_interrupt,
+					  NULL);
+#endif // BRD4180B_CLI_ENABLED
 #ifdef RSI_ACTIVE_LOW  
   GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, INTERRUPT_PIN.pin,false, true, true);
 #else
+#if !BRD4180B_CLI_ENABLED
   GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, INTERRUPT_PIN.pin, true, false, true);
+#else
+  GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, interrupt, true, false, true);
+#endif // BRD4180B_CLI_ENABLED
 #endif
 #ifdef LOGGING_STATS
   // Configure logging stats gpio pin
@@ -450,16 +490,116 @@ static void rsi_hal_com_port_init(void)
   USART_Enable(COM_PORT_PERIPHERAL, usartEnable);
 }
 
+#if BRD4180B_CLI_ENABLED && BRD4180B_CLI_DEBUG_PRINTS_ENABLED
+static void rsi_hal_debug_port_init(void)
+{
+  USART_InitAsync_TypeDef init_usart1 = USART_INITASYNC_DEFAULT;
+    init_usart1.baudrate = COM_PORT_BAUDRATE;
+    init_usart1.parity = COM_PORT_PARITY;
+    init_usart1.stopbits = COM_PORT_STOP_BITS;
+  #if (_SILICON_LABS_32B_SERIES > 0)
+    init_usart1.hwFlowControl = COM_PORT_FLOW_CONTROL_TYPE;
+  #endif
 
+  #if (_SILICON_LABS_32B_SERIES > 0)
+    #if defined(COM_PORT_CTS_PIN)
+      bool cts = false;
+    #endif
+    #if defined(COM_PORT_RTS_PIN)
+      bool rts = false;
+  #endif
+  #endif
 
+  #if defined(_CMU_HFPERCLKEN0_MASK)
+    CMU_ClockEnable(cmuClock_HFPER, true);
+  #endif
+    GPIO_PinModeSet(BRD4180B_DEBUG_PRINTS_TX_PIN.port, BRD4180B_DEBUG_PRINTS_TX_PIN.pin, gpioModePushPull, 1);
+    CMU_ClockEnable(DEBUG_PRINTS_CLOCK, true);
+    init_usart1.enable = usartDisable;
+    USART_InitAsync(BRD4180B_DEBUG_PRINTS_PERIPHERAL, &init_usart1);
+  #if defined(GPIO_USART_ROUTEEN_TXPEN)
+    GPIO->USARTROUTE[BRD4180B_DEBUG_PRINTS_PERIPHERAL_NO].ROUTEEN = GPIO_USART_ROUTEEN_TXPEN | GPIO_USART_ROUTEEN_RXPEN;
+    GPIO->USARTROUTE[BRD4180B_DEBUG_PRINTS_PERIPHERAL_NO].TXROUTE = (BRD4180B_DEBUG_PRINTS_TX_PIN.port << _GPIO_USART_TXROUTE_PORT_SHIFT)
+                                                                       | (BRD4180B_DEBUG_PRINTS_TX_PIN.pin << _GPIO_USART_TXROUTE_PIN_SHIFT);
+  #elif defined(USART_ROUTEPEN_RXPEN)
+    COM_PORT_PERIPHERAL->ROUTEPEN |= USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_TXPEN;
+    COM_PORT_PERIPHERAL->ROUTELOC0 = (COM_PORT_PERIPHERAL->ROUTELOC0 & ~(_USART_ROUTELOC0_TXLOC_MASK | _USART_ROUTELOC0_RXLOC_MASK))
+                                                   | (COM_PORT_TX_LOC << _USART_ROUTELOC0_TXLOC_SHIFT)
+                                                   | (COM_PORT_RX_LOC << _USART_ROUTELOC0_RXLOC_SHIFT);
+    COM_PORT_PERIPHERAL->ROUTEPEN = USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_TXPEN;
+  #else
+    COM_PORT_PERIPHERAL->ROUTE = USART_ROUTE_RXPEN | USART_ROUTE_TXPEN | (COM_PORT_ROUTE_LOC << _USART_ROUTE_LOCATION_SHIFT);
+  #endif
+  #if (_SILICON_LABS_32B_SERIES > 0)
+      switch (COM_PORT_FLOW_CONTROL_TYPE) {
+        case usartHwFlowControlNone:
+          break;
+        case usartHwFlowControlCts:
+        #if defined(COM_PORT_CTS_PIN)
+          cts = true;
+        #endif
+          break;
+        case usartHwFlowControlRts:
+        #if defined(COM_PORT_RTS_PIN)
+           rts = true;
+        #endif
+          break;
+        case usartHwFlowControlCtsAndRts:
+        #if defined(COM_PORT_CTS_PIN)
+          cts = true;
+        #endif
+        #if defined(COM_PORT_RTS_PIN)
+          rts = true;
+        #endif
+          break;
+        default:
+          return;    // SL_STATUS_INVALID_CONFIGURATION;
+      }
+  #if defined(COM_PORT_CTS_PIN)
+      if (cts == true) {
+        GPIO_PinModeSet(COM_PORT_CTS_PIN.port, COM_PORT_CTS_PIN.pin, gpioModeInputPull, 0);
+     #if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
+        COM_PORT_PERIPHERAL->ROUTELOC1 = (COM_PORT_CTS_LOC << _USART_ROUTELOC1_CTSLOC_SHIFT);
+        COM_PORT_PERIPHERAL->CTRLX    |= USART_CTRLX_CTSEN;
+        COM_PORT_PERIPHERAL->ROUTEPEN |= USART_ROUTEPEN_CTSPEN;
+     #elif defined(_GPIO_USART_ROUTEEN_MASK)
+        GPIO->USARTROUTE_SET[COM_PORT_PERIPHERAL_NO].CTSROUTE = (COM_PORT_CTS_PIN.port << _GPIO_USART_CTSROUTE_PORT_SHIFT)
+                                                                              | (COM_PORT_CTS_PIN.pin << _GPIO_USART_CTSROUTE_PIN_SHIFT);
+        COM_PORT_PERIPHERAL->CTRLX_SET = USART_CTRLX_CTSEN;
+     #endif
+      }
+  #endif
+  #if defined(COM_PORT_RTS_PIN)
+      if (rts == true) {
+        GPIO_PinModeSet(COM_PORT_RTS_PIN.port, COM_PORT_RTS_PIN.pin, gpioModePushPull, 0);
+     #if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
+        COM_PORT_PERIPHERAL->ROUTELOC1 |= (COM_PORT_RTS_LOC << _USART_ROUTELOC1_RTSLOC_SHIFT);
+        COM_PORT_PERIPHERAL->ROUTEPEN |= USART_ROUTEPEN_RTSPEN;
+     #elif defined(_GPIO_USART_ROUTEEN_MASK)
+        GPIO->USARTROUTE_SET[COM_PORT_PERIPHERAL_NO].ROUTEEN = GPIO_USART_ROUTEEN_RTSPEN;
+        GPIO->USARTROUTE_SET[COM_PORT_PERIPHERAL_NO].RTSROUTE = (COM_PORT_RTS_PIN.port << _GPIO_USART_RTSROUTE_PORT_SHIFT)
+                                                                              | (COM_PORT_RTS_PIN.pin << _GPIO_USART_RTSROUTE_PIN_SHIFT);
+     #endif
+      }
+  #endif
+     #endif  // Configure GPIOs for hardware flow control
+    USART_Enable(BRD4180B_DEBUG_PRINTS_PERIPHERAL, usartEnable);
+}
+#endif
 int _write(int file, const char *ptr, int len)
 {
   int txCount;
   (void)file;
 
+#if !BRD4180B_CLI_ENABLED
   for (txCount = 0; txCount < len; txCount++) {
     USART_Tx(COM_PORT_PERIPHERAL, *ptr++);
   }
+#else
+  for (txCount = 0; txCount < len; txCount++) {
+	  USART_Tx(BRD4180B_DEBUG_PRINTS_PERIPHERAL, *ptr++);
+  }
+#endif // BRD4180B_CLI_ENABLED
 
   return len;
 }
@@ -480,5 +620,4 @@ void USART0_RX_IRQHandler(void)
 {
     uart_rx_handler(COM_PORT_PERIPHERAL->RXDATA);
 }
-
 #endif

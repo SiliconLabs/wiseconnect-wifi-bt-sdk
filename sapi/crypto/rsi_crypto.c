@@ -1246,13 +1246,11 @@ int32_t rsi_ecdh_point_multiplication(uint8_t ecdh_mode,
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    if (result != NULL) {
-      // Attach the buffer given by user
-      rsi_common_cb->app_buffer = result;
+    // Attach the buffer given by user
+    rsi_common_cb->app_buffer = result;
 
-      // Length of the buffer provided by user
-      rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
-    }
+    // Length of the buffer provided by user
+    rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
 
     // Get Data Pointer
     ecdh = (rsi_ecdh_pm_req_t *)pkt->data;
@@ -1448,13 +1446,11 @@ int32_t rsi_ecdh_point_addition(uint8_t ecdh_mode,
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    if (result != NULL) {
-      // Attach the buffer given by user
-      rsi_common_cb->app_buffer = result;
+    // Attach the buffer given by user
+    rsi_common_cb->app_buffer = result;
 
-      // Length of the buffer provided by user
-      rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
-    }
+    // Length of the buffer provided by user
+    rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
 
     // Get Data Pointer
     ecdh = (rsi_ecdh_pa_ps_req_t *)pkt->data;
@@ -1636,13 +1632,11 @@ int32_t rsi_ecdh_point_subtraction(uint8_t ecdh_mode,
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    if (result != NULL) {
-      // Attach the buffer given by user
-      rsi_common_cb->app_buffer = result;
+    // Attach the buffer given by user
+    rsi_common_cb->app_buffer = result;
 
-      // Length of the buffer provided by user
-      rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
-    }
+    // Length of the buffer provided by user
+    rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
 
     // Get Data Pointer
     ecdh = (rsi_ecdh_pa_ps_req_t *)pkt->data;
@@ -1822,13 +1816,11 @@ int32_t rsi_ecdh_point_double(uint8_t ecdh_mode,
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    if (result != NULL) {
-      // Attach the buffer given by user
-      rsi_common_cb->app_buffer = result;
+    // Attach the buffer given by user
+    rsi_common_cb->app_buffer = result;
 
-      // Length of the buffer provided by user
-      rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
-    }
+    // Length of the buffer provided by user
+    rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
 
     // Get Data Pointer
     ecdh = (rsi_ecdh_pd_req_t *)pkt->data;
@@ -1990,13 +1982,11 @@ int32_t rsi_ecdh_point_affine(uint8_t ecdh_mode,
       return RSI_ERROR_PKT_ALLOCATION_FAILURE;
     }
 
-    if (result != NULL) {
-      // Attach the buffer given by user
-      rsi_common_cb->app_buffer = result;
+    // Attach the buffer given by user
+    rsi_common_cb->app_buffer = result;
 
-      // Length of the buffer provided by user
-      rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
-    }
+    // Length of the buffer provided by user
+    rsi_common_cb->app_buffer_length = ECDH_MAX_OUTPUT_SIZE;
 
     // Get Data Pointer
     ecdh = (rsi_ecdh_affine_req_t *)pkt->data;
@@ -2427,9 +2417,6 @@ int32_t rsi_ccm_pen(uint8_t enc_dec,
   uint32_t reserved = key_info->reserved;
 
 #endif
-
-  //! Get wlan cb structure pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 
   //! Get commmon cb pointer
   rsi_common_cb_t *rsi_common_cb = rsi_driver_cb->common_cb;
@@ -3972,6 +3959,46 @@ int32_t rsi_gcm(uint8_t enc_dec,
   }
 #endif
 
+#ifdef CHIP_917B0
+  if (total_len == 0 && gcm_mode == GCM_MODE) {
+#else
+  if (total_len == 0) {
+#endif
+    chunk_len = total_len;
+    gcm_flags = LAST_CHUNK;
+    gcm_flags |= FIRST_CHUNK;
+#ifdef CHIP_917B0
+    status = rsi_gcm_pen(gcm_mode,
+                         enc_dec,
+                         dma_use,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key_info,
+                         iv,
+                         iv_sz,
+                         header,
+                         header_length,
+                         gcm_flags,
+                         output);
+#else
+    status = rsi_gcm_pen(enc_dec,
+                         dma_use,
+                         msg,
+                         msg_length,
+                         chunk_len,
+                         key,
+                         key_length,
+                         iv,
+                         iv_sz,
+                         header,
+                         header_length,
+                         gcm_flags,
+                         output);
+#endif
+    return status;
+  }
+
   while (total_len) {
     //! check total length
     if (total_len > MAX_DATA_SIZE_BYTES) {
@@ -4278,17 +4305,21 @@ int32_t rsi_gcm_pen(uint8_t enc_dec,
 
     //!Header
     //!Memset before filling
-    memset(&gcm->header[0], 0, header_length);
+    if (header_length > 0) {
+      memset(&gcm->header[0], 0, header_length);
 
-    //!Copy header
-    memcpy(&gcm->header[0], header, header_length);
+      //!Copy header
+      memcpy(&gcm->header[0], header, header_length);
+    }
 
     //!Data
     //! Memset before filling
     memset(&gcm->msg[0], 0, MAX_DATA_SIZE_BYTES);
 
     //! Copy Data
-    memcpy(&gcm->msg[0], msg, chunk_length);
+    if (chunk_length > 0) {
+      memcpy(&gcm->msg[0], msg, chunk_length);
+    }
 
     //! Using host descriptor to set payload length
     send_size = sizeof(rsi_gcm_req_t) - MAX_DATA_SIZE_BYTES + chunk_length;

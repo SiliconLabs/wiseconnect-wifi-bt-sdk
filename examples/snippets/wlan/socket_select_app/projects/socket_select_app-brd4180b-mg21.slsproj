@@ -15,10 +15,13 @@
     <include pattern="emlib/em_system.c" />
     <include pattern="emlib/em_usart.c" />
 	<include pattern="emlib/em_rtcc.c" />
+    <include pattern="emlib/em_rmu.c" />	
   </module>
   <module id="com.silabs.sdk.exx32.common.emdrv">
     <include pattern="Drivers/tempdrv.c" />
+    
   </module>
+  
   <module id="com.silabs.sdk.exx32.common.bsp">
     <exclude pattern=".*" />
   </module>

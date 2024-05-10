@@ -710,15 +710,15 @@ int32_t rsi_ble_central(void)
 
 #endif
   // Read Transmit Power
-  rsi_ble_tx_pwr_t *tx_pwr;
+  rsi_ble_tx_pwr_t tx_pwr;
   status = rsi_ble_read_transmit_power(&tx_pwr);
   if (status != RSI_SUCCESS) {
     LOG_PRINT(" \n read tx_power cmd failed with 0x%lX \n", status);
     return status;
   } else {
     LOG_PRINT(" \n read tx power cmd success and  \n min_tx_pwr = %i \n max_tx_pwr = %i \n",
-              tx_pwr->min_tx_pwr,
-              tx_pwr->max_tx_pwr);
+              tx_pwr.min_tx_pwr,
+              tx_pwr.max_tx_pwr);
   }
 
 #if 0

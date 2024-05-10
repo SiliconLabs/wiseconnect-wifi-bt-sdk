@@ -89,7 +89,12 @@ typedef enum rsi_error_e {
   RSI_ERROR_BLE_ADV_EXT_COMMAND_NOT_ALLOWED = -54,
   RSI_ERROR_BLE_LEGACY_COMMAND_NOT_ALLOWED  = -55,
   RSI_ERROR_TRNG_DUPLICATE_ENTROPY          = -56,
-  RSI_ERROR_CORRUPTED_FIRMWARE              = -57
+  RSI_ERROR_CORRUPTED_FIRMWARE              = -57,
+  RSI_ERROR_INVALID_MAC_ADDRESS             = -58,
+  RSI_ERROR_INVALID_QOS_PRIORITY            = -59,
+  RSI_ERROR_INVALID_CHANNEL                 = -60,
+  RSI_ERROR_INVALID_DATA_RATE               = -61,
+  RSI_ERROR_INVALID_BTR_CONFIG              = -62
 } rsi_error_t;
 
 /******************************************************

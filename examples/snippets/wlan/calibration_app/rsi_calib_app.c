@@ -320,7 +320,7 @@ void rsi_calib_host_cmd_event_handler(void)
   uint8_t cmd_len    = 0;
   uint8_t num_params = 0;
   uint8_t target;
-  uint32_t flags;
+  uint32_t flags = 0;
   int8_t gain_offset[3];
   uint8_t xo_ctune                            = 80;
   int32_t status                              = 0;
@@ -359,7 +359,7 @@ void rsi_calib_host_cmd_event_handler(void)
               num_params++;
             }
             if (calib_host_cmd_buf[offset] != '\0') {
-              offset += rsi_parse(&flags, RSI_PARSE_1_BYTES, &calib_host_cmd_buf[offset]);
+              offset += rsi_parse(&flags, RSI_PARSE_4_BYTES, &calib_host_cmd_buf[offset]);
               num_params++;
             }
             if (calib_host_cmd_buf[offset] != '\0') {

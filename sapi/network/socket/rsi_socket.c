@@ -35,7 +35,7 @@ extern rsi_socket_select_info_t *rsi_socket_select_info;
  *              Zero,-1        - Failure
  *              
  */
-int8_t is_power_of_two(int8_t x)
+int8_t rsi_is_power_of_two(int8_t x)
 {
   if (x < 0)
     return -1;
@@ -855,8 +855,9 @@ void rsi_reset_per_socket_info(int32_t sockID)
  * @param[in]  msg            - Pointer to data that needs to be sent to remote peer
  * @param[in]  msgLength      - Length of data to send
  * @param[in]  flags          - Reserved
- * @return     0              - Success \n
- * @return     Non-Zero Value - Failure
+ * @return     Positive Value - Success, returns the number of bytes sent successfully \n
+ * @return     Negative Value - Failure
+ * @return     Zero           - Socket Close Error
  *
  */
 
@@ -1529,7 +1530,7 @@ int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *optio
 #ifdef CHIP_917
   //! Configure max_retransmission_timeout_value
   if (option_name == SO_MAX_RETRANSMISSION_TIMEOUT_VAL) {
-    status = is_power_of_two(*(int8_t *)option_value);
+    status = rsi_is_power_of_two(*(int8_t *)option_value);
     if ((status == 1) && !((*(int8_t *)option_value) > MAX_RETRANSMISSION_TIME_VALUE)) {
       rsi_socket_pool_non_rom[sockID].max_retransmission_timeout_value = *(int8_t *)option_value;
       SL_PRINTF(SL_SETSOCKOPT_EXIT_14, NETWORK, LOG_INFO);
@@ -3481,8 +3482,8 @@ int32_t rsi_socket_listen(int32_t sockID, int32_t backlog)
 /// @private
 int32_t rsi_vap_sockets_shutdown(uint8_t vapID)
 {
-  int32_t status = RSI_SUCCESS, sock_id = -1;
-  int i = 0;
+  int32_t status = RSI_SUCCESS;
+  int i          = 0;
 
   SL_PRINTF(SL_VAP_SOCKET_SHUTDOWN_ENTRY, NETWORK, LOG_INFO);
 

@@ -1735,7 +1735,7 @@ int32_t rsi_ble_set_local_irk_value(uint8_t *local_irk);
 /**
  * @fn          int32_t rsi_ble_set_ble_tx_power
  */
-int32_t rsi_ble_set_ble_tx_power(uint8_t role, uint8_t *remote_dev_address, int8_t tx_power);
+int32_t rsi_ble_set_ble_tx_power(int8_t tx_power);
 /*==============================================*/
 /**
  * @fn          int32_t rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t bandedge_tx_power)

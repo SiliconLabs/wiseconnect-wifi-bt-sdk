@@ -13,27 +13,34 @@ typedef struct {
 
 #define PIN(port_id, pin_id)  (rsi_pin_t){.port=gpioPort##port_id, .pin=pin_id}
 
-#define SLEEP_CONFIRM_PIN   PIN(D, 2)
+//! For 9117 EVK swap below pin configuration
+#ifdef EXP_BOARD
+#define SLEEP_CONFIRM_PIN   PIN(D, 3)
 #ifndef LOGGING_STATS
+#define WAKE_INDICATOR_PIN  PIN(D, 2)
+#else   /* LOGGING_STATS */
+#define LOGGING_WAKE_INDICATOR_PIN  PIN(D, 2)
+#define LOGGING_STATS_PORT    gpioPortD
+#define LOGGING_STATS_PIN     02
+#endif  /* LOGGING_STATS */
+#else   /* EXP_BOARD */
+#define SLEEP_CONFIRM_PIN   PIN(D, 2)
+#ifndef LOGGING_STATS // 9116
 #define WAKE_INDICATOR_PIN  PIN(D, 3)
-#endif
-#define RESET_PIN           PIN(B, 0)
-#define INTERRUPT_PIN       PIN(B, 1)
-
-#ifdef LOGGING_STATS
+#else   /* LOGGING_STATS // 9116 */
 #define LOGGING_WAKE_INDICATOR_PIN  PIN(D, 3)
 #define LOGGING_STATS_PORT    gpioPortD
 #define LOGGING_STATS_PIN     03
-#endif
+#endif  /* LOGGING_STATS // 9116 */
+#endif  /* EXP_BOARD */
 
+#define RESET_PIN           PIN(B, 0)
+#define INTERRUPT_PIN       PIN(B, 1)
 
 #define SPI_CLOCK_PIN PIN(C, 2)
 #define SPI_MOSI_PIN  PIN(C, 0)
 #define SPI_MISO_PIN  PIN(C, 1)
 #define SPI_CS_PIN    PIN(C, 3)
-
-
-
 
 #define RX_LDMA_CHANNEL   0
 #define TX_LDMA_CHANNEL   1

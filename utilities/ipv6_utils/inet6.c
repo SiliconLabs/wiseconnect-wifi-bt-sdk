@@ -6,7 +6,7 @@ void little_to_big_endian(unsigned int *source, unsigned char *result, unsigned 
   unsigned int curr = 0;
   length /= 4;
 
-  for (int i = 0; i < length; i++) {
+  for (uint32_t i = 0; i < length; i++) {
     curr    = source[i];
     temp    = &result[i * 4];
     temp[3] = (curr & 0xFF);
@@ -30,6 +30,7 @@ const char *rsi_inet_ntop6(const unsigned char *input, char *dst, rsi_socklen_t 
   } best, cur;
   unsigned int words[RSI_IPV6_ADDRESS_LENGTH / 2];
   struct rsi_sock_errno rsi_error;
+  UNUSED_CONST_PARAMETER(rsi_error);
   int i;
   unsigned int ip_big_endian[4];
   unsigned char *src;
@@ -112,6 +113,7 @@ int rsi_inet_pton6(const char *src, const char *src_endp, unsigned char *dst, un
 
   unsigned char tmp[RSI_IPV6_ADDRESS_LENGTH], *tp, *endp, *colonp;
   const char *curtok;
+  UNUSED_CONST_PARAMETER(*curtok);
   int ch;
   size_t xdigits_seen; /* Number of hex digits since colon.  */
   unsigned int val;

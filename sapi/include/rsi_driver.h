@@ -191,6 +191,14 @@ typedef struct rsi_driver_cb_s {
   // driver common control block TX queue
   rsi_queue_cb_t common_tx_q;
 
+#ifdef SIDE_BAND_CRYPTO
+  // driver common control block structure pointer
+  rsi_crypto_cb_t *crypto_cb;
+
+  // driver common control block TX queue
+  rsi_queue_cb_t crypto_tx_q;
+#endif
+
   // driver WLAN  control block structure pointer
   rsi_wlan_cb_t *wlan_cb;
 

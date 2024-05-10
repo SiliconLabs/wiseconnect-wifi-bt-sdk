@@ -1328,4 +1328,10 @@ BIT[13-31] - Reserved
 #define MAX_BEACON_WAKE_UP_AFTER_SP \
   2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
 /*========================================================================*/
+// Ram Dump command Parameters
+/*========================================================================*/
+#ifndef RAM_DUMP_SEL_BITMAP
+#define RAM_DUMP_SEL_BITMAP 0
+#endif
+/*========================================================================*/
 #endif

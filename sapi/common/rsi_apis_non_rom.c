@@ -127,6 +127,9 @@ void rom_init(void)
 #ifdef RSI_M4_INTERFACE
   global_cb_p->tx_desc = &tx_desc[0];
   global_cb_p->rx_desc = &rx_desc[0];
+#ifdef SIDE_BAND_CRYPTO
+  global_cb_p->crypto_desc = &crypto_desc[0];
+#endif
 #endif
 
   global_cb_p->rom_apis_p->rsi_mutex_create           = rsi_mutex_create;

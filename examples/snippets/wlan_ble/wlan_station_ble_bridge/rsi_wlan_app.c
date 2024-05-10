@@ -250,6 +250,7 @@ void rsi_wlan_app_task(void)
           break;
         }
 #endif
+        break;
       }
       case RSI_WLAN_IPCONFIG_DONE_STATE: {
 
@@ -306,6 +307,7 @@ void rsi_wlan_app_task(void)
           LOG_PRINT("\r\nConnect to Server Socket Success\r\n");
           //! update wlan application state
           rsi_wlan_app_cb.state = RSI_WLAN_SOCKET_CONNECTED_STATE;
+          break;
         }
       }
       case RSI_WLAN_SOCKET_CONNECTED_STATE: {

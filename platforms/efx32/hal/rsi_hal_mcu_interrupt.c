@@ -21,10 +21,15 @@
 #include "rsi_driver.h"
 #include "em_gpio.h"
 #include "em_usart.h"
+#include "rsi_board_configuration.h"
 
-
+#if !BRD4180B_CLI_ENABLED
 typedef void (* UserIntCallBack_t)(void);
 UserIntCallBack_t call_back, gpio_callback;
+#else
+extern call_back;
+#endif
+
 uint8_t current_pin_set, prev_pin_set;
 #ifdef EXP_BOARD
 uint8_t even_current_pin_set, even_prev_pin_set;
@@ -34,6 +39,8 @@ uint8_t even_current_pin_set, even_prev_pin_set;
  * @brief
  *    GPIO interrupt handler.
  *****************************************************************************/
+//Adding guard to fix multiple definition error on enabling uart cli
+#if !BRD4180B_CLI_ENABLED
 void GPIO_ODD_IRQHandler(void)
 {
   if(call_back!=NULL)
@@ -56,7 +63,7 @@ void GPIO_ODD_IRQHandler(void)
 #endif
 #endif
 }
-
+#endif
 /**************************************************************************//**
  * @brief
  *    GPIO interrupt handler.

@@ -276,8 +276,13 @@ typedef enum rsi_wlan_cmd_response_e {
   RSI_WLAN_RSP_GET_CSI_DATA          = 0xC4,
   RSI_WLAN_RSP_GET_DPD_DATA          = 0xDC,
   RSI_WLAN_RSP_EXT_STATS             = 0x68,
-  SL_WIFI_BTR_SET_CHANNEL_RSP        = 0x7A,
-  SL_WIFI_BTR_TX_DATA_STATUS         = 0x3D
+  SL_WIFI_BTR_RSP_SET_CHANNEL        = 0x7A,
+  SL_WIFI_BTR_TX_DATA_STATUS         = 0x3D,
+  SL_WIFI_BTR_RSP_PEER_LIST_UPDATE   = 0x8B,
+  SL_WIFI_BTR_RSP_CONFIG_PARAMS      = 0x8C,
+  SL_WIFI_BTR_RSP_SET_MCAST_FILTER   = 0x8D,
+  SL_WIFI_BTR_RSP_FLUSH_DATA_Q       = 0x8E
+
 } rsi_wlan_cmd_response_t;
 
 // enumeration for WLAN command request codes
@@ -388,8 +393,11 @@ typedef enum rsi_wlan_cmd_request_e {
   RSI_WLAN_REQ_EVM_WRITE            = 0x37,
   RSI_WLAN_REQ_EXT_STATS            = 0x68,
   RSI_WLAN_REQ_SET_NON_PREF_CHAN    = 0x5F,
-  SL_WIFI_BTR_SET_CHANNEL           = 0x7A
-
+  SL_WIFI_BTR_REQ_SET_CHANNEL       = 0x7A,
+  SL_WIFI_BTR_REQ_PEER_LIST_UPDATE  = 0x8B,
+  SL_WIFI_BTR_REQ_CONFIG_PARAMS     = 0x8C,
+  SL_WIFI_BTR_REQ_SET_MCAST_FILTER  = 0x8D,
+  SL_WIFI_BTR_REQ_FLUSH_DATA_Q      = 0x8E
 } rsi_wlan_cmd_request_t;
 
 typedef enum rsi_wlan_opermode_e {
@@ -1800,6 +1808,7 @@ typedef struct rsi_gain_table_info_s {
 typedef struct rsi_ram_dump_s {
   uint32_t addr;
   uint32_t length;
+  uint32_t uartSel;
 } rsi_ram_dump_t;
 // switch protocol structure
 typedef struct rsi_switch_proto_s {
@@ -1860,7 +1869,7 @@ typedef struct rsi_csi_config_s {
 #if SPI_EXTENDED_TX_LEN_2K
 #define MAX_PAYLOAD_LEN 2020
 #else
-#define MAX_PAYLOAD_LEN 1548
+#define MAX_PAYLOAD_LEN 1450
 #endif
 
 #define RSI_STATUS int32_t
@@ -1890,6 +1899,14 @@ typedef struct rsi_csi_config_s {
 #define IS_FROMDS(ctrl_flags)          (ctrl_flags & BIT(4))
 #define IS_CFM_TO_HOST_SET(ctrl_flags) (ctrl_flags & BIT(5))
 #define IS_BCAST_MCAST_MAC(addr)       (addr & BIT(0))
+
+#define IS_MAC_ZERO(mac) (!(mac[0] | mac[1] | mac[2] | mac[3] | mac[4] | mac[5]))
+
+#define BTR_PEER_ADD         BIT(0)
+#define BTR_MCAST_FILTER_EN  BIT(0)
+#define MAX_RETRANSMIT_COUNT 15
+#define MAX_CW_EXPN_COUNT    15
+#define MAX_AIFSN            15
 
 typedef struct sl_wifi_btr_set_channel_s {
   sl_wifi_channel_t chan_info;

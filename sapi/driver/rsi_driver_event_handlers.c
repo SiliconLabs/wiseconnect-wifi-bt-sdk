@@ -1066,4 +1066,88 @@ void rsi_rx_event_handler(void)
 
   return;
 }
+
+#ifdef SIDE_BAND_CRYPTO
+#define SIDE_BAND_CRYPTO_PKT_LENGTH 16
+extern rsi_m4ta_desc_t crypto_desc[2];
+void rsi_crypto_event_tx_handler(void)
+{
+
+  rsi_pkt_t *pkt                 = NULL;
+  rsi_crypto_cb_t *rsi_crypto_cb = rsi_driver_cb->crypto_cb;
+  rsi_reg_flags_t flags;
+
+  // if packet pending dequeue the packet from common queue
+  pkt = (rsi_pkt_t *)rsi_dequeue_pkt(&rsi_driver_cb->crypto_tx_q);
+
+  rsi_crypto_cb->crypto_buffer = pkt;
+
+  // fill crypto desc
+  crypto_desc[0].addr   = pkt->desc;
+  crypto_desc[0].length = 16;
+  crypto_desc[1].addr   = pkt->data;
+  crypto_desc[1].length = SIDE_BAND_CRYPTO_PKT_LENGTH;
+  // enter critical section
+#ifdef RSI_M4_INTERFACE
+  // mask P2P interrupt
+  RSI_MASK_TA_INTERRUPT();
+#endif
+
+  // Disable all the interrupts
+  flags = RSI_CRITICAL_SECTION_ENTRY();
+
+  // raise interrupt
+  // Write the packet pending interrupt to TA register
+  M4SS_P2P_INTR_SET_REG = SIDE_BAND_CRYPTO_INTR;
+
+  // poll for interrupt clear
+  while (M4SS_P2P_INTR_SET_REG & SIDE_BAND_CRYPTO_INTR)
+    ;
+
+  // exit critical section
+  // Enable all the interrupts
+  RSI_CRITICAL_SECTION_EXIT(flags);
+
+#ifdef RSI_M4_INTERFACE
+  // unmask P2P interrupt
+  RSI_UNMASK_TA_INTERRUPT();
+#endif
+
+  // set crypto hold sleep
+  rsi_crypto_cb->crypto_hold_power_save = 1;
+
+  // Clear Crypto event
+  rsi_clear_event(RSI_CRYPTO_TX_EVENT);
+  return;
+}
+
+void rsi_crypto_event_rx_handler(void)
+{
+
+  // Get crypto cb pointer
+  rsi_crypto_cb_t *rsi_crypto_cb = rsi_driver_cb->crypto_cb;
+  rsi_pkt_t *pkt                 = rsi_crypto_cb->crypto_buffer;
+  uint32_t status                = rsi_bytes2R_to_uint16(pkt->desc + RSI_STATUS_OFFSET);
+
+  // Set Status
+  rsi_crypto_set_status(status);
+
+  // set crypto hold sleep
+  rsi_crypto_cb->crypto_hold_power_save = 0;
+
+  // free the dequeued packet
+  rsi_pkt_free(&rsi_driver_cb->crypto_cb->crypto_tx_pool, rsi_crypto_cb->crypto_buffer);
+
+  // Post Waiting crypto semaphore
+#ifndef RSI_CRYPTO_SEM_BITMAP
+  rsi_driver_cb_non_rom->crypto_wait_bitmap &= ~BIT(1);
+#endif
+  rsi_semaphore_post(&rsi_driver_cb_non_rom->crypto_cmd_sem);
+
+  // Clear Crypto event
+  rsi_clear_event(RSI_CRYPTO_RX_EVENT);
+  return;
+}
+#endif
+
 /** @} */

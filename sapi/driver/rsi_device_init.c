@@ -153,6 +153,7 @@ int16_t rsi_bl_select_option(uint8_t cmd)
   int16_t retval      = 0;
   uint16_t read_value = 0;
   rsi_timer_instance_t timer_instance;
+  uint16_t default_nwp_fw_selected = 0;
 
   retval = rsi_mem_wr(RSI_HOST_INTF_REG_OUT, 2, (uint8_t *)&boot_cmd);
   if (retval < 0) {
@@ -189,39 +190,51 @@ int16_t rsi_bl_select_option(uint8_t cmd)
       return RSI_ERROR_FW_LOAD_OR_UPGRADE_TIMEOUT;
     }
   }
-  if ((cmd == LOAD_NWP_FW) || (cmd == LOAD_DEFAULT_NWP_FW_ACTIVE_LOW)) {
+  while ((cmd == LOAD_NWP_FW) || (cmd == LOAD_DEFAULT_NWP_FW_ACTIVE_LOW)) {
     rsi_init_timer(&timer_instance, 3000);
-    do {
-      retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
-      if (retval < 0) {
-        return retval;
-      }
-      if ((read_value & 0xF000) == (RSI_HOST_INTERACT_REG_VALID_FW & 0xF000)) {
-        if ((read_value & 0xFF) == VALID_FIRMWARE_NOT_PRESENT) {
+    retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
+    if (retval < 0) {
+      return retval;
+    }
+    if ((read_value & 0xF000) == (RSI_HOST_INTERACT_REG_VALID_FW & 0xF000)) {
+      if ((read_value & 0xFF) == VALID_FIRMWARE_NOT_PRESENT) {
+        if (default_nwp_fw_selected == 0) {
+          boot_cmd = RSI_HOST_INTERACT_REG_VALID_FW | SELECT_DEFAULT_NWP_FW;
+          retval   = rsi_bootloader_instructions(RSI_REG_WRITE, &boot_cmd);
+          if (retval < 0) {
+            return retval;
+          }
+          boot_cmd = RSI_HOST_INTERACT_REG_VALID_FW | cmd;
+          retval   = rsi_bootloader_instructions(RSI_REG_WRITE, &boot_cmd);
+          if (retval < 0) {
+            return retval;
+          }
+          default_nwp_fw_selected = 1;
+          continue;
+        } else {
 #ifdef RSI_DEBUG_PRINT
           RSI_DPRINT(RSI_PL4, "VALID_FIRMWARE_NOT_PRESENT\n");
 #endif
           return RSI_ERROR_VALID_FIRMWARE_NOT_PRESENT;
         }
-        if ((read_value & 0xFF) == RSI_INVALID_OPTION) {
+      }
+      if ((read_value & 0xFF) == RSI_INVALID_OPTION) {
 #ifdef RSI_DEBUG_PRINT
-          RSI_DPRINT(RSI_PL4, "INVALID CMD\n");
+        RSI_DPRINT(RSI_PL4, "INVALID CMD\n");
 #endif
 
-          return RSI_ERROR_INVALID_OPTION;
-        }
-        if ((read_value & 0xFF) == RSI_CHECKSUM_SUCCESS) {
+        return RSI_ERROR_INVALID_OPTION;
+      }
+      if ((read_value & 0xFF) == RSI_CHECKSUM_SUCCESS) {
 #ifdef RSI_DEBUG_PRINT
-          RSI_DPRINT(RSI_PL4, "LOAD SUCCESS\n");
+        RSI_DPRINT(RSI_PL4, "LOAD SUCCESS\n");
 #endif
-          break;
-        }
+        break;
       }
-      if (rsi_timer_expired(&timer_instance)) {
-        return RSI_ERROR_FW_LOAD_OR_UPGRADE_TIMEOUT;
-      }
-
-    } while (1);
+    }
+    if (rsi_timer_expired(&timer_instance)) {
+      return RSI_ERROR_FW_LOAD_OR_UPGRADE_TIMEOUT;
+    }
   }
   return retval;
 }
