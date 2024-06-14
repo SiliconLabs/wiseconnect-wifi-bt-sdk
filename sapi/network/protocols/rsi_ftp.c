@@ -256,7 +256,6 @@ int32_t rsi_ftp_disconnect(void)
       rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
       // Return status if error in sending command occurs
       SL_PRINTF(SL_FTP_DISCONNECT_ERROR_IN_SENDING_COMMAND_1, NETWORK, LOG_ERROR, "status: %4x", status);
-      return status;
     }
     // Allocate command buffer from WLAN pool
     pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);

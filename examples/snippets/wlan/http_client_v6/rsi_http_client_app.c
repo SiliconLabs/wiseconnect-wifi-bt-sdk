@@ -296,6 +296,17 @@ int32_t rsi_http_client_app()
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
 
+#if ((defined RSI_UART_INTERFACE) && (defined RSI_UART_FLOW_CTRL_ENABLE))
+  status = rsi_cmd_uart_flow_ctrl(HFC_ENABLE);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nHardware flow control Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nHardware flow control is Successful\r\n");
+  }
+
+  uart_init();
+#endif
 #if LOAD_CERTIFICATE
   if (flags & HTTPS_SUPPORT) {
     //! Load certificates

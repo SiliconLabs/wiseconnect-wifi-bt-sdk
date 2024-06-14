@@ -303,7 +303,12 @@ int32_t rsi_ftp_client()
                            FTP_SERVER_PORT);
   if (retval != RSI_SUCCESS) {
     LOG_PRINT("\r\nConnect to  FTP Server Failed, Error Code : 0x%lX\r\n", retval);
-    return retval;
+    retval = rsi_ftp_disconnect();
+    if (retval != RSI_SUCCESS) {
+      LOG_PRINT("\r\nFailed to disconnect FTP");
+      return retval;
+    }
+    LOG_PRINT("\r\n FTP disconnected :%d", retval);
   } else {
     LOG_PRINT("\r\nConnect to  FTP Server Success\r\n");
   }

@@ -14,7 +14,6 @@
 * sections of the MSLA applicable to Source Code.
 *
 ******************************************************************************/
-
 #ifndef RSI_M4_INTERFACE
 
 #ifndef _RSI_UART_H
@@ -90,7 +89,9 @@ typedef enum rsi_uart_rx_state_e {
 } rsi_uart_rx_state_t;
 
 extern uint32_t desired_len;
+extern uint32_t last_len;
 extern uint8_t uart_rev_buf[1600];
+extern uint8_t uart_rev_buf2[1600];
 
 // host descriptor structure
 typedef struct rsi_frame_desc_s {
@@ -152,6 +153,8 @@ extern void rsi_enter_critical_sec(void);
 extern void rsi_exit_critical_sec(void);
 extern void rsi_platform_based_init(void);
 extern int32_t rsi_uart_deinit(void);
+extern short int rsi_uart_iface_int();
+extern void uart_init(void);
 #endif
 
 #endif

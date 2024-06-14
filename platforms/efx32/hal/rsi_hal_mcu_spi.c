@@ -25,23 +25,17 @@
 #include "sl_spidrv_instances.h"
 #endif
 
-#define LDMA_MAX_TRANSFER_LENGTH		4096
-#define LDMA_DESCRIPTOR_ARRAY_LENGTH	(LDMA_MAX_TRANSFER_LENGTH / 2048)
 /**
  * Global Variables
  */
-#if SPI_EXTENDED_TX_LEN_2K
-uint8_t dummy[2500];
-#else
 uint8_t dummy[1600];
-#endif
 
 // LDMA descriptor and transfer configuration structures for USART TX channel
-LDMA_Descriptor_t ldmaTXDescriptor[LDMA_DESCRIPTOR_ARRAY_LENGTH];
+LDMA_Descriptor_t ldmaTXDescriptor;
 LDMA_TransferCfg_t ldmaTXConfig;
 
 // LDMA descriptor and transfer configuration structures for USART RX channel
-LDMA_Descriptor_t ldmaRXDescriptor[LDMA_DESCRIPTOR_ARRAY_LENGTH];
+LDMA_Descriptor_t ldmaRXDescriptor;
 LDMA_TransferCfg_t ldmaRXConfig;
 volatile uint8_t rx_done;
 
@@ -115,7 +109,6 @@ int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_l
 {
 
   UNUSED_PARAMETER(mode); //This statement is added only to resolve compilation warnings, value is unchanged
-  int i = 0;
   if (tx_buff == NULL) {
     tx_buff = (uint8_t*)&dummy;
   } else if (rx_buff == NULL) {
@@ -123,26 +116,14 @@ int16_t rsi_spi_transfer(uint8_t *tx_buff, uint8_t *rx_buff, uint16_t transfer_l
   }
 
 #if !BRD4180B_CLI_ENABLED
-  //Configure LDMA Tx and Rx descriptors
-  if (transfer_length <= 2048) {
-	// Configure Tx descriptor. Source is tx_buff, destination is USART2_TXDATA, length is transfer_length
-	ldmaTXDescriptor[0] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(tx_buff, &(USART2->TXDATA), transfer_length);
-	//Configure Rx descriptor, Source is USART2_RXDATA, destination is rx_buff, length is transfer_length
-	ldmaRXDescriptor[0] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(USART2->RXDATA), rx_buff, transfer_length);
-  }
-  else {
-	//Transfer length is more than 2048 bytes. Initialize multiple LDMA Tx and Rx descriptors.
-    for(i = 0; i < (LDMA_DESCRIPTOR_ARRAY_LENGTH - 1); i++) {
-	  ldmaTXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_LINKREL_M2P_BYTE((tx_buff + (2048 * i)), &(USART2->TXDATA), 2048, 1);
-	  ldmaRXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(&(USART2->RXDATA), (rx_buff + (2048 * i)), 2048, 1);
-    }
-    ldmaTXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE((tx_buff + (2048 * i)), &(USART2->TXDATA), \
-	          															    (transfer_length - (2048 * i)));
-    ldmaRXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(USART2->RXDATA), (rx_buff + (2048 * i)), \
-	  																	    (transfer_length - (2048 * i)));																			
-  }
+  // Source is outbuf, destination is USART2_TXDATA, and length if BUFLEN
+  ldmaTXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(tx_buff, &(USART2->TXDATA), transfer_length);
+
   // Transfer a byte on free space in the USART buffer
   ldmaTXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART2_TXBL);
+
+  // Source is USART2_RXDATA, destination is inbuf, and length if BUFLEN
+  ldmaRXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(USART2->RXDATA), rx_buff, transfer_length);
 
   // Transfer a byte on receive data valid
   ldmaRXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART2_RXDATAV);

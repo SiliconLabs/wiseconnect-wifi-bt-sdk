@@ -159,6 +159,9 @@ int32_t rsi_device_init(uint8_t select_option)
 #elif defined(RSI_SPI_INTERFACE)
   // SPI interface initialization
   status = rsi_spi_iface_init();
+#elif defined(RSI_UART_INTERFACE)
+  // UART interface initialization
+  status = rsi_uart_iface_int();
 #endif
   if (status != RSI_SUCCESS) {
     SL_PRINTF(SL_DEVICE_INIT_SPI_INIT_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);

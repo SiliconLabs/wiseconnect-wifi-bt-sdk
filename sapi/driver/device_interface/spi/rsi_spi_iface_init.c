@@ -92,29 +92,45 @@ int16_t rsi_spi_iface_init(void)
 /**
  * @brief               Initialize the SPI secondary device interface of the module on ULP wakeup
  * @param[in]           void
- * @return              Void
+ * @return              0              - Success \n
+ * @return              Non-Zero value - Failure \n
  */
-void rsi_ulp_wakeup_init(void)
+int16_t rsi_ulp_wakeup_init(void)
 {
   uint8_t txCmd[4];
   uint8_t rxbuff[2];
+  int16_t retval = RSI_SUCCESS;
+  uint16_t timeout;
 
-  txCmd[0] = (RSI_RS9116_INIT_CMD & 0xFF);
-  txCmd[1] = ((RSI_RS9116_INIT_CMD >> 8) & 0xFF);
-  txCmd[2] = ((RSI_RS9116_INIT_CMD >> 16) & 0xFF);
-  txCmd[3] = ((RSI_RS9116_INIT_CMD >> 24) & 0xFF);
+  // 10ms timeout on command, nothing magic, just a reasonable number
+  timeout = 10;
 
+  // Init the timer counter
+  RSI_RESET_TIMER1;
   while (1) {
+    if (RSI_INC_TIMER_1 > timeout) {
+      retval = RSI_ERROR_SPI_TIMEOUT;
+      break;
+    }
+
+    txCmd[0] = (RSI_RS9116_INIT_CMD & 0xFF);
+    txCmd[1] = ((RSI_RS9116_INIT_CMD >> 8) & 0xFF);
+    txCmd[2] = ((RSI_RS9116_INIT_CMD >> 16) & 0xFF);
+    txCmd[3] = ((RSI_RS9116_INIT_CMD >> 24) & 0xFF);
+
     rsi_spi_transfer(txCmd, rxbuff, 2, RSI_MODE_8BIT);
     if (rxbuff[1] == RSI_SPI_FAIL) {
-      return;
+      break;
     } else if (rxbuff[1] == 0x00) {
       rsi_spi_transfer(&txCmd[2], rxbuff, 2, RSI_MODE_8BIT);
       if (rxbuff[1] == RSI_SPI_SUCCESS) {
         break;
       }
+    } else {
+      retval = RSI_ERROR_SPI_BUSY;
     }
   }
+  return retval;
 }
 #endif
 /** @} */

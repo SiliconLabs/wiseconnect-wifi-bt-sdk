@@ -336,7 +336,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--C99 --reduce_paths</MiscControls>
-              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE RSI_WITH_OS RSI_CRYPTO_ENABLE </Define>
+              <Define>WISECONNECT RSI_SAMPLE_HAL RSI_DEBUG_PRINTS RSI_WLAN_ENABLE RSI_SPI_INTERFACE RSI_SPI_HIGH_SPEED_ENABLE USE_HAL_DRIVER STM32F411xE RSI_DEBUG_PRINTS RSI_BLE_ENABLE RSI_WITH_OS RSI_CRYPTO_ENABLE </Define>
               <Undefine></Undefine>
               <IncludePath>../../../../../examples/snippets/ble/ble_central;../../../../../sapi/include; ../../../../../sapi/network/protocols; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc; ../../../../../platforms/stm32/drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../../../../../platforms/stm32/drivers/CMSIS/Include; ../../../../../platforms/stm32/drivers/CMSIS/Device/ST/STM32F4xx/Include; ../../../../../platforms/stm32/core/inc; ../../../../../platforms/stm32/boards/nucleo-f411re; ../../../../../third_party/freertos/include; ../../../../../third_party/freertos/portable; ../../../../../sapi/rtos/freertos_wrapper; platforms/stm32/boards/nucleo-f411re</IncludePath>
             </VariousControls>

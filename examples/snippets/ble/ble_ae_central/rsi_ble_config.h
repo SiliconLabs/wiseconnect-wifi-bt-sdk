@@ -187,6 +187,12 @@
 #define BLE_AE_PER_REM_DEV    2
 #define BLE_AE_CLEAR_PER_LIST 3
 
+#define BLE_AE_OPTIONS \
+  ((BLE_AE_PERIODIC_LIST_USED) | (BLE_AE_REPORTING_ENABLED << 1) | (BLE_AE_PERODIC_DUPLICATE_FILTERING_ENABLED << 2))
+
+#define BLE_AE_PERIODIC_SYNC_CANCEL    0x00
+#define BLE_AE_PERIODIC_SYNC_TERMIN    0x00
+#define BLE_AE_PERIODIC_CLEAR_ADV_LIST 0x00
 /*=======================================================================*/
 // Extended Advertising parameters
 /*=======================================================================*/

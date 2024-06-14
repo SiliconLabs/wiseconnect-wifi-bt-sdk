@@ -340,18 +340,6 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       // PSK and PMK parameters
       payload_size = sizeof(rsi_req_psk_t);
     } break;
-    case SL_WIFI_BTR_REQ_SET_CHANNEL: {
-      payload_size = sizeof(sl_wifi_btr_set_channel_t);
-    } break;
-    case SL_WIFI_BTR_REQ_PEER_LIST_UPDATE: {
-      payload_size = sizeof(sl_wifi_btr_peer_update_t);
-    } break;
-    case SL_WIFI_BTR_REQ_SET_MCAST_FILTER: {
-      payload_size = sizeof(sl_wifi_btr_mcast_filter_t);
-    } break;
-    case SL_WIFI_BTR_REQ_CONFIG_PARAMS: {
-      payload_size = sizeof(sl_wifi_btr_config_params_t);
-    } break;
     case RSI_WLAN_REQ_BG_SCAN: {
       rsi_req_bg_scan_t *rsi_bg_scan = (rsi_req_bg_scan_t *)pkt->data;
 
@@ -677,7 +665,9 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = sizeof(rsi_req_pop3_client_t);
     } break;
     case RSI_WLAN_REQ_HTTP_CLIENT_PUT: {
-
+      payload_size = rsi_bytes2R_to_uint16(host_desc);
+    } break;
+    case RSI_WLAN_REQ_NWK_APP_PROTOCOL_CONFIG: {
       payload_size = rsi_bytes2R_to_uint16(host_desc);
     } break;
     case RSI_WLAN_REQ_OTA_FWUP: {
@@ -1126,7 +1116,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
                      6);
               ((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->sec_type =
                 ((rsi_rsp_nw_params_t *)payload)->sec_type;
-              memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->psk,
+              memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->pmk,
                      ((rsi_rsp_nw_params_t *)payload)->psk,
                      64);
               memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->ipv4_address,
@@ -1226,7 +1216,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
               memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->mac_address,
                      ((rsi_rsp_go_params_t *)payload)->mac_address,
                      6);
-              memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->psk,
+              memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->pmk,
                      ((rsi_rsp_go_params_t *)payload)->psk,
                      64);
               memcpy(((rsi_rsp_wireless_info_t *)rsi_wlan_cb->app_buffer)->ipv4_address,
@@ -2381,34 +2371,6 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
         }
       }
     } break;
-    case SL_WIFI_BTR_RSP_SET_CHANNEL: {
-      if (status == RSI_SUCCESS)
-        rsi_driver_cb->wlan_cb->state = SL_WIFI_BTR_STATE_BTR_MODE_CONFIG_DONE;
-    } break;
-    case SL_WIFI_BTR_TX_DATA_STATUS: {
-      uint16_t status;
-      uint32_t token, rate;
-      uint8_t priority;
-      status   = host_desc[15];
-      token    = rsi_bytes4R_to_uint32(&host_desc[24]);
-      rate     = host_desc[16];
-      priority = host_desc[20];
-      if (rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_tx_data_status_cb != NULL) {
-        // Call asynchronous response handler to indicate to host
-        rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_tx_data_status_cb(status, token, priority, rate);
-      }
-    } break;
-    case SL_WIFI_BTR_RSP_CONFIG_PARAMS: {
-      if (status == RSI_SUCCESS) {
-        // check the length of application buffer and copy get profile response
-        if ((rsi_wlan_cb->app_buffer != NULL) && (rsi_wlan_cb->app_buffer_length != 0)) {
-          copy_length = (payload_length < rsi_wlan_cb->app_buffer_length) ? (payload_length)
-                                                                          : (rsi_wlan_cb->app_buffer_length);
-          memcpy(rsi_wlan_cb->app_buffer, payload, copy_length);
-          rsi_wlan_cb->app_buffer = NULL;
-        }
-      }
-    } break;
     default:
       break;
   }
@@ -2436,7 +2398,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_OTA_FWUP) || (cmd_type == RSI_WLAN_REQ_WEBPAGE_CLEAR_ALL)
              || (cmd_type == RSI_WLAN_REQ_FWUP) || (cmd_type == RSI_WLAN_RSP_WIRELESS_FWUP_OK)
              || (cmd_type == RSI_WLAN_RSP_WIRELESS_FWUP_DONE) || (cmd_type == RSI_WLAN_REQ_EMB_MQTT_CLIENT)
-             || (cmd_type == RSI_WLAN_REQ_PING_PACKET)) {
+             || (cmd_type == RSI_WLAN_REQ_PING_PACKET) || (cmd_type == RSI_WLAN_RSP_NWK_APP_PROTOCOL_CONFIG)) {
     rsi_wlan_set_nwk_status(status);
     if (rsi_driver_cb_non_rom->nwk_wait_bitmap & BIT(0)) {
 #ifndef RSI_NWK_SEM_BITMAP
@@ -2476,10 +2438,8 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_TWT_AUTO_CONFIG) || (cmd_type == RSI_WLAN_REQ_WMM_PARAMS)
              || (cmd_type == RSI_WLAN_REQ_SET_NON_PREF_CHAN) || (cmd_type == RSI_WLAN_REQ_SET_SNI)
              || (cmd_type == RSI_WLAN_REQ_EVM_OFFSET) || (cmd_type == RSI_WLAN_REQ_EVM_WRITE)
-             || (cmd_type == SL_WIFI_BTR_REQ_SET_CHANNEL) || (cmd_type == RSI_WLAN_REQ_GET_DEVICE_ID)
-             || (cmd_type == RSI_WLAN_REQ_BEACON_STOP) || (cmd_type == RSI_WLAN_REQ_GET_DPD_DATA)
-             || (cmd_type == SL_WIFI_BTR_REQ_PEER_LIST_UPDATE) || (cmd_type == SL_WIFI_BTR_REQ_SET_MCAST_FILTER)
-             || (cmd_type == SL_WIFI_BTR_REQ_FLUSH_DATA_Q) || (cmd_type == SL_WIFI_BTR_REQ_CONFIG_PARAMS)
+             || (cmd_type == RSI_WLAN_REQ_GET_DEVICE_ID) || (cmd_type == RSI_WLAN_REQ_BEACON_STOP)
+             || (cmd_type == RSI_WLAN_REQ_GET_DPD_DATA)
 #ifdef RSI_WAC_MFI_ENABLE
              || (cmd_type == RSI_WLAN_REQ_ADD_MFI_IE)
 #endif
@@ -3070,9 +3030,6 @@ void rsi_wlan_process_raw_data(rsi_pkt_t *pkt)
   uint8_t *host_desc;
   uint8_t *payload;
   uint16_t payload_length;
-  uint16_t payload_offset = 0;
-  int8_t rssi             = 0;
-  uint32_t rate           = 0;
 
   // Get wlan cb struct pointer
   //  rsi_wlan_cb_t *rsi_wlan_cb = rsi_driver_cb->wlan_cb;
@@ -3086,18 +3043,7 @@ void rsi_wlan_process_raw_data(rsi_pkt_t *pkt)
   // Get payoad length
   payload_length = (rsi_bytes2R_to_uint16(host_desc) & 0xFFF);
 
-  if (rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_data_receive_cb != NULL) {
-    rssi = host_desc[16];
-    rate = host_desc[18];
-
-    payload_offset = host_desc[4];
-    // Call asynchronous Wi-Fi BTR 802.11 data receive handler to indicate to host
-    rsi_wlan_cb_non_rom->callback_list.sl_wifi_btr_80211_data_receive_cb(0,
-                                                                         payload + payload_offset,
-                                                                         payload_length - payload_offset,
-                                                                         rssi,
-                                                                         rate);
-  } else if (rsi_wlan_cb_non_rom->callback_list.wlan_data_receive_handler != NULL) {
+  if (rsi_wlan_cb_non_rom->callback_list.wlan_data_receive_handler != NULL) {
     // Call asynchronous data receive handler to indicate to host
     rsi_wlan_cb_non_rom->callback_list.wlan_data_receive_handler(0, payload, payload_length);
   }

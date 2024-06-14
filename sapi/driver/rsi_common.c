@@ -1022,15 +1022,16 @@ void rsi_handle_slp_wkp(uint8_t frame_type)
 
 /*====================================================*/
 /**
- * @fn        int8_t rsi_req_wakeup(void)
+ * @fn        int16_t rsi_req_wakeup(void)
  * @brief     Set wakeup GPIO high
  * @param[in] void 
  * @return    0              - Success \n 
  * @return    Non-Zero Value - Failure
  */
 
-int8_t rsi_req_wakeup(void)
+int16_t rsi_req_wakeup(void)
 {
+  int16_t status = 0;
 
 #ifndef RSI_M4_INTERFACE
   rsi_timer_instance_t timer_instance;
@@ -1042,7 +1043,10 @@ int8_t rsi_req_wakeup(void)
 #ifdef WAKEUP_GPIO_INTERRUPT_METHOD
   if (rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
 #ifdef RSI_SPI_INTERFACE
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
 #endif
   } else {
     rsi_hal_gpio_unmask();
@@ -1053,7 +1057,10 @@ int8_t rsi_req_wakeup(void)
       return RSI_ERROR_GPIO_WAKEUP_TIMEOUT;
     }
 #ifdef RSI_SPI_INTERFACE
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
 #endif
   }
 #else
@@ -1062,7 +1069,10 @@ int8_t rsi_req_wakeup(void)
     if (rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
 #if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
 #ifdef RSI_SPI_INTERFACE
-      rsi_ulp_wakeup_init();
+      status = rsi_ulp_wakeup_init();
+      if (status != RSI_SUCCESS) {
+        return status;
+      }
 #endif
 #endif
       break;
@@ -1078,21 +1088,25 @@ int8_t rsi_req_wakeup(void)
 
 /*====================================================*/
 /**
- * @fn         int8_t rsi_wait4wakeup(void)
+ * @fn         int16_t rsi_wait4wakeup(void)
  * @brief      Waits for wakeup confirmation pin to be set
  * @param[in]  void
  * @return     0              - Success \n
  * @return     Non-Zero Value - Failure
  */
 /// @private
-int8_t rsi_wait4wakeup(void)
+int16_t rsi_wait4wakeup(void)
 {
+  int16_t status;
 #ifndef RSI_M4_INTERFACE
   rsi_timer_instance_t timer_instance;
 #ifdef WAKEUP_GPIO_INTERRUPT_METHOD
   if (rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
 #ifdef RSI_SPI_INTERFACE
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
 #endif
   } else {
     rsi_hal_gpio_unmask();
@@ -1103,7 +1117,10 @@ int8_t rsi_wait4wakeup(void)
       return RSI_ERROR_GPIO_WAKEUP_TIMEOUT;
     }
 #ifdef RSI_SPI_INTERFACE
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return status;
+    }
 #endif
   }
 #else
@@ -1118,7 +1135,10 @@ int8_t rsi_wait4wakeup(void)
         rsi_hal_set_gpio(RSI_HAL_SLEEP_CONFIRM_PIN);
       }
 #ifdef RSI_SPI_INTERFACE
-      rsi_ulp_wakeup_init();
+      status = rsi_ulp_wakeup_init();
+      if (status != RSI_SUCCESS) {
+        return status;
+      }
 #endif
 #else
       rsi_hal_set_gpio(RSI_HAL_LP_SLEEP_CONFIRM_PIN);

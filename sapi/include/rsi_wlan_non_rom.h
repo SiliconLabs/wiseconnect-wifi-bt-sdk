@@ -230,13 +230,6 @@ typedef struct rsi_callback_cb_s {
   //CSI data receive response handler
   void (*wlan_receive_csi_data_response_handler)(uint16_t status, uint8_t *buffer, const uint32_t length);
 
-  // Wi-Fi BTR 802.11 data receive response handler
-  void (*sl_wifi_btr_80211_data_receive_cb)(RSI_STATUS status,
-                                            uint8_t *buffer,
-                                            uint32_t length,
-                                            int8_t rssi,
-                                            uint32_t rate);
-  void (*sl_wifi_btr_80211_tx_data_status_cb)(uint16_t status, uint32_t token, uint8_t priority, uint32_t rate);
 } rsi_callback_cb_t;
 
 // enumerations for call back types
@@ -262,8 +255,6 @@ typedef enum rsi_callback_id_e {
   RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         = 18,
   RSI_WLAN_TWT_RESPONSE_CB                  = 19,
   RSI_WLAN_RECEIVE_CSI_DATA                 = 20,
-  SL_WIFI_BTR_DATA_RECEIVE_CB               = 21,
-  SL_WIFI_BTR_TX_DATA_STATUS_CB             = 22
 } rsi_callback_id_t;
 typedef struct rsi_nwk_callback_s {
 

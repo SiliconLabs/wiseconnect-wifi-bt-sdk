@@ -20,7 +20,7 @@
  */
 #include "rsi_driver.h"
 #include "em_device.h"
-
+#include "em_usart.h"
 /**
  * Global Variables
  */
@@ -37,6 +37,11 @@
  */
 int16_t rsi_uart_send(uint8_t *ptrBuf, uint16_t bufLen)
 {
+uint16_t i = 0u;
+ while (i < bufLen){
+  USART_Tx(USART0, ptrBuf[i++]);
+}
+return 0;
   UNUSED_PARAMETER(ptrBuf); //This statement is added only to resolve compilation warnings, value is unchanged
   UNUSED_PARAMETER(bufLen); //This statement is added only to resolve compilation warnings, value is unchanged
   return 0;

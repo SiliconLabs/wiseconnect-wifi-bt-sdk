@@ -393,6 +393,9 @@ typedef enum rsi_socket_state_e {
   RSI_SOCKET_STATE_CONNECTED
 } rsi_socket_state_t;
 
+typedef enum { RSI_HTTP } nw_app_protocol;
+typedef enum { RSI_CIPHER_SELECTION } nw_app_config;
+
 /******************************************************
  * *                 Type Definitions
  * ******************************************************/
@@ -676,6 +679,10 @@ int32_t rsi_sendto_async(int32_t sockID,
                          struct rsi_sockaddr *destAddr,
                          int32_t destAddrLen,
                          void (*data_transfer_complete_handler)(int32_t sockID, const uint16_t length));
+uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
+                                         nw_app_config config_type,
+                                         void *config,
+                                         uint16_t config_length);
 int rsi_setsockopt(int32_t sockID, int level, int option_name, const void *option_value, rsi_socklen_t option_len);
 int32_t rsi_get_app_socket_descriptor(uint8_t *src_port);
 int32_t rsi_get_primary_socket_id(uint8_t *port_number);

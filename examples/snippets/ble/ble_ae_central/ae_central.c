@@ -618,45 +618,6 @@ int32_t rsi_ble_central(void)
     LOG_PRINT(" \n set ae scan enable success \n");
   }
 
-#if 1
-  // AE Periodic create sync
-  rsi_ble_ae_set_periodic_adv_create_sync_t ae_per_sync_create = { 0 };
-  rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)ae_per_sync_create.adv_addr, (int8_t *)REM_ADDR);
-  ae_per_sync_create.adv_addr_type = LE_PUBLIC_ADDRESS;
-  ae_per_sync_create.adv_sid       = BLE_AE_ADV_SID;
-  ae_per_sync_create.fil_policy    = RSI_BLE_ADV_FILTER_TYPE;
-  ae_per_sync_create.skip          = BLE_AE_ADV_SKIP;
-  ae_per_sync_create.sync_timeout  = BLE_AE_SYNC_TIMOUT;
-  LOG_PRINT("\n size of create sync structure is %d\n", sizeof(ae_per_sync_create));
-  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_CREATE, &ae_per_sync_create);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT(" \n set ae periodic sync failed with 0x%lX \n", status);
-  } else {
-    LOG_PRINT(" \n set ae periodic sync success \n");
-  }
-
-  // AE Periodic create cancel sync
-  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_CANCEL, &ae_per_sync_create);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT(" \n set ae periodic sync cancel failed with 0x%lX \n ", status);
-    return status;
-  } else {
-    LOG_PRINT(" \n set ae periodic sync cancel success \n");
-  }
-#endif
-
-#if 0
-  // AE Terminate Periodic sync
-  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_TERMINATE,&ae_per_sync_create);
-  if(status != RSI_SUCCESS)
-  {
-    LOG_PRINT (" \n set ae periodic sync terminate failed with 0x%lX \n");
-  }
-  else{
-    LOG_PRINT (" \n set ae periodic sync terminate success \n");
-  }
-#endif
-#if 1
   rsi_ble_ae_dev_to_periodic_list_t ae_add_dev = { 0 };
   rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)ae_add_dev.adv_addr, (int8_t *)REM_ADDR1);
   ae_add_dev.adv_addr_type = LE_RANDOM_ADDRESS;
@@ -669,6 +630,43 @@ int32_t rsi_ble_central(void)
   } else {
     LOG_PRINT("\n successfully added remote device to Periodic Adv List \n");
   }
+
+  // AE Periodic create sync
+  rsi_ble_ae_set_periodic_adv_create_sync_t ae_per_sync_create = { 0 };
+  rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)ae_per_sync_create.adv_addr, (int8_t *)REM_ADDR);
+  ae_per_sync_create.adv_addr_type = LE_PUBLIC_ADDRESS;
+  ae_per_sync_create.adv_sid       = BLE_AE_ADV_SID;
+  ae_per_sync_create.options       = BLE_AE_OPTIONS;
+  ae_per_sync_create.skip          = BLE_AE_ADV_SKIP;
+  ae_per_sync_create.sync_timeout  = BLE_AE_SYNC_TIMOUT;
+  LOG_PRINT("\n size of create sync structure is %d\n", sizeof(ae_per_sync_create));
+  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_CREATE, &ae_per_sync_create);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT(" \n set ae periodic sync failed with 0x%lX \n", status);
+  } else {
+    LOG_PRINT(" \n set ae periodic sync success \n");
+  }
+
+#if BLE_AE_PERIODIC_SYNC_CANCEL
+  // AE Periodic create cancel sync
+  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_CANCEL, &ae_per_sync_create);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT(" \n set ae periodic sync cancel failed with 0x%lX \n ", status);
+    return status;
+  } else {
+    LOG_PRINT(" \n set ae periodic sync cancel success \n");
+  }
+#endif
+
+#if BLE_AE_PERIODIC_SYNC_TERMIN
+  // AE Terminate Periodic sync
+  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_TERMINATE, &ae_per_sync_create);
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT(" \n set ae periodic sync terminate failed with 0x%lX \n");
+  } else {
+    LOG_PRINT(" \n set ae periodic sync terminate success \n");
+  }
+#endif
 
 #if 0
   rsi_ble_ae_dev_to_periodic_list_t ae_remv_dev ={0};
@@ -686,6 +684,8 @@ int32_t rsi_ble_central(void)
       LOG_PRINT("\n successfully removed remote device from Periodic Adv List \n");
   }
 #endif
+
+#if BLE_AE_PERIODIC_CLEAR_ADV_LIST
   rsi_ble_ae_dev_to_periodic_list_t ae_clear_dev = { 0 };
   // AE Clear Periodic Adv list
   rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)REM_ADDR1, (int8_t *)ae_clear_dev.adv_addr);
@@ -707,7 +707,6 @@ int32_t rsi_ble_central(void)
   } else {
     LOG_PRINT(" \n read ae periodic adv list size cmd success and size is %d \n", size);
   }
-
 #endif
   // Read Transmit Power
   rsi_ble_tx_pwr_t tx_pwr;

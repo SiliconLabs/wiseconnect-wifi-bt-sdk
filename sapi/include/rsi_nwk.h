@@ -48,6 +48,9 @@
 // To indicate HTTPS socket about SNI hostname to be used during SSL handshake
 #define RSI_HTTPS_USE_SNI BIT(11)
 
+// To indicate HTTPS tls ciphers are enabled
+#define RSI_HTTPS_CIPHERS_BITMAP BIT(12)
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -1091,6 +1094,8 @@ typedef struct rsi_pop3_mail_data_resp_s {
 #define HTTP_CLIENT_POST_DATA_MAX_BUFFER_LENGTH 900
 #define MAX_HTTP_CLIENT_POST_DATA_BUFFER_LENGTH 900
 
+#define RSI_CONFIG_LENGTH 4
+
 // HTTP client PUT create command
 #define HTTP_CLIENT_PUT_CREATE 1
 
@@ -1194,6 +1199,18 @@ typedef struct rsi_http_client_post_data_req_s {
 
 } rsi_http_client_post_data_req_t;
 
+// Network App Protocol Config stucture
+typedef struct rsi_network_app_protocol_config_req_s {
+  // valid protocol
+  uint16_t protocol;
+  // config type of the protocol
+  uint16_t config_type;
+  // length of the config[]
+  uint16_t config_length;
+  // config parameter
+  uint8_t config[RSI_CONFIG_LENGTH];
+
+} rsi_network_app_protocol_config_req_t;
 /******************************************************
  * *                      Macros
  * ******************************************************/

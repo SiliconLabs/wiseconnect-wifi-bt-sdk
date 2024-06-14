@@ -32,6 +32,10 @@
 #include "sl_device_init_lfxo_config.h"
 #include "sl_device_init_emu_config.h"
 #include "rsi_board_configuration.h"
+#ifdef RSI_UART_INTERFACE
+#include "rsi_uart.h"
+int _write(int file, const char *ptr, int len);
+#endif
 #if BRD4180B_CLI_ENABLED
 #include "gpiointerrupt.h"
 #endif // BRD4180B_CLI_ENABLED
@@ -39,7 +43,7 @@
 #ifndef WEAK
 #define WEAK  __attribute__((weak))
 #endif
-
+#ifdef RSI_SPI_INTERFACE
 #ifndef RSI_HAL_NO_COM_PORT
 static void rsi_hal_com_port_init(void);
 #endif
@@ -53,6 +57,45 @@ void rsi_calib_uart_recv_isr(uint8_t cmd_char);
 
 //! packet pending interrupt priority
 #define	PACKET_PENDING_INT_PRI	3
+#endif
+#ifdef RSI_UART_INTERFACE
+
+#define DEBUG_BREAK __asm__("BKPT #0");
+
+#define ITM_Port32(n) (*((volatile unsigned int *)(0xE0000000+4*n)))
+/* Need to implement the two Retarget IO functions with the read/write functions we want to use. */
+int RETARGET_WriteChar(char c){
+return ITM_SendChar (c);
+}
+/**************************************************************************//**
+ * @brief
+ *  Write to a file.
+ *
+ * @param[in] file
+ *  Descriptor for the file you want to write to.
+ *
+ * @param[in] ptr
+ *  Pointer to the text you want to write
+ *
+ * @param[in] len
+ *  Number of characters to be written.
+ *
+ * @return
+ *  Number of characters that have been written.
+ *****************************************************************************/
+int _write(int file, const char *ptr, int len)
+{
+  int txCount;
+
+  (void) file;
+
+  for (txCount = 0; txCount < len; txCount++) {
+    RETARGET_WriteChar(*ptr++);
+  }
+
+  return len;
+}
+#endif
 #if BRD4180B_CLI_ENABLED
 typedef void (* UserIntCallBack_t)(void);
 UserIntCallBack_t call_back;
@@ -139,7 +182,7 @@ void initLdma(void)
   LDMA_Init(&ldmaInit);
 }
 
-#if 0
+#ifdef RSI_UART_INTERFACE
 /***************************************************************************//**
  * Configure SWO - serial wire output
  ******************************************************************************/
@@ -248,6 +291,7 @@ static void swo_setup(void)
 void rsi_hal_board_init(void)
 {
 #ifndef RSI_HAL_NO_CLOCK_INIT
+#ifdef RSI_SPI_INTERFACE
   // Initializes the platform
   CHIP_Init();
 
@@ -287,7 +331,8 @@ void rsi_hal_board_init(void)
   NVIC_SetPriority(SysTick_IRQn, SYSTICK_INTR_PRI);
 #endif
 #endif
-
+#endif
+#ifdef RSI_SPI_INTERFACE
 //  swo_setup();
   // Initialize GPIO and USART0
 #if !BRD4180B_CLI_ENABLED
@@ -335,6 +380,11 @@ void rsi_hal_board_init(void)
   GPIO_ExtIntConfig(INTERRUPT_PIN.port, INTERRUPT_PIN.pin, interrupt, true, false, true);
 #endif // BRD4180B_CLI_ENABLED
 #endif
+#endif
+#ifdef RSI_UART_INTERFACE
+  swo_setup();
+  SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000);
+#endif
 #ifdef LOGGING_STATS
   // Configure logging stats gpio pin
   GPIO_PinModeSet(LOGGING_WAKE_INDICATOR_PIN.port, LOGGING_WAKE_INDICATOR_PIN.pin, gpioModeInput, 1);
@@ -365,7 +415,9 @@ void rsi_switch_to_high_clk_freq()
 //  USART_BaudrateSyncSet(USART2, 0, 25000000);
 }
 
+#ifdef  RSI_SPI_INTERFACE
 #ifndef RSI_HAL_NO_COM_PORT
+
 static void rsi_hal_com_port_init(void)
 {
   USART_InitAsync_TypeDef init_vcom = USART_INITASYNC_DEFAULT;
@@ -489,6 +541,7 @@ static void rsi_hal_com_port_init(void)
   // Finally enable it
   USART_Enable(COM_PORT_PERIPHERAL, usartEnable);
 }
+
 
 #if BRD4180B_CLI_ENABLED && BRD4180B_CLI_DEBUG_PRINTS_ENABLED
 static void rsi_hal_debug_port_init(void)
@@ -620,4 +673,5 @@ void USART0_RX_IRQHandler(void)
 {
     uart_rx_handler(COM_PORT_PERIPHERAL->RXDATA);
 }
+#endif
 #endif

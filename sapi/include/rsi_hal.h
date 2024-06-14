@@ -136,6 +136,7 @@ uint32_t GetTickCount(void);
 
 void rsi_interrupt_handler(void);
 void ABRD(void);
+short int rsi_uart_iface_int();
 
 void Error_Handler(void);
 

@@ -387,7 +387,7 @@ int32_t application()
         }
         return 0;
       } else {
-        LOG_PRINT("\r\nFirmware update failed\n");
+        LOG_PRINT("\r\nFirmware update failed with error code: %x\n", status);
         return status;
       }
     }

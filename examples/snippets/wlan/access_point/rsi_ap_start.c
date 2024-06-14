@@ -366,7 +366,7 @@ int32_t rsi_ap_start()
 
 #endif
 
-#ifdef AP_TURN_OFF
+#if AP_TURN_OFF
 
   //! Stop Access point
   status = rsi_wlan_ap_stop();

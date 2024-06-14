@@ -1081,8 +1081,8 @@ typedef struct rsi_rsp_wireless_info_s {
   // security type
   uint8_t sec_type;
 
-  // PSK
-  uint8_t psk[64];
+  // PMK
+  uint8_t pmk[64];
 
   // uint8[4], Module IP Address
   uint8_t ipv4_address[4];
@@ -1768,102 +1768,6 @@ typedef struct rsi_calib_read_s {
   } rsi_evm_data_t;
 } rsi_calib_read_t;
 
-/*! @cond WLAN_BTR_MODE */
-/** @addtogroup WLAN_BTR
-* @{
-*/
-
-/// Control block structure used to hold meta data for the payload passed in \ref sl_wifi_btr_send_80211_data
-typedef struct sl_wifi_btr_data_ctrlblk_s {
-  ///       | Bit position | ctrl_flags bit description                                                                                                                     |
-  ///       |--------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-  ///       | 0            | Shall be set for 4-address packet or unset for 3-address packet.                                                                               |
-  ///       | 1            | Shall be set for QoS packet. QoS control field shall not be present in the MAC header for non-QoS packet.                                      |
-  ///       | 2            | Shall be set to use auto-rate. For using auto-rate, external host shall indicate supported rates of peer as part of \ref sl_wifi_btr_peer_add. |
-  ///       | 3            | Shall be set to enable ToDS bit in Frame Control. Valid only for 3-addr packet(bit 0 is unset).                                                |
-  ///       | 4            | Shall be set to enable FromDS bit in Frame Control. Valid only for 3-addr packet(bit 0 is unset).                                              |
-  ///       | 5            | Shall be set if host requires tx data status report                                                                                            |
-  ///       | 6:7          | Reserved                                                                                                                                       |
-  /// @note If addr1 is multicast/broadcast, ctrl_flags bit 1 is ignored and the frame is sent as a non-QoS frame, i.e. QoS control field shall not be present in the MAC header.
-  uint8_t ctrl_flags;
-  uint8_t reserved1;
-  uint8_t reserved2;
-  /// Data Packets are queued to respective queue based on priority. Best Effort - 0, Background - 1, Video - 2, Voice - 3.
-  uint8_t priority;
-  /// Rates shall be provided as per \ref RSI_RATES. Only 11b/g rates shall be supported.
-  uint32_t rate;
-  /// Used for synchronization between data packets sent and reports received. Application shall provide token/identifier per PPDU. MAC layer shall send the same token/identifier in status report along with the status of the transmitted packet
-  uint32_t token;
-  /// Receiver MAC address
-  uint8_t addr1[6];
-  /// Transmitter MAC address
-  uint8_t addr2[6];
-  /// Destination MAC address
-  uint8_t addr3[6];
-  /// Source MAC address. Optional based on ctrl_flags
-  uint8_t addr4[6];
-} sl_wifi_btr_data_ctrlblk_t;
-
-/// Wi-Fi radio band
-typedef enum {
-  SL_WIFI_AUTO_BAND   = 0, ///< Wi-Fi Band Auto
-  SL_WIFI_BAND_900MHZ = 1, ///< Wi-Fi Band 900Mhz
-  SL_WIFI_BAND_2_4GHZ = 2, ///< Wi-Fi Band 2.4Ghz
-  SL_WIFI_BAND_5GHZ   = 3, ///< Wi-Fi Band 5Ghz
-  SL_WIFI_BAND_6GHZ   = 4, ///< Wi-Fi Band 6Ghz
-  SL_WIFI_BAND_60GHZ  = 5, ///< Wi-Fi Band 60Ghz
-} sl_wifi_band_t;
-
-/// Wi-Fi channel bandwidth
-typedef enum {
-  SL_WIFI_AUTO_BANDWIDTH   = 0, ///< Wi-Fi Bandwidth Auto
-  SL_WIFI_BANDWIDTH_10MHz  = 0, ///< Wi-Fi Bandwidth 10Mhz
-  SL_WIFI_BANDWIDTH_20MHz  = 1, ///< Wi-Fi Bandwidth 20Mhz
-  SL_WIFI_BANDWIDTH_40MHz  = 2, ///< Wi-Fi Bandwidth 40Mhz
-  SL_WIFI_BANDWIDTH_80MHz  = 3, ///< Wi-Fi Bandwidth 80Mhz
-  SL_WIFI_BANDWIDTH_160MHz = 4, ///< Wi-Fi Bandwidth 160Mhz
-} sl_wifi_bandwidth_t;
-
-/// Wi-Fi channel
-typedef struct sl_wifi_channel_s {
-  uint16_t channel;              ///< Channel number
-  sl_wifi_band_t band;           ///< Wi-Fi Radio Band
-  sl_wifi_bandwidth_t bandwidth; ///< Channel bandwidth
-} sl_wifi_channel_t;
-
-typedef struct sl_wifi_btr_peer_update_s {
-  uint8_t flags;
-  uint8_t peer_mac_address[6];
-  uint32_t peer_supported_rate_bitmap;
-} sl_wifi_btr_peer_update_t;
-
-typedef struct sl_wifi_btr_mcast_filter_s {
-  uint8_t flags;
-  uint8_t num_of_mcast_addr;
-  uint8_t mac[2][6];
-} sl_wifi_btr_mcast_filter_t;
-
-typedef struct sl_wifi_btr_cw_params_s {
-  uint8_t
-    cwmin; ///< Min contention window size. Value is calculated from 2n - 1 where exponent shall be provided as the input. Valid values for exponent N are 0 - 10
-  uint8_t
-    cwmax; ///< Max contention window size. Value is calculated from 2n - 1 where exponent shall be provided as the input. Valid values for exponent N are 0 - 10.
-  uint8_t aifsn; ///< AIFSN. Valid range is 2 to 15.
-  uint8_t reserved;
-} sl_wifi_btr_cw_params_t;
-
-typedef struct sl_wifi_btr_config_params_s {
-  uint8_t set; ///< Set or get BTR config params
-  uint8_t
-    retransmit_count; ///< Retransmit count. Common across all peers and access categories and valid only for unicast data frames
-  uint16_t flags; ///< Reserved
-  sl_wifi_btr_cw_params_t
-    cw_params[4]; ///< CW params for respective queues. AC index: Best Effort - 0, Background - 1, Video - 2, Voice - 3
-} sl_wifi_btr_config_params_t;
-
-/*! @endcond WLAN_BTR_MODE */
-/** @} */
-
 /******************************************************
  * *                    Structures
  * ******************************************************/
@@ -2003,6 +1907,4 @@ STATIC INLINE void clear_option(uint32_t *parameter, uint32_t flag)
   *parameter &= ~flag;
 }
 
-int32_t sl_wifi_btr_send_80211_data(sl_wifi_btr_data_ctrlblk_t *data_ctrlblk, uint8_t *payload, uint16_t payload_len);
-int32_t sl_wifi_btr_set_channel(sl_wifi_channel_t channel_info, uint8_t tx_pwr);
 #endif

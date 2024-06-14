@@ -624,7 +624,7 @@ int32_t rsi_get_ram_dump(uint32_t addr, uint16_t length, uint8_t *buf)
  * @return      Non-Zero Value - Failure
  * @note        **Precondition** - \ref rsi_driver_init() must be called before this API.
  */
-
+#endif
 int16_t rsi_bl_module_power_cycle(void)
 {
   SL_PRINTF(SL_BL_MODULE_POWER_CYCLE_ENTRY, DRIVER, LOG_INFO);
@@ -667,5 +667,4 @@ int16_t rsi_bl_module_power_cycle(void)
 
   return RSI_SUCCESS;
 }
-#endif
 #endif

@@ -246,7 +246,7 @@ int16_t rsi_pre_dsc_rd(uint8_t *dbuf);
 int16_t rsi_pkt_rd(uint8_t *pkt, uint16_t dummy_len, uint16_t total_len);
 int16_t rsi_set_intr_mask(uint8_t interruptMask);
 int16_t rsi_spi_iface_init(void);
-void rsi_ulp_wakeup_init(void);
+int16_t rsi_ulp_wakeup_init(void);
 int16_t rsi_device_interrupt_status(uint8_t *int_status);
 int16_t rsi_spi_high_speed_enable(void);
 int16_t rsi_set_intr_type(uint32_t interruptMaskVal);

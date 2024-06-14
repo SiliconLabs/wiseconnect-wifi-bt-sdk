@@ -170,7 +170,7 @@ void rsi_tx_event_handler(void)
     // request wakeup if module is in GPIO_BASED handshake power save
 #if (RSI_WMM_PS_ENABLE && RSI_WMM_PS_TYPE)
     status = rsi_wait4wakeup();
-    if (status != 0) {
+    if (status != RSI_SUCCESS) {
 #ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, TX_EVENT_CMD);
 #endif
@@ -178,7 +178,7 @@ void rsi_tx_event_handler(void)
     }
 #else
     status = rsi_req_wakeup();
-    if (status != 0) {
+    if (status != RSI_SUCCESS) {
 #ifndef RSI_TX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, TX_EVENT_CMD);
 #endif
@@ -187,7 +187,10 @@ void rsi_tx_event_handler(void)
 #endif
 #else
 #if (RSI_ULP_MODE == 1)
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return;
+    }
 #endif
 #endif
   }
@@ -612,11 +615,12 @@ void rsi_rx_event_handler(void)
 {
   uint8_t queue_no;
   uint8_t frame_type;
-  uint16_t status    = 0;
-  uint8_t *buf_ptr   = NULL;
-  rsi_pkt_t *rx_pkt  = NULL;
+  uint16_t status   = 0;
+  uint8_t *buf_ptr  = NULL;
+  rsi_pkt_t *rx_pkt = NULL;
+#ifndef RSI_UART_INTERFACE
   uint8_t int_status = 0;
-
+#endif
 #if RSI_ASSERT_ENABLE
 #if ((defined RSI_SPI_INTERFACE) || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
   uint32_t assert_val        = 0;
@@ -682,7 +686,7 @@ void rsi_rx_event_handler(void)
     // request wakeup if module is in GPIO_BASED handshake power save
 #if (RSI_WMM_PS_ENABLE && RSI_WMM_PS_TYPE)
     status = rsi_wait4wakeup();
-    if (status != 0) {
+    if (status != RSI_SUCCESS) {
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
 #endif
@@ -690,7 +694,7 @@ void rsi_rx_event_handler(void)
     }
 #else
     status = rsi_req_wakeup();
-    if (status != 0) {
+    if (status != RSI_SUCCESS) {
 #ifndef RSI_RX_EVENT_HANDLE_TIMER_DISABLE
       rsi_error_timeout_and_clear_events(status, RX_EVENT_CMD);
 #endif
@@ -701,7 +705,10 @@ void rsi_rx_event_handler(void)
 #elif (RSI_HAND_SHAKE_TYPE == MSG_BASED)
 #if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
 #ifdef RSI_SPI_INTERFACE
-    rsi_ulp_wakeup_init();
+    status = rsi_ulp_wakeup_init();
+    if (status != RSI_SUCCESS) {
+      return;
+    }
 #endif
 #endif
 #endif

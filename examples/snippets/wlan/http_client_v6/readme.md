@@ -21,6 +21,12 @@ Before running the application, the user will need the following things to setup
 
 ![Setup Diagram for HTTP Client Example](resources/readme/httpclientv6setupncp.png)
 
+* UART INTERFACE setup
+![Setup Diagram for HTTP Client Example with UART interface](resources/readme/UART_INTERFACE_setup.png)
+* Here is the Pin connections between EFR32MG21 and RS9116W:
+
+![Pin connections between EFR32MG21 and RS9116W for HTTP Client Example with UART interface](resources/readme/Pin%20connections.png)
+
 ### 2.2 Software Requirements
 
 - [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/).
@@ -44,6 +50,7 @@ The Application can be built and executed on below Host platforms
 ### 3.2 Host Interface
 
 * By default, the application is configured to use the SPI bus for interfacing between Host platforms (STM32F411 Nucleo / EFR32MG21) and the RS9116W EVK.
+* This application can be configured to use the UART interface with EFR32MG21.
 * This application is also configured to use the SDIO bus for interfacing between Host platforms (EFM32GG11) and the RS9116W EVK.
 
 ### 3.3 Project Configuration
@@ -211,6 +218,7 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
   - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
   - If RESET pin is not connected from EFX32 to Rs9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Add the macro RSI_CONFIGURE_IPV6=1 in the preprocessor settings to enable IPv6 (Project -> Properties -> C/C++ Build -> Settings ->GNU ARM C Compiler ->Preprosessor)
+- For the Host MCU to communicate with RS9116W through UART Interface, replace the **RSI_SPI_INTERFACE** and **RSI_SPI_HIGH_SPEED_ENABLE** macros in the pre-processor Symbols present at path: **C/C++ General → Paths and Symbols → Symbols → GNU C** with **RSI_UART_INTERFACE** , **EFX_UART_HAL** and **RSI_UART_FLOW_CTRL_ENABLE**.
 - Free run the project
 - Then continue the common steps from **5.3**
 
@@ -232,7 +240,29 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 8. After receiving complete response for the given HTTP GET, the device post the given data in HTTP_DATA macro to HTTP server using HTTP POST method.
 
-9. User can see the log messages at HTTP server. 
+9. User can see the log messages at HTTP server.
+
+#### Console Output with a UART Interface
+
+ **Using Run as:**
+
+* From the menu, select Tools
+* In the Tools dialog, select Simplicity Commander and click OK.
+* In the Simplicity Commander window, click Select Kit and choose your radio board.
+* In the navigation pane, go to the Console section.
+* Click Connect.
+* Console output will start getting displayed in the SWO window as shown below.
+
+![Console logs](resources/readme/UART_interface_HTTP_CLIENT_host_logs_Run_As.png)
+
+**Using Debug as:**
+
+* Run the Project by clicking on relevant icons on the IDE. Observe the LOG PRINTS of the application in the console window as shown below.
+
+![Console logs](resources/readme/UART_interface_HTTP_CLIENT_host_logs_Debug_As.png)
+
+**Note!**
+> You must click Disconnect to close the SWO connection (if already connected) before initiating the debugging of an application.
 
 ## Compressed Debug Logging
 

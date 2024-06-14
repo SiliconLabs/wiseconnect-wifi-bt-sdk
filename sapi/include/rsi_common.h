@@ -358,16 +358,14 @@
   ((100000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT)) //!Firmware max timeout value is 100 seconds
 #define RSI_HTTP_CLIENT_PUT_RESPONSE_WAIT_TIME \
   ((100000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT)) //!Firmware max timeout value is 100 seconds
-#define RSI_SNTP_RESPONSE_WAIT_TIME                    ((100000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_EMB_MQTT_RESPONSE_WAIT_TIME                ((60000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_PSK_RESPONSE_WAIT_TIME                     ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_SOCKET_CLOSE_RESPONSE_WAIT_TIME            ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_WLAN_11AX_WAIT_TIME                        ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_WLAN_TWT_RESPONSE_WAIT_TIME                ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define RSI_WLAN_NON_PREF_CHAN_WAIT_TIME               ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SL_WIFI_BTR_SET_CHANNEL_RESPONSE_WAIT_TIME     ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SL_WIFI_BTR_SEND_80211_DATA_RESPONSE_WAIT_TIME ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SL_WIFI_BTR_CONFIG_CMD_RESPONSE_WAIT_TIME      ((5000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_SNTP_RESPONSE_WAIT_TIME         ((100000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_EMB_MQTT_RESPONSE_WAIT_TIME     ((60000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_PSK_RESPONSE_WAIT_TIME          ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_SOCKET_CLOSE_RESPONSE_WAIT_TIME ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_11AX_WAIT_TIME             ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_TWT_RESPONSE_WAIT_TIME     ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_NON_PREF_CHAN_WAIT_TIME    ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_WLAN_NWK_APP_CONFIG_WAIT_TIME   ((5000 * WIFI_WAIT_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 
 // WIFI BLOCKED timeout defines
 #define RSI_ACCEPT_RESPONSE_WAIT_TIME          (RSI_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF)
@@ -1037,8 +1035,8 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
 int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb);
 void rsi_common_set_status(int32_t status);
 void rsi_handle_slp_wkp(uint8_t frame_type);
-int8_t rsi_req_wakeup(void);
-int8_t rsi_wait4wakeup(void);
+int16_t rsi_req_wakeup(void);
+int16_t rsi_wait4wakeup(void);
 void rsi_allow_sleep(void);
 void rsi_powersave_gpio_init(void);
 void rsi_common_packet_transfer_done(rsi_pkt_t *pkt);

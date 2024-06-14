@@ -162,7 +162,10 @@ int32_t rsi_socket_async(int32_t protocolFamily,
  * @return      SOCK_ID              - Socket ID of the created socket \n
  * @return      Negative value - Failure (**Possible Error Codes** - 0xfffffffd) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
- *
+ * @note A maximum of 10 sockets can be opened. Range of socket handles are between 1 to 10.
+ * @note If 3 TLS sockets are opened then the remaining 7 could be any combinations of UDP and TCP sockets.
+ * @note Module supports a maximum of 3 TLS sockets. These can be a combination of client and server sockets. If the HTTPS server is enabled then the user can open only 2 more TLS socket.
+ * 
  */
 
 int32_t rsi_socket(int32_t protocolFamily, int32_t type, int32_t protocol)
@@ -4432,5 +4435,91 @@ int32_t rsi_set_sni_emb_socket(uint8_t app_protocol, uint8_t *hostname, uint16_t
   rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   SL_PRINTF(SL_SET_SNI_FOR_APP_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
 
+  return status;
+}
+
+/*==============================================*/
+/**
+ * @brief        Set the network application protocols configuration. This is a non-blocking API.
+ * @pre \ref rsi_network_app_protocol_config() API needs to be called after \ref only.
+ * @param[in]    protocol       - Protocol 
+ * @param[in]    config_type    - Configuration type of the protocol
+ * @param[in]    config         - Pointer to the configuration params
+ * @param[in]    config_length  - Length of the config parameter
+ * @return       0              - Success  \n
+ * @return       Non-Zero Value - Failure (**Possible Error Codes** - 0xffffff82) \n
+ * @note         **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
+ *
+ */
+
+uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
+                                         nw_app_config config_type,
+                                         void *config,
+                                         uint16_t config_length)
+{
+
+  rsi_pkt_t *pkt;
+  int32_t status     = RSI_SUCCESS;
+  uint16_t send_size = 0;
+  uint8_t *host_desc = NULL;
+  SL_PRINTF(SL_NWK_APP_PROTO_CONFIG_PKT_ENTRY, NETWORK, LOG_INFO);
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
+  rsi_network_app_protocol_config_req_t *nwk_app_config;
+
+  status = rsi_check_and_update_cmd_state(NWK_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+    // Allocate command buffer from WLAN pool
+    pkt = rsi_pkt_alloc(&wlan_cb->wlan_tx_pool);
+    // If allocation of packet fails
+    if (pkt == NULL) {
+      // Change common state to allow state
+      rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+      // Return packet allocation failure error
+      SL_PRINTF(SL_NWK_APP_PROTO_CONFIG_PKT_ALLOCATION_FAILURE, NETWORK, LOG_ERROR, "status: %4x", status);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+    // Memset the packet data to insert NULL between fields
+    memset(&pkt->data, 0, sizeof(rsi_network_app_protocol_config_req_t));
+
+    nwk_app_config = (rsi_network_app_protocol_config_req_t *)pkt->data;
+
+    nwk_app_config->protocol      = protocol;
+    nwk_app_config->config_type   = config_type;
+    nwk_app_config->config_length = config_length;
+    memcpy(nwk_app_config->config, config, config_length);
+
+    // Use host descriptor to set payload length
+    send_size = sizeof(rsi_network_app_protocol_config_req_t) - RSI_CONFIG_LENGTH + config_length;
+
+    // Get the host descriptor
+    host_desc = (pkt->desc);
+
+    // Fill data length in the packet host descriptor
+    rsi_uint16_to_2bytes(host_desc, (send_size & 0xFFF));
+
+    // Send nwk app portocol config command
+    status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_NWK_APP_PROTOCOL_CONFIG, pkt);
+
+#ifndef RSI_NWK_SEM_BITMAP
+    rsi_driver_cb_non_rom->nwk_wait_bitmap |= BIT(0);
+#endif
+    // Wait on NWK semaphore
+    rsi_wait_on_nwk_semaphore(&rsi_driver_cb_non_rom->nwk_sem, RSI_WLAN_NWK_APP_CONFIG_WAIT_TIME);
+    // Get WLAN/network command response status
+    status = rsi_wlan_get_nwk_status();
+
+    // Change NWK state to allow
+    rsi_check_and_update_cmd_state(NWK_CMD, ALLOW);
+
+  } else {
+    // Return NWK command error
+    SL_PRINTF(SL_NWK_APP_PROTO_CONFIG_COMMAND_ERROR, NETWORK, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
+
+  // Return status
+  SL_PRINTF(SL_NWK_APP_PROTO_CONFIG_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }

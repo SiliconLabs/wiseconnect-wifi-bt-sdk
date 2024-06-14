@@ -24,7 +24,8 @@
 #define RSI_ENABLE 1
 //! Disable feature
 #define RSI_DISABLE 0
-
+//! Enable Hardware flow control
+#define HFC_ENABLE 2
 //! To enable concurrent mode
 #define CONCURRENT_MODE RSI_DISABLE
 

@@ -46,6 +46,13 @@
 #define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS       2
 #define RSI_BLE_MAX_NUM_ADV_EXT_EVENT_CALLBACKS 0x08
 
+#define BLE_AE_REPORTING_DISABLED                   0x01
+#define BLE_AE_REPORTING_ENABLED                    0x00
+#define BLE_AE_PERODIC_DUPLICATE_FILTERING_ENABLED  0x01
+#define BLE_AE_PERODIC_DUPLICATE_FILTERING_DISABLED 0x00
+#define BLE_AE_PERIODIC_LIST_NOT_USED               0x00
+#define BLE_AE_PERIODIC_LIST_USED                   0x01
+
 /******************************************************
  * *                    Constants
  * ******************************************************/
@@ -1368,7 +1375,21 @@ typedef struct rsi_ble_ae_set_scan_enable_s {
 //#pragma pack(push, 1)
 typedef struct rsi_ble_ae_set_periodic_adv_create_sync_s {
 
-  uint8_t fil_policy;
+  /** uint8_t, Options field, The Options parameter is used to determine whether the Periodic Advertiser List is used
+   
+     Bit_NUmber    parameter description
+	 
+   * 0 	           0: Use the Advertising_SID, Advertiser_Address_Type, and Advertiser_Address parameters to determine which advertiser to listen to
+		           1: Use the Periodic Advertiser List to determine which advertiser to listen to.
+				   
+   * 1 			   0: Reporting initially enabled
+                   1: Reporting initially disabled
+				   
+   * 2             0: Duplicate filtering initially disabled
+                   1: Duplicate filtering initially enabled
+				   
+    All other bits Reserved for future use   **/
+  uint8_t options;
   /** uint8_t, Advertising SID subfield in the ADI field used to identify the Periodic Advertising .
  *  Range : 0x00 to 0x0F, All other bits - Reserved for future use
 */
