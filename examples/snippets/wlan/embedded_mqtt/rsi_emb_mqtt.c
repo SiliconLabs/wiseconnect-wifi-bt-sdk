@@ -45,6 +45,7 @@
 #include "rsi_nwk.h"
 #include "rsi_emb_mqtt_client.h"
 #include "rsi_driver.h"
+#include "stdlib.h"
 //! Access point SSID to connect
 #define SSID                       "SILABS_AP"
 #define RSI_EMB_MQTT_TOPIC_MAX_LEN 202
@@ -81,8 +82,14 @@
 //! Server port number
 #define SERVER_PORT 1234
 
+//! Minimum range Client port number
+#define MIN_PORT_NUM 5001
+
+//! Maximum range Client  port number
+#define MAX_PORT_NUM 65534
+
 //! Client port number
-#define CLIENT_PORT 5001
+#define CLIENT_PORT ((rand() % (MAX_PORT_NUM - MIN_PORT_NUM + 1)) + MIN_PORT_NUM)
 
 //! Memory length for driver
 #define GLOBAL_BUFF_LEN 15000

@@ -274,6 +274,54 @@ AWS_DOMAIN_NAME refers to domain name of the AWS server
   #define ENABLE_POWER_SAVE              1
 ```
 
+### 4.3 Setting up Security Certificates
+
+To authenticate and securely connect with AWS, your Wi-Fi device requires a unique x.509 security certificate and private key, as well as a CA certificate which is used to verify the AWS server. Security credentials need to be converted into a C-array rather than [PEM format](https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail) provided by AWS; they also need to be added to your project. 
+
+The WiSeConnect SDK includes a Python 3 script to streamline the conversion process. This script
+certificate_to_array.py is in the SDK 'resources' directory [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/).
+
+To convert the device certificate and private key to C arrays, open a system command prompt and use the script as indicated in the following examples.
+
+```sh
+$> python3 certificate_to_array.py <input filename> <output arrayname>
+
+For example:
+$> python3 certificate_to_array.py d8f3a44d3f.cert.pem    aws_client_certificate
+$> python3 certificate_to_array.py d8f3a44d3f.private.key aws_client_private_certificate
+```
+
+After running the script on the certificate and private key, two new files are created.
+
+```sh
+aws_client_certificate.pem.crt.h
+aws_client_private_key.pem.key.h
+```
+
+Copy the two files aws_client_certificate.pem.crt.h and aws_client_private_key.pem.key.h to the WiSeConnect directory: /resources/certificates, overwriting any existing files with same name. 
+
+The Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the WiSeConnect SDK; no additional setup is required.
+For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/aws_starfield_ca.pem.h).
+
+> NOTE :
+> For AWS connectivity, StarField Root CA Class 2 certificate has the highest authority being at the top of the signing hierarchy.
+> 
+> The StarField Root CA Class 2 certificate is an expected/required certificate which usually comes pre-installed in the operating systems and it plays a key part in certificate chain verification when a device is performing TLS authentication with the IoT endpoint.
+> 
+> On RS9116 device, we do not maintain root CA trust repository due to memory constraints, so it is mandatory to load StarField Root CA Class 2 certificate for successful connection to AWS server.
+> 
+> The certificate chain sent by AWS server is as below:
+> id-at-commonName=Amazon,id-at-organizationalUnitName=Server CA 1B,id-at-organizationName=Amazon,id-at-countryName=US
+> id-at-commonName=Amazon Root CA 1,id-at-organizationName=Amazon,id-at-countryName=US
+> id-at-commonName=Starfield Services Root Certificate Authority ,id-at-organizationName=Starfield Technologies, Inc.,id-at-localityName=Scottsdale,id-at-  stateOrProvinceName=Arizona,id-at-countryName=US)
+> 
+> On RS9116 to authenticate the AWS server, firstly Root CA is validated (validate the Root CA received with the Root CA loaded on the device). Once the Root CA is validation is successful , other certificates sent from the AWS server are validated.
+> RS9116 don't authenticate to AWS server if intermediate CA certificates are loaded instead of StarField Root CA Class 2 certificate and would result in Handshake error.
+> StarField Root CA Class 2 certificate is at https://certs.secureserver.net/repository/sf-class2-root.crt
+> 
+> Reference links :
+> https://aws.amazon.com/blogs/security/how-to-prepare-for-aws-move-to-its-own-certificate-authority/
+
 ## 5. Testing the Application 
 
 User has to follow the below steps for the successful execution of the application.
@@ -335,6 +383,71 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 5. After the program gets executed, RS9116W EVK would be connected to Access point having the configuration same that of in the application and get IP.
 
 6. The Device which is configured as SSL client will connect to three different remote SSL servers.
+
+## Appendix
+
+### Create an AWS Thing
+
+Create a thing in the AWS IoT registry to represent your IoT Device.
+
+* In the [AWS IoT console](https://console.aws.amazon.com/iot/home), in the navigation pane, under Manage, choose All devices, and then choose Things.
+
+  ![AWS console](resources/readme/aws_create_thing_step1.png)
+
+* If a **You don't have any things yet** dialog box is displayed, choose **Register a thing**. Otherwise, choose **Create**.
+* Click on **Create things**.
+
+  ![AWS thing](resources/readme/aws_create_thing_step2.png)
+
+* On the **Create things** page, choose **Create a single thing** and click next.
+
+  ![AWS thing creation](resources/readme/aws_create_thing_step3.png)
+
+* On the **Specify thing properties** page, enter a name for your IoT thing (for example, **Test_IoT**), and choose **Unnamed shadow (classic)** in the Device Shadow section, then choose **Next**. You can't change the name of a thing after you create it. To change a thing's name, you must create a new thing, give it the new name, and then delete the old thing.
+
+  ![Add Device 1](resources/readme/aws_create_thing_step4.png)
+
+* During **Configure device certificate** step, choose **Auto-generate a new certificate (recommended)** option and click next.
+
+  ![Add Device 2](resources/readme/aws_create_thing_step5.png) 
+
+* Attach the policy to the thing created
+   
+   * If you have any existing policy, attach it and click on create thing
+
+      !["Attach policy"](resources/readme/aws_choosing_policy.png)
+
+   * If policy is not yet created, follow the below steps.
+      
+      * Choose Create policy and fill the fields as per your requirements.
+
+         !["Create policy"](resources/readme/aws_create_thing_attach_policy.png)
+
+      * Give the **Name** to your Policy, Fill **Action** and **Resource ARN** as shown in below image, Click on **Allow** under **Effect** and click **Create**
+   
+         ![Register Thing](resources/readme/aws_create_thing_policy_create.png)
+
+      * choose the created policy and click on **Create thing**
+
+* Choose the **Download** links to download the device certificate, private key, and root CA certificate. Root CA certificate is already present in SDK (aws_starfield_ca.pem.h), and can be directly used.
+  > **Warning:** This is the only instance you can download your device certificate and private key. Make sure to save them safely. 
+
+  ![Downloading certificates](resources/readme/aws_thing_certificates_download.png)
+
+* Click Done.
+
+* The created thing should now be visible on the AWS console (Manage > All devices > Things)
+
+### **Appendix**: Steps to create a policy from AWS console
+
+* Navigate to **AWS IoT console**
+* Choose **Policies** under **Secure**
+
+  ![AWS console create policy](resources/readme/image451.png) 
+
+* Click on **Create**
+   
+  ![Create policy](resources/readme/aws_create_policy.png)
 
 ## Compressed Debug Logging
 

@@ -154,6 +154,7 @@ int16_t rsi_bl_select_option(uint8_t cmd)
   uint16_t read_value = 0;
   rsi_timer_instance_t timer_instance;
   uint16_t default_nwp_fw_selected = 0;
+  int32_t left                     = 0;
 
   retval = rsi_mem_wr(RSI_HOST_INTF_REG_OUT, 2, (uint8_t *)&boot_cmd);
   if (retval < 0) {
@@ -191,7 +192,7 @@ int16_t rsi_bl_select_option(uint8_t cmd)
     }
   }
   while ((cmd == LOAD_NWP_FW) || (cmd == LOAD_DEFAULT_NWP_FW_ACTIVE_LOW)) {
-    rsi_init_timer(&timer_instance, 3000);
+    rsi_init_timer(&timer_instance, 5000);
     retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
     if (retval < 0) {
       return retval;
@@ -203,6 +204,20 @@ int16_t rsi_bl_select_option(uint8_t cmd)
           retval   = rsi_bootloader_instructions(RSI_REG_WRITE, &boot_cmd);
           if (retval < 0) {
             return retval;
+          }
+          while (1) { // waiting 2sec to get the correct location of the firmware.
+            left = rsi_timer_left(&timer_instance);
+            if (left > 3000) {
+              retval = rsi_bootloader_instructions(RSI_REG_READ, &read_value);
+              if (retval < 0) {
+                return retval;
+              }
+              if (read_value == (RSI_HOST_INTERACT_REG_VALID | SELECT_DEFAULT_NWP_FW)) {
+                break;
+              }
+            } else {
+              return RSI_ERROR_FW_LOAD_OR_UPGRADE_TIMEOUT;
+            }
           }
           boot_cmd = RSI_HOST_INTERACT_REG_VALID_FW | cmd;
           retval   = rsi_bootloader_instructions(RSI_REG_WRITE, &boot_cmd);

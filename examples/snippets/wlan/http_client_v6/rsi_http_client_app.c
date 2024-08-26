@@ -85,10 +85,10 @@
 #define CHANNEL_NO 0
 
 //! Security type
-#define SECURITY_TYPE RSI_OPEN
+#define SECURITY_TYPE RSI_WPA2
 
 //! Password
-#define PSK NULL
+#define PSK "12345678"
 
 //!SSL TLS versions
 

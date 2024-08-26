@@ -100,7 +100,7 @@ RSI_SSL_V_1_2                       BIT(3)
 //! for example select required flag bits,  Eg:(HTTPS_SUPPORT | HTTPV6 | HTTP_USER_DEFINED_CONTENT_TYPE)
 #define FLAGS HTTPS_SUPPORT
 //! include the certificate
-#include "http_baltimore_ca.pem.h"
+#include "aws_starfield_ca.pem.h"
 //! Server port number
 #define HTTP_PORT 443
 //! Server URL
@@ -368,7 +368,9 @@ int32_t rsi_http_otaf_app()
     //Reset Loaded certificates
     status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, NULL, 0);
     //Load certificate
-#if defined(AWS_ENABLE) || defined(AZURE_ENABLE)
+#if defined(AWS_ENABLE)
+    status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, aws_starfield_ca, (sizeof(aws_starfield_ca) - 1));
+#elif defined(AZURE_ENABLE)
     status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, http_baltimore_ca, (sizeof(http_baltimore_ca) - 1));
 #else
     status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, cacert, (sizeof(cacert) - 1));
