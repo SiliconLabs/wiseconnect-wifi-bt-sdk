@@ -525,7 +525,11 @@ void SDMMCHOST_Deinit(void *host)
 
 status_t SDMMCHOST_ReceiveTuningBlock(SDMMCHOST_TYPE *base, uint32_t tuningCmd, uint32_t *revBuf, uint32_t size)
 {
+#if ENABLE_SD_CARD_IN_D0_BOARDS
+ if(base == SD_HOST_BASEADDR1)
+#else
  if(base == SD_HOST_BASEADDR0)
+#endif
   {
     assert(revBuf != NULL);
     status_t error = kStatus_Success;

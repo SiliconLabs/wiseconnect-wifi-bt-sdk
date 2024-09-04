@@ -4653,6 +4653,8 @@ int32_t rsi_wlan_buffer_config(void)
  * @return     0               - Success \n
  * @return     Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa) \n
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
+ * @note       The module gets a default IP of 192.168.100.76 if it becomes Access Point in case of IPv4. and gets a default IP of 2001:db8:0:1:0:0:0:120 in case of IPv6.
+ *             If user wants to override the default IP configurations for the AP then \ref rsi_config_ipaddress() should be called before this API.               
  * @note       DFS channels are not supported in AP mode.
  * @note       For AP mode with WPA3 security, only SAE-H2E method is supported. SAE Hunting-and-Pecking method is not supported.
  * @note       In WPA3(Personal or Personal transition) security mode, TKIP encryption mode is not supported. Encryption mode is automatically configured to RSI_CCMP.

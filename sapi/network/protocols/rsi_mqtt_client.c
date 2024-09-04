@@ -43,7 +43,7 @@
  *  Bit(0) - Server IP version    |     1      - IPv6 \n
  *  ^                                   0      - IPv4
  *     
- * @param[in]  keep_alive_interval 	 - MQTT client keep alive interval \n
+ * @param[in]  keep_alive_interval 	 - MQTT client keep alive interval value in seconds \n
  *             				                 If there are no transactions between MQTT client and broker within \n 
  *             				                 this time period, MQTT Broker disconnects the MQTT client \n
  *             				                 If 0, Server does not disconnect \n

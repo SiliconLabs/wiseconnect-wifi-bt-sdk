@@ -25,7 +25,7 @@ This document provides a comprehensive description of the RS9116 TCP/IP Feature 
 
 This document explains the application's usage to determine the static memory footprint in an RS9116 module to establish applications using either WiFi only or Wi-Fi plus Bluetooth/BLE capabilities and determine whether the desired Wi-Fi, Bluetooth Classic, Bluetooth LE and TCP/IP capabilities for a customer application can be fit within the static memory available in the RS9116 system of choice.
 
-**Note:** This application only works for **2.9.0** build version and checks for static memory allocation (Dynamic memory is not profiled by this application).
+**Note:** This application only works for **2.10.0** build version and checks for static memory allocation (Dynamic memory is not profiled by this application).
 
 ## 2. Prerequisites
 
@@ -311,15 +311,19 @@ This section describes how to select features using the GUI for feasibility chec
 
    ![](resources/image14.png)
 
-8. Select the Host interface and Chip revision and click on **'Check Feasibility'** to check the feasibility of the selected features with the selected memory configuration an the host interface. (By default, 'UART/SPI/SDIO' is configured as the host inteface and '1.4' is configured as the chip revision).
+8. Select the Host interface and Chip revision and click on **'Check Feasibility'** to check the feasibility of the selected features with the selected memory configuration an the host interface. (By default, 'UART/SPI/SDIO' is configured as the host interface and '1.4' is configured as the chip revision).
 
    ![](resources/feasibility.png)
 
-9. To save the created opermode command in a computer folder, Click on *Save* and enter the file name to save with.
+9. Click on *Save Heap Allocation Log To The Directory* to save the Heap Memory Allocation Log to the current directory with the file name (Feature Select) Log x.
+
+   ![](resources/feasibility.png)
+
+10. To save the created opermode command in a computer folder, Click on *Save* and enter the file name to save with.
 
    ![](resources/image15.png)
 
-10. One can open the saved opermode command by clicking on *Open* to view the command.
+11. One can open the saved opermode command by clicking on *Open* to view the command.
 
     ![](resources/image16.png)
 

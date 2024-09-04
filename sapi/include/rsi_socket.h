@@ -638,9 +638,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
                                   const int8_t *msg,
                                   int32_t msgLength,
                                   int32_t flags,
-                                  void (*rsi_sock_data_tx_done_cb)(int32_t sockID,
-                                                                   int16_t status,
-                                                                   uint16_t total_data_sent));
+                                  void (*rsi_sock_data_tx_done_cb)(int32_t sockID, uint16_t total_data_sent));
 int32_t rsi_select(int32_t nfds,
                    rsi_fd_set *readfds,
                    rsi_fd_set *writefds,

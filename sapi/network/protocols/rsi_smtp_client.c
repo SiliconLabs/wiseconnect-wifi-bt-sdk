@@ -18,9 +18,7 @@
 #include "rsi_driver.h"
 
 #include "rsi_smtp_client.h"
-/** @addtogroup NETWORK11
-* @{
-*/
+
 /*==============================================*/
 /**
  * @brief       Create an SMTP client. nitialize the client with a given configuration.
@@ -49,7 +47,7 @@
  * @note        **This API is not supported in current release.**
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
-
+///@private
 int32_t rsi_smtp_client_create(uint8_t flags,
                                uint8_t *username,
                                uint8_t *password,
@@ -233,11 +231,6 @@ int32_t rsi_smtp_client_create(uint8_t flags,
   return status;
 }
 
-/** @} */
-
-/** @addtogroup NETWORK11
-* @{
-*/
 /*==============================================*/
 /**
  * @brief       Send mail to the recipient from the SMTP client.
@@ -262,7 +255,7 @@ int32_t rsi_smtp_client_create(uint8_t flags,
  * @note        Refer to \ref error-codes for the description of above error codes.
  *   
  */
-
+///@private
 int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
                                         uint8_t priority,
                                         uint8_t *mail_subject,
@@ -377,11 +370,6 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
   return status;
 }
 
-/** @} */
-
-/** @addtogroup NETWORK11
-* @{
-*/
 /*==============================================*/
 /**
  * @brief       Delete SMTP client.
@@ -395,7 +383,7 @@ int32_t rsi_smtp_client_mail_send_async(uint8_t *mail_recipient_address,
  * @note        **This API is not supported in current release.**
  * @note        If status in callback is non-zero, then sub-command type will be in 6th byte of the descriptor.
  */
-
+///@private
 int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)(uint16_t status,
                                                                                  const uint8_t cmd_type))
 {
@@ -480,4 +468,3 @@ int32_t rsi_smtp_client_delete_async(void (*smtp_client_delete_response_handler)
   SL_PRINTF(SL_SMTP_CLIENT_DELETE_ASYNC_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
-/** @} */

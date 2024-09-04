@@ -27,6 +27,17 @@ rsi_socket_info_t *rsi_socket_pool;
 rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 extern rsi_socket_select_info_t *rsi_socket_select_info;
 
+#ifdef RSI_WITH_OS
+
+#define RSI_NETWORK_TASK_PRIORITY 1
+
+//  network task stack size
+#define RSI_NETWORK_TASK_STACK_SIZE (512 * 2)
+
+rsi_task_handle_t network_task_handle = NULL;
+void rsi_network_driver_task(void);
+#endif
+
 /*==============================================*/
 /**
  * @brief       Checking input parameter is power of two or not. This is a non-blocking API.
@@ -154,17 +165,20 @@ int32_t rsi_socket_async(int32_t protocolFamily,
  *                               SOCK_STREAM (1): Select  TCP\n
  *                               TCP SOCK_DGRM (2): Select UDP
  * @param[in]   protocol       - 0: Non SSL sockets \n
- *                               1: SSL sockets \n
+ *                               PROTOCOL_DFLT_VERSION: To open an SSL/TLS connection over TCP socket. By default supports versions of both TLS 1.0 and TLS 1.2. \n
  *                               BIT(5) - Must be enabled to select the certificate index \n
  *                               0<<12 for index 0, \n
  *                               1<<12 for index 1 \n
+ *                               PROTOCOL_TLS_1_0 - To open an SSL/TLS connection over TCP socket with TLS version 1.0 \n
+ *                               PROTOCOL_TLS_1_1 - To open an SSL/TLS connection over TCP socket with TLS version 1.1 \n 
+ *                               PROTOCOL_TLS_1_2 - To open an SSL/TLS connection over TCP socket with TLS version 1.2 \n
  *                               Note: Certificates must be loaded in to RAM to select the certificate index feature.
  * @return      SOCK_ID              - Socket ID of the created socket \n
  * @return      Negative value - Failure (**Possible Error Codes** - 0xfffffffd) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note A maximum of 10 sockets can be opened. Range of socket handles are between 1 to 10.
  * @note If 3 TLS sockets are opened then the remaining 7 could be any combinations of UDP and TCP sockets.
- * @note Module supports a maximum of 3 TLS sockets. These can be a combination of client and server sockets. If the HTTPS server is enabled then the user can open only 2 more TLS socket.
+ * @note Module supports a maximum of 3 TLS sockets. These can be a combination of client and server sockets. If the HTTPS client is enabled then the user can open only 2 more TLS socket.
  * 
  */
 
@@ -921,6 +935,29 @@ int32_t rsi_send_large_data_sync(int32_t sockID, const int8_t *msg, int32_t msgL
   return offset;
 }
 
+#ifdef RSI_WITH_OS
+/*================================================*/
+/**
+ * @brief      network task to send large data to send_async API
+ * @param[in]  Void
+ * @param[in]  Void
+ * @return     Void
+ *
+ */
+
+/// @private
+void rsi_network_driver_task(void)
+{
+  int32_t sockID = 0;
+  while (1) {
+    if (rsi_wlan_cb_non_rom->socket_bitmap) {
+      sockID = rsi_find_socket_data_pending(rsi_wlan_cb_non_rom->socket_bitmap);
+      rsi_chunk_data_tx_done_cb(sockID, 0);
+      rsi_task_destroy(network_task_handle);
+    }
+  }
+}
+#endif
 /*==============================================*/
 /**
  * @brief      Send one chunk of data at a time
@@ -939,6 +976,7 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
   uint16_t total_data_sent, chunk_size = 0;
   rsi_socket_info_non_rom_t *rsi_sock_info_non_rom_p = &rsi_socket_pool_non_rom[sockID];
   int32_t maximum_length                             = 0;
+  int32_t complete_notify                            = 0;
 
   // Find maximum limit based on the protocol
   if ((rsi_socket_pool[sockID].sock_type & 0xF) == SOCK_DGRAM) {
@@ -956,55 +994,65 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
   } else {
     maximum_length = rsi_socket_pool_non_rom[sockID].mss;
   }
-
-  if (rsi_sock_info_non_rom_p->rem_len) {
+  do {
+    if (rsi_sock_info_non_rom_p->rem_len) {
+#ifndef RSI_WITH_OS
 #ifndef WISEMCU
-    // Mask the socket event
-    rsi_mask_event(RSI_SOCKET_EVENT);
+      // Mask the socket event
+      rsi_mask_event(RSI_SOCKET_EVENT);
 #endif
-    rsi_sock_info_non_rom_p->more_data = 1;
-    chunk_size                         = MIN(maximum_length, rsi_sock_info_non_rom_p->rem_len);
-    // Send next chunk of data and return the total data sent in successful case
-    status = rsi_send_async(sockID,
-                            rsi_sock_info_non_rom_p->buffer + rsi_sock_info_non_rom_p->offset,
-                            chunk_size,
-                            rsi_sock_info_non_rom_p->flags,
-                            rsi_chunk_data_tx_done_cb);
-    if (status < 0) {
-      status = rsi_wlan_socket_get_status(sockID);
+#endif
+      rsi_sock_info_non_rom_p->more_data = 1;
+      chunk_size                         = MIN(maximum_length, rsi_sock_info_non_rom_p->rem_len);
+      // Send next chunk of data and return the total data sent in successful case
+      status = rsi_send_async(sockID,
+                              rsi_sock_info_non_rom_p->buffer + rsi_sock_info_non_rom_p->offset,
+                              chunk_size,
+                              rsi_sock_info_non_rom_p->flags,
+                              rsi_wlan_cb_non_rom->nwk_callbacks.data_transfer_complete_handler);
+      if (status < 0) {
+        status = rsi_wlan_socket_get_status(sockID);
 #ifdef RSI_WITH_OS
-      status = rsi_get_error(sockID);
-      rsi_set_os_errno(status);
+        status = rsi_get_error(sockID);
+        rsi_set_os_errno(status);
 #endif
-      total_data_sent = rsi_sock_info_non_rom_p->offset;
-      if (status != RSI_TX_BUFFER_FULL) {
-        if (rsi_sock_info_non_rom_p->rsi_sock_data_tx_done_cb != NULL) {
-          rsi_sock_info_non_rom_p->rsi_sock_data_tx_done_cb(sockID, status, total_data_sent);
+        total_data_sent = rsi_sock_info_non_rom_p->offset;
+        if (status != RSI_TX_BUFFER_FULL) {
+          if (rsi_wlan_cb_non_rom->nwk_callbacks.rsi_send_large_data_async_complete_callback != NULL) {
+            rsi_wlan_cb_non_rom->nwk_callbacks.rsi_send_large_data_async_complete_callback(sockID,
+                                                                                           status,
+                                                                                           total_data_sent);
+            complete_notify = 1;
+          }
+          rsi_reset_per_socket_info(sockID);
         }
-        rsi_reset_per_socket_info(sockID);
+      } else {
+        rsi_sock_info_non_rom_p->rem_len -= status;
+        rsi_sock_info_non_rom_p->offset += status;
       }
-    } else {
-      rsi_sock_info_non_rom_p->rem_len -= status;
-      rsi_sock_info_non_rom_p->offset += status;
-    }
+#ifndef RSI_WITH_OS
 #ifndef WISEMCU
-    // Unmask the socket event
-    rsi_unmask_event(RSI_SOCKET_EVENT);
+      // Unmask the socket event
+      rsi_unmask_event(RSI_SOCKET_EVENT);
 #endif
-  } else // In case total data is sent
-  {
-    total_data_sent = rsi_sock_info_non_rom_p->offset;
-    if (rsi_sock_info_non_rom_p->rsi_sock_data_tx_done_cb != NULL) {
-      rsi_sock_info_non_rom_p->rsi_sock_data_tx_done_cb(sockID, RSI_SUCCESS, total_data_sent);
-    }
-    rsi_reset_per_socket_info(sockID);
-    if (rsi_wlan_cb_non_rom->socket_bitmap == 0) {
+#endif
+    } else { // In case total data is sent
+      total_data_sent = rsi_sock_info_non_rom_p->offset;
+      if (rsi_wlan_cb_non_rom->nwk_callbacks.rsi_send_large_data_async_complete_callback != NULL) {
+        rsi_wlan_cb_non_rom->nwk_callbacks.rsi_send_large_data_async_complete_callback(sockID, status, total_data_sent);
+        complete_notify = 1;
+      }
+      rsi_reset_per_socket_info(sockID);
+      if (rsi_wlan_cb_non_rom->socket_bitmap == 0) {
+#ifndef RSI_WITH_OS
 #ifndef WISEMCU
-      // Clear the socket event
-      rsi_clear_event(RSI_SOCKET_EVENT);
+        // Clear the socket event
+        rsi_clear_event(RSI_SOCKET_EVENT);
 #endif
+#endif
+      }
     }
-  }
+  } while (!complete_notify);
 }
 
 /*==============================================*/
@@ -1021,6 +1069,8 @@ void rsi_chunk_data_tx_done_cb(int32_t sockID, const uint16_t length)
  * 
  * @return     0                        - Success \n
  * @return     Non-Zero Value           - Failure
+ * 
+ * @note Need to register application callback using The rsi_wlan_nwk_register_send_large_data_event_cb() API to get the complete notify.
  *
  */
 
@@ -1028,9 +1078,7 @@ int32_t rsi_send_large_data_async(int32_t sockID,
                                   const int8_t *msg,
                                   int32_t msgLength,
                                   int32_t flags,
-                                  void (*rsi_sock_data_tx_done_cb)(int32_t sockID,
-                                                                   int16_t status,
-                                                                   uint16_t total_data_sent))
+                                  void (*rsi_sock_data_tx_done_cb)(int32_t sockID, uint16_t total_data_sent))
 {
   SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_ENTRY, NETWORK, LOG_INFO);
   int32_t status                                     = 0;
@@ -1073,13 +1121,12 @@ int32_t rsi_send_large_data_async(int32_t sockID,
     maximum_length = rsi_socket_pool_non_rom[sockID].mss;
   }
 
-  chunk_size                                        = MIN(maximum_length, msgLength);
-  rsi_sock_info_non_rom_p->rsi_sock_data_tx_done_cb = rsi_sock_data_tx_done_cb;
-  rsi_sock_info_non_rom_p->buffer                   = (int8_t *)msg;
-  rsi_sock_info_non_rom_p->flags                    = flags;
+  chunk_size                      = MIN(maximum_length, msgLength);
+  rsi_sock_info_non_rom_p->buffer = (int8_t *)msg;
+  rsi_sock_info_non_rom_p->flags  = flags;
   rsi_wlan_cb_non_rom->socket_bitmap |= BIT(sockID);
   // Return total num of bytes sent in successful case
-  status = rsi_send_async(sockID, rsi_sock_info_non_rom_p->buffer, chunk_size, flags, rsi_chunk_data_tx_done_cb);
+  status = rsi_send_async(sockID, rsi_sock_info_non_rom_p->buffer, chunk_size, flags, rsi_sock_data_tx_done_cb);
   // If chunk of data is not sent, no need to update the values
   if (status < 0) {
     status = rsi_wlan_socket_get_status(sockID);
@@ -1094,9 +1141,19 @@ int32_t rsi_send_large_data_async(int32_t sockID,
   {
     rsi_sock_info_non_rom_p->rem_len = msgLength - status;
     rsi_sock_info_non_rom_p->offset  = status;
+#ifndef RSI_WITH_OS
     // Set the socket event
     rsi_set_event(RSI_SOCKET_EVENT);
   }
+#else
+  }
+  rsi_task_create((rsi_task_function_t)rsi_network_driver_task,
+                  (uint8_t *)"network",
+                  RSI_NETWORK_TASK_STACK_SIZE,
+                  NULL,
+                  RSI_NETWORK_TASK_PRIORITY,
+                  &network_task_handle);
+#endif
   SL_PRINTF(SL_SEND_LARGE_DATA_ASYNC_EXIT_2, NETWORK, LOG_INFO);
   return RSI_SUCCESS;
 }
@@ -1351,13 +1408,17 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  * @param[in]    sockID       - Socket descriptor ID
  * @param[in]    level        - Set the socket option, take the socket level
  * @param[in]    option_name  - Provide the name of the ID. \n
- *                              1.SO_MAX_RETRY - Select TCP max retry count \n
- *                              2.SO_SOCK_VAP_ID - Select the VAP id \n
- *                              3.SO_TCP_KEEP_ALIVE - Configure the TCP keep alive initial time \n
- *                              4.SO_RCVBUF - Configure the application buffer for receiving server certificate \n
- *                              5.SO_SSL_ENABLE-Configure SSL socket \n
- *                              6.SO_HIGH_PERFORMANCE_SOCKET-Configure high performance socket \n
- *                              7.IP_TOS - Configure the type of service value [0-7]
+ *                              SO_MAX_RETRY - Select TCP max retry count \n
+ *                              SO_SOCK_VAP_ID - Select the VAP ID \n
+ *                                VAP ID to differentiate between station and AP in concurrent mode. 0 – for station, 1 – for Access point
+ *                              SO_TCP_KEEP_ALIVE - Configure the TCP keep alive initial time in seconds \n
+ *                              SO_RCVBUF - Configure the application buffer for receiving server certificate \n
+ *                              SO_SSL_ENABLE- To open an SSL/TLS connection over TCP socket. By default supports versions of both TLS 1.0 and TLS 1.2 \n
+ *                              SO_SSL_V_1_0_ENABLE- To open an SSL/TLS connection over TCP socket with TLS version 1.0 \n 
+ *                              SO_SSL_V_1_1_ENABLE- To open an SSL/TLS connection over TCP socket with TLS version 1.1 \n
+ *                              SO_SSL_V_1_2_ENABLE- To open an SSL/TLS connection over TCP socket with TLS version 1.2 \n
+ *                              SO_HIGH_PERFORMANCE_SOCKET-Configure high performance socket \n
+ *                              IP_TOS - Configure the type of service value [0-7]
  *                                | TOS | Value	Description                                                         |
  *                                |-----|---------------------------------------------------------------------------|
  *                                |  0	| Best Effort                                                               |   
@@ -1368,8 +1429,8 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  *                                |  5	| Critical - mainly used for voice RTP (Real-time Tranlocal_port Protocol)  |
  *                                |  6	| Internet                                                                  |       
  *                                |  7	| Network                                                                   |
- *                             8.SO_TLS_SNI for configuring the SNI feature \n
-*                              9.SO_RCVTIMEO: Configure the socket-receive timeout using this option. If no data is received within this time, the sapi driver will unblock this API.
+ *                             SO_TLS_SNI for configuring the SNI feature \n
+*                              SO_RCVTIMEO: Configure the socket-receive timeout using this option. If no data is received within this time, the sapi driver will unblock this API.
  *
  * @param[in]    option_value - Value of the parameter
  * @param[in]    option_len   - Length of the parameter
@@ -4367,6 +4428,9 @@ void rsi_post_waiting_socket_semaphore(int32_t sockID)
 #endif
 /** @} */
 
+/** @addtogroup NETWORK9
+* @{
+*/
 /*==============================================*/
 /**
  * @brief       Sets the SNI Hostname for internal socket
@@ -4438,18 +4502,34 @@ int32_t rsi_set_sni_emb_socket(uint8_t app_protocol, uint8_t *hostname, uint16_t
   return status;
 }
 
+/** @} */
+
+/** @addtogroup NETWORK5
+* @{
+*/
 /*==============================================*/
 /**
  * @brief        Set the network application protocols configuration. This is a non-blocking API.
  * @pre \ref rsi_network_app_protocol_config() API needs to be called after \ref only.
- * @param[in]    protocol       - Protocol 
- * @param[in]    config_type    - Configuration type of the protocol
- * @param[in]    config         - Pointer to the configuration params
+ * @param[in]    protocol       -  The following table lists in below 
+ *                             | Protocol   | Value       |
+ *                             |------------|-------------|
+ *                             |  RSI_HTTP  | 0           |
+ * @param[in]    config_type    - The following table lists in below
+ *                             | config_type               | Value           |
+ *                             |---------------------------|-----------------|
+ *                             | RSI_CIPHER_SELECTION      | 0               |
+ * @param[in]    config         - The following table lists in below
+ *                             | Protocol   |   config_type         |     config                                                                    |
+ *                             |------------|-----------------------|-------------------------------------------------------------------------------|
+ *                             |  RSI_HTTP  | RSI_CIPHER_SELECTION  | Configure the Cipher values as explained on the \ref ssl-ciphers-selection page. |                   
  * @param[in]    config_length  - Length of the config parameter
  * @return       0              - Success  \n
  * @return       Non-Zero Value - Failure (**Possible Error Codes** - 0xffffff82) \n
  * @note         **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
- *
+ * @note Examples : rsi_network_app_protocol_config(RSI_HTTP, RSI_CIPHER_SELECTION, &cipher_value, 4); \n
+ *       cipher_value : (SSL_NEW_CIPHERS | BIT_DHE_RSA_GCM | BIT_ECDHE_RSA_GCM )
+ * 
  */
 
 uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
@@ -4523,3 +4603,4 @@ uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
   SL_PRINTF(SL_NWK_APP_PROTO_CONFIG_EXIT, NETWORK, LOG_INFO, "status: %4x", status);
   return status;
 }
+/** @} */

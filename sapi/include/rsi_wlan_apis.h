@@ -625,7 +625,7 @@
 #define RSI_CHANNEL_SCAN_TIME_MSEC BIT(1)
 
 //Used for WLAN keep alive timeout in sec
-#define RSI_WLAN_KEEP_ALIBE_TIMEOUT_SEC BIT(2)
+#define RSI_WLAN_KEEP_ALIVE_TIMEOUT_SEC BIT(2)
 
 /*=========================================================================*/
 

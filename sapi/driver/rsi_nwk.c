@@ -184,6 +184,34 @@ int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
 }
 /*====================================================*/
 /**
+ * @fn          int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(uint32_t sock_id,
+                                                                         uint16_t status,
+                                                                         uint16_t length))
+ * @brief       Register the event callbacks. This is non blocking API.
+ * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
+ * @param[out]  socket_id            - socket id for active connection. 
+ * @param[out]  status               - Response status.
+ * @param[out]  length               - Length of the response buffer.
+ * @return      0              - Success \n
+ * @return      Positive Value - Failure \n
+ * ## prototypes of the callback functions ##
+ * Prototype                            | Description         |   Parameters
+ * -------------------------------------|:--------------------|:-------------------------------------------------------------
+ * void (*rsi_send_large_data_async_complete_callback)(uint32_t sock_id, uint16_t status, uint16_t length); | This callback is used to Register rsi_send_large_data complete notify| sock_id => sock_id of the connection\n status => status of the response\n length => length of the payload.
+ */
+
+int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(uint32_t sock_id,
+                                                                                    int16_t status,
+                                                                                    uint16_t length))
+{
+
+  // Register json update handler
+  rsi_wlan_cb_non_rom->nwk_callbacks.rsi_send_large_data_async_complete_callback = callback_handler_ptr;
+
+  return RSI_SUCCESS;
+}
+/*====================================================*/
+/**
  * @fn          int16_t rsi_wlan_nwk_register_webpage_req_cb(uint32_t callback_id,
                                              void (*callback_handler_ptr)(uint8_t type,
                                                                           uint8_t *url_name,
