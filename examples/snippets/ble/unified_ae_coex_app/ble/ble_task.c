@@ -521,7 +521,7 @@ uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_add
   } else
     return peripheral_device_found;
 
-  //! check if remote device already connected or advertise report received- TODO .  Can check efficiently?
+  //! check if remote device already connected or advertise report received.
   if (peripheral_device_found == PERIPHERAL_FOUND) {
     for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
       if (rsi_ble_conn_info[i].rsi_remote_name != NULL) {

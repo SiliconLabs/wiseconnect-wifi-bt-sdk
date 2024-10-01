@@ -661,7 +661,7 @@ int rpmsg_lite_send(struct rpmsg_lite_instance *rpmsg_lite_dev,
         return RL_ERR_PARAM;
     }
 
-    // FIXME : may be just copy the data size equal to buffer length and Tx it.
+    // May be just copy the data size equal to buffer length and Tx it.
     if (size > (unsigned long)RL_BUFFER_PAYLOAD_SIZE)
     {
         return RL_ERR_BUFF_SIZE;
@@ -991,7 +991,7 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
         return RL_NULL;
     }
 
-    // FIXME - a better way to handle this , tx for master is rx for remote and vice versa.
+    //A better way to handle this , tx for master is rx for remote and vice versa.
     rpmsg_lite_dev->tvq = vqs[1];
     rpmsg_lite_dev->rvq = vqs[0];
 
@@ -1166,7 +1166,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
         return RL_NULL;
     }
 
-    // FIXME - a better way to handle this , tx for master is rx for remote and vice versa.
+    //A better way to handle this , tx for master is rx for remote and vice versa.
     rpmsg_lite_dev->tvq = vqs[0];
     rpmsg_lite_dev->rvq = vqs[1];
 

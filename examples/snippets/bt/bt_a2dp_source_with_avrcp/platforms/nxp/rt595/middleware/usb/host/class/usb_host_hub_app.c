@@ -273,7 +273,7 @@ static void USB_HostHubProcess(usb_host_hub_instance_t *hubInstance)
                 hubInstance->hubStatus = kHubRunInvalid;
                 break;
             }
-            /* TODO: port instance status -> can be removed.  app_status */
+            /* Port instance status -> can be removed.  app_status */
 
             hubInstance->hubStatus = kHubRunSetPortPower; /* update as next state */
             hubInstance->portIndex = 0;

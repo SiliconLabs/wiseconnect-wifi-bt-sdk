@@ -366,7 +366,9 @@ For Azure
 ```c
 status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, http_baltimore_ca, (sizeof(http_baltimore_ca) - 1));
 ```
-
+**Note:**
+> AWS has notified that there will be changes in their root CA chaining. More details can be found in the reference links.(https://aws.amazon.com/blogs/security/acm-will-no-longer-cross-sign-certificates-with-starfield-class-2-starting-august-2024/)
+> We are providing both root CAs (Starfield class-2 and Starfield G2) in aws_starfield_ca.pem.h, the new files to the WiSeConnect directory `<SDK>/resources/certificates/aws_starfield_ca.pem.h`
 ## 5. Testing the Application
 
 User has to follow the below steps for the successful execution of the application. 

@@ -19,7 +19,7 @@
 #define FSL_COMPONENT_ID "platform.drivers.flexcomm_i2s"
 #endif
 
-/* TODO - absent in device header files, should be there */
+/* Absent in device header files, should be there */
 #define I2S_FIFOCFG_TXI2SE0_MASK (0x4U)
 #define I2S_FIFOCFG_TXI2SE0_SHIFT (2U)
 #define I2S_FIFOCFG_TXI2SE0(x) (((uint32_t)(((uint32_t)(x)) << I2S_FIFOCFG_TXI2SE0_SHIFT)) & I2S_FIFOCFG_TXI2SE0_MASK)
@@ -220,7 +220,7 @@ static void I2S_Config(I2S_Type *base, const i2s_config_t *config)
 
 void I2S_Deinit(I2S_Type *base)
 {
-    /* TODO gate FLEXCOMM clock via FLEXCOMM driver */
+   /* Need to add gate FLEXCOMM clock via FLEXCOMM driver */ 
 }
 
 static void I2S_TxEnable(I2S_Type *base, bool enable)

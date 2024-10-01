@@ -61,7 +61,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-//! TODO : Move the ISR handler to the demo
+//! Move the ISR handler to the demo
 #if (BT_A2DP_SOURCE_WIFI_HTTP_S_RX_DYN_COEX || BLE_MULTI_SLAVE_MASTER || COEX_MAX_APP || COEX_TEST_FRAMEWORK || BT_HFP_HF_ROLE)
 #if COEX_MAX_APP
 #include <rsi_user_input_DEMO_57.h>

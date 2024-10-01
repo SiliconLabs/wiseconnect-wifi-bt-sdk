@@ -119,11 +119,11 @@ int32_t rsi_config_timeout(uint32_t timeout_type, uint16_t timeout_value)
  * @fn         int32_t send_timeout(uint32_t timeout_bitmap,uint16_t timeout_value)
  * @brief      This API is used to set timeouts. \n This is a blocking API.
  * @pre        \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  timeout_type        - It is used to identify which timeout to be set.\n 
- *																		 if timeout_type is
- *																		 1 - set for association and authentication timeout request in ms.
- *																		 2 - set for the each channel active scan time in ms
- *																		 3 - is set for  the WLAN keep alive time in seconds
+ * @param[in]  timeout_bitmap        - It is used to identify which timeout to be set.\n
+ *																		 if timeout_bitmap is
+ *																		 RSI_ASSOCIATION_AND_AUTHENTICATION_TIMEOUT_MSEC - set for association and authentication timeout request in ms.
+ *																		 RSI_CHANNEL_SCAN_TIME_MSEC - set for the each channel active scan time in ms
+ *																		 RSI_WLAN_KEEP_ALIVE_TIMEOUT_SEC - is set for  the WLAN keep alive time in seconds
  * @param[in]  timeout_value         - timeout value to be set.
  * @note			 Packet is sent as Wlan Keep alive before \ref rsi_config_ipaddress() \n
  *						 After \ref rsi_config_ipaddress() it is sent as gratuitous ARP.
@@ -5078,7 +5078,8 @@ int32_t rsi_wlan_ap_start(int8_t *ssid,
  * 		          RSI_UAPSD (2)          |   This psp_type is used to enable WMM power save.
  * @param[in]   listen_interval        -   Used to configure sleep duration in power save and should be less than the listen interval configured by RSI_LISTEN_INTERVAL Macro in join command parameters in rsi_wlan_config.h file. \n 
  *                                         Valid only if BIT (7) in join_feature_bit_map is set. This value is given in time units (1024 microsecond). \n
- * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. 
+ * @note        **Precondition** - \ref rsi_wireless_init() and rsi_wlan_radio_init() (is mandatory for power mode RSI_SLEEP_MODE_8 and RSI_SLEEP_MODE_10) APIs needs to be called in the same order as mentioned before this API. \n
+ * @note        RSI_SLEEP_MODE_2 can be used after calling the rsi_radio_init() or rsi_wlan_connect() API. If you use it before rsi_wlan_connect(), be sure to disable power save mode by switching to RSI_ACTIVE to prevent interop protocol issues. However, it's recommended to enable RSI_SLEEP_MODE_2 after calling rsi_wlan_connect() to avoid potential problems. \n
  * @note    		psp_type is only valid in psp_mode 1 and 2. \n
  * @note			  psp_type: RSI_UAPSD is applicable only, if WMM_PS is enabled in rsi_wlan_config.h file. \n
  * @note			  In RSI_MAX_PSP mode, Few access points will not aggregate the packets, when power save is enabled from STA. This may cause the drop in throughputs.
@@ -5137,7 +5138,8 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *		         To enable this mode, follow this procedure: \n
  *             Add ENABLE_ENHANCED_MAX_PSP (BIT[26]) in RSI_CONFIG_FEATURE_BITMAP, \n
  *             Set psp_type to RSI_FAST_PSP (1) \n
- * @note	     **Precondition** - \ref rsi_wireless_init() API needs to be called before this API. 
+ * @note	     **Precondition** - \ref rsi_wireless_init() and rsi_wlan_radio_init() (is mandatory for power mode RSI_SLEEP_MODE_8 and RSI_SLEEP_MODE_10) APIs needs to be called in the same order as mentioned before this API. \n
+ * @note	     RSI_SLEEP_MODE_2 can be used after calling the rsi_radio_init() or rsi_wlan_connect() API. If you use it before rsi_wlan_connect(), be sure to disable power save mode by switching to RSI_ACTIVE to prevent interop protocol issues. However, it's recommended to enable RSI_SLEEP_MODE_2 after calling rsi_wlan_connect() to avoid potential problems. \n
  * @note	     Configure the monitor interval using the RSI_MONITOR_INTERVAL macro in rsi_wlan_config.h file. (default value is 50 ms) \n
  * @note	     psp_type is only valid in psp_mode 1 and 2. \n
  * @note	     psp_type - UAPSD is applicable only if WMM_PS is enabled in rsi_wlan_config.h file. \n
@@ -6371,13 +6373,21 @@ int32_t rsi_wlan_ping_async(uint8_t flags,
 
 /*==============================================*/
 /**
+ * @fn         void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(uint16_t status, uint8_t state))
  * @brief      Register auto-configuration response handler.. This is a non-blocking API.
- * @param[in]  rsi_auto_config_rsp_handler - Pointer to rsi_auto_config_rsp_handler
+ * @param[in]  rsi_auto_config_rsp_handler - Pointer to rsi_auto_config_rsp_handler.
  * @param[out] status			                 - Response status, 0 if success else failure.
- * @param[out] state			                 - BIT(1) RSI_AUTO_CONFIG_FAILED. \n 
- *                                           BIT(2) RSI_AUTO_CONFIG_GOING_ON. \n
- *                                           BIT(3) RSI_AUTO_CONFIG_DONE 
+ * @param[out] state			                 - BIT(1) RSI_AUTO_CONFIG_FAILED.\n
+ *                                               - BIT(2) RSI_AUTO_CONFIG_GOING_ON.\n
+ *                                               - BIT(3) RSI_AUTO_CONFIG_DONE.
+ * @note       *RSI_AUTO_CONFIG_FAILED   - Auto_configuration failed.
+ * @note       *RSI_AUTO_CONFIG_GOING_ON - Auto_configuration in progress.
+ * @note       *RSI_AUTO_CONFIG_DONE     - Auto_configuration succeed.
  * @return     Void
+ * @note       **rsi_auto_config_rsp_handler must be registered using the rsi_register_auto_config_rsp_handler API.
+ * @note       **Precondition** - \ref rsi_driver_init() API needs to be called before this rsi_register_auto_config_rsp_handler API.
+ * @note       **The callback indicates the state of Auto configuration process asynchronously.
+ * @note       **User can proceed with the next commands only after either the RSI_AUTO_CONFIG_FAILED or RSI_AUTO_CONFIG_DONE status is recevied. Until then, commands are not accepted by the SAPI driver.
  */
 
 void rsi_register_auto_config_rsp_handler(void (*rsi_auto_config_rsp_handler)(uint16_t status, uint8_t state))

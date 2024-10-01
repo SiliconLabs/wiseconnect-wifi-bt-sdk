@@ -3707,7 +3707,7 @@ void USB_HostEhciTransactionDone(usb_host_ehci_instance_t *ehciInstance)
                             /* callback function is different from the current condition */
                             transfer->callbackFn(transfer->callbackParam, transfer,
                                                  kStatus_USB_Success); /* transfer callback success */
-                            /* TODO: iso callback error */
+                                                                       /* Need to update iso callback error */
                         }
                         else
                         {
@@ -3732,7 +3732,7 @@ void USB_HostEhciTransactionDone(usb_host_ehci_instance_t *ehciInstance)
                             /* callback function is different from the current condition */
                             transfer->callbackFn(transfer->callbackParam, transfer,
                                                  kStatus_USB_Success); /* transfer callback success */
-                            /* TODO: iso callback error */
+                                                                       /*  Need to update iso callback error */
                         }
                         else
                         {

@@ -263,7 +263,7 @@ typedef enum _pca9420_on_glt_long
     kPCA9420_OnGltLong16s = 0x03U, /* ON pin long glitch timer set to 16 sec. */
 } pca9420_on_glt_long_t;
 
-/* TODO: charger function */
+/* Add charger function */
 
 /*! @brief PCA9420 Regulator Status definition. */
 typedef enum _pca9420_reg_status

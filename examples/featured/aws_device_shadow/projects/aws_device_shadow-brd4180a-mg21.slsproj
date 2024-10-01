@@ -147,7 +147,6 @@
    <macroDefinition name="RSI_DEBUG_PRINTS" />
    <macroDefinition name="RSI_WLAN_ENABLE" />
    <macroDefinition name="RSI_SPI_INTERFACE" />
-   <macroDefinition name="RSI_SPI_HIGH_SPEED_ENABLE" />
   
    <macroDefinition name="RSI_CRYPTO_ENABLE" />
   

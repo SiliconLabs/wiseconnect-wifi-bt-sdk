@@ -193,7 +193,7 @@ static inline void xa_hw_renderer_pause(XARenderer *d)
 {
     TRACE(INIT, _b("xa_hw_renderer_pause"));
 
-    /* TODO: implement */
+    /* Implement */   
 }
 
 /* ...resume renderer operation */
@@ -201,7 +201,7 @@ static inline void xa_hw_renderer_resume(XARenderer *d)
 {
     TRACE(INIT, _b("xa_hw_renderer_resume"));
 
-    /* TODO: implement */
+     /* Implement */
 }
 
 /* DMA transfer callback. */
@@ -217,8 +217,8 @@ static void TxRenderCallback(struct _dma_handle *handle, void *userData, bool tr
         {
             TRACE(UNDERRUN, _b("xa_renderer DMA underrun"));
 
-            /* ...reset rendered value to match submitted.
-             * TODO: stop DMA transfers here to avoid sending stale data to I2S. */
+           /* ...reset rendered value to match submitted.
+              stop DMA transfers here to avoid sending stale data to I2S. */
             d->rendered = d->submitted;
 
             d->state ^= XA_RENDERER_FLAG_RUNNING | XA_RENDERER_FLAG_IDLE;

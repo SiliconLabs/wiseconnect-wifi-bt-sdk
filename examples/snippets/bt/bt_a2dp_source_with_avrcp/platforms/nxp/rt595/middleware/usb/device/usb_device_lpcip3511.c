@@ -1786,7 +1786,7 @@ usb_status_t USB_DeviceLpc3511IpControl(usb_device_controller_handle controllerH
 
 #if defined(USB_DEVICE_CONFIG_REMOTE_WAKEUP) && (USB_DEVICE_CONFIG_REMOTE_WAKEUP > 0U)
         case kUSB_DeviceControlResume:
-            /* todo: turn on USB clock and enable the USB clock source */
+            /* Turn on USB clock and enable the USB clock source */
             lpc3511IpState->registerBase->DEVCMDSTAT |= USB_LPC3511IP_DEVCMDSTAT_FORCE_NEEDCLK_MASK;
             lpc3511IpState->registerBase->DEVCMDSTAT &= ~USB_LPC3511IP_DEVCMDSTAT_DSUS_MASK;
             while (lpc3511IpState->registerBase->DEVCMDSTAT & USB_LPC3511IP_DEVCMDSTAT_DSUS_MASK)
@@ -1799,7 +1799,7 @@ usb_status_t USB_DeviceLpc3511IpControl(usb_device_controller_handle controllerH
             break;
 #if (defined(USB_DEVICE_CONFIG_LPM_L1) && (USB_DEVICE_CONFIG_LPM_L1 > 0U))
         case kUSB_DeviceControlSleepResume:
-            /* todo: turn on USB clock and enable the USB clock source */
+            /* Turn on USB clock and enable the USB clock source */
             lpc3511IpState->registerBase->DEVCMDSTAT |= USB_LPC3511IP_DEVCMDSTAT_FORCE_NEEDCLK_MASK;
             lpc3511IpState->registerBase->DEVCMDSTAT &= ~USB_LPC3511IP_DEVCMDSTAT_LPM_SUS_MASK;
             while (lpc3511IpState->registerBase->DEVCMDSTAT & USB_LPC3511IP_DEVCMDSTAT_LPM_SUS_MASK)
@@ -1997,7 +1997,7 @@ void USB_DeviceLpcIp3511IsrFunction(void *deviceHandle)
                     lpc3511IpState->endpointState[1].stateUnion.stateBitField.stalled = 0U;
                 }
 
-                /* todo: setup token interrupt */
+                    /* Setup token interrupt */
                 USB_DeviceLpc3511IpInterruptToken(lpc3511IpState, 0U, 1, usbErrorCode);
             }
         }

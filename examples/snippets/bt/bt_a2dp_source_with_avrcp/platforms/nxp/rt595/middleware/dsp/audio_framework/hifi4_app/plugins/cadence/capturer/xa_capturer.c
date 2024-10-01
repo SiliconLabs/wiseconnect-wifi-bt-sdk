@@ -416,7 +416,7 @@ static void evk_hw_capturer_init(void* ptr)
  ******************************************************************************/
 static inline void xa_hw_capturer_close(XACapturer *d)
 {
-    /* TODO: implement proper close device. */
+    /* Implement proper close device. */
 }
 
 /* ...submit data (in samples) into internal capturer ring-buffer */
@@ -539,7 +539,7 @@ static inline XA_ERRORCODE xa_hw_capturer_control(XACapturer *d, UWORD32 state)
         XF_CHK_ERR(d->state & XA_CAPTURER_FLAG_RUNNING, XA_CAPTURER_EXEC_NONFATAL_STATE);
 
         /* ...pause capturer operation */
-        /* TODO: implement pause functionality */
+        /* Implement pause functionality */
 
         /* ...mark capturer is paused */
         d->state ^= XA_CAPTURER_FLAG_RUNNING | XA_CAPTURER_FLAG_PAUSED;

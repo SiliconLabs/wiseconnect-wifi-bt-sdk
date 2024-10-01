@@ -664,6 +664,8 @@ int32_t rsi_http_response_status(int32_t *rsp_var)
     //! event loop
 #ifndef RSI_WITH_OS
     rsi_wireless_driver_task();
+#else
+    rsi_delay_ms(10);
 #endif
 
   } while (!(*rsp_var));

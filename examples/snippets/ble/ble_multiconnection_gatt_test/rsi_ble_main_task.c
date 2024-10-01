@@ -17,6 +17,8 @@
 /**
  * @file    rsi_ble_main_task.c
  * @version 0.1
+ * 
+ * 
  * @date    19 Mar 2021
  *
  *
@@ -293,7 +295,7 @@ uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
   } else
     return peripheral_device_found;
 
-  //! check if remote device already connected or advertise report received- TODO .  Can check efficiently?
+  //! check if remote device already connected or advertise report received.
   if (peripheral_device_found == DEV_FOUND) {
     for (i = 0; i < TOTAL_CONNECTIONS; i++) {
       if (!(strcmp((const char *)rsi_ble_conn_info[i].rsi_remote_name, (const char *)remote_dev_name))) {
@@ -2069,7 +2071,7 @@ void rsi_ble_main_app_task()
         status = rsi_ble_stop_scanning();
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\n scanning stop cmd status = %lx\r\n", status);
-          //return status;	//! TODO
+          //return status;
         } else {
           rsi_scan_in_progress = 0;
         }
@@ -2079,7 +2081,7 @@ void rsi_ble_main_app_task()
         status = rsi_ble_start_scanning();
         if (status != RSI_SUCCESS) {
           LOG_PRINT("\r\n scanning start cmd status = %lx\r\n", status);
-          //return status;	//! TODO
+          //return status;
         } else {
           rsi_scan_in_progress = 1;
         }

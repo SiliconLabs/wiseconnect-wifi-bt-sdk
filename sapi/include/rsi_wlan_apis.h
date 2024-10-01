@@ -1519,6 +1519,7 @@ typedef struct rsi_wlan_ext_stats_s {
 #define SME_WEP                      3
 #define SME_WPA_ENTERPRISE           4
 #define SME_WPA2_ENTERPRISE          5
+#define SME_WPA_WPA2_MIXED_MODE      6
 #define SME_WPA3_PERSONAL            7
 #define SME_WPA3_PERSONAL_TRANSITION 8
 

@@ -2635,7 +2635,7 @@ int32_t rsi_bt_app_task()
   rsi_os_task_delay(30000);
 #endif
 #endif
-//! FIXME: Workaround
+//! Added workaround
 //! Wait till WLAN got connected and ip done state.
 #if WLAN_SYNC_REQ
   if (rsi_wlan_running) {
@@ -4099,7 +4099,7 @@ retry:
             no_of_sbc_frames = (rem_mtu_size - PKT_HEADER_AND_CRC - RTP_HEADER) / frame_size;
             bytes_to_read    = no_of_sbc_frames * 512;
             update_modified_mtu_size(rem_mtu_size); //update to encoder task
-            //FIXME: Need to check
+            // Need to check
             rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
 #endif
 #endif
@@ -4120,7 +4120,7 @@ retry:
             no_of_sbc_frames = (rem_mtu_size - PKT_HEADER_AND_CRC - RTP_HEADER) / frame_size;
             bytes_to_read    = no_of_sbc_frames * 512;
             update_modified_mtu_size(rem_mtu_size); //update to encoder task
-            //FIXME: Need to check
+            // Need to check
             rsi_bt_app_set_event(RSI_APP_EVENT_A2DP_MORE_DATA_REQ);
 #endif
 #endif

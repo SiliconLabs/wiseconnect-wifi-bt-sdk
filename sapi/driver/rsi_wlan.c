@@ -2749,7 +2749,7 @@ int32_t rsi_wlan_radio_init(void)
                                   uint8_t filter_bcast_tim_till_next_cmd)
  * @brief       Program the ignore threshold levels of the broadcast packet when station is in power save and is used to achieve low current consumption in standby associated mode. 
  *              This is blocking API
- * @param[in]   beacon_drop_threshold               - LMAC beacon drop threshold(ms): The amount of time that FW waits to receive full beacon.Default value is 5000ms. 
+ * @param[in]   beacon_drop_threshold               - LMAC beacon drop threshold(ms):LMAC beacon drop threshold (ms): This is the time the firmware waits to receive the complete beacon. For optimal power performance, use the default value of 5000 ms.
  * @param[in]   filter_bcast_in_tim                 - If this bit is set, then from the next dtim any broadcast data pending bit in TIM indicated will be ignored valid values: 0 - 1 \n
  *                                                    Validity of this bit is dependent on the  filter_bcast_tim_till_next_cmd.
  * @param[in]   filter_bcast_tim_till_next_cmd      - 0 - filter_bcast_in_tim is valid till disconnect of the STA. \n

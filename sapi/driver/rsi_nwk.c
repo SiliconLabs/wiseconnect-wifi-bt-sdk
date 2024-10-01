@@ -184,8 +184,8 @@ int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
 }
 /*====================================================*/
 /**
- * @fn          int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(uint32_t sock_id,
-                                                                         uint16_t status,
+ * @fn          int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(int32_t sock_id,
+                                                                         int16_t status,
                                                                          uint16_t length))
  * @brief       Register the event callbacks. This is non blocking API.
  * @param[in]   callback_handler_ptr - Callback handler which needs to be registered for a given callback
@@ -197,10 +197,10 @@ int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
  * ## prototypes of the callback functions ##
  * Prototype                            | Description         |   Parameters
  * -------------------------------------|:--------------------|:-------------------------------------------------------------
- * void (*rsi_send_large_data_async_complete_callback)(uint32_t sock_id, uint16_t status, uint16_t length); | This callback is used to Register rsi_send_large_data complete notify| sock_id => sock_id of the connection\n status => status of the response\n length => length of the payload.
+ * void (*rsi_send_large_data_async_complete_callback)(int32_t sock_id, int16_t status, uint16_t length); | This callback is used to Register rsi_send_large_data complete notify| sock_id => sock_id of the connection\n status => status of the response\n length => length of the payload.
  */
 
-int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(uint32_t sock_id,
+int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(int32_t sock_id,
                                                                                     int16_t status,
                                                                                     uint16_t length))
 {

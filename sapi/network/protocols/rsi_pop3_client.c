@@ -19,9 +19,6 @@
 
 #include "rsi_pop3_client.h"
 
-/** @addtogroup NETWORK20
-* @{
-*/
 /*==============================================*/
 /**
  * @brief       Create POP3 client session. This is a non-blocking API.
@@ -44,7 +41,7 @@
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
-
+/// @private
 int32_t rsi_pop3_session_create_async(uint8_t flags,
                                       uint8_t *server_ip_address,
                                       uint16_t server_port_number,
@@ -165,7 +162,7 @@ int32_t rsi_pop3_session_create_async(uint8_t flags,
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
-
+/// @private
 int32_t rsi_pop3_session_delete(void)
 {
 
@@ -240,6 +237,7 @@ int32_t rsi_pop3_session_delete(void)
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
+/// @private
 int32_t rsi_pop3_get_mail_stats(void)
 {
 
@@ -317,7 +315,7 @@ int32_t rsi_pop3_get_mail_stats(void)
  * @note        Refer to \ref error-codes for the description of above error codes.
  *              
  */
-
+/// @private
 int32_t rsi_pop3_get_mail_list(uint16_t mail_index)
 {
 
@@ -408,7 +406,7 @@ int32_t rsi_pop3_get_mail_list(uint16_t mail_index)
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
-
+/// @private
 int32_t rsi_pop3_retrive_mail(uint16_t mail_index)
 {
 
@@ -488,7 +486,7 @@ int32_t rsi_pop3_retrive_mail(uint16_t mail_index)
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Refer to \ref error-codes for the description of above error codes.
  */
-
+/// @private
 int32_t rsi_pop3_mark_mail(uint16_t mail_index)
 {
 
@@ -567,7 +565,7 @@ int32_t rsi_pop3_mark_mail(uint16_t mail_index)
  * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
-
+/// @private
 int32_t rsi_pop3_unmark_mail(void)
 {
 
@@ -643,7 +641,7 @@ int32_t rsi_pop3_unmark_mail(void)
  * @note       **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
-
+/// @private
 int32_t rsi_pop3_get_server_status(void)
 {
 
@@ -707,5 +705,5 @@ int32_t rsi_pop3_get_server_status(void)
   // Return status
   return status;
 }
-/** @} */
+
 #endif

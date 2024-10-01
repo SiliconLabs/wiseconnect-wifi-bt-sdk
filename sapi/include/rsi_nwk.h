@@ -79,7 +79,7 @@ int16_t rsi_wlan_nwk_register_json_event_cb(uint32_t callback_id,
                                             void (*callback_handler_ptr)(uint32_t status,
                                                                          uint8_t *json_object,
                                                                          uint32_t length));
-int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(uint32_t sock_id,
+int16_t rsi_wlan_nwk_register_send_large_data_event_cb(void (*callback_handler_ptr)(int32_t sock_id,
                                                                                     int16_t status,
                                                                                     uint16_t length));
 

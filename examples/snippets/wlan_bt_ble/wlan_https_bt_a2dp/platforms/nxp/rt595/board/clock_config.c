@@ -9,7 +9,7 @@
  * will be overwritten if the respective MCUXpresso Config Tools is used to update this file.
  **********************************************************************************************************************/
 /*
- * How to set up clock using clock driver functions:TODO
+ * How to set up clock using clock driver functions
  *
  * 1. Setup clock sources.
  *
@@ -211,7 +211,7 @@ void BOARD_BootClockRUN(void)
     CLOCK_EnableSysOscClk(true, BOARD_SYSOSC_SETTLING_US); /* Enable system OSC */
     CLOCK_SetXtalFreq(BOARD_XTAL_SYS_CLK_HZ);              /* Sets external XTAL OSC freq */
 
-    /* FIXME: Set the PLL lock time to 150us. Should be removed after getting trimmed sample. */
+    /* Set the PLL lock time to 150us. Should be removed after getting trimmed sample. */
     CLKCTL0->SYSPLL0LOCKTIMEDIV2   = 150U;
     CLKCTL1->AUDIOPLL0LOCKTIMEDIV2 = 150U;
 

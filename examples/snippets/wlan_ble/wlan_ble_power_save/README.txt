@@ -1,2 +1,2 @@
-Please refer https://docs.silabs.com/rs9116/RS9116W_Guide_for_SAPI_Application_Examples.pdf 
+Please refer https://www.silabs.com/documents/login/application-notes/an1282-rs9116w-guide-for-sapi-application-examples.pdf
 for information about the application execution.

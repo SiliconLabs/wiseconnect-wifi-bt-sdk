@@ -270,7 +270,7 @@ uint8_t rsi_check_dev_list(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
   } else
     return peripheral_device_found;
 
-  //! check if remote device already connected or advertise report received- TODO .  Can check efficiently?
+  //! check if remote device already connected or advertise report received.
   if (peripheral_device_found == PERIPHERAL_FOUND) {
     for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
       if (!(strcmp((const char *)rsi_ble_conn_info[i].rsi_remote_name, (const char *)rem_dev_name))) {
@@ -1982,7 +1982,7 @@ void rsi_ble_main_app_task()
   int32_t event_id = 0;
 
 #if WLAN_SYNC_REQ
-  //! FIXME: Workaround
+  //! Added workaround
   if (rsi_wlan_running) {
     LOG_PRINT("Waiting BLE, Wlan to unblock\n");
     rsi_semaphore_wait(&sync_coex_ble_sem, 0);
@@ -2219,7 +2219,7 @@ void rsi_ble_main_app_task()
           status = rsi_ble_stop_scanning();
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\r\n scanning stop cmd status = %x\r\n", status);
-            //return status;	//! TODO
+            //return status;
           } else {
             CLR_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }
@@ -2231,7 +2231,7 @@ void rsi_ble_main_app_task()
           status = rsi_ble_start_scanning();
           if (status != RSI_SUCCESS) {
             LOG_PRINT("\r\n scanning start cmd status = %x\r\n", status);
-            //return status;	//! TODO
+            //return status;
           } else {
             SET_BIT(rsi_ble_states_bitmap, RSI_SCAN_STATE);
           }

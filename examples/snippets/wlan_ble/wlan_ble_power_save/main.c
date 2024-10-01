@@ -83,6 +83,14 @@ int32_t rsi_wlan_ble_app(void)
   }
   LOG_PRINT("\r\nWireless Initialization Success\r\n");
 
+  //! Send feature frame
+  status = rsi_send_feature_frame();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nSend Feature Frame Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  }
+  LOG_PRINT("\r\nSend Feature Frame Success\r\n");
+
   //! Firmware version Prints
   status = rsi_get_fw_version(fmversion, sizeof(fmversion));
   if (status != RSI_SUCCESS) {

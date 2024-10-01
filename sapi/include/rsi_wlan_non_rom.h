@@ -361,7 +361,7 @@ typedef struct rsi_nwk_callback_s {
   void (*rsi_emb_mqtt_keep_alive_timeout_callback)(uint16_t status, uint8_t *buffer, const uint32_t length);
 
   // rsi_send_large_data_async complete callback handler
-  void (*rsi_send_large_data_async_complete_callback)(uint32_t sock_id, uint16_t status, uint16_t length);
+  void (*rsi_send_large_data_async_complete_callback)(int32_t sock_id, int16_t status, uint16_t length);
 
 } rsi_nwk_callback_t;
 

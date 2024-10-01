@@ -7,7 +7,7 @@
  */
 
 #include "fsl_casper.h"
-#include <math.h> /* ceil TODO check if really need it */
+#include <math.h> 
 
 /*******************************************************************************
  * Definitions
@@ -1954,7 +1954,7 @@ void Jac_scalar_multiplication(
 
     /* Recode the scalar */
     odd = casper_get_word(&scalar[0]) & 1u;
-    sub_n(M, q, scalar, NUM_LIMBS); // todo!!!
+    sub_n(M, q, scalar, NUM_LIMBS); 
     casper_select(scalar, M, scalar, odd, NUM_LIMBS);
 
     /* Use n=384 and w=4 --> compute ciel(384/3) = 128 + 1 digits */
@@ -1997,7 +1997,7 @@ void Jac_scalar_multiplication(
     GET_LUT(X3, Y3, Z3, index);
 
     /* Compute -y and select the positive or negative point. */
-    sub_n(M, p, Y3, NUM_LIMBS); // todo!!!
+    sub_n(M, p, Y3, NUM_LIMBS); 
     casper_select(Y3, Y3, M, sign, NUM_LIMBS);
 
     for (i = CASPER_RECODE_LENGTH - 2; i >= 0; i--)
@@ -2012,14 +2012,13 @@ void Jac_scalar_multiplication(
         GET_LUT(X, Y, Z, index);
 
         /* Compute -y and select the positive or negative point. */
-        sub_n(scalar, p, Y, NUM_LIMBS); // todo!!!
+        sub_n(scalar, p, Y, NUM_LIMBS); 
         casper_select(scalar, Y, scalar, sign, NUM_LIMBS);
 
         Jac_addition(X3, Y3, Z3, X3, Y3, Z3, X, scalar, Z);
     }
 
-    sub_n(M, p, Y3, NUM_LIMBS); // todo!!!
-
+    sub_n(M, p, Y3, NUM_LIMBS); 
     casper_select(Y3, M, Y3, odd, NUM_LIMBS);
 }
 
@@ -2243,7 +2242,7 @@ void double_scalar_multiplication(uint32_t *X3,
     copy(Z3, &lut[GETLUTZ(index)]);
     c += 2;
 
-// todo: create an is_zero function
+// Create an is_zero function
 #if CASPER_ECC_P256
     while ((casper_get_word(&p1[0]) | casper_get_word(&p1[1]) | casper_get_word(&p1[2]) | casper_get_word(&p1[3]) |
             casper_get_word(&p1[4]) | casper_get_word(&p1[5]) | casper_get_word(&p1[6]) | casper_get_word(&p1[7]) |

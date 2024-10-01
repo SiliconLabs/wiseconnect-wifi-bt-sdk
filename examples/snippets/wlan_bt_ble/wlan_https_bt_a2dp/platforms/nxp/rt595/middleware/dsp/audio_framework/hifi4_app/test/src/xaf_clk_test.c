@@ -168,8 +168,8 @@ clk_t clk_read_stop(clk_seln_t seln)
 
 // Compute the difference
 clk_t clk_diff(clk_t stop, clk_t start)
-{
-    // TODO: Tackle wraparound
+{ 
+    // Need to add tackle wraparound
     if ((start == 0) || (stop == 0))
         return 0;
     else
