@@ -8,7 +8,7 @@ WiSeConnect documentation is [available online](http://docs.silabs.com/rs9116-wi
 - [AT-Command Programmers Reference Manuals](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-programming-reference-manuals/)
 - [Example Documentation](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-example-applications-overview/)
 - [Application Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-application-notes/)
-- [Release Notes](http://docs.silabs.com/rs9116-wiseconnect/latest/wifibt-wc-release-notes/)
+- [Release Notes](docs/release_notes/release_notes.md)
 
 # SDK Outline
 The WiSeConnect SDK contains the following files and folders.

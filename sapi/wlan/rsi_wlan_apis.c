@@ -2484,6 +2484,7 @@ int32_t rsi_send_freq_offset(int32_t freq_offset_in_khz)
  * 			              valid only when BURN_FREQ_OFFSET & SW_XO_CTUNE_VALID of flags is set. The range of xo_ctune is [0, 255], and the typical value is 80.            
  * @return            0			- Success \n
  * @return            Non-Zero Value	- Failure
+ * @note              The gain offset values present in the NVM will be incremented by the values sent from the host.
  * @note              **Precondition** - \ref rsi_transmit_test_start(), \ref rsi_send_freq_offset() API needs to be called before this API. This API is relevant in PER mode only. 
  * @note              For RS9116 Rev 1.5, the user needs to calibrate gain-offset for low sub-band (channel-1), mid sub-band (channel-6), and high sub-band (channel-11) and input the three gain-offsets to this API and set the corresponding flags to validate it. However, for RS9116 Rev 1.4, the user needs to calibrate gain-offset for low sub-band (channel-1) only and input the three gain-offsets to this API with dummy values for mid and high gain offsets and set the flag for low gain offset only to validate it. \n
  * @note              Recalibration is not possible if EFuse is being used instead of flash as calibration data storage
@@ -6913,64 +6914,64 @@ int16_t rsi_wlan_set_sleep_timer(uint16_t sleep_time)
  *             ### Prototypes of the callback functions with given callback id ###
  * 	           Callback id                               |   Function Description
  * 	           :-----------------------------------------|:-----------------------------------------------------------
- * 		         RSI_JOIN_FAIL_CB                          |   Called when asynchronous rejoin failure is received from the firmware. Application should try to re-join to the AP. This is valid in both AP and STA mode This callback is triggered when module fails to connect to AP in STA mode or when AP creation fails. \n
- *             ^                                             @note  Need to call rsi_scan() API in STA mode, rsi_wlan_ap_start() API in AP mode. 
- *             ^                                             @param buffer   NULL \n 
- *             ^                                             @param status  Possible Error response codes - 0x0019,0x0045,0x0046,0x0047,0x0048,0x0049
- * 		         RSI_IP_FAIL_CB                            |   Called when asynchronous DHCP renewal failure is received from the firmware. Application should retry IP configuration. This is valid in both AP and STA mode. This callback is triggered when module fails to renew the DHCP. 
- *             ^                                             @note Need to call rsi_wlan_connect() API. 
- *             ^                                             @param buffer  NULL \n 
- *             ^                                             @param status  Possible Error response codes - 0xFF9C, 0xFF9D
- * 		         RSI_REMOTE_SOCKET_TERMINATE_CB            |   Called when asynchronous remote TCP socket closed is received from the firmware. It is an indication given to application that the socket is terminated from remote. This is valid in both STA and AP mode. This callback is triggered when remote socket is terminated or closed 
- *             ^                                             @note  Need to connect to socket. 
- *             ^                                             @param buffer rsi_rsp_socket_close_t ( \ref rsi_rsp_socket_close_s) response structure is provided in callback   \n 
- *             ^                                             @param status  NA
- *             RSI_IP_CHANGE_NOTIFY_CB                   |   Called when asynchronous IP change notification is received from the firmware. It is an indication given to application that the IP has been modified. This is valid only in STA mode. This callback is triggered when AP changes the IP address. 
- *             ^                                             @note Need to call rsi_wlan_connect(),rsi_config_ipaddress() API. 
- *             ^                                             @param buffer  NULL \n 
- *             ^                                             @param status  RSI_SUCCESS
- *             RSI_STATIONS_DISCONNECT_NOTIFY_CB         |   Called when asynchronous station disconnect notification is received from the firmware in AP mode. It is an indication that the AP is disconnect. Application should retry to connect to the AP. This is valid when module acts as AP. This callback is triggered when stations are disconnected. 
- *             ^                                             @note STA need to connect to the Accesspoint 9116. 
- *             ^                                             @param buffer mac address is provided in response structure   \n 
- *             ^                                             @param status Response status @param length 6
- *             RSI_STATIONS_CONNECT_NOTIFY_CB            |   Called when asynchronous station connect notification is received from the firmware in AP mode. It is an indication that the application is connected to the AP. This is valid when 9116 module acts as AP. This callback is triggered when stations are connected. 
- *             ^                                             @pre  STA need to connect to the accesspoint 9116.  
- *             ^                                             @param buffer mac address is provided in response structure \n 
- *             ^                                             @param status Response status 
- *             ^                                             @param length 6
- *             RSI_WLAN_DATA_RECEIVE_NOTIFY_CB           |   Called when asynchronous data is received from the firmware in TCP/IP bypass mode. This is valid in both AP and STA mode. This callback is triggered when data is received in TCP/IP bypass mode. 
- *             ^                                             @pre  Need to connect to socket. 
- *             ^                                             @param buffer raw data received \n 
- *             ^                                             @param status  Response status
- * 		         RSI_WLAN_WFD_DISCOVERY_NOTIFY_CB          |   Called when Wi-Fi direct device discovery notification received from the firmware. This is valid in Wi-Fi Direct Mode only. This callback is triggered when a peer is discovered by the device. 
- *             ^                                             @pre  Need to call  rsi_wireless_init() ,rsi_wlan_wfd_start_discovery API.  
- *             ^                                             @param buffer  NULL \n 
- *             ^                                             @param status  Response status
- *             RSI_WLAN_RECEIVE_STATS_RESPONSE_CB        |   Called when asynchronous receive statistics from the firmware in PER mode. This is valid in PER Mode only. This callback is triggered when module wants to receive statistics. 
- *             ^                                             @pre  Need to call rsi_wlan_radio_init() API. 
- *             ^                                             @param buffer rsi_per_stats_rsp_t (\ref rsi_per_stats_rsp_s) response structure is provided in callback.  \n 
- *             ^                                             @param status  Response status
- * 		         RSI_WLAN_WFD_CONNECTION_REQUEST_NOTIFY_CB |   Called when Wi-Fi direct connection request from the firmware. This is valid in Wi-Fi Direct Mode only. This call back is triggered when there is a connection request from other peer device. 
- *             ^                                             @pre Need to rsi_wireless_init() ,rsi_wlan_wfd_start_discovery() API. 
- *             ^                                             @param buffer  device name \n 
- *             ^                                             @param status  Response status 
- *             ^                                             @param length 32
- *             RSI_WLAN_RAW_DATA_RECEIVE_HANDLER         |   Called when raw data packets are received from the firmware. This is valid in both AP and STA mode. This callback is triggered when raw data is received in TCP/IP bypass mode. 
- *             ^                                             @pre Need to connect to socket.  
- *             ^                                             @param buffer raw data  \n 
- *             ^                                             @param status Response status.
- *             RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB         |   Called when a socket connection response comes to the host. This is valid in both STA and AP mode. This callback is registered and triggered when socket connects. 
- *             ^                                             @pre  Need to create socket. 
- *             ^                                             @param buffer rsi_rsp_socket_create_t ( \ref rsi_rsp_socket_create_s)   \n 
- *             ^                                             @param status Response status.
- *             RSI_WLAN_SERVER_CERT_RECEIVE_NOTIFY_CB    |   Reserved 
- *             RSI_WLAN_ASYNC_STATS                      |   Called when asynchronous response comes from the firmware to the host. Host can register this callback to get all the information regarding AP connectivity.
- *             ^                                             @param buffer rsi_state_notification_t ( \ref rsi_state_notification_s) response structure is provided in callback   \n 
- *             ^                                             @param status Response status
- * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |   Called when WLAN assertion is triggered from firmware. It returns the assert value to the application. 
- *             ^                                             @param buffer   NULL \n 
- *             ^                                             @param status   Assert Value
- *             RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         |   Reserved
+ * 		         RSI_JOIN_FAIL_CB                          |    Called when asynchronous rejoin failure is received from the firmware. Application should try to re-join to the AP. This is valid in both AP and STA mode This callback is triggered when module fails to connect to AP in STA mode or when AP creation fails. \n
+ *             ^                                         |    @note  Need to call rsi_scan() API in STA mode, rsi_wlan_ap_start() API in AP mode. 
+ *             ^                                         |    @param buffer   NULL \n 
+ *             ^                                         |    @param status  Possible Error response codes - 0x0019,0x0045,0x0046,0x0047,0x0048,0x0049
+ * 		         RSI_IP_FAIL_CB                            |    Called when asynchronous DHCP renewal failure is received from the firmware. Application should retry IP configuration. This is valid in both AP and STA mode. This callback is triggered when module fails to renew the DHCP. 
+ *             ^                                         |    @note Need to call rsi_wlan_connect() API. 
+ *             ^                                         |    @param buffer  NULL \n 
+ *             ^                                         |    @param status  Possible Error response codes - 0xFF9C, 0xFF9D
+ * 		         RSI_REMOTE_SOCKET_TERMINATE_CB            |    Called when asynchronous remote TCP socket closed is received from the firmware. It is an indication given to application that the socket is terminated from remote. This is valid in both STA and AP mode. This callback is triggered when remote socket is terminated or closed 
+ *             ^                                         |    @note  Need to connect to socket. 
+ *             ^                                         |    @param buffer rsi_rsp_socket_close_t ( \ref rsi_rsp_socket_close_s) response structure is provided in callback   \n 
+ *             ^                                         |    @param status  NA
+ *             RSI_IP_CHANGE_NOTIFY_CB                   |    Called when asynchronous IP change notification is received from the firmware. It is an indication given to application that the IP has been modified. This is valid only in STA mode. This callback is triggered when AP changes the IP address. 
+ *             ^                                         |    @note Need to call rsi_wlan_connect(),rsi_config_ipaddress() API. 
+ *             ^                                         |    @param buffer  NULL \n 
+ *             ^                                         |    @param status  RSI_SUCCESS
+ *             RSI_STATIONS_DISCONNECT_NOTIFY_CB         |    Called when asynchronous station disconnect notification is received from the firmware in AP mode. It is an indication that the AP is disconnect. Application should retry to connect to the AP. This is valid when module acts as AP. This callback is triggered when stations are disconnected. 
+ *             ^                                         |    @note STA need to connect to the Accesspoint 9116. 
+ *             ^                                         |    @param buffer mac address is provided in response structure   \n 
+ *             ^                                         |    @param status Response status @param length 6
+ *             RSI_STATIONS_CONNECT_NOTIFY_CB            |    Called when asynchronous station connect notification is received from the firmware in AP mode. It is an indication that the application is connected to the AP. This is valid when 9116 module acts as AP. This callback is triggered when stations are connected. 
+ *             ^                                         |    @pre  STA need to connect to the accesspoint 9116.  
+ *             ^                                         |    @param buffer mac address is provided in response structure \n 
+ *             ^                                         |    @param status Response status 
+ *             ^                                         |    @param length 6
+ *             RSI_WLAN_DATA_RECEIVE_NOTIFY_CB           |    Called when asynchronous data is received from the firmware in TCP/IP bypass mode. This is valid in both AP and STA mode. This callback is triggered when data is received in TCP/IP bypass mode. 
+ *             ^                                         |    @pre  Need to connect to socket. 
+ *             ^                                         |    @param buffer raw data received \n 
+ *             ^                                         |    @param status  Response status
+ * 		         RSI_WLAN_WFD_DISCOVERY_NOTIFY_CB          |    Called when Wi-Fi direct device discovery notification received from the firmware. This is valid in Wi-Fi Direct Mode only. This callback is triggered when a peer is discovered by the device. 
+ *             ^                                         |    @pre  Need to call  rsi_wireless_init() ,rsi_wlan_wfd_start_discovery API.  
+ *             ^                                         |    @param buffer  NULL \n 
+ *             ^                                         |    @param status  Response status
+ *             RSI_WLAN_RECEIVE_STATS_RESPONSE_CB        |    Called when asynchronous receive statistics from the firmware in PER mode. This is valid in PER Mode only. This callback is triggered when module wants to receive statistics. 
+ *             ^                                         |    @pre  Need to call rsi_wlan_radio_init() API. 
+ *             ^                                         |    @param buffer rsi_per_stats_rsp_t (\ref rsi_per_stats_rsp_s) response structure is provided in callback.  \n 
+ *             ^                                         |    @param status  Response status
+ * 		         RSI_WLAN_WFD_CONNECTION_REQUEST_NOTIFY_CB |    Called when Wi-Fi direct connection request from the firmware. This is valid in Wi-Fi Direct Mode only. This call back is triggered when there is a connection request from other peer device. 
+ *             ^                                         |    @pre Need to rsi_wireless_init() ,rsi_wlan_wfd_start_discovery() API. 
+ *             ^                                         |    @param buffer  device name \n 
+ *             ^                                         |    @param status  Response status 
+ *             ^                                         |    @param length 32
+ *             RSI_WLAN_RAW_DATA_RECEIVE_HANDLER         |    Called when raw data packets are received from the firmware. This is valid in both AP and STA mode. This callback is triggered when raw data is received in TCP/IP bypass mode. 
+ *             ^                                         |    @pre Need to connect to socket.  
+ *             ^                                         |    @param buffer raw data  \n 
+ *             ^                                         |    @param status Response status.
+ *             RSI_WLAN_SOCKET_CONNECT_NOTIFY_CB         |    Called when a socket connection response comes to the host. This is valid in both STA and AP mode. This callback is registered and triggered when socket connects. 
+ *             ^                                         |    @pre  Need to create socket. 
+ *             ^                                         |    @param buffer rsi_rsp_socket_create_t ( \ref rsi_rsp_socket_create_s)   \n 
+ *             ^                                         |    @param status Response status.
+ *             RSI_WLAN_SERVER_CERT_RECEIVE_NOTIFY_CB    |    Reserved 
+ *             RSI_WLAN_ASYNC_STATS                      |    Called when asynchronous response comes from the firmware to the host. Host can register this callback to get all the information regarding AP connectivity.
+ *             ^                                         |    @param buffer rsi_state_notification_t ( \ref rsi_state_notification_s) response structure is provided in callback   \n 
+ *             ^                                         |    @param status Response status
+ * 		         RSI_WLAN_ASSERT_NOTIFY_CB                 |    Called when WLAN assertion is triggered from firmware. It returns the assert value to the application. 
+ *             ^                                         |    @param buffer   NULL \n 
+ *             ^                                         |    @param status   Assert Value
+ *             RSI_WLAN_MAX_TCP_WINDOW_NOTIFY_CB         |    Reserved
  * 
  * ### RSI_WLAN_ASYNC_STATS ###
  * • Asychronous messages are used to indicate module state to host. Asynchronous message are enabled by setting bit 10 of the custom feature bitmap in opermode. \n
