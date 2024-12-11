@@ -586,7 +586,6 @@ uint32_t SDIODRV_DeviceInitAndIdent (SDIODRV_Handle_t *handle, uint16_t *rca)
 
     if (res == SDIODRV_ERROR_NONE) {
         rsi_delay_ms(100);
-      //TODO implement the generic initialization flow
       // IO_SEND_OP_COND (CMD5)
       // IO_SEND_OP_COND (CMD5)
       // (CMD55+ACMD41)

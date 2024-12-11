@@ -127,6 +127,9 @@
 //To enable support for long sized ICMP packets. Max 1472 Bytes for IPv4 and Max 1452 Bytes for IPv6.
 #define FEAT_LONG_ICMP_PACKET BIT(12)
 
+// If below bit is set, new set of firmware update result code will be received
+#define FEAT_FW_UPDATE_RSP_CODE_SET_V2 BIT(16)
+
 // Secure Attestation
 #define FEAT_SECURE_ATTESTATION BIT(30)
 /*=========================================================================*/
@@ -158,8 +161,7 @@
 // TCP/IP bypass feature
 #define TCP_IP_FEAT_BYPASS BIT(0)
 
-// Enable HTTP server feature
-#define TCP_IP_FEAT_HTTP_SERVER BIT(1)
+#define TCP_IP_FEAT_RESERVED_1 BIT(1)
 
 // Enable DHCPv4 client feature
 #define TCP_IP_FEAT_DHCPV4_CLIENT BIT(2)
@@ -191,8 +193,7 @@
 // Enable ICMP feature(ping)
 #define TCP_IP_FEAT_ICMP BIT(11)
 
-// Enable HTTP client
-#define TCP_IP_FEAT_HTTPS_SERVER BIT(12)
+#define TCP_IP_FEAT_RESERVED_12 BIT(12)
 
 // Enable sending web page configuration to host from wireless config page
 #define TCP_IP_FEAT_SEND_CONFIGS_TO_HOST BIT(14)
@@ -236,8 +237,7 @@
 /*=========================================================================*/
 #define EXT_TCP_FEAT_DHCP_OPT77 BIT(1)
 
-// Enable HTTP server root path (Default configuration page) bypass
-#define EXT_TCP_IP_HTTP_SERVER_BYPASS BIT(2)
+#define EXT_TCP_FEAT_RESERVED_2 BIT(2)
 
 // TCP bi-dir ack update
 #define EXT_TCP_IP_BI_DIR_ACK_UPDATE BIT(3)
@@ -361,8 +361,7 @@
 // then this configuration is needed
 #define CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ BIT(24)
 
-// HTTP server credentials to host in get configuration command
-#define CUSTOM_FEAT_HTTP_SERVER_CRED_TO_HOST BIT(25)
+#define CUSTOM_FEAT_RESERVED_25 BIT(25)
 
 // For a LTCP socket when maximum clients are connected if a new connection request is received, then this connection request will be rejected immediately
 #define CUSTOM_FEAT_REJECT_CONNECT_REQ_IMMEDIATELY BIT(26)
@@ -674,13 +673,13 @@
 #define RSI_POWER_LEVEL_LOW 0
 
 // Medium Tx power level !//
-// (5+/-1)dBm in 2.4GHz band
+// (10+/-1)dBm in 2.4GHz band
 // (7+/-1)dBm in 5GHz band
 #define RSI_POWER_LEVEL_MEDIUM 1
 
 // High Tx power level !//
-// Highest power that can be
-// used in that channel
+// (18+/-2)dBm in 2.4GHz band
+// (12+/-2)dBm in 5GHz band
 #define RSI_POWER_LEVEL_HIGH 2
 
 // To enable b/g only mode in station mode

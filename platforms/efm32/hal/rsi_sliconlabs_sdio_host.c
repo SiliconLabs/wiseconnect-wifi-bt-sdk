@@ -133,8 +133,6 @@ static sl_status_t wait_action_completion(SDIODRV_Event_t evt,
   // Update the waited event
   waited_evt = evt;
 
-  // FIXME overlap after running almost 50days
-
   while(tmo--){
     if (action_done) {
       status = SL_STATUS_OK;

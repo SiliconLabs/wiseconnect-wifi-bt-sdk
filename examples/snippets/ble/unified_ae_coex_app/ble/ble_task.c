@@ -85,7 +85,7 @@ uint8_t adv[0x19] = { 2, 1, 6 };
 volatile uint16_t rsi_ble_att1_val_hndl;
 volatile uint16_t rsi_ble_att2_val_hndl;
 volatile uint16_t rsi_ble_att3_val_hndl;
-uint16_t rsi_app_resp_max_no_of_supp_adv_sets       = 0;
+uint32_t rsi_app_resp_max_no_of_supp_adv_sets       = 0;
 uint32_t rsi_app_resp_max_adv_data_len              = 0;
 int8_t rsi_app_resp_tx_power                        = 0;
 uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
@@ -300,7 +300,7 @@ static uint32_t rsi_ble_add_custom_service_serv(void)
                             RSI_BLE_ATT_PROPERTY_READ | RSI_BLE_ATT_PROPERTY_INDICATE,
                             new_serv_resp.start_handle + 2,
                             new_uuid,
-                            SEC_MODE_1_LEVEL_4);
+                            SEC_MODE_1_LEVEL_1);
   //! adding characteristic value attribute to the service
   rsi_ble_att3_val_hndl = new_serv_resp.start_handle + 2;
   new_uuid.size         = 2;
@@ -1455,7 +1455,7 @@ int32_t rsi_ble_dual_role(void)
   if (status != RSI_SUCCESS) {
     LOG_PRINT("get max supported adv sets failed with 0x%lX\n", status);
   } else {
-    LOG_PRINT("Max number of supported Adv sets are %d  \n", rsi_app_resp_max_no_of_supp_adv_sets);
+    LOG_PRINT("Max number of supported Adv sets are %ld  \n", rsi_app_resp_max_no_of_supp_adv_sets);
   }
 
 #if ADV_ENABLED_DEFAULT

@@ -704,17 +704,9 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		        Structure Fields        |	Description	
  * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	 	         rf_channel	            |      Access point channel number
- * 	 	         security_mode	        |      Security modes
- *             ^                             0 : Open
- *	           ^        	                 	 1 : WPA
- *	           ^        	                	 2 : WPA2
- *	           ^        	                	 3 : WEP
- *	           ^        	                	 4 : WPA Enterprise
- *	           ^        	                	 5 : WPA2 Enterprise
- *	           ^                             6 : WPA3
+ * 	 	         security_mode	        |      Security modes\n  0 : Open \n  1 : WPA\n  2 : WPA2\n  3 : WEP\n  4 : WPA Enterprise\n  5 : WPA2 Enterprise\n 6 : WPA/WPA2 Mixed mode\n 7 : WPA3 Personal\n  8 : WPA3 Personal Transition Mode
  * 	 	         rssi_val	              |       RSSI value of the Access Point
- * 	 	         network_type	          |       This is the type of the network
- * 	 	         ^            	                1 : Infrastructure mode	
+ * 	 	         network_type	          |       This is the type of the network\n  1 : Infrastructure mode
  * 	 	         ssid		                |       SSID of the access point
  * 	 	         bssid		              |       MAC address of the access point
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.   
@@ -845,16 +837,9 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * 		         Structure Fields        |	Description	
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
  * 	 	         rf_channel	             |      Access point channel number
- * 	 	         security_mode	         |      Security mode0 : Open
- *	           ^        	                  	1 . WPA
- *	           ^        	                  	2 . WPA2
- *	           ^        	                  	3 . WEP
- *	           ^        	                  	4 . WPA Enterprise
- *	           ^        	                  	5 . WPA2 Enterprise
- *	           ^        	                  	7 . WPA3
+ * 	 	         security_mode	         |      Security mode\n  0 : Open\n  1 : WPA\n  2 : WPA2\n  3 : WEP\n  4 : WPA Enterprise\n  5 : WPA2 Enterprise\n 6 : WPA/WPA2 Mixed mode\n  7 : WPA3 Personal\n  8 : WPA3 Personal Transition Mode
  * 	 	         rssi_val	               |      RSSI value of the Access Point
- * 	 	         network_type	           |      Type of network
- * 	 	         ^            	                1 . Infrastructure mode	
+ * 	 	         network_type	           |      Type of network\n 1 . Infrastructure mode
  * 	 	         ssid		                 |      SSID of the access point
  * 	 	         bssid		               |      MAC address of the access point
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
@@ -1288,6 +1273,11 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *		            RSI_REJOIN_FIRST_TIME_RETRY    | ENABLE  - Try to rejoin in the first attempt after join failure. \n
  *		                                             DISABLE - Try to rejoin based on maximum rejoin retries configured. \n
  * @note	      When RSI_REJOIN_PARAMS_SUPPORT is enabled in the rsi_wlan_config.h, the rejoin frame will be sent to the firmware after the scan is done.
+ * @note        Rejoin scan interval is in seconds.
+ * @note        Default beacon missed count is 40, A unicast probe request will be sent from the midpoint of the given beacon missed count. \n
+ * @note        For example, \n
+ *              If the beacon count is 40, the unicast probe request will be sent from the module to the AP at the midpoint, which is the 21st beacon. This will also occur at the 31st beacon count.
+ * @note        Recommended to enable RSI_REJOIN_FIRST_TIME_RETRY to minimize join failures, especially in scenarios such as abnormal connection termination caused by a module reset.
  * @note        This API internally handles following commands based on wlan_cb state and sends the next command and finally sends the join command. \n
  *              Set MAC address, Band, Timeout, Init, Set region, WMM parameters, Scan, EAP config, WMM PS parameters, WPS method, Set WEP keys, Host PSK, Rejoin params, Join \n
  * @note        For example, \n
@@ -3917,9 +3907,26 @@ int32_t rsi_wlan_get_status(void)
  *              		       6 | RSI_STATIONS_INFO \n
  *              		       7 | RSI_SOCKETS_INFO \n
  *              		       8 | RSI_CFG_GET \n
- *                         9 | RSI_GET_WLAN_STAT
+ *                         9 | RSI_GET_WLAN_STAT \n
+ *                         10 | RSI_WLAN_EXT_STATS \n
+ *                         11 | RSI_WMM_PARAMS \n
+ *                         12 | RSI_GET_DEVICE_ID \n
  * @param[out] response  - Response of the requested command.
  * @param[in]  length     - Length of the response buffer in bytes to hold result.
+ *                         cmd_type |	Request Structure
+ *                         :---|:---------------------
+ *                      	 RSI_FW_VERSION        | uint8_t response[20] \n
+ *                         RSI_MAC_ADDRESS       | uint8_t response[6] \n
+ *                         RSI_RSSI              | uint8_t response[2] \n
+ *                         RSI_WLAN_INFO         | struct \ref rsi_rsp_wireless_info_s \n
+ *                         RSI_CONNECTION_STATUS | It returns 0x0001 if the WLAN is connected else 0x0000. \n
+ *                         RSI_STATIONS_INFO     | struct \ref rsi_rsp_stations_info_s \n
+ *                         RSI_SOCKETS_INFO      | struct \ref rsi_rsp_sockets_info_s \n
+ *                         RSI_CFG_GET           | struct \ref rsi_cfgGetFrameRcv \n
+ *                         RSI_GET_WLAN_STAT     | struct \ref rsi_rsp_wlan_stats_s \n
+ *                         RSI_WLAN_EXT_STATS    | struct \ref rsi_wlan_ext_stats_s \n
+ *                         RSI_WMM_PARAMS        | struct \ref rsi_wmm_ps_parms_s \n
+ *                         RSI_GET_DEVICE_ID     | uint8_t response[2] \n 0x9116 for 9116 chipsets \n 0x917 for 917 chipsets \n
  * @note	     RSI_WLAN_INFO is relevant in both station and AP mode. \n
  * @note	     RSI_SOCKETS_INFO is relevant in both station mode and AP mode. \n
  * @note	     RSI_STATIONS_INFO is relevant in AP mode \n

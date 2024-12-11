@@ -1,0 +1,106 @@
+#include "ble_cmd_hdlr_auto_gen.h"
+#include "event_loop.h"
+#include <stdlib.h>
+
+generic_command_handler_lut_entry_t ble_commands_hdlr_lut[] = 
+{
+{% for command, details in user_interface["ble"]["commands"].items() %}
+	{{ details["module_handler"] }},
+{% endfor %}
+};
+{% macro render_ui_cmd_handler_callback_function(command) %}
+/*==============================================*/
+/**
+ * @fn          void ui_task_{{ command }}_command_handler(uint8_t argc, uint8_t **argv)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.command_queue to be processed in ble task context
+ * @param[in]   uint8_t, argc 
+ * @param[in]   uint8_t, argv
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues command data received in driver context to ble_generic_cb.command_queue to be processed in ble task context
+ *
+ */
+
+APP_WEAK void ui_task_{{ command }}_cmd_handler(uint8_t argc, uint8_t **argv)
+{
+	generic_command_message_t cmd_msg = {0};
+	rsi_error_t sem_return_status;
+
+	//! init messag details
+	cmd_msg.next = NULL;
+	cmd_msg.argc = argc;
+	cmd_msg.argv = argv;
+	cmd_msg.command_id = {{ command }}_command_id;
+	cmd_msg.semaphore = &ui_task_response_semaphore;
+
+	//! enqueue message to ble_generic_cb.command_queue
+	rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.command_queue, &cmd_msg, &ble_generic_cb.cmd_mutex);
+
+	//! post the ble_generic_cb.semaphore to excute event loop
+  	rsi_semaphore_post(&ble_generic_cb.semaphore);
+
+	//! wait ui_task_response_semaphore until that particular command handler excutes
+	sem_return_status = rsi_semaphore_wait(&ui_task_response_semaphore, 0);
+	if(sem_return_status != 0)
+	{
+		assert("ui_task_response_semaphore failed!!!");
+	}
+
+	if (cmd_msg.response_status == FIXED_LEN_RESPONSE_BUFFER_VALID)
+	{
+		LOG_PRINT("\r\ncommand response: %s\r\n", cmd_msg.fixed_length_response_buffer);
+	} 
+	else if (cmd_msg.response_status == VARIABLE_LEN_RESPONSE_BUFFER_VALID)
+	{
+		LOG_PRINT("\r\ncommand response: %s\r\n", cmd_msg.variable_length_response_buffer);
+		if (cmd_msg.free_handler)
+		{
+			cmd_msg.free_handler(cmd_msg.variable_length_response_buffer);
+		} 
+		else 
+		{
+			assert("free_handler missing!!!");
+		}
+	}
+}
+{% endmacro %}
+
+
+{% if "commands" in user_interface["ble"].keys() %}
+{% for command in user_interface["ble"]["commands"].keys() %}
+{{ render_ui_cmd_handler_callback_function(command) -}}
+{% endfor %}
+{% endif %}
+
+{% for command, detail in user_interface["ble"]["commands"].items() %}
+/*==============================================*/
+/**
+ * @fn          void {{ detail["module_handler"] }}(generic_command_message_t *generic_command_message)
+ * @brief       handler for {{ command }} to be executed in ble task context
+ * @param[in]   generic_command_message_t, generic_command_message 
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * handler for {{ command }} to be executed in ble task context
+ *
+ */
+
+APP_WEAK void {{ detail["module_handler"] }}(generic_command_message_t *generic_command_message)
+{
+	//! Add handling here
+	  int32_t status;
+    status = call_api();
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\n {{ detail["module_handler"] }} : error status 0x%x \n", status);
+    } else {
+    
+      LOG_PRINT("\r\n {{ detail["module_handler"] }} : successful \n");
+    }
+
+	  generic_command_message->response_status = 0;
+
+}
+{% endfor %}

@@ -870,7 +870,6 @@ void rsi_ble_on_data_transmit(uint8_t ble_conn_id)
       }
     } else {
       rsi_ble_conn_info[ble_conn_id].write_cnt++;
-      rsi_ble_event_data_transmit_driver_callback(ble_conn_id);
     }
   }
 
@@ -2767,30 +2766,31 @@ void rsi_ble_event_indication_confirmation(uint16_t __attribute__((unused)) stat
 }
 /*==============================================*/
 /**
- * @fn          void rsi_ble_event_write(uint16_t status, void *event_data)
- * @brief       handler for event_write to be executed in ble task context
- * @param[in]   uint16_t , event_status
- * @param[in]   void, event_data
+ * @fn          void rsi_ble_on_event_write_resp(uint16_t status, void *event_data)
+ * @brief       Handler for the BLE write response event to be executed in the BLE task context.
+ * @param[in]   uint16_t status   The status of the write response (e.g., success or error code).
+ * @param[in]   void *event_data  Pointer to the data associated with the BLE write response event.
  * @return      None
  *
  * @section description
- * handler for event_write to be executed in ble task context
+ * This function is called when a BLE write response event occurs. It is executed in the BLE task context.
+ * The function processes the event, which includes checking the status and using the event data to take
+ * appropriate actions. The function does not return any value.
  *
  */
 void rsi_ble_on_event_write_resp(uint16_t status, void *event_data)
 {
   uint8_t ble_conn_id;
-  rsi_ble_event_write_t *rsi_ble_write = (rsi_ble_event_write_t *)event_data;
+  rsi_ble_set_att_resp_t *rsi_ble_set_att_resp = (rsi_ble_set_att_resp_t *)event_data;
   //! convert to ascii
 
-  LOG_PRINT_D("\r\n in BLE EVENT Write r\n");
   // This statement is added only to resolve compilation warning  : [-Wunused-parameter] , value is unchanged
   UNUSED_PARAMETER(status);
 
-  LOG_PRINT_D("\r\n in write event \r\n");
+  LOG_PRINT_D("\r\n in write response event \r\n");
 
   //! convert to ascii
-  rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_write->dev_addr);
+  rsi_6byte_dev_address_to_ascii(remote_dev_addr_conn, rsi_ble_set_att_resp->dev_addr);
 
 #if (CONNECT_OPTION != CONN_BY_NAME)
   //! get conn_id
@@ -2799,123 +2799,11 @@ void rsi_ble_on_event_write_resp(uint16_t status, void *event_data)
   ble_conn_id = rsi_get_ble_conn_id(remote_dev_addr_conn, NULL, 0);
 #endif
 
-  //! copy to conn specific buffer
-  memcpy(&rsi_ble_conn_info[ble_conn_id].app_ble_write_event, rsi_ble_write, sizeof(rsi_ble_event_write_t));
-
-  //! process the received 'write response' data packet
-  if ((*(uint16_t *)(rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle)) == rsi_ble_att1_val_hndl) {
-    rsi_ble_att_list_t *attribute = NULL;
-    uint8_t opcode = 0x12, err = 0x00;
-    attribute =
-      rsi_gatt_get_attribute_from_list(&att_list,
-                                       (*(uint16_t *)(rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle)));
-
-    //! Check if value has write properties
-    if ((attribute != NULL) && (attribute->value != NULL)) {
-      if (!(attribute->char_val_prop & 0x08)) //! If no write property, send error response
-      {
-        err = 0x03; //! Error - Write not permitted
-      }
-    } else {
-      //! Error = No such handle exists
-      err = 0x01;
-    }
-
-    //! Update the value based6 on the offset and length of the value
-    if ((err == 0) && ((rsi_ble_conn_info[ble_conn_id].app_ble_write_event.length) <= attribute->max_value_len)) {
-      memset(attribute->value, 0, attribute->max_value_len);
-
-      //! Check if value exists for the handle. If so, maximum length of the value.
-      memcpy(attribute->value,
-             rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value,
-             rsi_ble_conn_info[ble_conn_id].app_ble_write_event.length);
-
-      //! Update value length
-      attribute->value_len = rsi_ble_conn_info[ble_conn_id].app_ble_write_event.length;
-
-      LOG_PRINT("\r\n received data from remote device: %s \n", (uint8_t *)attribute->value);
-
-      //! Send gatt write response
-      rsi_ble_gatt_write_response(rsi_ble_conn_info[ble_conn_id].rsi_connected_dev_addr, 0);
-    } else {
-      //! Error : 0x07 - Invalid request,  0x0D - Invalid attribute value length
-      err = 0x07;
-    }
-
-    if (err) {
-      //! Send error response
-      rsi_ble_att_error_response(rsi_ble_conn_info[ble_conn_id].rsi_connected_dev_addr,
-                                 *(uint16_t *)rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle,
-                                 opcode,
-                                 err);
-    }
-  }
-
-  //! print the received 'write no response' data packet
-  if ((*(uint16_t *)(rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle)) == rsi_ble_att2_val_hndl) {
-    LOG_PRINT("\r\n received data from remote device: %s \n",
-              rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value);
-  }
-
-  //! when remote device enabled the notifications
-  if (((*(uint16_t *)(rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle) - 1) == rsi_ble_att1_val_hndl)) {
-    if (ble_confgs.ble_conn_configuration[ble_conn_id].tx_notifications) {
-      // check for valid notifications
-      if (rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value[0] == NOTIFY_ENABLE) {
-        LOG_PRINT("\r\n Remote device enabled the notification -conn%d\n", ble_conn_id);
-        rsi_ble_conn_info[ble_conn_id].rsi_tx_to_rem_dev = true;
-        //! configure the buffer configuration mode
-        rsi_ble_conn_info[ble_conn_id].transmit = true;
-        rsi_ble_event_set_buffer_config_driver_callback(&ble_conn_id);
-      } else if (rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value[0] == NOTIFY_DISABLE) {
-        LOG_PRINT("\r\n Remote device disabled the notification -conn%d\n", ble_conn_id);
-        rsi_ble_conn_info[ble_conn_id].transmit = false;
-      }
-    }
-  }
-
-  else if (((*(uint16_t *)(rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle) - 1) == rsi_ble_att3_val_hndl)) {
-    if (ble_confgs.ble_conn_configuration[ble_conn_id].tx_indications) {
-      // check for valid indications
-      if (rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value[0] == INDICATION_ENABLE) {
-        LOG_PRINT("\r\n Remote device enabled the indications -conn%d\n", ble_conn_id);
-        rsi_ble_conn_info[ble_conn_id].rsi_tx_to_rem_dev = true;
-        rsi_ble_event_set_buffer_config_driver_callback(&ble_conn_id);
-      } else if (rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value[0] == INDICATION_DISABLE) {
-        LOG_PRINT("\r\n Remote device disabled the indications -conn%d\n", ble_conn_id);
-      }
-    }
-  }
-  //! code to handle remote device indications
-  //! send acknowledgement to the received indication packet
-  if (*(uint16_t *)rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle
-      == (rsi_ble_conn_info[ble_conn_id].indication_handle)) {
-    if (ble_confgs.ble_conn_configuration[ble_conn_id].rx_indications) {
-      LOG_PRINT("\r\n received indication packet from remote device, data= %s \n",
-                rsi_ble_conn_info[ble_conn_id].app_ble_write_event.att_value);
-#if RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST
-      //! Send indication acknowledgement to remote device
-      status = rsi_ble_indicate_confirm(rsi_ble_conn_info[ble_conn_id].rsi_connected_dev_addr);
-      if (status != RSI_SUCCESS) {
-        LOG_PRINT("\r\n indication confirm failed \t reason = %x -conn%d\n", status, ble_conn_id);
-      } else {
-        LOG_PRINT("\r\n indication confirm response sent -conn%d\n", ble_conn_id);
-      }
+  if (ble_confgs.ble_conn_configuration[ble_conn_id].tx_write) {
+    rsi_ble_on_data_transmit(ble_conn_id);
+#if RSI_DEBUG_EN
+    LOG_PRINT("\r\nIn rsi_ble_on_event_write_resp event\n");
 #endif
-    }
-  }
-
-  //! code to handle remote device notifications
-  else if (*(uint16_t *)rsi_ble_conn_info[ble_conn_id].app_ble_write_event.handle
-           == (rsi_ble_conn_info[ble_conn_id].notify_handle)) {
-    if ((!rsi_ble_conn_info[ble_conn_id].notification_received)
-        && (ble_confgs.ble_conn_configuration[ble_conn_id].rx_notifications)) {
-      //! stop printing the logs after receiving first notification
-      rsi_ble_conn_info[ble_conn_id].notification_received = true;
-      LOG_PRINT("\r\n receiving notifications from remote device -conn%d\r\n", ble_conn_id);
-    } else {
-      //! do nothing as received notifications not required to print
-    }
   }
 }
 

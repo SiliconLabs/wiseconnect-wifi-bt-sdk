@@ -128,7 +128,7 @@ int32_t rsi_device_init(uint8_t select_option)
 #endif
 
 #ifdef LINUX_PLATFORM
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
   if (!skip_bootload_sequence) {
     do {
       retval = rsi_waitfor_boardready();

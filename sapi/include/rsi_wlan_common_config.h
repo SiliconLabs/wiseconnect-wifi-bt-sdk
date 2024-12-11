@@ -205,7 +205,7 @@
 
 // "US" or "EU" or "JP" or other region codes
 #ifndef RSI_COUNTRY_CODE
-#define RSI_COUNTRY_CODE "US" //TODO: review
+#define RSI_COUNTRY_CODE "US"
 #endif
 
 /*=======================================================================*/

@@ -1068,7 +1068,7 @@ int16_t rsi_req_wakeup(void)
   do {
     if (rsi_hal_get_gpio(RSI_HAL_WAKEUP_INDICATION_PIN)) {
 #if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
-#ifdef RSI_SPI_INTERFACE
+#if ((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM))
       status = rsi_ulp_wakeup_init();
       if (status != RSI_SUCCESS) {
         return status;
@@ -1134,7 +1134,7 @@ int16_t rsi_wait4wakeup(void)
       if (rsi_driver_cb->wlan_cb->state >= RSI_WLAN_STATE_CONNECTED) {
         rsi_hal_set_gpio(RSI_HAL_SLEEP_CONFIRM_PIN);
       }
-#ifdef RSI_SPI_INTERFACE
+#if ((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM))
       status = rsi_ulp_wakeup_init();
       if (status != RSI_SUCCESS) {
         return status;

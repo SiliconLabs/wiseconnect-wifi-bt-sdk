@@ -317,7 +317,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 	}
 	server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[0].ipv4_address);
 
-	status = ConnecttoNetwork(pNetwork, 2,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, CLIENT_PORT);       //fixme:flags kept as 0
+	status = ConnecttoNetwork(pNetwork, 2,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, CLIENT_PORT);
 
 	return (IoT_Error_t)status;
 }
@@ -332,7 +332,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 			written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++)
 	{
 		while(!has_timer_expired(timer) &&
-				(ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)      //FIXME:flags parameter kept as 0
+				(ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)
 		{
 			isErrorFlag = true;
 		}
@@ -377,7 +377,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	while (len > 0)
 	{
 		// This read will timeout after IOT_SSL_READ_TIMEOUT if there's no data to be read
-		ret = rsi_recv(pNetwork->socket_id,pMsg, len, 0);  //FIXME:flags parameter kept as 0
+		ret = rsi_recv(pNetwork->socket_id,pMsg, len, 0);
 		if (ret > 0)
 		{
 			rxLen += ret;

@@ -51,7 +51,7 @@
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP 0
 #endif
 
-#define RSI_EXT_TCPIP_FEATURE_BITMAP TCP_IP_FEAT_DHCPV4_CLIENT
+#define RSI_EXT_TCPIP_FEATURE_BITMAP 0
 
 /*=======================================================================*/
 

@@ -1,0 +1,655 @@
+#include "ble_event_hdlr_auto_gen.h"
+#include "ble_private.h"
+#include "event_loop.h"
+#include <stdlib.h>
+#include "rsi_common_utils.h"
+
+generic_task_cb_t ble_generic_cb;
+
+
+generic_event_handler_lut_entry_t ble_events_lut[] = 
+{
+{% for ble_event, callback in ble_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{{ callback["handler"] }},
+{% else %}
+	NULL,
+{% endif %}
+{% endfor %}
+{% for bt_event, callback in bt_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{{ callback["handler"] }},
+{% else %}
+	NULL,
+{% endif %}
+{% endfor %}
+{% for dummy_event, callback in dummy_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{{ callback["handler"] }},
+{% else %}
+	NULL,
+{% endif %}
+{% endfor %}
+	NULL
+};
+
+{% macro render_driver_callback_function(ble_event, value) %}
+/*==============================================*/
+/**
+{% if value == 'common_event_status_last' %}
+ * @fn          void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, uint16_t status)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, event_data
+ * @param[in]   uint16_t , event_status 
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, uint16_t status)
+{% elif value == 'common_event_status_first' %}
+ * @fn          void rsi_ble_{{ ble_event }}_driver_callback(uint16_t status, rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ ble_event }}_driver_callback(uint16_t status, rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+{% elif value == 'common_event_status_none' %}
+ * @fn          void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+{% else %}
+ * @fn          void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ ble_event }}_driver_callback(rsi_ble_{{ ble_event }}_t *rsi_ble_{{ ble_event }})
+{% endif %}
+{
+		{% if ble_event == 'event_read_by_type1' %}
+		  UNUSED_PARAMETER(status);
+		{% endif %}
+	LOG_PRINT_D("\n in rsi_ble_{{ ble_event }}_driver_callback \n");
+	generic_event_message_t *msg;
+
+	//! allocate message
+	{% if value == 'common_event_status_first' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_{{ ble_event }}_t));
+	{% elif value == 'common_event_status_last' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_{{ ble_event }}_t));
+	{% elif value == 'common_event_status_none' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_{{ ble_event }}_t));
+	{% else %}
+	msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_{{ ble_event }}_t));
+	{% endif %}
+  if (msg == NULL) {
+    LOG_PRINT("Out of Memory assert\n");
+    _assert("Out Of Memory\n");
+  } else {
+    LOG_PRINT_D("Malloc passed\n");
+  }
+	//! init messag details
+	msg->next = NULL;
+	msg->event_id = {{ ble_event }}_event_id;
+	//! function to be called to free this message
+	msg->free_callback = rsi_free_memory;
+	{% if value == 'common_event_status_none' %}
+	//msg->status = status;
+	{% elif ble_event == 'event_read_by_type1' %}
+	//msg->status = status;
+	{%else%}
+	msg->status = status;
+	{%endif%}
+	{% if value == 'common_event_status_first' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ ble_event }}, sizeof(rsi_ble_{{ ble_event }}_t));
+	{% elif value == 'common_event_status_last' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ ble_event }}, sizeof(rsi_ble_{{ ble_event }}_t));
+	{% elif value == 'common_event_status_none' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ ble_event }}, sizeof(rsi_ble_{{ ble_event }}_t));
+	{% endif %}
+	//! enqueue message to ble_generic_cb.event_queues[0]
+	rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.event_queues[0], (rsi_app_pkt_t *)msg, &ble_generic_cb.event_mutex);
+  	rsi_semaphore_post(&ble_generic_cb.semaphore);
+}
+
+{% endmacro %}
+
+{% macro render_driver_callback_function2(bt_event, value) %}
+/*==============================================*/
+/**
+{% if value == 'common_event_status_last' %}
+ * @fn          void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, uint16_t status)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, event_data
+ * @param[in]   uint16_t , event_status 
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, uint16_t status)
+{% elif value == 'common_event_status_first' %}
+ * @fn          void rsi_ble_{{ bt_event }}_driver_callback(uint16_t status, rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ bt_event }}_driver_callback(uint16_t status, rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+{% elif value == 'common_event_status_none' %}
+ * @fn          void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+{% else %}
+ * @fn          void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_{{ bt_event }}_driver_callback(rsi_bt_{{ bt_event }}_t *rsi_ble_{{ bt_event }})
+{% endif %}
+{
+	LOG_PRINT_D("\n in rsi_ble_{{ bt_event }}_driver_callback \n");
+	generic_event_message_t *msg;
+
+	//! allocate message
+	{% if value == 'common_event_status_first' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_bt_{{ bt_event }}_t));
+	{% elif value == 'common_event_status_last' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_bt_{{ bt_event }}_t));
+	{% elif value == 'common_event_status_none' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_bt_{{ bt_event }}_t));
+	{% else %}
+	msg = malloc(sizeof(generic_event_message_t) + sizeof(rsi_bt_{{ bt_event }}_t));
+	{% endif %}
+  if (msg == NULL) {
+    LOG_PRINT("Out of Memory assert\n");
+    _assert("Out Of Memory\n");
+  } else {
+    LOG_PRINT_D("Malloc passed\n");
+  }
+	//! init messag details
+	msg->next = NULL;
+	msg->event_id = {{ bt_event }}_event_id;
+	//! function to be called to free this message
+	msg->free_callback = rsi_free_memory;
+	{% if value == 'common_event_status_none' %}
+	//msg->status = status;
+	{%else%}
+	msg->status = status;
+	{%endif%}
+	{% if value == 'common_event_status_first' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ bt_event }}, sizeof(rsi_bt_{{ bt_event }}_t));
+	{% elif value == 'common_event_status_last' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ bt_event }}, sizeof(rsi_bt_{{ bt_event }}_t));
+	{% elif value == 'common_event_status_none' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_{{ bt_event }}, sizeof(rsi_bt_{{ bt_event }}_t));
+	{% endif %}
+	//! enqueue message to ble_generic_cb.event_queues[0]
+	rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.event_queues[0], (rsi_app_pkt_t *)msg, &ble_generic_cb.event_mutex);
+  	rsi_semaphore_post(&ble_generic_cb.semaphore);
+}
+
+{% endmacro %}
+
+{% macro render_driver_callback_function3(dummy_event, value) %}
+/*==============================================*/
+/**
+
+{% if value == 'uint' %}
+ * @fn          void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t *conn_id)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint8_t *conn_id
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t *conn_id)
+{% elif value == 'uint_without_ptr' %}
+ * @fn          void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t conn_id)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint8_t conn_id
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_{{ dummy_event }}_driver_callback(uint8_t conn_id)
+{% elif value == 'void' %}
+ * @fn          void rsi_ble_event_{{ dummy_event }}_driver_callback(void)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   NULL
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_{{ dummy_event }}_driver_callback(void)
+{% elif value == 'profile_dummy_data' %}
+ * @fn          void rsi_ble_event_{{ dummy_event }}_driver_callback(profile_dummy_data_t *profile_dummy_data)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint8_t *conn_id, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_{{ dummy_event }}_driver_callback(profile_dummy_data_t *profile_dummy_data)
+{% else %}
+ * @fn          void rsi_ble_event_{{ dummy_event }}_driver_callback(rsi_ble_{{ dummy_event }}_t *rsi_ble_{{ dummy_event }})
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   rsi_ble_{{ dummy_event }}_t *rsi_ble_{{ dummy_event }}, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_{{ dummy_event }}_driver_callback(rsi_ble_{{ dummy_event }}_t *rsi_ble_{{ dummy_event }})
+{% endif %}
+{
+	LOG_PRINT_D("\n in rsi_ble_{{ dummy_event }}_driver_callback \n");
+	generic_event_message_t *msg;
+
+	//! allocate message
+
+	{% if value == 'uint' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(uint8_t));
+	{% elif value == 'uint_without_ptr' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(uint8_t));
+	{% elif value == 'void' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_conn_info_t));
+	{% elif value == 'profile_dummy_data' %}
+		msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(profile_dummy_data_t));
+	{% else %}
+	msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_{{ ble_event }}_t));
+	{% endif %}
+  if (msg == NULL) {
+    LOG_PRINT("Out of Memory assert\n");
+    _assert("Out Of Memory\n");
+  } else {
+    LOG_PRINT_D("Malloc passed\n");
+  }
+	//! init messag details
+	msg->next = NULL;
+	msg->event_id = {{ dummy_event }}_event_id;
+	//! function to be called to free this message
+	msg->free_callback = rsi_free_memory;
+	{% if value == 'uint' %}
+	//msg->status = status;	
+	{% elif value == 'profile_dummy_data' %}
+	//msg->status = status;
+	{% elif value == 'uint_without_ptr' %}
+	//msg->status = status;
+	{% elif value == 'void' %}
+	//msg->status = status;
+	{%else%}
+	msg->status = status;
+	{%endif%}
+
+	{% if value == 'uint' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)conn_id, sizeof(uint8_t));
+	{% elif value == 'profile_dummy_data' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)profile_dummy_data, sizeof(profile_dummy_data_t));
+	{% elif value == 'void' %}
+	//! copy event data to msg
+	memcpy((void *)&msg->event_data[0], (void *)rsi_ble_conn_info, sizeof(rsi_ble_conn_info_t));
+	{% endif %}
+	//! enqueue message to ble_generic_cb.event_queues[0]
+	rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.event_queues[0], (rsi_app_pkt_t *)msg, &ble_generic_cb.event_mutex);
+  	rsi_semaphore_post(&ble_generic_cb.semaphore);
+}
+
+{% endmacro %}
+
+
+
+{% for ble_event, callback in ble_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if ble_event == 'event_conn_update' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'event_disconnect' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'event_remote_conn_param_req' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_last') -}}
+	{% elif ble_event == 'set_att_resp' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_prepare_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'execute_write' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'read_req' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_profiles_list' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_profile_by_uuid' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_read_by_type1' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_att_value' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'event_error_resp' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+        {% elif ble_event == 'ae_adv_report' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_sync_estbl' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_report' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'per_adv_sync_lost' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'scan_timeout' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'adv_set_terminated' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'scan_req_recvd' %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_first') -}}
+	{% elif ble_event == 'indication_confirmation' %}
+/*==============================================*/
+/**
+ * @fn          void rsi_ble_set_att_resp_driver_callback(uint16_t status, rsi_ble_set_att_resp_t *rsi_ble_set_att_resp)
+ * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   rsi_ble_set_att_resp_t *rsi_ble_set_att_resp, event_data
+ * @param[out]  None
+ * @return      None
+ *
+ * @section description
+ * This function enqueues event data received in driver context to ble_generic_cb.event_queues to be processed in ble task context
+ *
+ */
+
+APP_WEAK void rsi_ble_event_indication_confirmation_driver_callback(uint16_t status,
+                                                                    rsi_ble_set_att_resp_t *rsi_ble_event_set_att_rsp)
+{
+  LOG_PRINT_D(" \n in rsi_ble_event_indication_confirmation driver_callback \n");
+  generic_event_message_t *msg;
+  UNUSED_PARAMETER(status);
+  //! allocate message
+  msg = rsi_malloc(sizeof(generic_event_message_t) + sizeof(rsi_ble_set_att_resp_t));
+  //! assert if malloc failed
+  if (msg == NULL) {
+    LOG_PRINT("Out of Memory assert\n");
+    _assert("Out Of Memory\n");
+  } else {
+    LOG_PRINT_D("Malloc passed\n");
+  }
+  //! init messag details
+  msg->next     = NULL;
+  msg->event_id = indication_confirmation_event_id;
+  //! function to be called to free this message
+  msg->free_callback = rsi_free_memory;
+  //msg->status = status;
+  //! copy event data to msg
+  memcpy((void *)&msg->event_data[0], (void *)rsi_ble_event_set_att_rsp, sizeof(rsi_ble_set_att_resp_t));
+  //! enqueue message to ble_generic_cb.event_queues[0]
+
+  rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.event_queues[0], (rsi_app_pkt_t *)msg, &ble_generic_cb.event_mutex);
+  rsi_semaphore_post(&ble_generic_cb.semaphore);
+}
+	{% else %}
+		{{ render_driver_callback_function(ble_event, 'common_event_status_none') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+{% for bt_event, callback in bt_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if bt_event == 'event_encryption_enabled' %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_first') -}}
+	{% elif bt_event == 'event_smp_failed' %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_first') -}}
+	{% else %}
+		{{ render_driver_callback_function2(bt_event, 'common_event_status_none') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+{% for dummy_event, callback in dummy_events.items() %}
+{% if "handler" in callback.keys() and callback["handler"] != Null %}
+	{% if dummy_event == 'data_transmit' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint_without_ptr') -}}
+	{% elif dummy_event == 'event_smp_pending' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'advertisement_restart' %}
+		{{ render_driver_callback_function3(dummy_event, 'void') -}}
+	{% elif dummy_event == 'scan_restart' %}
+		{{ render_driver_callback_function3(dummy_event, 'void') -}}
+	{% elif dummy_event == 'event_on_data_recieve' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_conn_update_req' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_set_buffer_config' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_select_data_transfer' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'event_profile_discovery' %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% elif dummy_event == 'profile_dummy' %}
+		{{ render_driver_callback_function3(dummy_event, 'profile_dummy_data') -}}
+	{% elif dummy_event == 'ae_oneshot_adv_restart' %}
+		{{ render_driver_callback_function3(dummy_event, 'void') -}}		          
+	{% else %}
+		{{ render_driver_callback_function3(dummy_event, 'uint') -}}
+	{% endif  %}
+{% endif %}
+{% endfor %}
+
+{% for ble_event, details in ble_events.items() %}
+/*==============================================*/
+/**
+ * @fn          void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+ * @brief       handler for {{ ble_event }} to be executed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   void, event_data
+ * @return      None
+ *
+ * @section description
+ * handler for {{ ble_event }} to be executed in ble task context
+ *
+ */
+APP_WEAK void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+{
+	//! Add handling here
+}
+
+{% endfor %}
+
+{% for bt_event, details in bt_events.items() %}
+/*==============================================*/
+/**
+ * @fn          void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+ * @brief       handler for {{ bt_event }} to be executed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   void, event_data
+ * @return      None
+ *
+ * @section description
+ * handler for {{ bt_event }} to be executed in ble task context
+ *
+ */
+APP_WEAK void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+{
+	//! Add handling here
+}
+
+{% endfor %}
+
+{% for dummy_event, details in dummy_events.items() %}
+/*==============================================*/
+/**
+ * @fn          void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+ * @brief       handler for {{ dummy_event }} to be executed in ble task context
+ * @param[in]   uint16_t , event_status 
+ * @param[in]   void, event_data
+ * @return      None
+ *
+ * @section description
+ * handler for {{ dummy_event }} to be executed in ble task context
+ *
+ */
+APP_WEAK void {{ details["handler"] }}(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+{
+	//! Add handling here
+}
+
+{% endfor %}
+
+
+void sl_btc_ble_gap_register_callbacks_wrapper()
+{
+  rsi_ble_gap_register_callbacks(rsi_ble_event_adv_report_driver_callback,
+                                 rsi_ble_event_conn_status_driver_callback,
+                                 rsi_ble_event_disconnect_driver_callback,
+                                 NULL, /* ble_on_le_ping_time_expired_event */
+                                 NULL, /* rsi_ble_event_phy_update_driver_callback*/
+                                 NULL, /*rsi_ble_event_data_length_update_driver_callback*/
+                                 rsi_ble_event_enhance_conn_status_driver_callback,
+                                 NULL, /* ble_on_directed_adv_report_event */
+                                 rsi_ble_event_conn_update_driver_callback,
+                                 rsi_ble_event_remote_conn_param_req_driver_callback);
+}
+void sl_btc_ble_gatt_register_callbacks_wrapper()
+{
+  rsi_ble_gatt_register_callbacks(
+    NULL, /* rsi_ble_on_profiles_list_resp */
+    NULL, /* ble_on_profile_resp */
+    NULL, /* ble_on_char_services_resp */
+    NULL, /* ble_on_inc_services_resp */
+    NULL, /* ble_on_att_desc_resp */
+    NULL, /* ble_on_read_resp */
+    NULL, /* ble_on_write_resp */
+    rsi_ble_event_write_driver_callback,
+    rsi_ble_event_prepare_write_driver_callback,
+    rsi_ble_execute_write_driver_callback,
+    rsi_ble_read_req_driver_callback,
+    rsi_ble_event_mtu_driver_callback,
+    rsi_ble_event_error_resp_driver_callback,
+    NULL, /* rsi_ble_on_gatt_desc_val_event */
+    rsi_ble_event_profiles_list_driver_callback,
+    rsi_ble_event_profile_by_uuid_driver_callback, //!add profile event
+    rsi_ble_event_read_by_type1_driver_callback,
+    NULL, /* ble_on_read_by_inc_services_event */
+    NULL, /* ble_on_read_att_value_event */
+    rsi_ble_event_att_value_driver_callback,
+    rsi_ble_set_att_resp_driver_callback,
+    rsi_ble_event_indication_confirmation_driver_callback, /* rsi_ble_on_event_indication_confirmation */
+    NULL /* rsi_ble_prepare_write_resp_driver_callback */);
+}
+void sl_btc_ble_gatt_extended_register_callbacks_wrapper()
+{
+  rsi_ble_gatt_extended_register_callbacks(rsi_ble_event_mtu_exchange_information_driver_callback);
+}
+void sl_btc_ble_gap_extended_register_callbacks_wrapper()
+{
+  rsi_ble_gap_extended_register_callbacks(rsi_ble_event_remote_features_driver_callback,
+                                          rsi_ble_event_le_dev_buf_ind_driver_callback);
+}
+
+void sl_btc_ble_smp_register_callbacks_wrapper()
+{
+  rsi_ble_smp_register_callbacks(rsi_ble_event_smp_req_driver_callback,
+                                 rsi_ble_event_smp_resp_driver_callback,
+                                 rsi_ble_event_smp_passkey_driver_callback,
+                                 rsi_ble_event_smp_failed_driver_callback,
+                                 rsi_ble_event_encryption_enabled_driver_callback,
+                                 rsi_ble_event_smp_passkey_display_driver_callback,
+                                 rsi_ble_event_sc_passkey_driver_callback,
+                                 rsi_ble_event_le_ltk_request_driver_callback,
+                                 rsi_ble_event_le_security_keys_driver_callback,
+                                 NULL, /* ble_on_cli_smp_response_event */
+                                 NULL /* ble_on_sc_method_event not required in this app */);
+}
+
+void sl_btc_ble_adv_extended_register_callbacks_wrapper()
+{
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_ADVERTISE_REPORT_EVENT,
+                                                     (void *)rsi_ble_ae_adv_report_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_PERIODIC_ADV_SYNC_ESTBL_EVENT,
+                                              (void *)rsi_ble_per_adv_sync_estbl_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_PERIODIC_ADVERTISE_REPORT_EVENT,
+                                                     (void *)rsi_ble_per_adv_report_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_PERIODIC_ADV_SYNC_LOST_EVENT,
+                                                     (void *)rsi_ble_per_adv_sync_lost_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_SCAN_TIMEOUT_EVENT,
+                                                     (void *)rsi_ble_scan_timeout_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT,
+                                                     (void *)rsi_ble_adv_set_terminated_driver_callback);
+    rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT,
+                                                     (void *)rsi_ble_scan_req_recvd_driver_callback);
+}

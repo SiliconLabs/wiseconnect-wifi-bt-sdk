@@ -27,7 +27,7 @@
 #include "rsi_m4.h"
 #endif
 #ifdef LINUX_PLATFORM
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
 #include "rsi_linux_app_init.h"
 #endif
 #endif
@@ -196,7 +196,7 @@ void rsi_tx_event_handler(void)
   }
 
 #if (defined RSI_BT_ENABLE || defined RSI_BLE_ENABLE || defined RSI_PROP_PROTOCOL_ENABLE)
-#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) \
+#if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) || (defined RSI_M4_INTERFACE) \
      || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
   if (bt_pkt_pending
 #ifdef RSI_PROP_PROTOCOL_ENABLE
@@ -264,7 +264,7 @@ void rsi_tx_event_handler(void)
 #endif
 
   if (common_pkt_pending) {
-#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) \
+#if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) || (defined RSI_M4_INTERFACE) \
      || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
     rsi_driver_cb->rsi_tx_done_handler = &rsi_common_packet_transfer_done;
     // Read interrupt status register to check buffer full condition
@@ -356,7 +356,7 @@ void rsi_tx_event_handler(void)
 #endif
   else if (wlan_pkt_pending) {
 #ifdef RSI_WLAN_ENABLE
-#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) \
+#if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) || (defined RSI_M4_INTERFACE) \
      || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
     // Read interrupt status register to check buffer full condition
     ret_status = rsi_device_interrupt_status(&int_status);
@@ -655,7 +655,8 @@ void rsi_rx_event_handler(void)
     return;
   }
 #endif
-#if ((defined RSI_SPI_INTERFACE) || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
+#if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) \
+     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
 #if ((defined RSI_SPI_INTERFACE) || (defined RSI_SDIO_INTERFACE))
   if (!rsi_get_intr_status()) {
 
@@ -815,7 +816,7 @@ void rsi_rx_event_handler(void)
 #ifdef RSI_UART_INTERFACE
     if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
       if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif
@@ -886,7 +887,7 @@ void rsi_rx_event_handler(void)
 #if RSI_UART_INTERFACE
     if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
       if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif
@@ -1012,7 +1013,7 @@ void rsi_rx_event_handler(void)
 #ifdef RSI_UART_INTERFACE
   if (!rsi_check_queue_status(&rsi_linux_app_cb.rcv_queue))
 #endif
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
     if (rsi_linux_driver_app_cb.rcv_queue.pending_pkt_count == 0)
 #endif
 #endif

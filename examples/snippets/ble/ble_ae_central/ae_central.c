@@ -658,16 +658,6 @@ int32_t rsi_ble_central(void)
   }
 #endif
 
-#if BLE_AE_PERIODIC_SYNC_TERMIN
-  // AE Terminate Periodic sync
-  status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_TERMINATE, &ae_per_sync_create);
-  if (status != RSI_SUCCESS) {
-    LOG_PRINT(" \n set ae periodic sync terminate failed with 0x%lX \n");
-  } else {
-    LOG_PRINT(" \n set ae periodic sync terminate success \n");
-  }
-#endif
-
 #if 0
   rsi_ble_ae_dev_to_periodic_list_t ae_remv_dev ={0};
   rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)ae_remv_dev.adv_addr,(int8_t *)REM_ADDR1);
@@ -860,7 +850,17 @@ int32_t rsi_ble_central(void)
       case RSI_APP_EVENT_AE_PER_SYNC_ESTBL: {
 
         //! Ae Periodic Sync Estabilished event
-
+#if BLE_AE_PERIODIC_SYNC_TERMIN
+        // AE Terminate Periodic sync
+        rsi_ble_ae_set_periodic_adv_terminate_sync_t ae_per_sync_terminate = { 0 };
+        ae_per_sync_terminate.sync_handle                                  = BLE_AE_ADV_SID;
+        status = rsi_ble_ae_set_periodic_sync(BLE_AE_PER_SYNC_TERMINATE, &ae_per_sync_terminate);
+        if (status != RSI_SUCCESS) {
+          LOG_PRINT(" \n set ae periodic sync terminate failed with 0x%lX \n");
+        } else {
+          LOG_PRINT(" \n set ae periodic sync terminate success \n");
+        }
+#endif
         //! clear the event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_AE_PER_SYNC_ESTBL);
       } break;

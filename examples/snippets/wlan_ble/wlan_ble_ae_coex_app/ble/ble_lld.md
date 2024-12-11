@@ -1,0 +1,164 @@
+# BLE LLD
+## BLE Task Private CB
+### Structures
+
+The structures for ble module are all defined in [ble_private.h](ble_private.h)
+## Initialization
+```mermaid
+sequenceDiagram
+	ble_init() ->> rsi_ble_register_callbacks() : register ble Callbacks
+	alt ble_private_cb.adv_scan_cb.adv_scan_enable
+	ble_init() ->> rsi_ble_start_advertising() : RSI_BLE_SET_ADV_DATA rsi_ble_set_advertise_data
+	end
+	alt ble_private_cb.adv_scan_cb.page_scan_enable
+	ble_init() ->> rsi_ble_start_scanning() : 
+	note over rsi_ble_set_connctable() : Triggers on_connect subtask created
+	end
+	alt ble_private_cb.peer_info[n].bd_address is valid
+	alt ble_private_cb.page_cb.adv_required
+	ble_init() ->> rsi_ble_adv() : RSI_BLE_REQ_ADV
+	note over rsi_ble_adv() : Triggers on_adv_complete
+	else
+	ble_init() ->> rsi_ble_connect() : RSI_BLE_REQ_BOND
+	note over rsi_bleconnect() : Triggers on_connect
+	end
+	end
+
+```
+## State Transitions
+### ADV Process
+```mermaid
+stateDiagram-v2
+	idle
+	adv_triggered
+	Connectable_adv
+	Non_connectable_adv
+	On_Enhance_Conn
+	state name_valid <<choice>>
+	[*] --> idle : Bootup
+	idle --> adv_triggered : if (requested by start_adv or user_command)
+	adv_triggered --> Connectable_adv
+	adv_triggered --> Non_connectable_adv
+	Connectable_adv --> On_Enhance_Conn : if connect command given 
+	On_Enhance_Conn --> adv_triggered : again start adv 
+
+	
+```
+
+
+
+### SCAN Process
+```mermaid
+stateDiagram-v2
+	idle
+	scan_triggered
+	Connectable_scan
+	Non_connectable_scan
+	On_Conn
+	Adv_report_recieved
+	state name_valid <<choice>>
+	[*] --> idle : Bootup
+	idle --> scan_triggered : if (requested by start_scan or user_command)
+	scan_triggered --> Adv_report_recieved
+	Adv_report_recieved --> Connectable_scan
+	Adv_report_recieved --> Non_connectable_scan
+	Connectable_scan --> On_Conn : if adv_report matches the device which is advertising 
+	On_Conn --> scan_triggered : again start scan 
+	
+```
+### Connection Process
+
+#### On Connect
+```mermaid
+stateDiagram-v2
+	idle
+	DUT_ADV_SCAN
+	On_enhance_conn
+	On_conn
+	Connection_established 
+	MTU_Exhange_Info
+	SMP_Protocol
+	Profile_Discovery
+	[*] --> idle : Bootup
+	idle --> DUT_ADV_SCAN
+	DUT_ADV_SCAN --> On_enhance_conn : if remote device is scanning
+	DUT_ADV_SCAN --> On_conn : if remote device is advertising
+	On_enhance_conn --> Connection_established :  master++
+	On_conn --> Connection_established :  slave++
+	Connection_established --> MTU_Exhange_Info
+	MTU_Exhange_Info --> SMP_Protocol
+	SMP_Protocol --> Profile_Discovery
+	Profile_Discovery --> DUT_ADV_SCAN
+
+
+```
+
+
+#### On Disconnect
+```mermaid
+stateDiagram-v2
+	DUT_ADV_SCAN
+	On_Disconnect
+	state disconnection <<choice>>
+	[*] --> DUT_ADV_SCAN : Stable Connected State
+	DUT_ADV_SCAN --> On_Disconnect : on_disconnect Conn_variables are freed
+	On_Disconnect --> DUT_ADV_SCAN : master / slave according to the connection decreased
+```
+### Event Handling
+#### Generic Flow
+The generic handling of all events starting from ble call back handling in driver context to call for each event handler in ble task context shall be implemented through jinja templates and a yaml file to configure the supported events.
+The templeate is defines in ble_auto_gen.c.jinja and ble_auto_gen.h.jinja. list of events is configerd through ble_configs.yaml under event hierarchy.
+```mermaid
+sequenceDiagram
+	note over ble_driver_call_back() : Driver/SAPI context
+	note over ble_generic_cb.event_handler_lut[event_id], event_handler() : BLE Main Task context which leads to BLE subtask 
+	ble_driver_call_back() ->> ble_generic_cb.event_handler_lut[event_id] : Invokes BLE MAIN tasks
+	ble_generic_cb.event_handler_lut[event_id] ->> event_handler() : Final event Handler which Invokes ble sub task
+	note over ble_driver_call_back() : AutoGen Code
+	note over ble_generic_cb.event_handler_lut[event_id] : Generic Task Handling
+	note over event_handler() : manual implementation
+```
+##### BLE Driver Call Back Handling
+All BLE driver call backs are handled in driver context as per below flow
+```mermaid
+flowchart 
+	subgraph ble_driver_callback
+	malloc(malloc sizeof_event_message_t)
+	copy_status(event_message.status = status)
+	set_free_function(event_message.free_callback = free_function)
+	copy_event_data(memcpy - event_message.event_data, event_data)
+	enqueue(enqueue_message ble_task_cb.priority_queue_0)
+	end
+	malloc--> copy_status --> set_free_function --> copy_event_data --> enqueue
+```
+### Folder Heirarchy
+```mermaid
+flowchart
+    subgraph src
+    subgraph ble
+    classic_defines
+    subgraph ble
+        ble_configs.yaml
+        ble_auto_gen.c.j2
+        ble_auto_gen.c
+        ble_auto_gen.h.j2
+        ble_auto_gen.h
+        ble_call_backs.c
+        ble_private.h
+    end
+    end
+    end
+```
+- ble_configs.yaml files shall host the config for all autogen code
+- ble_autogen.c.j2 files shall host the templates for ble_auto_gen.c files
+- ble_autogen.h.j2 files shall host the templates for ble_auto_gen.h files
+- ble_autogen.c files shall host autogenerated C code
+    - event and command handler look up tables
+    - registered driver call backs()
+    - command handler wrappers(performs conversion of ascii to binary of arguments and call actual command handlers)
+- ble_autogen.h shall host auto generated enums and declarations
+    - enum for event list for the ble
+    - declarations for event and command handlers
+    - MACRO for event callback registration
+- ble_call_backs.c file shall host actual event and command call backs
+- ble_private.h file shall host structures specific to the ble, ie. struct ble_private_cb

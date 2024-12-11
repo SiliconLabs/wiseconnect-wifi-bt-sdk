@@ -1,0 +1,73 @@
+#include "generic_command_handling.h"
+
+{% macro render_command_details(module, commands) %}
+	{% for command, command_details in commands.items() %}
+	{% if "ui_handler" in command_details.keys() %}
+extern void {{ command_details["ui_handler"] }}(uint8_t argc, uint8_t *argv[]);
+	{% else %}
+extern void ui_task_{{ command }}_cmd_handler(uint8_t argc, uint8_t *argv[]);
+	{% endif %}
+	{% endfor %}
+command_lut_entry_t {{ module }}_commands_lut[] =
+{
+	{% for command, command_details in commands.items() %}
+	{% if "ui_handler" in command_details.keys() %}
+	{.command_name = "{{ command }}", .handler = {{ command_details["ui_handler"] }}},
+	{% else %}
+	{.command_name = "{{ command }}", .handler = ui_task_{{ command }}_cmd_handler},
+	{% endif %}
+	{% endfor %}
+	{.command_name = NULL, .handler = NULL}
+};
+{% endmacro%}
+
+{% macro render_null_command_details(module) %}
+command_lut_entry_t {{ module }}_commands_lut[] =
+{
+	{.command_name = NULL, .handler = NULL}
+};
+{% endmacro%}
+
+{% macro render_module_details(module, module_details) %}
+{% if module_details != None %}
+{% for sub_module, sub_module_details in module_details.items() %}
+{% if sub_module_details != None and sub_module != "commands" and sub_module != "handler" %}
+{{ render_module_details(sub_module, sub_module_details) -}}
+{% endif %}
+{% endfor %}
+{% if "commands" in module_details.keys() %}
+{{ render_command_details(module, module_details["commands"]) -}}
+{% else %}
+{{ render_null_command_details(module) -}}
+{% endif %}
+
+{% for sub_module, sub_module_details in module_details.items() %}
+	{% if sub_module != "commands" and sub_module != "handler" %}
+	{% if sub_module_details != None and 'handler' in sub_module_details.keys() %}
+extern  {{ sub_module_details["handler"] }}
+	{% else %}
+extern module_lut_entry_t {{ sub_module }}_module_lut[];
+extern command_lut_entry_t {{ sub_module}}_commands_lut[];
+	{% endif%}
+	{% endif %}
+{% endfor%}
+
+module_lut_entry_t {{ module }}_module_lut[] =
+{
+{% for sub_module, sub_module_details in module_details.items() %}
+	{% if sub_module != "commands" and sub_module != "handler" %}
+	{% if sub_module_details != None and 'handler' in sub_module_details.keys() %}
+	{.module_name = "{{sub_module}}", .sub_modules = NULL, .commands = NULL, .custom_handler = {{ sub_module_details["handler"] }}},
+	{% else %}
+	{.module_name = "{{sub_module}}", .sub_modules = {{ sub_module }}_module_lut, .commands = {{ sub_module}}_commands_lut, .custom_handler = NULL },
+	{% endif%}
+	{% endif %}
+{% endfor%}
+	{.module_name = NULL, .sub_modules = NULL, .commands = NULL, .custom_handler = NULL }
+};
+{% endif %}
+{% endmacro %}
+
+{% for sub_module, sub_module_details in user_interface.items() %}
+{{ render_module_details(sub_module, sub_module_details) -}}
+{% endfor%}

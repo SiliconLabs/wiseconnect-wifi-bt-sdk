@@ -1,0 +1,2 @@
+python3 ../../../../../Utils/Python/jinja_renderer.py -t utils/command_template.j2 -y root_configs.yaml -o root_auto_gen.c
+python3 ../../../../../Utils/Python/jinja_renderer.py -t utils/command_template.j2 -y ble/btc_configs.yaml -o btc_auto_gen.c

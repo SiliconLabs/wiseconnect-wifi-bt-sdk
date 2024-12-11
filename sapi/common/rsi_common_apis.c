@@ -385,7 +385,7 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 #endif
 
 #ifdef LINUX_PLATFORM
-#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE))
+#if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
   status = rsi_linux_app_init();
   if (status != RSI_SUCCESS) {
     return status;

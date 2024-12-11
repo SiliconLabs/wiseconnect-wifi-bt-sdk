@@ -1816,7 +1816,8 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, uin
  *              0x4E0C	Command disallowed \n 
  *              0x4046 	Invalid Arguments \n 
  *              0x4D04	BLE not connected \n 
- *              0x4D14	BLE parameter out of mandatory range 
+ *              0x4D14	BLE parameter out of mandatory range \n
+ *              0x4D15  Unsuported power index for 915 
  * @note        Refer Error Codes section for above error codes \ref error-codes .
  *
  */

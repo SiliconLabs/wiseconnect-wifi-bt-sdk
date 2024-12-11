@@ -275,7 +275,6 @@ int32_t rsi_wlan_ble_app_init(void)
   //! BLE initialization
   rsi_ble_app_init();
 
-  //FIXME
   //rsi_wlan_app_init();
 
   //! Task created for WLAN task

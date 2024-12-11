@@ -200,11 +200,6 @@ COMMON_SOURCES = $(RSI_SDK_PATH)/sapi/common/rsi_common_apis.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_scheduler.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_utils.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_timer.c \
-                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_frame_rd_wr.c \
-                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_functs.c \
-                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_iface_init.c \
-                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_mem_rd_wr.c \
-                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_reg_rd_wr.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_iap.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_common.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_scheduler_rom.c \
@@ -213,6 +208,14 @@ COMMON_SOURCES = $(RSI_SDK_PATH)/sapi/common/rsi_common_apis.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_queue_rom.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_events_rom.c \
                  $(WLAN_COMMON_SOURCES)
+
+ifneq "$(PLATFORM)" "linux"
+COMMON_SOURCES += $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_frame_rd_wr.c \
+                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_functs.c \
+                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_iface_init.c \
+                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_mem_rd_wr.c \
+                 $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_reg_rd_wr.c
+endif
 
 zigbee_SOURCES = $(ZB_CORE_SRC)/rsi_zb.c \
                  $(ZB_CORE_SRC)/rsi_zb_utility.c \

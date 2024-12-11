@@ -1,0 +1,50 @@
+#ifndef BLE_CMD_HDLR_AUTO_GEN_H
+#define BLE_CMD_HDLR_AUTO_GEN_H
+#include "rsi_driver.h"
+#include "event_loop.h"
+
+#ifdef FRDM_K28F
+#define APP_WEAK __attribute__((weak))
+#else
+#ifdef MXRT_595s
+#define APP_WEAK __weak
+#else
+#define APP_WEAK
+#endif
+#endif
+
+#define FIXED_LEN_RESPONSE_BUFFER_VALID      1
+#define VARIABLE_LEN_RESPONSE_BUFFER_VALID   2
+
+//! Enumerations
+enum ble_cmd_ids {
+{% for command, details in  user_interface["ble"]["commands"].items() %}
+	{{ command }}_command_id,
+{% endfor %}
+	max_ble_command_id
+};
+
+//! function declarations
+{% for command, details in  user_interface["ble"]["commands"].items() %}
+void ui_task_{{ command }}_cmd_handler(uint8_t argc, uint8_t *argv[]);
+{% endfor %}
+
+{% for command, details in user_interface["ble"]["commands"].items() %}
+void {{ details["module_handler"] }}(generic_command_message_t *generic_command_message);
+{% endfor %}
+
+/** Extern functions  **/
+//! function declarations
+{% for command, details in  user_interface["ble"]["commands"].items() %}
+extern void ui_task_{{ command }}_cmd_handler(uint8_t argc, uint8_t *argv[]);
+{% endfor %}
+
+{% for command, details in user_interface["ble"]["commands"].items() %}
+extern void {{ details["module_handler"] }}(generic_command_message_t *generic_command_message);
+{% endfor %}
+
+/** Extern variables  **/
+extern generic_task_cb_t ble_generic_cb;
+extern rsi_semaphore_handle_t ui_task_response_semaphore;
+extern generic_command_handler_lut_entry_t ble_commands_hdlr_lut[];
+#endif
