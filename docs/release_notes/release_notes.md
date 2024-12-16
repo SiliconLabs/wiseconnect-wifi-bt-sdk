@@ -2,6 +2,7 @@
 
 Release notes are provided with each version of the [WiSeConnect&trade; SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk).
 
+  - [WiSeConnect&trade; 2.11.1](#wiseconnect-2111-release-notes)
   - [WiSeConnect&trade; 2.11](#wiseconnect-211-release-notes)
   - [WiSeConnect&trade; 2.10.4](#wiseconnect-2104-release-notes)
   - [WiSeConnect&trade; 2.10.3](#wiseconnect-2103-release-notes)
@@ -29,6 +30,282 @@ Release notes are provided with each version of the [WiSeConnect&trade; SDK](htt
   - [WiSeConnect&trade; 2.4](#wiseconnect-24-release-notes)
   - [WiSeConnect&trade; 2.3](https://www.silabs.com/documents/login/release-notes/RS9116W-IoT-Software-2.3-release-notes.pdf)
   - [WiSeConnect&trade; 2.0](https://www.silabs.com/documents/login/release-notes/rs9116w-iot-software-2.0-release-notes.pdf)
+
+# WiSeConnect 2.11.1 Release Notes
+
+Last updated: December 11, 2024
+
+## Highlights
+Bug fix
+
+## Release Details
+| Item                                                | Details                                |
+|-----------------------------------------------------|----------------------------------------|
+| API Version (SAPI)                                  | 2.11.1.1 (Build 1)                     |
+| Firmware Version                                    | 2.11.1.0.1 (Build 1)                   |
+| Package Name                                        | RS9116W.2.11.1.1                       |
+| Supported RTOS                                      | FreeRTOS                               |
+| Hardware Modules                                    | QMS, B00, C00, CC1, AB0, AB1, AA0, AA1, AC0, AC1 |
+| Hardware Chipsets                                   | Chip revision 1.3, Chip revision 1.4, Chip revision 1.5  |
+| Operating Modes Supported                           | Wi-Fi STA, Wi-Fi AP, Wi-Fi STA + BLE, Wi-Fi STA + AP     |
+| Additional Operating Modes Supported                | Wi-Fi STA + BT, Wi-Fi STA + BT + BLE , BLE (With AE)     |
+
+### Notes
+The latest releases have bug fixes, enhancements, and new features in both 'SAPIs', and 'Firmware'. Therefore, it is recommended to update, and use 'SAPIs', and 'Firmware' of same version.
+
+## Updates in this Release
+RS9116W 2.11.1.1 release consists of two components:
+  - Firmware - RS9116 Firmware Binary
+  - SAPI Library - SAPI Library runs on Host
+
+This release is meant only for use with designs based on RS9116 Silicon revision 1.4 (RS9116X-xxx-xxx-Bxx), and RS9116 Silicon revision 1.5 (RS9116X-xxx-xxx-Cxx).
+Customers using the Silicon revision 1.3 (RS9116X-xxx-xxx-Xxx) parts can upgrade to the latest firmware. However, the power optimization feature macro EXT_FEAT_LOW_POWER_MODE in rsi_wlan_config.h must be disabled for revision 1.3.
+
+
+Select the appropriate firmware version for your specific Silicon revision as its a part of your design. Following Silicon revisions are available:
+- RS9116W.2.11.1.0.1.rps
+  - RS9116X-xxx-xxx-Xxx (Silicon revision 1.3)
+  - RS9116X-xxx-xxx-Bxx (Silicon revision 1.4)
+- RS916W.2.11.1.0.1.rps
+  - RS9116X-xxx-xxx-Cxx (Silicon revision 1.5)
+  - RS916WS00ACxxx
+
+## New Features
+Following new features are implemented with this version:
+
+### Wi-Fi
+None
+
+### System
+None
+
+### BT-Classic/BLE
+None
+
+### Network Stack
+None
+
+### Coexistence
+None
+
+## Changes and Fixes
+The list of fixes, and changes for this version are outlined further:
+
+### Wi-Fi
+None
+
+### Network Stack
+None
+
+### BT-Classic/BLE
+  Resolved the Bluetooth SPP(Serial Port Profile) data transfer issue, ensuring the data transmission from the DUT(Device Under Test) with a payload length of ≤ 127 bytes, while using the 2DH3 packet type.
+
+### Coexistence
+None
+
+### System
+None
+
+### Documentation
+None
+
+## Recommendations and New Options
+Following are the list of recommendations, and new options:
+
+### Wi-Fi
+  - Enable aggregation using the opermode parameter [feature_bit_map\[2\]](https://docs.silabs.com/rs9116-wiseconnect/2.6/wifibt-wc-sapi-reference/opermode#rsi-feature-bit-map).
+  - Disable high MCS rates to improve the robustness of a connection for low throughput applications in congested networks. For instance, turning off `MCS6`, and `MCS7` may help a Smart Lock in a congested wireless environment.
+  - To restart the RS9116, the application should call `rsi_driver_deinit()` followed by `rsi_driver_init()`, and `rsi_device_init()`. For OS cases, additionally call `rsi_task_destroy(driver_task_handle)` to delete the driver task before calling `rsi_driver_deinit()`, and create again after `rsi_device_init()` using `rsi_task_create()`.
+
+### Network Stack
+  - To ensure graceful handling during asynchronous TCP closures from a peer, enable the opermode parameter [ext_tcp_ip_feature_bit_map\[16\]](https://docs.silabs.com/rs9116-wiseconnect/2.6/wifibt-wc-sapi-reference/opermode#rsi-ext-tcpip-feature-bitmap).
+  - To avoid TCP disconnects during a rejoin, set TCP retransmission count to >= `30`.
+  - Implemented a new API - `rsi_network_app_protocol_config()` to configure the network application protocols such as cipher selection for HTTP protocol.
+
+### BT-Classic/BLE
+  - In BLE, the recommended range of the BLE Connection Interval is as follows:
+    - Power Save (BLE only) - 100 ms to 1.28 s
+    - BT Classic + BLE Dual Mode is >= 200 ms
+    - Wi-Fi + BLE coex - 30 ms to 250 ms
+  - During connection in BLE, it is not recommended to configure the scan window, and scan interval with the same value.
+  - In BT Classic, the recommended Sniff Interval configuration during powersave is limited to 100 ms (\<= 100).
+  - In BLE, if a device is acting as central, the scan window (in `set_scan_params()`, and `create_connection()` APIs) must be less than the existing connection interval.
+  - In BLE mode, if scanning, and advertising is in progress, and the device subsequently connects, and moves to the central role, scanning, and advertising stops. To further establish connection to another peripheral device or to a central device, the application must initiate advertising, and scanning again.
+  - Device powersave must be disabled prior to BT init, and de-init.
+
+### Coexistence
+  - For concurrent Wi-Fi + BLE, and while a Wi-Fi connection is active, we recommend setting the ratio of the BLE scan window to BLE scan interval to 1:3 or 1:4.
+  - Wi-Fi + BLE Advertising
+    - All standard advertising intervals are supported. As Wi-Fi throughput is increased, a slight difference in on-air advertisements compared to configured intervals might be observed.
+    - BLE advertising is skipped if the advertising interval collides with Wi-Fi activity.
+  - Wi-Fi + BLE scanning
+    - All standard scan intervals are supported. For better scan results, we recommend setting the ratio of the BLE scan window to BLE scan interval to 1:3 or 1:4.
+    - BLE scan would be stopped for intervals that collide with Wi-Fi activity.
+  - Wi-Fi + BLE Central/Peripheral Connections
+    - All standard connection intervals are supported.
+    - For a stable connection, use optimal connection intervals, and maximum supervision timeout in the presence of Wi-Fi activity.
+  - Wi-Fi + BLE Central/Peripheral Data Transfer
+    - To achieve higher throughput for both Wi-Fi, and BLE, use medium connection intervals, such as 45 to 80 ms with maximum supervision timeout.
+    - Ensure Wi-Fi activity consumes lower intervals.
+  - To ensure a stable, and seamless connection, connect Wi-Fi before BT/BLE connections in the following operating modes: Wi-Fi + BT + BLE, Wi-Fi + BT, and Wi-Fi + BLE.
+  - For Wi-Fi + BT + BLE, Wi-Fi + BT, and Wi-Fi + BLE operating modes, if BT/BLE must be connected before Wi-Fi, use with a high supervision timeout, a high connection interval for BLE, and a high sniff interval for BT to ensure seamless and stable connection. This configuration additionally ensures that the BT/BLE connection stays stable when Wi-Fi connects/disconnects/rejoins.
+
+### System
+  - For User Store configuration and Configuration Save, do not enable power save or save it as a configuration. If power save is enabled and saved as a configuration, upon boot up, the RS9116 will boot with the saved configuration and will go to powersave without any indication to the host.
+  - Set the compiler optimization level to `O0` in project settings for IDE (KEIL).
+  - Memory configuration must be 384K for BT/BLE and co-ex operating modes.
+    - Usage of low-power flash mode bit (bit 19 in extended customer feature bitmap). Enable this bit for ultra-low-power standby associated scenarios. This results in about 20&micro;A lower Wi-Fi standby associated current consumption.
+  - Memory Configuration in SAPI functions: The default memory configuration is 384K.
+  - Apply Opermode commands in AT mode correctly. Using the wrong opermode may lead to unspecified behavior.
+  - Set the recommended Power Save Profile (PSP) type to Enhanced Max PSP.
+  - It is recommended to disable the power save functionality while updating firmware.
+  - For high throughput applications, powersave operation should be disabled.
+  - The application is required to set the real-time clock with the correct timestamp when the feature is enabled before establishing a TLS connection.
+  - At least one second timeout is a necessity for socket select and receive. No timeout value under one second is supported.
+
+## Known Issues
+Following are the list of known issues:
+
+### Network Stack
+  - Reassembly of fragmented MQTT packets is not supported in embedded MQTT. MQTT transactions may fail with fragmented packets received from the broker.
+  - Occasionally, during a TLS handshake, ECC curve parameters are generated incorrectly, which results in connection failure with BBD2 error. However, this gets recover in next attempt.
+  - During firmware updates, MQTT disconnects when power savings is enabled. During the firmware update, disable power save and re-enable it on updated completion.
+  - All GCM-based cipher suites are implemented in software and have limited performance.
+  - The recommended MQTT publish payload is 1 kBytes.
+  - If HTTP server functionality is enabled, do not use port 80 for the MQTT client.
+  - Randomize the client port if using rapid connect/disconnect of the MQTT session on the same client port with powersave.
+  - Secure TLS renegotiation is not supported in the embedded networking stack.
+  - In WPA2 enterprise security mode, getting wireless statistics using rsi_wlan_get() API has restrictions.
+  - Example application wlan_throughtput_bt_spp_ble_dual_role is unsupported with bare metal.
+  - In concurrent mode, there could be a loss of communication on the STA application when, simultaneously, multiple clients are connected to the APUT.
+  - IP address conflict detection has limitations in STA + AP concurrent mode, failure is not reported to host.
+  - mqtt_client, and mqtt_client_v6 applications does not support SDIO host interface.
+  - During firmware update via OTA (TCP/HTTP) methods, if the firmware image received is corrupted, it can result in the module going unresponsive on the next bootup.
+  - TLS connection problems may be observed when attempting to revoke public and private keys using existing keys.
+  - Observed STA + BT (Connected) test cases not getting throughput results prints in teraterm.
+  - Observed inconsistency in TCP and UDP - Rx throughputs in AP alone mode.
+  - Observed duplicate IPv6 address is assigned to multiple STAs in AP mode.
+  - Ping timeout may be observed with 1 second ping timeout configuration.
+
+### Wi-Fi
+  - WPA3 Connection with Hunting and Pecking algorithm takes about three to four seconds.
+  - If the station performs a scan in concurrent mode (Wi-Fi STA + AP), stations connected to the AP may be disconnected. Enable AP after the STA connection is completed.
+  - With power save, PTA 3-wire co-existence does not work. However, if a weak pull-up is applied on the GRANT pin, the PTA 3-wire functionality will work while the power is saved. For further information, please refer to Application Notes.
+  - EAP security in the aws_device_shadow application is unsupported on the EFR platform due to memory constraints.
+  - In STA + AP, If AP started first station scan is supported only in channel in which AP is brought up. If multiple channel scan is requested, AP behaviour is undefined.
+  - Auto channel selection with EXT_FEAT_IEEE_80211J feature enabled is not supported in Access point operating mode.
+  - Testing for traffic differentiation within a single BSS with 802.11n stations is yielding failures during the 11n certification process.
+
+### BT-Classic/BLE
+  - Wake on wireless is not supported for BLE.
+  - BT-HID may not interoperate with Apple devices.
+  - For BLE, dual role scenario issues may occur when connecting as a central when the peripheral is advertising. Central connections can be made after peripheral connections are established and advertising stops.
+  - A BLE disconnection would occur if both the peer and RS9116 already have bond info. And the RS9116 initiates security as part of BLE secure connections. To work around this issue, the application should not initiate a security request if, it already has bond info.
+  - A2DP music streaming glitches may be observed if a Wi-Fi download is in progress at the same time.
+  - RTOS support is not there in ae_peripheral, and ae_central applications.
+  - AE connection issue is expected with Samsung mobiles.
+  - BT inquiry would not work in temperature range from -40 to 0 C.
+  - When DUT is configured as a peripheral with powersave, repeated string of passkey is observed in multiple iterations of reconnection.
+
+### Coexistence
+  - After power save is enabled in co-ex mode, `radio_init()` must be called to turn off power save.
+  - In Wi-Fi + BLE mode:
+    - BLE may disconnect when the supervision timeout is configured to be less than 16 seconds.
+    - WPS does not work.
+  - In Wi-Fi + BLE, or BLE only modes:
+    - When Wi-Fi disconnects, a BT/BLE reconnection issue is observed.
+  - In Wi-Fi + BT mode:
+    - When BT SPP is connected, Wi-Fi throughput prints are not displayed in Teraterm with wlan_bt_throughput_app demo.
+  - The wlan_https_bt_a2dp_ble_dual_role and wlan_https_bt_a2dp demos are not supported.
+  - In Wi-Fi + BT/BLE Co-Ex mode, high Wi-Fi broadcast traffic might cause BT/BLE disconnections.
+  - In Wi-Fi + BT mode when there is continuous Wi-Fi data, you might observe BT not re-connecting to the remote after disconnection.
+
+### Interoperability
+Disconnection may occur in Wi-Fi client mode if an AP does not acknowledge QoS null frames with power save configured.
+
+### System
+  - Chip Revision 1.3 doesn't support low-power mode optimization using the bit setting defined by EXT_FEAT_LOW_POWER_MODE; setting this results in a hang issue.
+  - Sometimes the RS9116 enters power save mode before the configured monitor interval for inactivity when co-ex is configured.
+  - The FTP client application does not work with EFx32/STM32 when an RTOS is used.
+  - The HTTP OTA update application does not work with EFR32 and EFM32 when an RTOS is used.
+  - Firmware update does not work for the EFM32 platform.
+  - SAPI driver with UART host interface is supported only on bare metal.
+  - Powersave without RAM retention does not work when the SPI interface is used.
+  - MQTT Receive may encounter failures in STA + AP concurrent mode.
+  - Standby associated listen interval current consumption is higher than expected with EFM Platform.
+
+## Limitations and Unsupported Features
+Following are the list of limitations and unsupported features:
+
+### Wi-Fi/Network Stack
+  - AMSDU transmit is not supported.
+  - UAPSD is not supported.
+  - Fragmentation is not supported.
+  - AMSDU's within AMPDU is not supported.
+  - Currently, the RS9116 does not support the radio measurement requests feature of CCX V2.
+  - 802.11k is not supported.
+  - Short GI is not supported.
+  - 2.4 and 5 GHz bands does not support 40 MHz bandwidth.
+  - 802.11j channels less than 16 are not supported.
+  - The USB host interface and USB power save are not supported.
+  - In AT mode, the total MQTT command length (apart from MQTT publish) should not exceed `150` bytes. This includes `at+rsi` (start of command) to (end of command)`\r\n`.
+  - Configure `MQTT_VERSION` in `rsi_mqtt_client.h` based on the server configuration; only version 3 and 4 are supported.
+  - 3xTLS connections or 1xTCP and 2xTLS connections are supported concurrently in Wi-Fi only mode.
+  - TLS curve IDs supports from 15-28. TLS handshake with third party clients depends on the TLS curve.
+  - Big endian architecture is not supported.
+  - Auto PAC Provisioning in EAP-FAST with TLSv1.2 is not supported.
+  - RC4_SHA, DES_CBC3_SHA, and RC4_MD5 ciphers are not supported in enterprise security.
+  - SA query procedure not supported in 11W AP mode.
+  - If background scan is enabled along with custom feature bit map bit (8) configuration of the DFS channel support, issues may occur in obtaining an IP address for the Wi-Fi STA.
+  - In AP mode, IPv6 Router Advertisements are not supported. Although STA connected to the APUT can transfer IPv6 data to the peers by using SLAAC for address configuration.
+  - Transparent mode is unsupported in USB-CDC mode.
+  - Channel 144 is not supported.
+  - IOP issues may be observed with device running DHCPv6 server with Android devices, as latter do not support DHCPv6 process for IPv6 address configuration.
+  - WPA3 AP mode is supported with alpha-level quality.
+  - WPA3 AP supports only H2E algorithm.
+  - WPA3 AP PMKSA is not supported.
+  - WPA3 AP transition mode is not supported.
+  - AP standalone mode does not support Tx aggregation. Rx aggregation is supported with limited number of BA sessions.
+  - In concurrent mode - AP mode, aggregation (Tx/Rx) is not supported.
+
+### BT-Classic/BLE
+  - BT A2DP is only supports for RS9116 Silicon revision 1.5.
+  - BT sniff mode does not work if BT multiple slaves feature is enabled.
+  - For BLE, if the connection is established with a small connection interval (<15 ms), simultaneous roles are not supported (that is Central/Peripheral + Advertising/Scanning).
+  - For BT Classic, only one connection is supported at a time.
+  - BLE slave latency value is valid up to 32 only.
+  - BT-A2DP encoder is not supported in the firmware.
+  - BT-A2DP is not supported in AT mode.
+  - Maximum supported  AE data length is 200 bytes.
+  - Supports only two ADV_EXT sets.
+  - Maximum two BLE connections are supported (one central + one peripheral).
+  - SMP is not supported in AE applications "ble_ae_central", and "ble_ae_peripheral".
+  - GATT transactions, and Data transfer are not supported in AE applications "ble_ae_central", and "ble_ae_peripheral".
+  - BLE duty cycling is not supported.
+  - BLE does not support User_Config method.
+  - In the rsibt_spptxv2 command, if the data length field value exceeds the actual data bytes, the firmware would continuously poll for the data, which results in no response or can cause it to get stuck.
+
+### Coexistence
+  - Wi-Fi STA + BT + BLE multiprotocol use cases requires a detailed understanding of use cases and associated configurations. Contact Silicon Labs support for additional details.
+  - Wi-Fi AP + BLE, Wi-Fi AP + BT, and Wi-Fi AP + BT + BLE modes are not supported.
+  - For AT commands, Wi-Fi + BT + BLE (Opermode 9), BT + BLE (Opermode 8) does not work.
+  - In Wi-Fi + BLE mode, if the BLE scan interval and window have the same value, then the Wi-Fi connection might be unsuccessful.
+  - Wi-Fi + AE Coexistence:
+    - Maximum supported BLE scan interval and window for 100 % duty cycling  is three seconds.
+    - Enable power save to test the WiFi + AE coexistence use cases.
+    - Remove the bond information on remote device for every connection if SMP is enabled.
+    - Maximum two extended Advertising sets are supported.
+    - Maximum two BLE connections are supported (one central + one peripheral).
+
+### System
+  - Wake on Wireless support has only been tested for the UART AT command interface.
+  - Firmware update via bootloader method requires the user to check the integrity of the RPS file content. A corrupted image may cause the chip to go unresponsive to host commands.
+
+## Notes
+### BT-Classic/BLE
+ - Acceptlist address should be given in reverse order, that is in big endian format.
+ - AE feature validated using revision 1.5 AC1 expansion board.
+ - AE feature is not supported in RS9116 revision 1.4.
 
 # WiSeConnect 2.11 Release Notes
 
@@ -201,6 +478,7 @@ Following are the list of known issues:
 ### Wi-Fi
   - WPA3 Connection with Hunting and Pecking algorithm takes about three to four seconds.
   - If the station performs a scan in concurrent mode (Wi-Fi STA + AP), stations connected to the AP may be disconnected. Enable AP after the STA connection is completed.
+  - Issue observed with WPA2 Enterprise Connectivity using Microsoft RADIUS Server.
   - With power save, PTA 3-wire co-existence does not work. However, if a weak pull-up is applied on the GRANT pin, the PTA 3-wire functionality will work while the power is saved. For further information, please refer to Application Notes.
   - EAP security in the aws_device_shadow application is unsupported on the EFR platform due to memory constraints.
   - In STA + AP, If AP started first station scan is supported only in channel in which AP is brought up. If multiple channel scan is requested, AP behaviour is undefined.
