@@ -153,7 +153,7 @@ extern void rsi_enter_critical_sec(void);
 extern void rsi_exit_critical_sec(void);
 extern void rsi_platform_based_init(void);
 extern int32_t rsi_uart_deinit(void);
-extern short int rsi_uart_iface_int();
+extern short int rsi_uart_iface_int(void);
 extern void uart_init(void);
 #endif
 
