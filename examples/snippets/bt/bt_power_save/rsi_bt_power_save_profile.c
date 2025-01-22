@@ -857,6 +857,20 @@ int32_t rsi_bt_spp_peripheral(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
+
+#if BT_ENABLE_TESTMODE
+
+  //! Enable the device under test mode
+  status = rsi_bt_enable_device_under_testmode();
+  if (status != RSI_SUCCESS) {
+    return status;
+  }
+
+  //! Infinite loop
+  while (1)
+    ;
+#endif
+
 #else
   //! stop the discover mode
   status = rsi_bt_stop_discoverable();

@@ -112,6 +112,9 @@ typedef enum {
 #define BT_PWR_CTRL         1
 #define BT_PWR_INX          10
 
+//! Enable this macro for test mode enabling used for certification and compliance testing
+#define BT_ENABLE_TESTMODE 0
+
 //! Enable/Disable Powersave
 #define ENABLE_POWER_SAVE 1
 #define PSP_TYPE          RSI_MAX_PSP
