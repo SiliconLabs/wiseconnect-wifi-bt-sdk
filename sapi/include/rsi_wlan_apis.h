@@ -1812,6 +1812,12 @@ extern int32_t rsi_wlan_wps_generate_pin(uint8_t *response, uint16_t length);
 extern int32_t rsi_wlan_wps_enter_pin(int8_t *wps_pin);
 extern int32_t rsi_wlan_wps_push_button_event(int8_t *ssid);
 extern int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, uint16_t mode, uint16_t channel);
+extern int32_t rsi_transmit_test_start_with_number_pkts(uint16_t power,
+                                                        uint32_t rate,
+                                                        uint16_t length,
+                                                        uint16_t mode,
+                                                        uint16_t channel,
+                                                        uint16_t number_pkts);
 extern int32_t rsi_transmit_test_stop(void);
 extern int32_t rsi_wlan_receive_stats_start(uint16_t channel);
 extern int32_t rsi_wlan_receive_stats_stop(void);

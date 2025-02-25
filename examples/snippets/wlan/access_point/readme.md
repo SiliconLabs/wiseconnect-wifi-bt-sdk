@@ -18,7 +18,7 @@ Before running the application, the user will need the following things to setup
   - [STM32F411 Nucleo](https://st.com/)
 * Windows PC (Remote PC) with iperf application
 
-![Setup Diagram for Access Point Start Example](resources/readme/image83.png)
+![Setup Diagram for Access Point Start Example](resources/readme/setup-diagram-for-AP-example.png)
 
 ### 2.2 Software Requirements
 
@@ -61,7 +61,7 @@ The Application is provided with the project folder containing Keil and Simplici
     - If the Radio Board is **BRD4180B** or **BRD4181B**, then access the path `<SDK>/examples/snippets/wlan/access_point/projects/access_point-brd4180b-mg21.slsproj`
     - User can find the Radio Board version as given below 
 
-![EFR Radio Boards](resources/readme/image83a.png)
+![EFR Radio Boards](resources/readme/efr-radio-boards.png)
 
   - EFM32GG11 platform
     - The Simplicity Studio project is used to evaluate the application on EFM32GG11.
@@ -273,7 +273,7 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 
 4. The RS9116W EVK accepts connection request and receives data on the TCP server port and exit after receiving configured NUMBER_OF_PACKETS
 
-![Receiving data on the TCP server port](resources/readme/image107.png)
+![Receiving data on the TCP server port](resources/readme/iperf-client-cmd.png)
 
 5. If rsi_wlan_ap_stop() API is used to turn off the module's soft Access Point, then its Wi-Fi network closes the connection with all connected clients and it stops beaconing its Wi-Fi network of specified SSID.
 

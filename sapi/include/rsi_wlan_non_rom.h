@@ -569,6 +569,8 @@ typedef struct rsi_wlan_cb_non_rom_s {
   uint32_t socket_cmd_rsp_pending;
   //! network command request pending
   uint32_t nwk_cmd_rsp_pending;
+  //! Number of packets in TX test mode
+  uint16_t number_pkts_tx_mode;
 } rsi_wlan_cb_non_rom_t;
 
 #define RSI_AP_NOT_FOUND 0x3

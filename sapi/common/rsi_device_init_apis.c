@@ -265,9 +265,7 @@ int32_t rsi_device_init(uint8_t select_option)
 
 int32_t rsi_device_deinit(void)
 {
-#if (RSI_WITH_OS && (defined RSI_WLAN_ENABLE))
   int32_t status = RSI_SUCCESS;
-#endif
   SL_PRINTF(SL_DEVICE_DEINIT_ENTRY, COMMON, LOG_INFO);
 #ifdef RSI_WLAN_ENABLE
   uint8_t i;
@@ -281,7 +279,17 @@ int32_t rsi_device_deinit(void)
               rsi_driver_cb_non_rom->device_state);
     return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
   }
+
   if (rsi_driver_cb != NULL) {
+    if (rsi_driver_cb->common_cb->power_save.current_ps_mode != 0) {
+      // Disable power save profile
+      status = rsi_wlan_power_save_profile(RSI_ACTIVE, 0);
+      if (status != RSI_SUCCESS) {
+        SL_PRINTF(SL_WLAN_POWER_SAVE_DISABLE_ENABLE_ERROR_IN_SENDING_COMMAND_1, WLAN, LOG_ERROR, "status: %4x", status);
+        return status;
+      }
+    }
+
 #ifndef RSI_M4_INTERFACE
     // Mask the interrupt
     rsi_hal_intr_mask();

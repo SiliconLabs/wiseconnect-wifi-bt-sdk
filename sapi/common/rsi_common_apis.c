@@ -2037,6 +2037,7 @@ int32_t rsi_driver_version(uint8_t *request)
  * @return      0              - Success \n
  * @return      Non-Zero Value - Failure \n
  * @note        **Precondition** - \ref rsi_wireless_init() API needs to be called before this API
+ * @note        This API is not supported when power save mode is enabled
  * @note        Hour is 24-hour format only (valid values are 0 to 23). Valid values for Month are 0 to 11 (January to December).
  */
 
@@ -2261,8 +2262,9 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
  *                               weekday-->  Current real time clock Weekday. \n
  * @return     0              - Success \n
  * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0x0021, 0x0025) \n                             
- * @note       **Precondition** - \ref rsi_set_rtc_timer() API needs to be called before this API. \n 
- *             rsi_wlan_scan() API or rsi_wlan_radio_init() API needs to be called before this API.
+ * @note       **Precondition** - \ref rsi_set_rtc_timer() API needs to be called before this API. \n
+ * @note       \ref rsi_wireless_init() needs to be called before this API.
+ * @note       This API is not supported when power save mode is enabled.
  * @note       Hour is 24-hour format only (valid values are 0 to 23). Valid values for Month are 0 to 11 (January to December).
  * @note        Refer to \ref error-codes for the description of above error codes.
  */

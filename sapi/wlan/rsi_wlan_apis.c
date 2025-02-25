@@ -181,20 +181,86 @@ int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
  * @brief      Scan surrounding access points and post scan response. You can call this API to get the scan results. This is a blocking API. 
  * @param[in]  ssid            - SSID of an access point to connect. \n SSID should be less than or equal to 32 bytes. \n
  *                               Note: SSID is a null terminated string.                          
- * @param[in]  chno            - Channel number of the access point.
+ * @param[in]  chno            - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n
+ *                                based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ *             ## Channels supported in 2.4 GHz Band ##
+ *             Channel numbers       	 |	chno    
+ *             :-----------------------|:--------------------------------------------------------------------------------------------------
+ *             All Channels	       	   |       0	  
+ *             1			                 |       1	
+ *             2			                 |       2	
+ *             3	                     |       3	
+ *             4			                 |       4	
+ *             5			                 |       5	
+ *             6			                 |       6	
+ *             7			                 |       7	
+ *             8			                 |       8	
+ *             9			                 |       9	
+ *             10                      |       10	
+ *             11			                 |       11	
+ *             12                      |       12	
+ *             13			                 |       13
+ *             #### Channels supported in 5 GHz Band ####
+ *             Channel numbers         |	chno
+ *             :-----------------------|:--------------------------------------------------------------------------------------------------
+ *             All Channels		         |       0
+ *             36	        	           |       36
+ *             40	        	           |       40
+ *             44	        	           |       44
+ * 		         48	        	           |       48
+ *             100	                   |       100
+ *             104	                   |       104
+ *             108	                   |       108
+ *             116	                   |       116
+ *             132                     |       132
+ *             136	          	       |       136
+ *             140         		         |       140
+ *             149	                   |       149
+ *             153		                 |       153
+ *             157		                 |       157
+ *             161        		         |       161
+ *             165	         	         |       165
+ *             #### DFS Channels supported in 5 GHz Band ####
+ *             Channel numbers          |	chno
+ *             :-----------------------|:--------------------------------------------------------------------------------------------------
+ *             52(DFS)	        	     |        52
+ *             56(DFS)	        	     |        56
+ *             60(DFS)	        	     |        60
+ *             64(DFS)	        	     |        64
+ *             100(DFS)	               |        100
+ *             104(DFS)	               |        104
+ *             108(DFS)	               |        108
+ * 		         112(DFS)	               |        112
+ * 		         116(DFS)	               |        116
+ * 		         120(DFS)	               |        120
+ * 		         124(DFS)	               |        124
+ *             128(DFS)	               |        128
+ *             132(DFS)                |        132
+ *             136(DFS)	          	   |        136
+ *             140(DFS)         		   |        140
+ *             144(DFS)         		   |        144
+ *             #### Channels supported in 4.9 GHz Band ####
+ *             Channel numbers         |	chno
+ *             :-----------------------|:--------------------------------------------------------------------------------------------------
+ *             All Channels		         |       0	
+ *             184	        	         |       184
+ *             188	        	         |       188
+ *             192	        	         |       192
+ *             196	        	         |       196
+ *             8	                     |       8
+ *             12	                     |       12
+ * 		         16	                     |       16
  * @param[out]  result         - Buffer address provided by the application to fill the scan response.
- * @param[in]  length          - Length of the resulting buffer measured in bytes to hold scan results.\n
- *                               Size of structure \ref rsi_rsp_scan_t is 54 bytes.\n
- *                               Length for storing one scan result is sizeof( \ref rsi_scan_info_t), which is 44 bytes. \n
- *                               Maximum of 11 scan results will be returned by the module, \n 
- *                               in this case, length should be configured as 8 + 11*sizeof( \ref rsi_scan_info_t).
+ *                               result is type of rsi_rsp_scan_t .
+ * @param[in]  length          - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+ *                               A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @param[in]  scan_bitmap     - Scan bitmap options. \n
  *                               BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
  *                               BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results are given to host. \n 
  *                               After getting scan results, host has to issue another scan request by disabling this bit in scan feature bitmap in same API \n
- *                               or call \ref rsi_wlan_scan API before issuing join command.                        
+ *                               or call \ref rsi_wlan_scan API before issuing join command.              
  * @return     0                -    Success \n
- * @return     Non-Zero Value   -    Failure
+ * @return     Non-Zero Value   -    Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  *
  */
@@ -258,25 +324,89 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
  * @pre                 \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]   ssid     - SSID of an access point to connect. \n
  *                        SSID should be less than or equal to 32 bytes.
- * @param[in]   chno     - Channel number of the access point.
+ * @param[in]   chno     - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n
+ *                         based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ *              ## Channels supported in 2.4 GHz Band ##
+ *              Channel numbers       	 |	chno
+ *              :----------------------- |:--------------------------------------------------------------------------------------------------
+                All Channels	       	   |       0	
+                1			                   |       1	
+                2			                   |       2	
+                3	                       |       3	
+                4			                   |       4	
+                5			                   |       5	
+                6			                   |       6	
+                7			                   |       7	
+  		          8			                   |       8
+                9			                   |       9
+                10                       |       10	
+                11			                 |       11
+                12                       |       12
+                13			                 |       13	
+                #### Channels supported in 5 GHz Band ####	
+                Channel numbers          |	chno	
+                :------------------------|:--------------------------------------------------------------------------------------------------
+                All Channels		         |       0	
+                36	        	           |       36
+                40	        	           |       40
+                44	        	           |       44
+                48	        	           |       48
+                100	                     |       100
+                104	                     |       104
+                108	                     |       108
+                116	                     |       116
+                132                      |       132
+                136	          	         |       136
+                140         		         |       140
+                149	                     |       149
+                153		                   |       153
+                157		                   |       157
+                161        		           |       161
+                165	         	           |       165
+                #### DFS Channels supported in 5 GHz Band ####
+                Channel numbers          |	chno
+                :------------------------|:--------------------------------------------------------------------------------------------------
+                52(DFS)	        	       |       52
+                56(DFS)	        	       |       56
+                60(DFS)	        	       |       60
+                64(DFS)	        	       |       64
+                100(DFS)	               |       100
+                104(DFS)	               |       104
+                108(DFS)	               |       108
+                112(DFS)	               |       112
+                116(DFS)	               |       116
+                120(DFS)	               |       120
+                124(DFS)	               |       124
+                128(DFS)	               |       128
+                132(DFS)                 |       132
+                136(DFS)	          	   |       136
+                140(DFS)         		     |       140
+                144(DFS)         		     |       144
+                #### Channels supported in 4.9 GHz Band ####
+                Channel numbers          |	chno
+                :------------------------|:--------------------------------------------------------------------------------------------------
+                All Channels		         |       0	
+                184	        	           |       184
+                188	        	           |       188
+                192	        	           |       192
+                196	        	           |       196
+                8	                       |       8
+                12	                     |       12
+                16	                     |       16
  * @param[in]   bitmap   - Scan feature bitmap \n
  *                         BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
  *                         BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results
- *                         are given to host. \n     After getting scan results, host has to issue another
+ *                         are given to host. \n     After getting scan results, host has o issue another
  *                         scan request by disabling this bit in scan feature bitmap in same api
  *                         or call \ref rsi_wlan_scan api \n     before issuing join command.
+ * @param[out]  scan_response_handler   - Callback that is called when the response for scan is received from the module.
+ *                                         The parameters involved are status, buffer, & length.
  * @param[out]  status   - Response status
  * @param[out]  buffer   - Buffer address provided by the application to fill the scan response.
- * @param[out]  length   - Length of the response buffer measured
- *                        in bytes to hold scan results. \n Size of structure 
- *                        \ref rsi_rsp_scan_t is 54 bytes.
- *                        Length for storing one scan result is
- *                        sizeof( \ref rsi_scan_info_t), which is 46 bytes. \n
- *                        Maximum of 11 scan results will be returned by the
- *                        module, \n in this case, length should be configured
- *                        as 8 + 11*sizeof( \ref rsi_scan_info_t).
+ * @param[out]  length   - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+ *                         A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return      0              -   Success \n
- *              Non-Zero Value -   Failure
+ * @return      Non-Zero Value -   Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  *
  */
 
@@ -631,13 +761,8 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * @brief      Scan the surrounding access points. Invokes rsi_wlan_scan_async() API, which is an asynchronous call. This is a blocking API.
  * @pre		     \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  ssid    - SSID size should be less than or equal to 32 bytes. Note: SSID is a null terminated string.
- * @param[in]  chno    - Channel number to perform scan. If 0, then the module will scan all the channels.
- * @param[out]  result - Scanned Wi-Fi networks information. \n
- *                       This output contains a maximum of 11 scan results \n
- *                       The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
- *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
- *                       information about each network scanned.
- * @param[in]  length  - Size that should be allocated to buffer that will store scan results. \n
+ * @param[in]  chno    - Specifies the channel number to scan. If set to 0, then the device scans all the channels \n
+ *                       based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration. 
  *             ## Channels supported in 2.4 GHz Band ##
  *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -663,6 +788,13 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         40	        	           |       40
  * 		         44	        	           |       44
  * 		         48	        	           |       48
+ *             100	                   |       100
+ *             104	                   |       104
+ *             108	                   |       108
+ *             116	                   |       116
+ *             132                     |       132
+ *             136	          	       |       136
+ *             140         		         |       140
  *		         149	                   |       149
  * 		         153		                 |       153
  * 		         157		                 |       157
@@ -698,6 +830,15 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         8	                     |       8
  * 		         12	                     |       12
  * 		         16	                     |       16
+ 
+ * @param[out]  result - Scanned Wi-Fi networks information. \n
+ *                       This output contains a maximum of 11 scan results \n
+ *                       The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
+ *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
+ *                       information about each network scanned.
+ *                       result is type of rsi_rsp_scan_t 
+ * @param[in]  length  -The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n
+ *                      A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return     0              - Success
  * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  * 	          ##	Scan Info structure ##
@@ -779,14 +920,8 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * @brief      Scan the surrounding access points. A scan response handler is registered with it to get the response for scan. This is a non-blocking API. 
  * @param[in]  ssid		        			 - SSID to scan. If this input parameter is present, module will scan for that particular SSID only. SSID size should be less than or equal to 32 bytes \n
  *                                     Note: SSID is a null terminated string.
- * @param[in]  chno 				         - Channel number to perform scan, if 0, then module will scan in all channels.
- * @param[in]  Scan_response_handler - Callback tht is called when the response for scan is received from the module. \n
- *				                             The parameters involved are status, buffer, & length. \n
- *@param[out]	 Status                - Response status.
- *@param[out]	 Buffer                - Response buffer \n
- *@param[out]	 Length                - Length of the response buffer measured in bytes to hold scan results. \n Size of structure \ref rsi_rsp_scan_t is 54 bytes. \n
- *					                           Length for storing one scan result is sizeof(rsi_scan_info_t) which is 44 bytes. \n
- *						                         Maximum of 11 scan results will be returned by the module, in this case, length must be configured as 8 + 11*sizeof(rsi_scan_info_t).      
+ * @param[in]  chno 				         - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n 
+ *                                      based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration. 
  *             ## Channels supported in 2.4 GHz Band ##
  *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -824,14 +959,48 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * 		         157		                 |       157
  * 		         161        		         |       161
  *		         165	         	         |       165
+               #### DFS Channels supported in 5 GHz Band ####
+               Channel numbers         |	chno
+               :-----------------------|:--------------------------------------------------------------------------------------------------
+               52(DFS)	        	     |       52
+               56(DFS)	        	     |       56
+               60(DFS)	        	     |       60
+               64(DFS)	        	     |       64
+               100(DFS)	               |       100
+               104(DFS)	               |       104
+               108(DFS)	               |       108
+               112(DFS)	               |       112
+               116(DFS)	               |       116
+               120(DFS)	               |       120
+               124(DFS)	               |       124
+               128(DFS)	               |       128
+               132(DFS)                |       132
+               136(DFS)	          	   |       136
+               140(DFS)         		   |       140
+               144(DFS)         		   |       144
+               #### Channels supported in 4.9 GHz Band ####
+               Channel numbers         |	chno
+               :-----------------------|:--------------------------------------------------------------------------------------------------
+               All Channels		         |       0
+               184	        	         |       184
+               188	        	         |       188
+               192	        	         |       192
+               196	        	         |       196
+               8	                     |       8
+               12	                     |       12
+               16	                     |       16
+ * @param[in]  Scan_response_handler - Callback that is called when the response for scan is received from the module. \n
+ *				                             The parameters involved are status, buffer, & length. \n
+ *@param[out]	 Status                - Response status.
+ *@param[out]	 Buffer                - Response buffer \n
+ *@param[out]	 Length                - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+                                       A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return     0              -  Success \n
  * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  * 	           #### Scan Response structure format ####
  * 		         Structure Fields        |	Description	
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
- * 	 	         scan_count	             |      Number of access points scanned.
- * 	 	         ^                              scan_count[0] Contains the scan count.
- * 	 	         ^                              scan_count[3-1] are reserved.
+ * 	 	         scan_count	             |      Number of access points scanned.\n scan_count[0] Contains the scan count.\n scan_count[3-1] are reserved.
  * 	 	         scan_info               |      Information about scanned Access points in rsi_scan_info_t structure.
  * 	           ##	Scan Info - rsi_scan_info_t structure ##
  * 		         Structure Fields        |	Description	
@@ -1290,6 +1459,10 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *              For EAP configuration below arguments are required and are congifured in rsi_wlan_config.h in enterprise_client applicaiton. \n
  *               • eap_method, inner_method, user_identity, password, okc, private_key_password \n
  *               • eap_method is 32 bytes and it can be any one of the following methods: TLS, TTLS, FAST, PEAP or LEAP, should be given as string in RSI_EAP_METHOD. \n
+ *                            -- PEAP can accept any of the following three values: \n
+ *                            -- `PEAP` – The EAP server may bypass Phase2 authentication (less secure). \n
+ *                            -- `PEAPSAFE1` – If a client certificate (private_key/client_cert) is not used and TLS session resumption is not used, then Phase2 authentication is mandatory. \n
+ *                            -- `PEAPSAFE2` – Requires Phase2 authentication in all cases (most secure). \n
  *               • inner_method is 32 bytes, this field is valid only in TTLS/PEAP. In case of TTLS/PEAP supported inner methods are MSCHAP/MSCHAPV2. In case of TLS/FAST/LEAP this field is not valid and it should be fixed to MSCHAPV2. Here MSCHAP/MSCHAPV2 are given in RSI_EAP_INNER_METHOD. \n
  *               • user_identity is 64 bytes, this can be configured in USER_IDENTITY of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
  *               • password is 128 bytes, this can be configured in PASSWORD of rsi_eap_connectivity.c of enterprise_client application and this should be a string. \n
@@ -5460,7 +5633,128 @@ int32_t rsi_transmit_test_start(uint16_t power, uint32_t rate, uint16_t length, 
   SL_PRINTF(SL_WLAN_TX_TEXT_START_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
   return status;
 }
+/*==============================================*/
+/**
+ * @brief      Start the transmit test. This is a blocking API. \n 
+ *             This API is relevant in PER mode.
+ * @param[in]  power  - Set TX power in dbm. The valid values are from 2dBm to 18dBm. \n
+ * @param[in]  rate   - Set transmit data rate. \n
+ * @param[in]  length - Configure length of the TX packet. \n
+ *                      The valid values are in the range of 24 to 1500 bytes in the burst mode and range of 24 to 260 bytes in the continuous mode. 
+ * @param[in]  mode   - Below mentioned are the available modes
+ *            Value     |       Parameter                                   |  Description	
+ * 		        :---------|:--------------------------------------------------|:-------------------------------------------------
+ *            0         |  Burst Mode                                       | DUT transmits a burst of packets with the given power, rate, length in the channel configured. 
+ *            ^                                                               The burst size will be determined by the <number of packets> and if its zero, then DUT keeps transmitting till a rsi_transmit_test_stop API is called.
+ *            1         |  Continuous Mode                                  | The DUT transmits a unmodulated waveform continuously
+ *            2         |  Continuous wave Mode (non modulation) in DC mode | The DUT transmits a spectrum only at the center frequency of the channel.
+ *            ^                                                               A basic signal with no modulation is that of a sine wave and is usually referred to as a continuous wave (CW) signal.
+ *            ^                                                               A basic signal source produces sine waves. Ideally, the sine wave is perfect. In the frequency domain, it is viewed as a single line at some specified frequency.
+ *            3         | Continuous wave Mode (non modulation) in single tone mode (center frequency -2.5MHz) | The DUT transmits a spectrum that is generated at -2.5MHz from the center frequency of the channel selected.
+ *            ^                                                                                                  Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2409.5MHz
+ *            4         | Continuous wave Mode (non modulation) in single tone mode (center frequency +5MHz)   | The DUT transmits a spectrum that is generated at 5MHz from the center frequency of the channel selected.
+ *                                                                                                               Some amount of carrier leakage will be seen at Center Frequency. Eg: for 2412MHz, the output will be seen at 2417MHz.                                                                                     
+ * @param[in]  channel - Set the channel number in 2.4 GHz / 5GHz.
+ * @param[in]  number_pkts - Set the number packets in TX mode.
+ * @note        User can configure the maximum power level allowed for the given frequncey in the configured region by providing 127 as power level \n
+ * @note        User should configure a minimum delay (approx. 10 milliseconds) before and after \ref rsi_transmit_test_start API to observe a stable output at requested dBm level. \n
+ *      ### Data Rates ###       
+ *			Data rate(Mbps)	|	Value of rate 
+ *			:--------------:|:-------------------:
+ *			1		            |	0 
+ *			2		            |	2 \n
+ *			5.5		          |	4 \n
+ *			11		          |	6 \n
+ *			6		            |	139 \n
+ *			9		            |	143 \n
+ *			12		          |	138 \n
+ *			18		          |	142 \n
+ *			24		          |	137 \n
+ *			36		          |	141 \n
+ *			48		          |	136 \n
+ *			54		          |	140 \n
+ *			MCS0		        |	256 \n
+ *			MCS1		        |	257 \n
+ *			MCS2		        |	258 \n
+ *			MCS3		        |	259 \n
+ *			MCS4		        |	260 \n
+ *			MCS5		        |	261 \n
+ *			MCS6		        |	262 \n
+ *			MCS7		        |	263 \n			
+ *			###The following table maps the channel number to the actual radio frequency in the 2.4 GHz spectrum. ### 
+ *			Channel numbers (2.4GHz)|	Center frequencies for 20MHz channel width 
+ *			:----------------------:|:-----------------------------------------------:
+ *			1			|	2412 
+ *			2			|	2417  
+ *			3			|	2422 
+ *			4			|	2427
+ *			5			|	2432 
+ *			6			|	2437 
+ *			7			|	2442 
+ *			8			|	2447 
+ *			9			|	2452
+ *			10			|	2457  
+ *			11			|	2462 
+ *			12			|	2467 
+ *			13			|	2472 
+ * @note	To start transmit test in 12,13 channels, configure set region parameters in rsi_wlan_config.h \n
+ *    ###	The following table maps the channel number to the actual radio frequency in the 5 GHz spectrum for 20MHz channel bandwidth. The channel numbers in 5 GHz range is from 36 to 165. ###
+ * 		Channel Numbers(5GHz) |	Center frequencies for 20MHz channel width 
+ * 		:--------------------:|:------------------------------------------:
+ *		36		      |5180 
+ *		40		      |5200 
+ *		44		      |5220 
+ *		48		      |5240 
+ *		52		      |5260 
+ *		56	        |5280 
+ *		60		      |5300 
+ *		64		      |5320 
+ *		149		      |5745 
+ *		153		      |5765 
+ *		157		      |5785 
+ *		161		      |5805 
+ *		165		      |5825 
+ * @note       **Precondition** - \ref rsi_wlan_radio_init() API needs to be called before this API.
+ * @note       Rate flags can be added in rsi_wlan_common_config.h file. \n
+ *             In rate flags, BIT(6) - Immediate Transfer, set this bit to transfer packets immediately ignoring energy/traffic in channel \n
+ * @note       Before starting Continuous Wave mode, user must start Continuous mode with power and channel values that are intended to be used in Continuous Wave mode i.e. \n
+ *             - Start Continuous mode with intended power value and channel values - Pass any valid values for rate and length. \n
+ *             - Stop Continuous mode \n 
+ *             - Start Continuous Wave mode \n
+ * @note       If user wants to switch continuous wave mode, first need to stop the transmit test and again need to give continous wave mode which user wants to switch. 
+ * @note	     In 2.4GHz, to start transmit test in 12,13,14 channels, configure set region parameters in rsi_wlan_config.h \n
+ * @return     0 		- Success \n
+ *             Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffa,0x000A, 0x0021, 0x0025, 0x002C) \n
+ * @note       Refer to \ref error-codes for the description of above error codes.
+ *
+ */
 
+int32_t rsi_transmit_test_start_with_number_pkts(uint16_t power,
+                                                 uint32_t rate,
+                                                 uint16_t length,
+                                                 uint16_t mode,
+                                                 uint16_t channel,
+                                                 uint16_t number_pkts)
+{
+  int32_t status = RSI_SUCCESS;
+  SL_PRINTF(SL_WLAN_TX_TEXT_START_ENTRY, WLAN, LOG_INFO);
+
+  if ((power == 0) || (length == 0) || (number_pkts == 0)) {
+    // Checking Invalid Parameters
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
+  // configure the number of packets
+  rsi_wlan_cb_non_rom->number_pkts_tx_mode = number_pkts;
+
+  status = rsi_transmit_test_start(power, rate, length, mode, channel);
+
+  rsi_wlan_cb_non_rom->number_pkts_tx_mode = 0;
+
+  // Return status if error in sending command occurs
+  SL_PRINTF(SL_WLAN_TX_TEXT_START_ERROR_IN_SENDING_COMMAND_2, WLAN, LOG_ERROR, "status: %4x", status);
+  return status;
+}
 /*==============================================*/
 /**
  * @brief      Stops the transmit test. This is a blocking API. \n
@@ -6276,7 +6570,7 @@ int32_t rsi_wlan_twt_config(uint8_t twt_enable, uint8_t twt_flow_id, twt_user_pa
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        The module can't receive ping packets whose length is more than 308 bytes.
  * @note        Refer to \ref error-codes for the description of above error codes.
- *
+ * @note        If the powersave is enabled on the device, the recommended ping timeout value is 3 seconds to account for the sleep duration and transmission delays depending on the channel conditions.
  *
  */
 

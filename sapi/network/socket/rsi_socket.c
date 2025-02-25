@@ -630,7 +630,8 @@ int32_t rsi_recv_large_data_sync(int32_t sockID,
  * @return     Negative value                        – Failure
  * @return     0                                     – Socket close error
  * @note       **Precondition** - \ref rsi_socket()/ \ref rsi_socket_async() API needs to be called before this API.             
- *
+ * @note      By default, a host can receive a maximum of 1460 bytes of data. If you enable the RSI_PROCESS_MAX_RX_DATA macro in the preprocessor settings, the host will be able to obtain a maximum chunk size of 4380 bytes and The host can request a maximum data length of 16384 bytes
+ * 
  */
 
 int32_t rsi_recvfrom(int32_t sockID,
@@ -681,7 +682,7 @@ int32_t rsi_recvfrom(int32_t sockID,
  * @note       **Precondition (TCP server)** - \ref rsi_listen() and \ref rsi_accept() API needs to be called before this API.
  * @note       **Precondition (UDP server)** - \ref rsi_bind() API needs to be called before this API.
  * @note       **Precondition (UDP client)** - \ref rsi_socket() or \ref rsi_bind() API needs to be called before this API        
- *
+ * @note       By default, a host can receive a maximum of 1460 bytes of data. If you enable the RSI_PROCESS_MAX_RX_DATA macro in the preprocessor settings, the host will be able to obtain a maximum chunk size of 4380 bytes and The host can request a maximum data length of 16384 bytes
  *
  */
 int32_t rsi_recv(int32_t sockID, void *rcvBuffer, int32_t bufferLength, int32_t flags)

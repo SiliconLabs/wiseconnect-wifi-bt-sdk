@@ -447,8 +447,11 @@ int32_t rsi_driver_wlan_send_cmd(rsi_wlan_cmd_request_t cmd, rsi_pkt_t *pkt)
       rsi_uint16_to_2bytes(rsi_tx_test_info->reserved, 0);
 
       // Enable or Disable transmit test mode
-      rsi_uint16_to_2bytes(rsi_tx_test_info->no_of_pkts, RSI_TX_TEST_NUM_PKTS);
-
+      if (rsi_wlan_cb_non_rom->number_pkts_tx_mode) {
+        rsi_uint16_to_2bytes(rsi_tx_test_info->no_of_pkts, rsi_wlan_cb_non_rom->number_pkts_tx_mode);
+      } else {
+        rsi_uint16_to_2bytes(rsi_tx_test_info->no_of_pkts, RSI_TX_TEST_NUM_PKTS);
+      }
       // Enable or Disable transmit test mode
       rsi_uint16_to_2bytes(rsi_tx_test_info->delay, RSI_TX_TEST_DELAY);
 
@@ -878,6 +881,7 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
   uint8_t buffers_freed                      = 0;
   int8_t wlan_pkt_pending                    = 0;
   uint8_t type                               = 0;
+  uint8_t vap_id                             = 0;
   uint8_t i                                  = 0;
   uint8_t j                                  = 0;
   rsi_rsp_socket_select_t *socket_select_rsp = NULL;
@@ -898,6 +902,9 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
 
   // Get command type
   cmd_type = pkt->desc[2];
+
+  // Get vap id
+  vap_id = pkt->desc[7];
 
   // Get payload pointer
   payload = pkt->data;
@@ -1564,7 +1571,9 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
         else
           rsi_wlan_cb->state = RSI_WLAN_STATE_INIT_DONE;
 #else
-        rsi_wlan_cb->state = RSI_WLAN_STATE_BAND_DONE;
+        if (!(rsi_wlan_cb->opermode == RSI_WLAN_CONCURRENT_MODE && vap_id == 1)) {
+          rsi_wlan_cb->state = RSI_WLAN_STATE_BAND_DONE;
+        }
 #endif
         //Reset powe save mode as Disconnect received
         common_cb->power_save.current_ps_mode = 0;

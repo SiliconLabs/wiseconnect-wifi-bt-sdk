@@ -370,7 +370,7 @@
 /*=======================================================================*/
 
 //!Timeout for PING_REQUEST
-#define RSI_PING_REQ_TIMEOUT_MS 1000
+#define RSI_PING_REQ_TIMEOUT_MS 3000
 
 //! Store Config Profile parameters
 /*=======================================================================*/
