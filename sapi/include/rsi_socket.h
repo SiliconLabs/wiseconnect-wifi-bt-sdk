@@ -42,6 +42,9 @@
 #define RSI_CERT_INDEX_0 0
 #define RSI_CERT_INDEX_1 1
 #define RSI_CERT_INDEX_2 2
+#ifndef CHIP_917
+#define RSI_CERT_INDEX_3 3
+#endif
 
 #define RSI_TCP_LISTEN_MIN_BACKLOG 1
 

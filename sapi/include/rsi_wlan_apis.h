@@ -286,6 +286,9 @@
 #define EXT_TCP_DYNAMIC_WINDOW_UPDATE_FROM_HOST BIT(19)
 #define EXT_TCP_MAX_RECV_LENGTH                 BIT(20)
 
+// Disables Webpage feature and enables usage of certificate index 3
+#define EXT_TCP_IP_CERTIFICATE_INDEX_3 BIT(21)
+
 #define EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS BIT(29)
 #define EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD  BIT(30)
 #define CONFIG_FEAT_EXTENTION_VALID       BIT(31)

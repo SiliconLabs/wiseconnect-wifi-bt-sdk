@@ -78,8 +78,8 @@ rsi_ble_req_scan_t change_scan_param;
 rsi_ble_conn_info_t rsi_ble_conn_info[TOTAL_CONNECTIONS]   = { 0 };
 rsi_bt_event_encryption_enabled_t l_rsi_encryption_enabled = { 0 };
 
-uint8_t num_of_connected_slave_devices = 0;
-uint8_t adv_pkt_processing_pending     = 0;
+uint8_t num_of_connected_peripheral_devices = 0;
+uint8_t adv_pkt_processing_pending          = 0;
 
 uint8_t i = 0, temp = 0;
 int32_t status          = 0;
@@ -440,15 +440,15 @@ static uint32_t rsi_ble_add_simple_chat_serv2(void)
 }
 uint8_t rsi_get_remote_device_role(uint8_t *remote_dev_addr)
 {
-  uint8_t role = MASTER_ROLE, i;
+  uint8_t role = CENTRAL_ROLE, i;
 
-  //! Loop all structures and if the device addr is matched for slave structure, then return slave role or else master role
-  for (i = 0; i < (RSI_BLE_MAX_NBR_SLAVES); i++) {
+  //! Loop all structures and if the device addr is matched for peripheral structure, then return peripheral role or else central role
+  for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
     if (memcmp(rsi_ble_conn_info[i].remote_dev_addr, remote_dev_addr, RSI_REM_DEV_ADDR_LEN) == 0) {
       return rsi_ble_conn_info[i].remote_device_role;
     }
   }
-  return role; //! Returning role as master
+  return role; //! Returning role as central
 }
 rsi_ble_profile_list_by_conn_t rsi_ble_profile_list_by_conn[5] = { 0 };
 /*=======================================================================*/
@@ -498,8 +498,8 @@ void rsi_assign_remote_data_serv_and_char()
 uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_addr)
 {
   LOG_PRINT_D("\r\n inside rsi_check_dev_list_driver \n");
-  uint8_t i                  = 0;
-  uint8_t slave_device_found = NO_SLAVE_FOUND;
+  uint8_t i                       = 0;
+  uint8_t peripheral_device_found = NO_PERIPHERAL_FOUND;
 
   // These statements are added only to resolve compilation warning, value is unchanged
 #if ((CONNECT_OPTION == CONN_BY_NAME) && RSI_DEBUG_EN)
@@ -515,24 +515,24 @@ uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_add
 
 #if (CONNECT_OPTION == CONN_BY_NAME)
   if ((strcmp((const char *)rem_dev_name, "")) == 0) {
-    return slave_device_found;
+    return peripheral_device_found;
   }
 
   if ((strcmp((const char *)rem_dev_name, RSI_REMOTE_DEVICE_NAME1)) == 0) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else if ((strcmp((const char *)rem_dev_name, RSI_REMOTE_DEVICE_NAME2)) == 0) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else if ((strcmp((const char *)rem_dev_name, RSI_REMOTE_DEVICE_NAME3)) == 0) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else
-    return slave_device_found;
+    return peripheral_device_found;
 
   //! check if remote device already connected or advertise report received.
-  if (slave_device_found == SLAVE_FOUND) {
-    for (i = 0; i < (RSI_BLE_MAX_NBR_SLAVES); i++) {
+  if (peripheral_device_found == PERIPHERAL_FOUND) {
+    for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
       if (rsi_ble_conn_info[i].rsi_remote_name != NULL) {
         if (!(strcmp((const char *)rsi_ble_conn_info[i].rsi_remote_name, (const char *)rem_dev_name))) {
-          slave_device_found = SLAVE_CONNECTED;
+          peripheral_device_found = PERIPHERAL_CONNECTED;
 #if RSI_DEBUG_EN
           LOG_PRINT_D("\r\n Device %s already connected!!!\r\n", advertised_dev_addr);
 #endif
@@ -543,19 +543,19 @@ uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_add
   }
 #else
   if (!strcmp(RSI_BLE_DEV_1_ADDR, (char *)advertised_dev_addr)) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else if (!strcmp(RSI_BLE_DEV_2_ADDR, (char *)advertised_dev_addr)) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else if (!strcmp(RSI_BLE_DEV_3_ADDR, (char *)advertised_dev_addr)) {
-    slave_device_found = SLAVE_FOUND;
+    peripheral_device_found = PERIPHERAL_FOUND;
   } else
-    return slave_device_found;
+    return peripheral_device_found;
 
   //! check if remote device already connected
-  if (slave_device_found == SLAVE_FOUND) {
-    for (i = 0; i < (RSI_BLE_MAX_NBR_SLAVES); i++) {
+  if (peripheral_device_found == PERIPHERAL_FOUND) {
+    for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
       if (!memcmp(rsi_ble_conn_info[i].remote_dev_addr, advertised_dev_addr, RSI_REM_DEV_ADDR_LEN)) {
-        slave_device_found = SLAVE_CONNECTED;
+        peripheral_device_found = PERIPHERAL_CONNECTED;
 #if RSI_DEBUG_EN
         LOG_PRINT_D("\r\n Device %s already connected!!!\r\n", advertised_dev_addr);
 #endif
@@ -565,11 +565,11 @@ uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_add
   }
 
 #endif
-  if (i == RSI_BLE_MAX_NBR_SLAVES) {
-    slave_device_found = SLAVE_NOT_CONNECTED;
+  if (i == RSI_BLE_MAX_NBR_PERIPHERALS) {
+    peripheral_device_found = PERIPHERAL_NOT_CONNECTED;
   }
 
-  return slave_device_found;
+  return peripheral_device_found;
 }
 
 #if (CONNECT_OPTION == CONN_BY_NAME)
@@ -609,7 +609,7 @@ uint8_t rsi_add_ble_conn_id(uint8_t *remote_dev_addr)
   uint8_t conn_id = 0xFF; //! Max connections (0xFF -1)
   uint8_t i       = 0;
 
-  for (i = 0; i < (RSI_BLE_MAX_NBR_SLAVES); i++) {
+  for (i = 0; i < (RSI_BLE_MAX_NBR_PERIPHERALS); i++) {
     if (!memcmp(rsi_ble_conn_info[i].remote_dev_addr, RSI_NULL_BLE_ADDR, RSI_REM_DEV_ADDR_LEN)) {
       memcpy(rsi_ble_conn_info[i].remote_dev_addr, remote_dev_addr, RSI_REM_DEV_ADDR_LEN);
 #if (CONNECT_OPTION == CONN_BY_NAME)
@@ -617,7 +617,7 @@ uint8_t rsi_add_ble_conn_id(uint8_t *remote_dev_addr)
       memset(rsi_ble_conn_info[i].rsi_remote_name, 0, size + 1);
       memcpy(rsi_ble_conn_info[i].rsi_remote_name, remote_name, size);
 #endif
-      rsi_ble_conn_info[i].remote_device_role = SLAVE_ROLE; //! remote device is slave
+      rsi_ble_conn_info[i].remote_device_role = PERIPHERAL_ROLE; //! remote device is peripheral
       conn_id                                 = i;
       break;
     }
@@ -1010,115 +1010,115 @@ int8_t rsi_ble_initialize_conn_buffer(rsi_ble_conn_config_t *ble_conn_spec_conf)
   LOG_PRINT_D("\r\n init conn buffer funstion caalled \n");
   int8_t status = RSI_SUCCESS;
   if (ble_conn_spec_conf != NULL) {
-    if (RSI_BLE_MAX_NBR_SLAVES > 0) {
-      //! Initialize slave1 configurations
-      ble_conn_spec_conf[SLAVE1].smp_enable        = SMP_ENABLE_S1;
-      ble_conn_spec_conf[SLAVE1].add_to_acceptlist = ADD_TO_ACCEPTLIST_S1;
-      ble_conn_spec_conf[SLAVE1].profile_discovery = PROFILE_QUERY_S1;
-      ble_conn_spec_conf[SLAVE1].data_transfer     = DATA_TRANSFER_S1;
-      // ble_conn_spec_conf[SLAVE1].bidir_datatransfer = SMP_ENABLE_S1;
-      ble_conn_spec_conf[SLAVE1].rx_notifications                 = RX_NOTIFICATIONS_FROM_S1;
-      ble_conn_spec_conf[SLAVE1].rx_indications                   = RX_INDICATIONS_FROM_S1;
-      ble_conn_spec_conf[SLAVE1].tx_notifications                 = TX_NOTIFICATIONS_TO_S1;
-      ble_conn_spec_conf[SLAVE1].tx_write                         = TX_WRITES_TO_S1;
-      ble_conn_spec_conf[SLAVE1].tx_write_no_response             = TX_WRITES_NO_RESP_TO_S1;
-      ble_conn_spec_conf[SLAVE1].tx_indications                   = TX_INDICATIONS_TO_S1;
-      ble_conn_spec_conf[SLAVE1].conn_param_update.conn_int       = CONN_INTERVAL_S1;
-      ble_conn_spec_conf[SLAVE1].conn_param_update.conn_latncy    = CONN_LATENCY_S1;
-      ble_conn_spec_conf[SLAVE1].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_S1;
-      ble_conn_spec_conf[SLAVE1].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_S1;
-      ble_conn_spec_conf[SLAVE1].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_S1;
-      ble_conn_spec_conf[SLAVE1].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_S1;
+    if (RSI_BLE_MAX_NBR_PERIPHERALS > 0) {
+      //! Initialize peripheral1 configurations
+      ble_conn_spec_conf[PERIPHERAL1].smp_enable        = SMP_ENABLE_P1;
+      ble_conn_spec_conf[PERIPHERAL1].add_to_acceptlist = ADD_TO_ACCEPTLIST_P1;
+      ble_conn_spec_conf[PERIPHERAL1].profile_discovery = PROFILE_QUERY_P1;
+      ble_conn_spec_conf[PERIPHERAL1].data_transfer     = DATA_TRANSFER_P1;
+      // ble_conn_spec_conf[PERIPHERAL1].bidir_datatransfer = SMP_ENABLE_P1;
+      ble_conn_spec_conf[PERIPHERAL1].rx_notifications                 = RX_NOTIFICATIONS_FROM_P1;
+      ble_conn_spec_conf[PERIPHERAL1].rx_indications                   = RX_INDICATIONS_FROM_P1;
+      ble_conn_spec_conf[PERIPHERAL1].tx_notifications                 = TX_NOTIFICATIONS_TO_P1;
+      ble_conn_spec_conf[PERIPHERAL1].tx_write                         = TX_WRITES_TO_P1;
+      ble_conn_spec_conf[PERIPHERAL1].tx_write_no_response             = TX_WRITES_NO_RESP_TO_P1;
+      ble_conn_spec_conf[PERIPHERAL1].tx_indications                   = TX_INDICATIONS_TO_P1;
+      ble_conn_spec_conf[PERIPHERAL1].conn_param_update.conn_int       = CONN_INTERVAL_P1;
+      ble_conn_spec_conf[PERIPHERAL1].conn_param_update.conn_latncy    = CONN_LATENCY_P1;
+      ble_conn_spec_conf[PERIPHERAL1].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_P1;
+      ble_conn_spec_conf[PERIPHERAL1].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_P1;
+      ble_conn_spec_conf[PERIPHERAL1].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_P1;
+      ble_conn_spec_conf[PERIPHERAL1].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_P1;
     }
 
-    if (RSI_BLE_MAX_NBR_SLAVES > 1) {
-      //! Initialize slave2 configurations
-      ble_conn_spec_conf[SLAVE2].smp_enable        = SMP_ENABLE_S2;
-      ble_conn_spec_conf[SLAVE2].add_to_acceptlist = ADD_TO_ACCEPTLIST_S2;
-      ble_conn_spec_conf[SLAVE2].profile_discovery = PROFILE_QUERY_S2;
-      ble_conn_spec_conf[SLAVE2].data_transfer     = DATA_TRANSFER_S2;
-      // ble_conn_spec_conf[SLAVE2].bidir_datatransfer = SMP_ENABLE_S2;
-      ble_conn_spec_conf[SLAVE2].rx_notifications                 = RX_NOTIFICATIONS_FROM_S2;
-      ble_conn_spec_conf[SLAVE2].rx_indications                   = RX_INDICATIONS_FROM_S2;
-      ble_conn_spec_conf[SLAVE2].tx_notifications                 = TX_NOTIFICATIONS_TO_S2;
-      ble_conn_spec_conf[SLAVE2].tx_write                         = TX_WRITES_TO_S2;
-      ble_conn_spec_conf[SLAVE2].tx_write_no_response             = TX_WRITES_NO_RESP_TO_S2;
-      ble_conn_spec_conf[SLAVE2].tx_indications                   = TX_INDICATIONS_TO_S2;
-      ble_conn_spec_conf[SLAVE2].conn_param_update.conn_int       = CONN_INTERVAL_S2;
-      ble_conn_spec_conf[SLAVE2].conn_param_update.conn_latncy    = CONN_LATENCY_S2;
-      ble_conn_spec_conf[SLAVE2].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_S2;
-      ble_conn_spec_conf[SLAVE2].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_S2;
-      ble_conn_spec_conf[SLAVE2].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_S2;
-      ble_conn_spec_conf[SLAVE2].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_S2;
+    if (RSI_BLE_MAX_NBR_PERIPHERALS > 1) {
+      //! Initialize peripheral2 configurations
+      ble_conn_spec_conf[PERIPHERAL2].smp_enable        = SMP_ENABLE_P2;
+      ble_conn_spec_conf[PERIPHERAL2].add_to_acceptlist = ADD_TO_ACCEPTLIST_P2;
+      ble_conn_spec_conf[PERIPHERAL2].profile_discovery = PROFILE_QUERY_P2;
+      ble_conn_spec_conf[PERIPHERAL2].data_transfer     = DATA_TRANSFER_P2;
+      // ble_conn_spec_conf[PERIPHERAL2].bidir_datatransfer = SMP_ENABLE_P2;
+      ble_conn_spec_conf[PERIPHERAL2].rx_notifications                 = RX_NOTIFICATIONS_FROM_P2;
+      ble_conn_spec_conf[PERIPHERAL2].rx_indications                   = RX_INDICATIONS_FROM_P2;
+      ble_conn_spec_conf[PERIPHERAL2].tx_notifications                 = TX_NOTIFICATIONS_TO_P2;
+      ble_conn_spec_conf[PERIPHERAL2].tx_write                         = TX_WRITES_TO_P2;
+      ble_conn_spec_conf[PERIPHERAL2].tx_write_no_response             = TX_WRITES_NO_RESP_TO_P2;
+      ble_conn_spec_conf[PERIPHERAL2].tx_indications                   = TX_INDICATIONS_TO_P2;
+      ble_conn_spec_conf[PERIPHERAL2].conn_param_update.conn_int       = CONN_INTERVAL_P2;
+      ble_conn_spec_conf[PERIPHERAL2].conn_param_update.conn_latncy    = CONN_LATENCY_P2;
+      ble_conn_spec_conf[PERIPHERAL2].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_P2;
+      ble_conn_spec_conf[PERIPHERAL2].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_P2;
+      ble_conn_spec_conf[PERIPHERAL2].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_P2;
+      ble_conn_spec_conf[PERIPHERAL2].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_P2;
     }
 
-    if (RSI_BLE_MAX_NBR_SLAVES > 2) {
-      //! Initialize SLAVE3 configurations
-      ble_conn_spec_conf[SLAVE3].smp_enable        = SMP_ENABLE_S3;
-      ble_conn_spec_conf[SLAVE3].add_to_acceptlist = ADD_TO_ACCEPTLIST_S3;
-      ble_conn_spec_conf[SLAVE3].profile_discovery = PROFILE_QUERY_S3;
-      ble_conn_spec_conf[SLAVE3].data_transfer     = DATA_TRANSFER_S3;
-      // ble_conn_spec_conf[SLAVE3].bidir_datatransfer = SMP_ENABLE_S3;
-      ble_conn_spec_conf[SLAVE3].rx_notifications                 = RX_NOTIFICATIONS_FROM_S3;
-      ble_conn_spec_conf[SLAVE3].rx_indications                   = RX_INDICATIONS_FROM_S3;
-      ble_conn_spec_conf[SLAVE3].tx_notifications                 = TX_NOTIFICATIONS_TO_S3;
-      ble_conn_spec_conf[SLAVE3].tx_write                         = TX_WRITES_TO_S3;
-      ble_conn_spec_conf[SLAVE3].tx_write_no_response             = TX_WRITES_NO_RESP_TO_S3;
-      ble_conn_spec_conf[SLAVE3].tx_indications                   = TX_INDICATIONS_TO_S3;
-      ble_conn_spec_conf[SLAVE3].conn_param_update.conn_int       = CONN_INTERVAL_S3;
-      ble_conn_spec_conf[SLAVE3].conn_param_update.conn_latncy    = CONN_LATENCY_S3;
-      ble_conn_spec_conf[SLAVE3].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_S3;
-      ble_conn_spec_conf[SLAVE3].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_S3;
-      ble_conn_spec_conf[SLAVE3].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_S3;
-      ble_conn_spec_conf[SLAVE3].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_S3;
+    if (RSI_BLE_MAX_NBR_PERIPHERALS > 2) {
+      //! Initialize PERIPHERAL3 configurations
+      ble_conn_spec_conf[PERIPHERAL3].smp_enable        = SMP_ENABLE_P3;
+      ble_conn_spec_conf[PERIPHERAL3].add_to_acceptlist = ADD_TO_ACCEPTLIST_P3;
+      ble_conn_spec_conf[PERIPHERAL3].profile_discovery = PROFILE_QUERY_P3;
+      ble_conn_spec_conf[PERIPHERAL3].data_transfer     = DATA_TRANSFER_P3;
+      // ble_conn_spec_conf[PERIPHERAL3].bidir_datatransfer = SMP_ENABLE_P3;
+      ble_conn_spec_conf[PERIPHERAL3].rx_notifications                 = RX_NOTIFICATIONS_FROM_P3;
+      ble_conn_spec_conf[PERIPHERAL3].rx_indications                   = RX_INDICATIONS_FROM_P3;
+      ble_conn_spec_conf[PERIPHERAL3].tx_notifications                 = TX_NOTIFICATIONS_TO_P3;
+      ble_conn_spec_conf[PERIPHERAL3].tx_write                         = TX_WRITES_TO_P3;
+      ble_conn_spec_conf[PERIPHERAL3].tx_write_no_response             = TX_WRITES_NO_RESP_TO_P3;
+      ble_conn_spec_conf[PERIPHERAL3].tx_indications                   = TX_INDICATIONS_TO_P3;
+      ble_conn_spec_conf[PERIPHERAL3].conn_param_update.conn_int       = CONN_INTERVAL_P3;
+      ble_conn_spec_conf[PERIPHERAL3].conn_param_update.conn_latncy    = CONN_LATENCY_P3;
+      ble_conn_spec_conf[PERIPHERAL3].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_P3;
+      ble_conn_spec_conf[PERIPHERAL3].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_P3;
+      ble_conn_spec_conf[PERIPHERAL3].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_P3;
+      ble_conn_spec_conf[PERIPHERAL3].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_P3;
     }
 
-    if (RSI_BLE_MAX_NBR_MASTERS > 0) {
-      //! Initialize master1 configurations
-      ble_conn_spec_conf[MASTER1].smp_enable        = SMP_ENABLE_M1;
-      ble_conn_spec_conf[MASTER1].add_to_acceptlist = ADD_TO_ACCEPTLIST_M1;
-      ble_conn_spec_conf[MASTER1].profile_discovery = PROFILE_QUERY_M1;
-      ble_conn_spec_conf[MASTER1].data_transfer     = DATA_TRANSFER_M1;
-      // ble_conn_spec_conf[MASTER1].bidir_datatransfer = SMP_ENABLE_M1;
-      ble_conn_spec_conf[MASTER1].rx_notifications                 = RX_NOTIFICATIONS_FROM_M1;
-      ble_conn_spec_conf[MASTER1].rx_indications                   = RX_INDICATIONS_FROM_M1;
-      ble_conn_spec_conf[MASTER1].tx_notifications                 = TX_NOTIFICATIONS_TO_M1;
-      ble_conn_spec_conf[MASTER1].tx_write                         = TX_WRITES_TO_M1;
-      ble_conn_spec_conf[MASTER1].tx_write_no_response             = TX_WRITES_NO_RESP_TO_M1;
-      ble_conn_spec_conf[MASTER1].tx_indications                   = TX_INDICATIONS_TO_M1;
-      ble_conn_spec_conf[MASTER1].conn_param_update.conn_int       = CONN_INTERVAL_M1;
-      ble_conn_spec_conf[MASTER1].conn_param_update.conn_latncy    = CONN_LATENCY_M1;
-      ble_conn_spec_conf[MASTER1].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_M1;
-      ble_conn_spec_conf[MASTER1].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_M1;
-      ble_conn_spec_conf[MASTER1].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_M1;
-      ble_conn_spec_conf[MASTER1].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_M1;
+    if (RSI_BLE_MAX_NBR_CENTRALS > 0) {
+      //! Initialize central1 configurations
+      ble_conn_spec_conf[CENTRAL1].smp_enable        = SMP_ENABLE_C1;
+      ble_conn_spec_conf[CENTRAL1].add_to_acceptlist = ADD_TO_ACCEPTLIST_C1;
+      ble_conn_spec_conf[CENTRAL1].profile_discovery = PROFILE_QUERY_C1;
+      ble_conn_spec_conf[CENTRAL1].data_transfer     = DATA_TRANSFER_C1;
+      // ble_conn_spec_conf[CENTRAL1].bidir_datatransfer = SMP_ENABLE_C1;
+      ble_conn_spec_conf[CENTRAL1].rx_notifications                 = RX_NOTIFICATIONS_FROM_C1;
+      ble_conn_spec_conf[CENTRAL1].rx_indications                   = RX_INDICATIONS_FROM_C1;
+      ble_conn_spec_conf[CENTRAL1].tx_notifications                 = TX_NOTIFICATIONS_TO_C1;
+      ble_conn_spec_conf[CENTRAL1].tx_write                         = TX_WRITES_TO_C1;
+      ble_conn_spec_conf[CENTRAL1].tx_write_no_response             = TX_WRITES_NO_RESP_TO_C1;
+      ble_conn_spec_conf[CENTRAL1].tx_indications                   = TX_INDICATIONS_TO_C1;
+      ble_conn_spec_conf[CENTRAL1].conn_param_update.conn_int       = CONN_INTERVAL_C1;
+      ble_conn_spec_conf[CENTRAL1].conn_param_update.conn_latncy    = CONN_LATENCY_C1;
+      ble_conn_spec_conf[CENTRAL1].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_C1;
+      ble_conn_spec_conf[CENTRAL1].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_C1;
+      ble_conn_spec_conf[CENTRAL1].buff_mode_sel.buffer_cnt         = DLE_BUFFER_COUNT_C1;
+      ble_conn_spec_conf[CENTRAL1].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_C1;
     }
 
-    if (RSI_BLE_MAX_NBR_MASTERS > 1) {
-      //! Initialize master2 configurations
-      ble_conn_spec_conf[MASTER2].smp_enable        = SMP_ENABLE_M2;
-      ble_conn_spec_conf[MASTER2].add_to_acceptlist = ADD_TO_ACCEPTLIST_M2;
-      ble_conn_spec_conf[MASTER2].profile_discovery = PROFILE_QUERY_M2;
-      ble_conn_spec_conf[MASTER2].data_transfer     = DATA_TRANSFER_M2;
-      // ble_conn_spec_conf[MASTER2].bidir_datatransfer = SMP_ENABLE_M2;
-      ble_conn_spec_conf[MASTER2].rx_notifications                 = RX_NOTIFICATIONS_FROM_M2;
-      ble_conn_spec_conf[MASTER2].rx_indications                   = RX_INDICATIONS_FROM_M2;
-      ble_conn_spec_conf[MASTER2].tx_notifications                 = TX_NOTIFICATIONS_TO_M2;
-      ble_conn_spec_conf[MASTER2].tx_write                         = TX_WRITES_TO_M2;
-      ble_conn_spec_conf[MASTER2].tx_write_no_response             = TX_WRITES_NO_RESP_TO_M2;
-      ble_conn_spec_conf[MASTER2].tx_indications                   = TX_INDICATIONS_TO_M2;
-      ble_conn_spec_conf[MASTER2].conn_param_update.conn_int       = CONN_INTERVAL_M2;
-      ble_conn_spec_conf[MASTER2].conn_param_update.conn_latncy    = CONN_LATENCY_M2;
-      ble_conn_spec_conf[MASTER2].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_M2;
-      ble_conn_spec_conf[MASTER2].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_M2;
-      ble_conn_spec_conf[MASTER2].buff_mode_sel.buffer_cnt
+    if (RSI_BLE_MAX_NBR_CENTRALS > 1) {
+      //! Initialize central2 configurations
+      ble_conn_spec_conf[CENTRAL2].smp_enable        = SMP_ENABLE_C2;
+      ble_conn_spec_conf[CENTRAL2].add_to_acceptlist = ADD_TO_ACCEPTLIST_C2;
+      ble_conn_spec_conf[CENTRAL2].profile_discovery = PROFILE_QUERY_C2;
+      ble_conn_spec_conf[CENTRAL2].data_transfer     = DATA_TRANSFER_C2;
+      // ble_conn_spec_conf[CENTRAL2].bidir_datatransfer = SMP_ENABLE_C2;
+      ble_conn_spec_conf[CENTRAL2].rx_notifications                 = RX_NOTIFICATIONS_FROM_C2;
+      ble_conn_spec_conf[CENTRAL2].rx_indications                   = RX_INDICATIONS_FROM_C2;
+      ble_conn_spec_conf[CENTRAL2].tx_notifications                 = TX_NOTIFICATIONS_TO_C2;
+      ble_conn_spec_conf[CENTRAL2].tx_write                         = TX_WRITES_TO_C2;
+      ble_conn_spec_conf[CENTRAL2].tx_write_no_response             = TX_WRITES_NO_RESP_TO_C2;
+      ble_conn_spec_conf[CENTRAL2].tx_indications                   = TX_INDICATIONS_TO_C2;
+      ble_conn_spec_conf[CENTRAL2].conn_param_update.conn_int       = CONN_INTERVAL_C2;
+      ble_conn_spec_conf[CENTRAL2].conn_param_update.conn_latncy    = CONN_LATENCY_C2;
+      ble_conn_spec_conf[CENTRAL2].conn_param_update.supervision_to = CONN_SUPERVISION_TIMEOUT_C2;
+      ble_conn_spec_conf[CENTRAL2].buff_mode_sel.buffer_mode        = DLE_BUFFER_MODE_C2;
+      ble_conn_spec_conf[CENTRAL2].buff_mode_sel.buffer_cnt
 
-        = DLE_BUFFER_COUNT_M2;
-      ble_conn_spec_conf[MASTER2].buff_mode_sel.max_data_length = RSI_BLE_MAX_DATA_LEN_M2;
+        = DLE_BUFFER_COUNT_C2;
+      ble_conn_spec_conf[CENTRAL2].buff_mode_sel.max_data_length = RSI_BLE_MAX_DATA_LEN_C2;
     }
 
     /* Check the Total Number of Buffers allocated.*/
-    if ((DLE_BUFFER_COUNT_S1 + DLE_BUFFER_COUNT_S2 + DLE_BUFFER_COUNT_S3 + DLE_BUFFER_COUNT_M1 + DLE_BUFFER_COUNT_M2)
+    if ((DLE_BUFFER_COUNT_P1 + DLE_BUFFER_COUNT_P2 + DLE_BUFFER_COUNT_P3 + DLE_BUFFER_COUNT_C1 + DLE_BUFFER_COUNT_C2)
         > RSI_BLE_NUM_CONN_EVENTS) {
       LOG_PRINT("\r\n Total number of per connection buffer count is more than the total number alllocated \r\n");
       status = RSI_FAILURE;
@@ -1139,8 +1139,8 @@ int8_t rsi_fill_ble_user_config()
 
   //! copy ble connection specific configurations
 
-  if ((RSI_BLE_MAX_NBR_MASTERS > 2) || (RSI_BLE_MAX_NBR_SLAVES > 3)) {
-    LOG_PRINT("\r\n number of BLE MASTERS or BLE SLAVES Given wrong declaration\r\n");
+  if ((RSI_BLE_MAX_NBR_CENTRALS > 2) || (RSI_BLE_MAX_NBR_PERIPHERALS > 3)) {
+    LOG_PRINT("\r\n number of BLE CENTRALS or BLE PERIPHERALS Given wrong declaration\r\n");
     rsi_delay_ms(1000);
     return RSI_FAILURE;
   }
@@ -1157,8 +1157,8 @@ uint16_t rsi_scan_in_progress;
 
 volatile uint16_t rsi_ble_att1_val_hndl;
 
-uint8_t slave_con_req_pending    = 0;
-uint8_t slave_ae_con_req_pending = 0;
+uint8_t peripheral_con_req_pending    = 0;
+uint8_t peripheral_ae_con_req_pending = 0;
 
 #ifdef M4_UART
 extern rsi_semaphore_handle_t ui_task_sem;
@@ -1378,7 +1378,7 @@ int32_t rsi_ble_dual_role(void)
   uint8_t local_dev_addr[RSI_REM_DEV_ADDR_LEN] = { 0 };
   rsi_ascii_dev_address_to_6bytes_rev((uint8_t *)rand_addr, (int8_t *)RSI_BLE_SET_RAND_ADDR);
 
-  //! This should be vary from one device to other, Present RSI dont have a support of FIXED IRK on every Reset
+  //! This should be vary from one device to other, Present SiWx917 dont have a support of FIXED IRK on every Reset
   uint8_t local_irk[16] = { 0x4d, 0xd7, 0xbd, 0x3e, 0xec, 0x10, 0xda, 0xab,
                             0x1f, 0x85, 0x56, 0xee, 0xa5, 0xc8, 0xe6, 0x93 };
   rsi_ble_set_smp_pairing_capabilty_data_t smp_capabilities;
@@ -1429,13 +1429,17 @@ int32_t rsi_ble_dual_role(void)
 
   rsi_assign_remote_data_serv_and_char();
 
-  //! Module advertises if master connections are configured
+  //! Module advertises if central connections are configured
 
   //! prepare advertise data //local/device name
 
-  adv[3] = strlen(RSI_BLE_APP_GATT_TEST) + 1;
-  adv[4] = 9;
-  strcpy((char *)&adv[5], RSI_BLE_APP_GATT_TEST);
+  if (BLE_AE_ADV_EVNT_PROP_SET_1 & BLE_LEGACY_ADV) {
+    adv[3] = strlen(BLE_AE_ADV_DATA) + 1;
+    adv[4] = 9;
+    strcpy((char *)&adv[5], BLE_AE_ADV_DATA);
+  } else {
+    strncpy((char *)adv, RSI_BLE_AE_ADV_DATA, BLE_AE_ADV_DATA_LEN);
+  }
 
   //! get the supported max adv data len
   status = rsi_ble_get_max_adv_data_len((uint8_t *)&rsi_app_resp_max_adv_data_len);
@@ -1559,7 +1563,7 @@ int32_t rsi_ble_dual_role(void)
 #endif
 #endif
 #if SCAN_ENABLED_DEFAULT
-  //! Module scans if slave connections are configured
+  //! Module scans if peripheral connections are configured
 
   status = ble_ext_scan_params();
   if (status != RSI_SUCCESS) {

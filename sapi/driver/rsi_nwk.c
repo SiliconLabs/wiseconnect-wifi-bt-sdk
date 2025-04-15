@@ -576,7 +576,7 @@ int32_t rsi_driver_process_recv_data_non_rom(rsi_pkt_t *pkt)
 
       if (sock_info->sock_receive_callback != NULL) {
         if ((sock_info->sock_bitmap & RSI_SOCKET_FEAT_WEBS_SUPPORT)) {
-          *(uint8_t *)(recv + data_offset - 1) = websocket_info;
+          *((uint8_t *)recv + data_offset - 1) = websocket_info;
 
           // Call registered callback if asynchronous callback
           sock_info->sock_receive_callback(sockID, ((uint8_t *)recv + data_offset - 1), data_length + 1);

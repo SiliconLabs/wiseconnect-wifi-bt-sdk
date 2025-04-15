@@ -170,9 +170,9 @@ typedef struct rsi_ble_conn_info_s {
   bool profile_mem_init;
   bool service_char_mem_init;
 
-  uint8_t remote_device_role;                            //! 1 - remote device is slave, 2 - remote device is master
-  uint8_t remote_dev_addr[18];                           //! 18 = RSI_REM_DEV_ADDR_LEN
-  rsi_ble_event_remote_features_t remote_dev_feature;    //! -- rsi_ble_simple_peripheral_on_remote_features_event()
+  uint8_t remote_device_role;                         //! 1 - remote device is peripheral, 2 - remote device is central
+  uint8_t remote_dev_addr[18];                        //! 18 = RSI_REM_DEV_ADDR_LEN
+  rsi_ble_event_remote_features_t remote_dev_feature; //! -- rsi_ble_simple_peripheral_on_remote_features_event()
   rsi_ble_event_adv_report_t rsi_app_adv_reports_to_app; //! -- rsi_ble_simple_central_on_adv_report_event()
   rsi_ble_ae_adv_report_t rsi_app_ae_adv_reports_to_app; //! -- rsi_ble_simple_central_on_ae_adv_report_event()
   rsi_ble_event_conn_update_t conn_update_resp;          //! -- ble_on_conn_update_complete_event()
@@ -222,15 +222,15 @@ typedef struct rsi_parsed_conf_s {
     bool is_wifi_enabled;
   } rsi_protocol_sel;
   struct rsi_ble_config_t {
-    uint8_t no_of_slaves;
-    uint8_t no_of_masters;
+    uint8_t no_of_peripherals;
+    uint8_t no_of_centrals;
     uint8_t conn_by_name;
-    uint8_t slave1_name[RSI_REM_DEV_NAME_LEN];
-    uint8_t slave2_name[RSI_REM_DEV_NAME_LEN];
-    uint8_t slave3_name[RSI_REM_DEV_NAME_LEN];
-    uint8_t slave1_addr[RSI_REM_DEV_ADDR_LEN];
-    uint8_t slave2_addr[RSI_REM_DEV_ADDR_LEN];
-    uint8_t slave3_addr[RSI_REM_DEV_ADDR_LEN];
+    uint8_t peripheral1_name[RSI_REM_DEV_NAME_LEN];
+    uint8_t peripheral2_name[RSI_REM_DEV_NAME_LEN];
+    uint8_t peripheral3_name[RSI_REM_DEV_NAME_LEN];
+    uint8_t peripheral1_addr[RSI_REM_DEV_ADDR_LEN];
+    uint8_t peripheral2_addr[RSI_REM_DEV_ADDR_LEN];
+    uint8_t peripheral3_addr[RSI_REM_DEV_ADDR_LEN];
     rsi_ble_conn_config_t rsi_ble_conn_config[TOTAL_CONNECTIONS];
   } rsi_ble_config;
 
@@ -297,7 +297,7 @@ extern rsi_ble_conn_info_t rsi_ble_conn_info[TOTAL_CONNECTIONS];
 
 extern uint8_t rsi_check_dev_list_driver(uint8_t *remote_dev_name, uint8_t *adv_dev_addr);
 
-extern uint8_t slave_con_req_pending;
+extern uint8_t peripheral_con_req_pending;
 
 extern volatile uint16_t rsi_ble_att1_val_hndl;
 
@@ -327,12 +327,12 @@ extern volatile uint16_t rsi_ble_att1_val_hndl;
 extern volatile uint16_t rsi_ble_att2_val_hndl;
 extern volatile uint16_t rsi_ble_att3_val_hndl;
 extern uint8_t adv_pkt_processing_pending;
-extern uint8_t num_of_connected_slave_devices;
+extern uint8_t num_of_connected_peripheral_devices;
 extern rsi_ble_conn_config_t ble_conn_configuration[TOTAL_CONNECTIONS];
 extern adv_state_t adv_state_dut;
 extern scan_state_t scan_state_dut;
-extern uint8_t slave_count;
-extern uint8_t master_count;
+extern uint8_t peripheral_count;
+extern uint8_t central_count;
 extern uint32_t one_shot_event_map;
 
 //! function protoypes

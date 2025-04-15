@@ -3781,6 +3781,11 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
  * @note 		   Enable bit[27] in tcp_ip_feature_bit_map to load SSl certificate into RAM. \n
  * @note 		   Enable bit[31] in tcp_ip_feature_bit_map and bit[29] in ext_tcp_ip_feature_bit_map to open 3 SSL client sockets. \n
  * 				     Three SSL client sockets feature is supported only in WLAN mode.
+ * @note       Enable bit[31] in tcp_ip_feature_bit_map and bit[21] in ext_tcp_ip_feature_bit_map for storing the certificate in index 3. \n
+ *             By enabling certificate index 3, Webpage feature is disabled as these are mutually exclusive to each other. \n
+ *             Index 3 certificate loading is valid only for storing the certificate on to flash. \n
+ *             Certificate index 3 is only used for storing the RSI_SSL_CA_CERTIFICATE certificate type, and this feature is valid only in 9116. \n
+ *             Though we can store 4 certificates with this bitmap, the maximum number of SSL sockets is only 3.
  *
  *
  */
@@ -5511,7 +5516,7 @@ int32_t rsi_wlan_power_save_disable_and_enable(uint8_t psp_mode, uint8_t psp_typ
  *             - Stop Continuous mode \n 
  *             - Start Continuous Wave mode \n
  * @note       If user wants to switch continuous wave mode, first need to stop the transmit test and again need to give continous wave mode which user wants to switch. 
- * @note	     In 2.4GHz, to start transmit test in 12,13,14 channels, configure set region parameters in rsi_wlan_config.h \n
+ * @note	     In 2.4GHz, to start transmit test in 12,13 channels, configure set region parameters in rsi_wlan_config.h \n
  * @return     0 		- Success \n
  *             Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffa,0x000A, 0x0021, 0x0025, 0x002C) \n
  * @note       Refer to \ref error-codes for the description of above error codes.

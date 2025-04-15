@@ -7,9 +7,9 @@
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
- * software is governed by the terms of Silicon Labs Master Software License
+ * software is governed by the terms of Silicon Labs Central Software License
  * Agreement (MSLA) available at
- * www.silabs.com/about-us/legal/master-software-license-agreement. This
+ * www.silabs.com/about-us/legal/central-software-license-agreement. This
  * software is distributed to you in Source Code format and is governed by the
  * sections of the MSLA applicable to Source Code.
  *
@@ -60,7 +60,7 @@ void ble_module_req_adv_cmd_handler(generic_command_message_t *generic_command_m
 
   if (adv_state_dut == adv_disabled) {
 
-    if (master_count == RSI_BLE_MAX_NBR_MASTERS) {
+    if (central_count == RSI_BLE_MAX_NBR_CENTRALS) {
 
       status = rsi_ble_start_advertising_with_values(&change_adv_param);
       if (status != RSI_SUCCESS) {
@@ -69,7 +69,7 @@ void ble_module_req_adv_cmd_handler(generic_command_message_t *generic_command_m
         adv_state_dut = adv_enabled_non_connectable;
         LOG_PRINT("\r\n ble_module_req_adv_cmd_handler : successful \n");
       }
-    } else if (master_count < RSI_BLE_MAX_NBR_MASTERS) {
+    } else if (central_count < RSI_BLE_MAX_NBR_CENTRALS) {
       status = rsi_ble_start_advertising();
       if (status != RSI_SUCCESS) {
         LOG_PRINT("\r\n ble_module_req_adv_cmd_handler : error status 0x%lx \n", status);
@@ -108,7 +108,7 @@ void ble_module_req_scan_cmd_handler(generic_command_message_t *generic_command_
 
   if (scan_state_dut == scan_off) {
 
-    if (slave_count == RSI_BLE_MAX_NBR_SLAVES) {
+    if (peripheral_count == RSI_BLE_MAX_NBR_PERIPHERALS) {
 
       status = rsi_ble_start_scanning_with_values(&change_scan_param);
       if (status != RSI_SUCCESS) {
@@ -117,7 +117,7 @@ void ble_module_req_scan_cmd_handler(generic_command_message_t *generic_command_
         scan_state_dut = non_connectable_scan;
         LOG_PRINT("\r\n ble_module_req_scan_cmd_handler : successful \n");
       }
-    } else if (slave_count < RSI_BLE_MAX_NBR_SLAVES) {
+    } else if (peripheral_count < RSI_BLE_MAX_NBR_PERIPHERALS) {
       status = rsi_ble_start_scanning();
       if (status != RSI_SUCCESS) {
         LOG_PRINT("\r\n ble_module_req_scan_cmd_handler : error status 0x%lx \n", status);
@@ -287,10 +287,10 @@ void ble_module_req_disconnect_cmd_handler(generic_command_message_t *generic_co
   if (status != RSI_SUCCESS) {
     LOG_PRINT("\r\n ble_module_req_disconnect_cmd_handler : error status 0x%lx \n", status);
   } else {
-    if (remote_device_role == SLAVE_ROLE) {
-      slave_count--;
+    if (remote_device_role == PERIPHERAL_ROLE) {
+      peripheral_count--;
     } else {
-      master_count--;
+      central_count--;
     }
     LOG_PRINT("\r\n ble_module_req_disconnect_cmd_handler : successful \n");
   }

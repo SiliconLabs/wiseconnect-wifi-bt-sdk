@@ -1,4 +1,4 @@
-# BLE LLD
+#BLE LLD
 ## BLE Task Private CB
 ### Structures
 
@@ -83,8 +83,8 @@ stateDiagram-v2
 	idle --> DUT_ADV_SCAN
 	DUT_ADV_SCAN --> On_enhance_conn : if remote device is scanning
 	DUT_ADV_SCAN --> On_conn : if remote device is advertising
-	On_enhance_conn --> Connection_established :  master++
-	On_conn --> Connection_established :  slave++
+	On_enhance_conn --> Connection_established :  central++
+	On_conn --> Connection_established :  peripheral++
 	Connection_established --> MTU_Exhange_Info
 	MTU_Exhange_Info --> SMP_Protocol
 	SMP_Protocol --> Profile_Discovery
@@ -102,7 +102,7 @@ stateDiagram-v2
 	state disconnection <<choice>>
 	[*] --> DUT_ADV_SCAN : Stable Connected State
 	DUT_ADV_SCAN --> On_Disconnect : on_disconnect Conn_variables are freed
-	On_Disconnect --> DUT_ADV_SCAN : master / slave according to the connection decreased
+	On_Disconnect --> DUT_ADV_SCAN : central / peripheral according to the connection decreased
 ```
 ### Event Handling
 #### Generic Flow

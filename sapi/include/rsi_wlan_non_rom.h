@@ -579,10 +579,6 @@ typedef struct rsi_wlan_cb_non_rom_s {
 #define PING_RESPONSE_PENDING BIT(0)
 #define DNS_RESPONSE_PENDING  BIT(1)
 #define SNTP_RESPONSE_PENDING BIT(2)
-//! Tx Data format bitmaps
-#define MAC_INFO_ENABLE          BIT(0)
-#define BCAST_INDICATION         BIT(1)
-#define CONFIRM_REQUIRED_TO_HOST BIT(2)
 /*===================================================*/
 typedef struct rsi_rsp_waiting_cmds_s {
   uint16_t waiting_cmds;

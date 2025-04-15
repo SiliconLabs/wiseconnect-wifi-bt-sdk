@@ -36,11 +36,7 @@
 #define RSI_RSP_WKP 0xDD
 
 // Max packet length of WLAN tx packet
-#if SPI_EXTENDED_TX_LEN_2K
-#define RSI_WLAN_CMD_LEN (2500 + SIZE_OF_HEADROOM)
-#else
 #define RSI_WLAN_CMD_LEN (1600 + SIZE_OF_HEADROOM)
-#endif
 
 // Max packet length of ZigBee tx packet
 #define RSI_ZIGB_CMD_LEN (256 + SIZE_OF_HEADROOM)
@@ -81,11 +77,7 @@
 
 // Max packet length of rx packet
 #if !((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
-#if SPI_EXTENDED_TX_LEN_2K
-#define RSI_DRIVER_RX_PKT_LEN (2500 + RSI_SSL_RECV_BUFFER_LENGTH)
-#else
 #define RSI_DRIVER_RX_PKT_LEN (1600 + RSI_SSL_RECV_BUFFER_LENGTH)
-#endif
 #else
 #define RSI_DRIVER_RX_PKT_LEN 0
 #endif

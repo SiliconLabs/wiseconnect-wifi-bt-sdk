@@ -459,13 +459,6 @@ int32_t rsi_wlan_tcp_server_app(void)
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
         }
 
-        LOG_PRINT("\r\nInitializing WLAN radio and supplicant parameters.\r\n");
-        //! enable wlan radio
-        status = rsi_wlan_radio_init();
-        if (status != RSI_SUCCESS) {
-          LOG_PRINT("\nradio init failed\n");
-          return status;
-        }
 #if ENABLE_POWER_SAVE
         LOG_PRINT("\r\nInitiate module in to power save\r\n");
         //! initiating power save in BLE mode

@@ -24,18 +24,18 @@
 
 /***********************************************************************************************************************************************/
 /***********************************************************************************************************************************************/
-#define RSI_BLE_APP_GATT_TEST   (void *)"BLE_AE_COEX_DEMO" //! local device name
-#define RSI_BLE_MAX_NBR_SLAVES  1
-#define RSI_BLE_MAX_NBR_MASTERS 1
-#define TOTAL_CONNECTIONS       RSI_BLE_MAX_NBR_SLAVES + RSI_BLE_MAX_NBR_MASTERS
-#define REM_DEV_ADDR            "00:00:00:00:00:00"
-#define RSI_BLE_SET_RAND_ADDR   "CC:44:33:44:55:CC"
+#define RSI_BLE_APP_GATT_TEST       (void *)"BLE_AE_COEX_DEMO" //! local device name
+#define RSI_BLE_MAX_NBR_PERIPHERALS 1
+#define RSI_BLE_MAX_NBR_CENTRALS    1
+#define TOTAL_CONNECTIONS           RSI_BLE_MAX_NBR_PERIPHERALS + RSI_BLE_MAX_NBR_CENTRALS
+#define REM_DEV_ADDR                "00:00:00:00:00:00"
+#define RSI_BLE_SET_RAND_ADDR       "CC:44:33:44:55:CC"
 
 #define RSI_BLE_GATT_ASYNC_ENABLE               1
 #define RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST 1
 #define RSI_BLE_MTU_EXCHANGE_FROM_HOST          1
 #define MAX_MTU_SIZE                            240
-#define UPDATE_CONN_PARAMETERS                  0 //! To update connection parameters of remote master connection
+#define UPDATE_CONN_PARAMETERS                  0 //! To update connection parameters of remote central connection
 #define MITM_ENABLE                             1
 #define RSI_BLE_MAX_CHAR_DESCRIPTORS            5
 #define RSI_MAX_PROFILE_CNT                     8
@@ -45,7 +45,7 @@
 #define LOCAL_MTU_SIZE                          232
 
 /** Note: When BLE_DYNAMIC_BUFF_CONFIGURATION_BASED_ON_INTERVAL Macro is enabled,
- *   After connection update completion, Tx buffers for Each Remote Master connection will be allocated as follows..
+ *   After connection update completion, Tx buffers for Each Remote Central connection will be allocated as follows..
  *   if Connection interval <= 15msec then 3 buffers will be allocated.
  *   If Connection interval <= 45msec then 5 buffers will be allocated.
  *   If Connection interval > 45msec then 7 buffers will be allocated.
@@ -78,9 +78,9 @@
 #define RSI_BLE_DEV_3_ADDR "00:1A:7D:DA:73:13"
 #endif
 
-#define SLAVE_FOUND         1
-#define SLAVE_CONNECTED     2
-#define SLAVE_NOT_CONNECTED 3
+#define PERIPHERAL_FOUND         1
+#define PERIPHERAL_CONNECTED     2
+#define PERIPHERAL_NOT_CONNECTED 3
 
 /***********************************************************************************************************************************************/
 //! BLE AE event properties
@@ -98,197 +98,197 @@
 //! BLE connection specific configurations
 /***********************************************************************************************************************************************/
 #if !RUN_TIME_CONFIG_ENABLE
-/*=================Master1 configurations=====================*/
+/*=================Central1 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_M1 1
+#define SMP_ENABLE_C1 1
 // Add remote device to acceptlist
-#define ADD_TO_ACCEPTLIST_M1 0
+#define ADD_TO_ACCEPTLIST_C1 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_M1 1
+#define PROFILE_QUERY_C1 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_M1 1
+#define DATA_TRANSFER_C1 1
 //! configure below macros to select type of data transfer
 //!  set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_M1 1
+#define RX_NOTIFICATIONS_FROM_C1 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_M1 0
+#define RX_INDICATIONS_FROM_C1 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_M1 1
+#define TX_NOTIFICATIONS_TO_C1 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_M1 0
+#define TX_WRITES_TO_C1 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_M1 0
+#define TX_WRITES_NO_RESP_TO_C1 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_M1 0
+#define TX_INDICATIONS_TO_C1 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_M1 0
-#if DLE_ON_M1
-#define DLE_BUFFER_MODE_M1      1
-#define DLE_BUFFER_COUNT_M1     2
-#define RSI_BLE_MAX_DATA_LEN_M1 230
+#define DLE_ON_C1 0
+#if DLE_ON_C1
+#define DLE_BUFFER_MODE_C1      1
+#define DLE_BUFFER_COUNT_C1     2
+#define RSI_BLE_MAX_DATA_LEN_C1 230
 #else
-#define DLE_BUFFER_MODE_M1      0
-#define DLE_BUFFER_COUNT_M1     2
-#define RSI_BLE_MAX_DATA_LEN_M1 20 //! max data length
+#define DLE_BUFFER_MODE_C1      0
+#define DLE_BUFFER_COUNT_C1     2
+#define RSI_BLE_MAX_DATA_LEN_C1 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_M1            36 //! for conn interval of 45ms
-#define CONN_LATENCY_M1             0
-#define CONN_SUPERVISION_TIMEOUT_M1 800
+#define CONN_INTERVAL_C1            36 //! for conn interval of 45ms
+#define CONN_LATENCY_C1             0
+#define CONN_SUPERVISION_TIMEOUT_C1 800
 
-/*=================Master2 configurations=====================*/
+/*=================Central2 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_M2 0
+#define SMP_ENABLE_C2 0
 // Add remote device to acceptlist
-#define ADD_TO_ACCEPTLIST_M2 0
+#define ADD_TO_ACCEPTLIST_C2 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_M2 1
+#define PROFILE_QUERY_C2 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_M2 1
+#define DATA_TRANSFER_C2 1
 //! configure below macros to select type of data transfer
 //!  set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_M2 0
+#define RX_NOTIFICATIONS_FROM_C2 0
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_M2 0
+#define RX_INDICATIONS_FROM_C2 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_M2 1
+#define TX_NOTIFICATIONS_TO_C2 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_M2 0
+#define TX_WRITES_TO_C2 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_M2 0
+#define TX_WRITES_NO_RESP_TO_C2 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_M2 0
+#define TX_INDICATIONS_TO_C2 0
 
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_M2 0
-#if DLE_ON_M2
-#define DLE_BUFFER_MODE_M2      1
-#define DLE_BUFFER_COUNT_M2     2
-#define RSI_BLE_MAX_DATA_LEN_M2 230
+#define DLE_ON_C2 0
+#if DLE_ON_C2
+#define DLE_BUFFER_MODE_C2      1
+#define DLE_BUFFER_COUNT_C2     2
+#define RSI_BLE_MAX_DATA_LEN_C2 230
 #else
-#define DLE_BUFFER_MODE_M2      0
-#define DLE_BUFFER_COUNT_M2     2
-#define RSI_BLE_MAX_DATA_LEN_M2 20 //! max data length
+#define DLE_BUFFER_MODE_C2      0
+#define DLE_BUFFER_COUNT_C2     2
+#define RSI_BLE_MAX_DATA_LEN_C2 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_M2            400 //! for conn interval of 500ms
-#define CONN_LATENCY_M2             0
-#define CONN_SUPERVISION_TIMEOUT_M2 800
+#define CONN_INTERVAL_C2            400 //! for conn interval of 500ms
+#define CONN_LATENCY_C2             0
+#define CONN_SUPERVISION_TIMEOUT_C2 800
 
-/*=================Slave1 configurations=====================*/
+/*=================Peripheral1 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S1 0
+#define SMP_ENABLE_P1 0
 // Add remote device to acceptlist
-#define ADD_TO_ACCEPTLIST_S1 0
+#define ADD_TO_ACCEPTLIST_P1 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S1 1
+#define PROFILE_QUERY_P1 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S1 1
+#define DATA_TRANSFER_P1 1
 //! configure below macros to select type of data transfer
 //!  set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S1 1
+#define RX_NOTIFICATIONS_FROM_P1 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S1 0
+#define RX_INDICATIONS_FROM_P1 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S1 1
+#define TX_NOTIFICATIONS_TO_P1 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S1 0
+#define TX_WRITES_TO_P1 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S1 0
+#define TX_WRITES_NO_RESP_TO_P1 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S1 0
+#define TX_INDICATIONS_TO_P1 0
 
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S1 0
-#if DLE_ON_S1
-#define DLE_BUFFER_MODE_S1      1
-#define DLE_BUFFER_COUNT_S1     2
-#define RSI_BLE_MAX_DATA_LEN_S1 230
+#define DLE_ON_P1 0
+#if DLE_ON_P1
+#define DLE_BUFFER_MODE_P1      1
+#define DLE_BUFFER_COUNT_P1     2
+#define RSI_BLE_MAX_DATA_LEN_P1 230
 #else
-#define DLE_BUFFER_MODE_S1      0
-#define DLE_BUFFER_COUNT_S1     2
-#define RSI_BLE_MAX_DATA_LEN_S1 20 //! max data length
+#define DLE_BUFFER_MODE_P1      0
+#define DLE_BUFFER_COUNT_P1     2
+#define RSI_BLE_MAX_DATA_LEN_P1 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S1            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S1             0
-#define CONN_SUPERVISION_TIMEOUT_S1 400
+#define CONN_INTERVAL_P1            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P1             0
+#define CONN_SUPERVISION_TIMEOUT_P1 400
 
-/*=================Slave2 configurations=====================*/
+/*=================Peripheral2 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S2 1
+#define SMP_ENABLE_P2 1
 // Add remote device to acceptlist
-#define ADD_TO_ACCEPTLIST_S2 0
+#define ADD_TO_ACCEPTLIST_P2 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S2 1
+#define PROFILE_QUERY_P2 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S2 1
+#define DATA_TRANSFER_P2 1
 //! configure below macros to select type of data transfer
 //!  set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S2 1
+#define RX_NOTIFICATIONS_FROM_P2 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S2 0
+#define RX_INDICATIONS_FROM_P2 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S2 1
+#define TX_NOTIFICATIONS_TO_P2 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S2 0
+#define TX_WRITES_TO_P2 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S2 0
+#define TX_WRITES_NO_RESP_TO_P2 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S2 0
+#define TX_INDICATIONS_TO_P2 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S2 0
-#if DLE_ON_S2
-#define DLE_BUFFER_MODE_S2      1
-#define DLE_BUFFER_COUNT_S2     2
-#define RSI_BLE_MAX_DATA_LEN_S2 230
+#define DLE_ON_P2 0
+#if DLE_ON_P2
+#define DLE_BUFFER_MODE_P2      1
+#define DLE_BUFFER_COUNT_P2     2
+#define RSI_BLE_MAX_DATA_LEN_P2 230
 #else
-#define DLE_BUFFER_MODE_S2      0
-#define DLE_BUFFER_COUNT_S2     2
-#define RSI_BLE_MAX_DATA_LEN_S2 20 //! max data length
+#define DLE_BUFFER_MODE_P2      0
+#define DLE_BUFFER_COUNT_P2     2
+#define RSI_BLE_MAX_DATA_LEN_P2 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S2            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S2             0
-#define CONN_SUPERVISION_TIMEOUT_S2 400
+#define CONN_INTERVAL_P2            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P2             0
+#define CONN_SUPERVISION_TIMEOUT_P2 400
 
-/*=================Slave3 configurations=====================*/
+/*=================Peripheral3 configurations=====================*/
 //! configure below macro to enable secure connection
-#define SMP_ENABLE_S3 1
+#define SMP_ENABLE_P3 1
 // Add remote device to acceptlist
-#define ADD_TO_ACCEPTLIST_S3 0
+#define ADD_TO_ACCEPTLIST_P3 0
 //! configure below macro to discover remote profiles
-#define PROFILE_QUERY_S3 1
+#define PROFILE_QUERY_P3 1
 //! configure below macro to perform data transfer
-#define DATA_TRANSFER_S3 1
+#define DATA_TRANSFER_P3 1
 //! configure below macros to select type of data transfer
 //!  set below macro to receive 'gatt notifications' from remote device
-#define RX_NOTIFICATIONS_FROM_S3 1
+#define RX_NOTIFICATIONS_FROM_P3 1
 //! set below macro to receive 'gatt indications' from remote device
-#define RX_INDICATIONS_FROM_S3 0
+#define RX_INDICATIONS_FROM_P3 0
 //! set below macro to Transmit 'gatt notifications' to remote device
-#define TX_NOTIFICATIONS_TO_S3 1
+#define TX_NOTIFICATIONS_TO_P3 1
 //! set below macro to Transmit 'gatt write with response' to remote device
-#define TX_WRITES_TO_S3 0
+#define TX_WRITES_TO_P3 0
 //! set below macro to Transmit 'gatt write without response' to remote device
-#define TX_WRITES_NO_RESP_TO_S3 0
+#define TX_WRITES_NO_RESP_TO_P3 0
 //! set below macro to Transmit 'gatt indications' to remote device
-#define TX_INDICATIONS_TO_S3 0
+#define TX_INDICATIONS_TO_P3 0
 //! Configure below macro to select data length extension ON/OFF
-#define DLE_ON_S3 0
-#if DLE_ON_S3
-#define DLE_BUFFER_MODE_S3      1
-#define DLE_BUFFER_COUNT_S3     2
-#define RSI_BLE_MAX_DATA_LEN_S3 230
+#define DLE_ON_P3 0
+#if DLE_ON_P3
+#define DLE_BUFFER_MODE_P3      1
+#define DLE_BUFFER_COUNT_P3     2
+#define RSI_BLE_MAX_DATA_LEN_P3 230
 #else
-#define DLE_BUFFER_MODE_S3      0
-#define DLE_BUFFER_COUNT_S3     2
-#define RSI_BLE_MAX_DATA_LEN_S3 20 //! max data length
+#define DLE_BUFFER_MODE_P3      0
+#define DLE_BUFFER_COUNT_P3     2
+#define RSI_BLE_MAX_DATA_LEN_P3 20 //! max data length
 #endif
 //! Configure below macros to select connection paramaters while data transfer
-#define CONN_INTERVAL_S3            240 //! for conn interval of 300ms
-#define CONN_LATENCY_S3             0
-#define CONN_SUPERVISION_TIMEOUT_S3 400
+#define CONN_INTERVAL_P3            240 //! for conn interval of 300ms
+#define CONN_LATENCY_P3             0
+#define CONN_SUPERVISION_TIMEOUT_P3 400
 #endif
 
 /***********************************************************************************************************************************************/
@@ -304,8 +304,11 @@
 #define BLE_AE_PERIODIC_ADV_DATA_TYPE 0x02
 #define BLE_AE_SCAN_RSP_DATA_TYPE     0x03
 
-#define BLE_AE_ADV_DATA_LEN 31
+#define BLE_AE_ADV_DATA_LEN 200
 #define BLE_AE_ADV_DATA     "AE_PERIPHERAL_DATA_1"
+#define RSI_BLE_AE_ADV_DATA                                                        \
+  "AE_PERIPHERAL_DATA_1_This_is_the_advertisement_data_for_the_peripheral_device_" \
+  "which_includes_information_about_its_capabilities_and_features_for_bluetooth."
 
 /*=================AE Set 1 configurations=====================*/
 #define BLE_AE_ADV_HNDL_SET_1          0x00
@@ -402,11 +405,11 @@
 #endif
 #endif
 
-#define SLAVE1  0
-#define SLAVE2  1
-#define SLAVE3  2
-#define MASTER1 RSI_BLE_MAX_NBR_SLAVES
-#define MASTER2 RSI_BLE_MAX_NBR_SLAVES + 1
+#define PERIPHERAL1 0
+#define PERIPHERAL2 1
+#define PERIPHERAL3 2
+#define CENTRAL1    RSI_BLE_MAX_NBR_PERIPHERALS
+#define CENTRAL2    RSI_BLE_MAX_NBR_PERIPHERALS + 1
 
 //! Notify status
 #define NOTIFY_DISABLE 0x00
@@ -487,41 +490,41 @@
 #define CONNECTION_EVENT_LEN_MAX 0x0000
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as slave to remote device as master connection
+//! Connection parameters for SiWx917 as peripheral to remote device as central connection
 /***********************************************************************************************************************************************/
 #define BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT 0x0C80
-#define S2M_CONNECTION_INTERVAL_MIN            0x00C8
-#define S2M_CONNECTION_INTERVAL_MAX            0x00C8
+#define P2C_CONNECTION_INTERVAL_MIN            0x00C8
+#define P2C_CONNECTION_INTERVAL_MAX            0x00C8
 
-#define S2M_CONNECTION_LATENCY  0x0000
-#define S2M_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * S2M_CONNECTION_INTERVAL_MAX))
-
-/***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
-/***********************************************************************************************************************************************/
-#define M2S12_CONNECTION_INTERVAL_MIN 0x00C8
-#define M2S12_CONNECTION_INTERVAL_MAX 0x00C8
-
-#define M2S12_CONNECTION_LATENCY  0x0000
-#define M2S12_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * M2S12_CONNECTION_INTERVAL_MAX))
+#define P2C_CONNECTION_LATENCY  0x0000
+#define P2C_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * P2C_CONNECTION_INTERVAL_MAX))
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
+//! Connection parameters for SiWx917 as central to remote device as peripheral connection
 /***********************************************************************************************************************************************/
-#define M2S34_CONNECTION_INTERVAL_MIN 0x0190
-#define M2S34_CONNECTION_INTERVAL_MAX 0x0190
+#define C2P12_CONNECTION_INTERVAL_MIN 0x00C8
+#define C2P12_CONNECTION_INTERVAL_MAX 0x00C8
 
-#define M2S34_CONNECTION_LATENCY  0x0000
-#define M2S34_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * M2S34_CONNECTION_INTERVAL_MAX))
+#define C2P12_CONNECTION_LATENCY  0x0000
+#define C2P12_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * C2P12_CONNECTION_INTERVAL_MAX))
 
 /***********************************************************************************************************************************************/
-//! Connection parameters for RSI as master to remote device as slave connection
+//! Connection parameters for SiWx917 as central to remote device as peripheral connection
 /***********************************************************************************************************************************************/
-#define M2S56_CONNECTION_INTERVAL_MIN 0x0320
-#define M2S56_CONNECTION_INTERVAL_MAX 0x0320
+#define C2P34_CONNECTION_INTERVAL_MIN 0x0190
+#define C2P34_CONNECTION_INTERVAL_MAX 0x0190
 
-#define M2S56_CONNECTION_LATENCY  0x0000
-#define M2S56_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * M2S56_CONNECTION_INTERVAL_MAX))
+#define C2P34_CONNECTION_LATENCY  0x0000
+#define C2P34_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * C2P34_CONNECTION_INTERVAL_MAX))
+
+/***********************************************************************************************************************************************/
+//! Connection parameters for SiWx917 as central to remote device as peripheral connection
+/***********************************************************************************************************************************************/
+#define C2P56_CONNECTION_INTERVAL_MIN 0x0320
+#define C2P56_CONNECTION_INTERVAL_MAX 0x0320
+
+#define C2P56_CONNECTION_LATENCY  0x0000
+#define C2P56_SUPERVISION_TIMEOUT MIN(BLE_MAX_SUPPORETED_SUPERVISION_TIMEOUT, (4 * C2P56_CONNECTION_INTERVAL_MAX))
 
 /***********************************************************************************************************************************************/
 
@@ -541,33 +544,33 @@
 #define SEND_NOTIFICATION            0
 #define RSI_BLE_MAX_CHAR_DESCRIPTORS 5
 
-#define MASTER_ROLE 2
-#define SLAVE_ROLE  1
+#define CENTRAL_ROLE    2
+#define PERIPHERAL_ROLE 1
 
-#define NO_SLAVE_FOUND      0
-#define SLAVE_FOUND         1
-#define SLAVE_CONNECTED     2
-#define SLAVE_NOT_CONNECTED 3
-#define PROTOCOL_SEL        "protocol <"
-#define BLE_CONF            "ble_conf <"
-#define BLE_REMOTE_NAME     "ble_remote_names <"
-#define BLE_REMOTE_ADDR     "ble_remote_addr <"
-#define SLAVE1_CONF         "slave1 <"
-#define SLAVE2_CONF         "slave2 <"
-#define SLAVE3_CONF         "slave3 <"
-#define MASTER1_CONF        "master1 <"
-#define MASTER2_CONF        "master2 <"
-#define BT_CONFIG           "bt_conf <"
-#define LINE1               1
-#define LINE2               2
-#define LINE3               3
-#define LINE4               4
-#define LINE5               5
-#define LINE6               6
-#define LINE7               7
-#define LINE8               8
-#define LINE9               9
-#define LINE10              10
+#define NO_PERIPHERAL_FOUND      0
+#define PERIPHERAL_FOUND         1
+#define PERIPHERAL_CONNECTED     2
+#define PERIPHERAL_NOT_CONNECTED 3
+#define PROTOCOL_SEL             "protocol <"
+#define BLE_CONF                 "ble_conf <"
+#define BLE_REMOTE_NAME          "ble_remote_names <"
+#define BLE_REMOTE_ADDR          "ble_remote_addr <"
+#define PERIPHERAL1_CONF         "peripheral1 <"
+#define PERIPHERAL2_CONF         "peripheral2 <"
+#define PERIPHERAL3_CONF         "peripheral3 <"
+#define CENTRAL1_CONF            "central1 <"
+#define CENTRAL2_CONF            "central2 <"
+#define BT_CONFIG                "bt_conf <"
+#define LINE1                    1
+#define LINE2                    2
+#define LINE3                    3
+#define LINE4                    4
+#define LINE5                    5
+#define LINE6                    6
+#define LINE7                    7
+#define LINE8                    8
+#define LINE9                    9
+#define LINE10                   10
 //#define DEMO_RING_BUFFER_SIZE 1000 // 300
 
 /*=======================================================================*/
