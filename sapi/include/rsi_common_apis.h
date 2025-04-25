@@ -200,7 +200,7 @@ extern int32_t rsi_driver_version(uint8_t *request);
 extern int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
 extern int32_t rsi_get_rtc_timer(module_rtc_time_t *response);
 
-#define RSI_DRIVER_VERSION "2.11.4.2"
+#define RSI_DRIVER_VERSION "2.11.5.1"
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
 #endif

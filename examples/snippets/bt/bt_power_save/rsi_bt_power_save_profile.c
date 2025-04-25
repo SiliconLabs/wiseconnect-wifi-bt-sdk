@@ -450,7 +450,7 @@ void rsi_bt_on_passkey_display(uint16_t resp_status, rsi_bt_event_user_passkey_d
   }
 
   LOG_PRINT("\r\n");
-  LOG_PRINT("passkey: %ld", *((uint32_t *)bt_event_user_passkey_display->passkey));
+  LOG_PRINT("passkey: %06u", *((uint32_t *)bt_event_user_passkey_display->passkey));
   LOG_PRINT("\r\n");
 }
 
@@ -514,7 +514,7 @@ void rsi_bt_on_confirm_request(uint16_t resp_status,
     LOG_PRINT(" 0x%02x,", user_confirmation_request->confirmation_value[ix]);
   }
   LOG_PRINT("\r\n");
-  LOG_PRINT("data: %s", user_confirmation_request->confirmation_value);
+  LOG_PRINT("data: %06u", user_confirmation_request->confirmation_value);
 }
 
 /*==============================================*/

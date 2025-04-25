@@ -1049,7 +1049,7 @@ typedef struct rsi_ble_per_receive_s {
   uint8_t duty_cycling_en;
 } rsi_ble_per_receive_t;
 
-#define ADV_DATA_LEN    210
+#define ADV_DATA_LEN    229
 #define DEVICE_ADDR_LEN 6
 
 //! ae adv report event
