@@ -514,7 +514,7 @@ void rsi_bt_on_confirm_request(uint16_t resp_status,
     LOG_PRINT(" 0x%02x,", user_confirmation_request->confirmation_value[ix]);
   }
   LOG_PRINT("\r\n");
-  LOG_PRINT("data: %06u", user_confirmation_request->confirmation_value);
+  LOG_PRINT("data: %06u", *((uint32_t *)user_confirmation_request->confirmation_value));
 }
 
 /*==============================================*/
@@ -746,7 +746,7 @@ int32_t rsi_bt_spp_peripheral(void)
   //! Firmware version Prints
   status = rsi_get_fw_version(fmversion, sizeof(fmversion));
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%X\r\n", status);
   } else {
     LOG_PRINT("\nfirmware_version = %s", fmversion);
   }

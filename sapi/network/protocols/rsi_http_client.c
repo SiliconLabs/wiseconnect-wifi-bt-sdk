@@ -67,6 +67,7 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str);
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        HTTP server port is configurable on non-standard port. \n 
  * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note	Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -154,6 +155,7 @@ int32_t rsi_http_client_get_async(uint16_t flags,
  * @return      Negative value   - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note        Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -244,6 +246,7 @@ int32_t rsi_http_client_post_async(uint16_t flags,
  * @return      Negative value   - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note        **Precondition** - \ref rsi_config_ipaddress() API needs to be called before this API.
  * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note        Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  * @note        Refer to \ref error-codes for the description of above error codes.
  *
  */
@@ -733,7 +736,8 @@ int32_t rsi_http_client_put_delete(void)
  * @return     0              -  Success  \n
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffd, 0xfffffffc) \n
  * @note       **Precondition** - \ref rsi_config_ipaddress() API and \ref rsi_http_client_put_create API needs to be called before this API.
- * @note        Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note       Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note       Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  * @note       Refer to \ref error-codes for the description of above error codes.
  */
 

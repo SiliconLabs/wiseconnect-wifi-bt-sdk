@@ -137,6 +137,7 @@ rsi_mqtt_client_info_t *rsi_mqtt_client_init(int8_t *buffer,
  *  ^                               |     0      - SSL Disable
  *  BIT(2)                          |     1      - SSL cert index 1
  *  BIT(3)                          |     1      - SSL cert index 2
+ *  BIT(2) & BIT(3)                 |     1      - Enable both BIT(2) & BIT(3) for SSL cert index 3
  * 
  * @param[in]   client_id 	   - clientID of the MQTT Client and should be unique for each device
  * @param[in]   username 	     - Username for the login credentials of MQTT server

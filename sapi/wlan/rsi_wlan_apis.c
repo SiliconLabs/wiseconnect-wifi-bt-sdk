@@ -1454,7 +1454,8 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  * @note        For example, \n
  *              after calling rsi_wlan_disconnect() or else after rejoin failure, wlan_cb state is updated to BAND_DONE state. So when we call this API, it will execute init, scan and join commands. \n
  * @note        For example, \n
- *              after calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to SCAN_DONE state. So when we call this API, it will execute join command directly.
+ *              after calling rsi_wlan_scan()/ rsi_wlan_scan_with_bitmap_options() API, wlan_cb state is updated to SCAN_DONE state. So when we call this API, it will execute join command directly. \n
+ * @note        To avoid IOP issues and connection failures, it is recommended to disable power save before Wi-Fi connection. \n
  * #### EAP configuration #### 
  *              For EAP configuration below arguments are required and are congifured in rsi_wlan_config.h in enterprise_client applicaiton. \n
  *               • eap_method, inner_method, user_identity, password, okc, private_key_password \n
@@ -3675,7 +3676,7 @@ int32_t rsi_config_ipaddress(rsi_ip_version_t version,
       ip_params->dhcp_mode = mode;
 
       // Fill IP address only if static mode is selected
-      if (mode == RSI_STATIC) {
+      if ((mode & RSI_STATIC_MODE) == RSI_STATIC) {
         // Fill IP address
         memcpy(ip_params->ipaddress, ip_addr, RSI_IPV4_ADDRESS_LENGTH);
 
@@ -8376,13 +8377,14 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                               <REGION NAME y>, <CHANNEL_CODE_5G>, 
  *                                               }; 
  *                            2. Supported Region names:
- *                                                   FCC, RED,TELEC  
+ *                                                   FCC, RED,TELEC,KCC
  *                                                   The following are the regions and the values to be passed instead of macros in the example.
  *                                                   Region      |          Macro Value
  *                                                   ------------|--------------------
  *                                                   FCC         |            0
  *                                                   RED         |            1
  *                                                   TELEC       |            2
+ *                                                   KCC         |            4
  *                            3. <CHANNEL_CODE_2G> is a 8 bit value which is encoded as:
  *                               If TX powers of all the channels are same, then use CHANNEL_CODE_2G as 17. In this case, mention channel number as 255.
  *                               Tf TX power is not same for all channels, then indicate CHANNEL_CODE_2G as no-of channels. And specify tx power values for all the channels indicated.

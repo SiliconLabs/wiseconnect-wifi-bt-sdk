@@ -986,10 +986,12 @@ typedef struct rsi_driver_cb_non_rom {
   uint8_t module_type_id;
 } rsi_driver_cb_non_rom_t;
 typedef struct rsi_set_config_s {
-#define XO_CTUNE_FROM_HOST BIT(0)
+#define XO_CTUNE_FROM_HOST           BIT(0)
+#define SET_XTAL_GOOD_TIME_FROM_HOST BIT(3)
+#define SET_PMU_GOOD_TIME_FROM_HOST  BIT(4)
   uint32_t code;
   union {
-    uint8_t xo_ctune;
+    uint16_t config_val;
   } values;
 } rsi_set_config_t;
 
@@ -1056,7 +1058,7 @@ void rsi_register_wait_timeout_error_callbacks(void (*callback_handler_ptr)(int3
 void rsi_error_timeout_and_clear_events(int32_t error, uint32_t cmd_type);
 #endif
 int32_t rsi_check_waiting_cmds(rsi_rsp_waiting_cmds_t *response);
-int32_t rsi_set_config(uint32_t code, uint8_t value);
+int32_t rsi_set_config(uint32_t code, uint16_t value);
 #ifdef WAKEUP_GPIO_INTERRUPT_METHOD
 void rsi_give_wakeup_indication(void);
 void rsi_hal_gpio_clear(void);

@@ -14,7 +14,7 @@
 /******************************************************
  * *                      Declarations
  * ******************************************************/
-int32_t rsi_http_fw_update(uint8_t flags,
+int32_t rsi_http_fw_update(uint16_t flags,
                            uint8_t *,
                            uint16_t,
                            uint8_t *,

@@ -1884,7 +1884,7 @@ int32_t rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t
                                 &prop_protocol_ble_bandedge_tx_power,
                                 NULL);
 }
-/** @addtogroup BT-LOW-ENERGY5
+/** @addtogroup BT-LOW-ENERGY1
 * @{
 */
 

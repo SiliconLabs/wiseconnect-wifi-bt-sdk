@@ -134,7 +134,11 @@ typedef enum {
 
 #define RSI_EXT_CUSTOM_FEATURE_BIT_MAP (EXT_FEAT_LOW_POWER_MODE | EXT_FEAT_XTAL_CLK_ENABLE | EXT_FEAT_384K_MODE)
 
+#if BT_ENABLE_TESTMODE
+#define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE | BT_BLE_CP_BUFF_SIZE)
+#else
 #define RSI_BT_FEATURE_BITMAP (BT_RF_TYPE)
+#endif
 
 /*=======================================================================*/
 //! Power save command parameters

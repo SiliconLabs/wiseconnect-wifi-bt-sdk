@@ -555,11 +555,12 @@ typedef struct rsi_ble_event_read_by_type2_s {
 typedef struct rsi_ble_event_read_by_type3_s {
   /**remote device address*/
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
-  /**attribute handle*/
+  /**connection handle*/
   uint8_t handle[2];
-  /**length of attribute value*/
+  /**Total length of the att_value list*/
   uint16_t length;
-  /**This contains the attribute value. The maximum value is 240, please refer RSI_DEV_ATT_LEN Macro*/
+  /**This contains the attribute handle-value pairs. The maximum value is 240, please refer RSI_DEV_ATT_LEN Macro*/
+  /**index 0 of this structure contains the length of each attribute handle-value pair **/
   uint8_t att_value[RSI_DEV_ATT_LEN];
 } rsi_ble_event_read_by_type3_t;
 

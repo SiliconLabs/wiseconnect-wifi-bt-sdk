@@ -44,6 +44,7 @@
 // To specify index of SSL cert to be used for HTTPS, for index 0 leave them unset
 #define HTTPS_CERT_INDEX_1 BIT(9)
 #define HTTPS_CERT_INDEX_2 BIT(10)
+#define HTTPS_CERT_INDEX_3 (HTTPS_CERT_INDEX_1 | HTTPS_CERT_INDEX_2)
 
 // To indicate HTTPS socket about SNI hostname to be used during SSL handshake
 #define RSI_HTTPS_USE_SNI BIT(11)
@@ -199,7 +200,7 @@ int32_t rsi_http_client_async(
   void (*callback)(uint16_t status, const uint8_t *buffer, const uint16_t length, uint32_t moredata));
 #endif
 int32_t rsi_http_otaf_async(uint8_t type,
-                            uint8_t flags,
+                            uint16_t flags,
                             uint8_t *ip_address,
                             uint16_t port,
                             uint8_t *resource,

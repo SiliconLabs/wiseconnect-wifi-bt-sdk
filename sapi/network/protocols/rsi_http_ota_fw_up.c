@@ -33,9 +33,11 @@
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(5) | HTTP_POST_DATA  |    Set this bit to enable Http_post large data feature
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
  * @param[in]  ip_address                 - Server IP address
- * @param[in]  port                       - Port number, default : 80 - HTTP, 443 - HTTPS
+ * @param[in]  port                       - Port number, default : 80 - HTTP, 443 - HTTPS	
  * @param[in]  resource                   - URL string for requested resource
  * @param[in]  host_name                  - Host name
  * @param[in]  extended_header            - Extender header if present
@@ -47,9 +49,11 @@
  * @return      0                         - Success \n
  * @return     Non-Zero value            - Failure (**Possible Error Codes** - BBED,BB40,BB38,BBD2,FF74,FFF4) \n
  * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note       Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  *
  */
-int32_t rsi_http_fw_update(uint8_t flags,
+int32_t rsi_http_fw_update(uint16_t flags,
                            uint8_t *ip_address,
                            uint16_t port,
                            uint8_t *resource,
@@ -92,6 +96,8 @@ int32_t rsi_http_fw_update(uint8_t flags,
  *  BIT(3) | RSI_SSL_V_1_2   |    Set this bit to support SSL_TLS Version 1.2 if HTTPS is enabled
  *  BIT(4) | RSI_SSL_V_1_1   |    Set this bit to support SSL_TLS Version 1.1 if HTTPS is enabled
  *  BIT(6) | HTTP_V_1_1      |    Set this bit  to use HTTP version 1.1
+ *  BIT(9) | HTTPS_CERT_INDEX_1 |    Set this bit to indicate certificate at index 1 to be used for HTTPS 
+ *  BIT(10)| HTTPS_CERT_INDEX_2 |    Set this bit to indicate certificate at index 2 to be used for HTTPS
  *
  * @param[in]  ip_address       - Server IP address
  * @param[in]  port             - Port number, default : 80 - HTTP, 443 - HTTPS
@@ -108,9 +114,11 @@ int32_t rsi_http_fw_update(uint8_t flags,
  * @return     0              -  Success  \n
  * @return     Negative Value - Failure (**Possible Error Codes** - 0xfffffffe, 0xfffffffd, 0xfffffffc) \n
  * @note       Refer to \ref error-codes for the description of above error codes.
+ * @note       Leave both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 unset for certificate index 0. \n
+ * @note       Set both HTTPS_CERT_INDEX_1, HTTPS_CERT_INDEX_2 to indicate certificate at index 3 to be used for HTTPS. \n
  */
 int32_t rsi_http_otaf_async(uint8_t type,
-                            uint8_t flags,
+                            uint16_t flags,
                             uint8_t *ip_address,
                             uint16_t port,
                             uint8_t *resource,
@@ -125,7 +133,7 @@ int32_t rsi_http_otaf_async(uint8_t type,
   rsi_req_http_client_t *http_client = NULL;
   rsi_pkt_t *pkt                     = NULL;
   int32_t status                     = RSI_SUCCESS;
-  uint8_t https_enable               = 0;
+  uint16_t https_enable              = 0;
   uint16_t http_length               = 0;
   uint32_t send_size                 = 0;
   uint8_t *host_desc                 = NULL;
@@ -193,6 +201,7 @@ int32_t rsi_http_otaf_async(uint8_t type,
     if (flags & RSI_SSL_ENABLE) {
       // Set https feature
       https_enable = 1;
+      https_enable |= flags & (HTTPS_CERT_INDEX_1 | HTTPS_CERT_INDEX_2);
     }
 
     // Set default by NULL delimiter

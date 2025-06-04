@@ -2337,15 +2337,26 @@ int32_t rsi_get_rtc_timer(module_rtc_time_t *response)
 
 /*==============================================*/
 /**
- * @fn                int32_t rsi_set_config( uint32_t code, uint8_t value)
- * @brief             Configure XO Ctune value from host
- * @param[in]         Code  - XO_CTUNE_FROM_HOST
+ * @fn                int32_t rsi_set_config( uint32_t code, uint16_t value)
+ * @brief             This function sets the configuration for the Network Processor based on configuration code.
+ * @param[in]         Code  - Configuration code. The possible values are as below:
+ *                            - XO_CTUNE_FROM_HOST: used to configure NWP's XO Ctune value.
+ *                            - SET_XTAL_GOOD_TIME_FROM_HOST: used to configure XTAL(crystal) good time.
+ *                            - SET_PMU_GOOD_TIME_FROM_HOST: used to configure PMU good time.
  * @param[in]         value - Value to be configured
+ *                     Code |	Value Range
+ *                     :---|:---------------------
+ *                     XO_CTUNE_FROM_HOST  |	0 - 255
+ *                     SET_XTAL_GOOD_TIME_FROM_HOST  |	2000µs - 10000µs
+ *                     SET_PMU_GOOD_TIME_FROM_HOST   |	1100µs - 2000µs
  * @return            0 		- Success \n
  * @return            Non-Zero Value  - Failure
+ * @note       **Precondition** - \ref rsi_wireless_init() should to called before this API. \n
+ * @note       **Precondition** - To set XTAL and PMU good time from host, call this API before setting the
+ *              opermode in \ref rsi_wireless_init(). \n
  */
 
-int32_t rsi_set_config(uint32_t code, uint8_t value)
+int32_t rsi_set_config(uint32_t code, uint16_t value)
 {
   rsi_pkt_t *pkt;
   rsi_set_config_t *set_config = NULL;
@@ -2355,12 +2366,14 @@ int32_t rsi_set_config(uint32_t code, uint8_t value)
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
 
   if (common_cb->state < RSI_COMMON_OPERMODE_DONE) {
-    // Command given in wrong state
-    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    if (code != SET_XTAL_GOOD_TIME_FROM_HOST && code != SET_PMU_GOOD_TIME_FROM_HOST) {
+      // Command given in wrong state
+      return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+    }
   }
 
-  if (code != XO_CTUNE_FROM_HOST) {
-    // if flag set is other than xo_ctune from host
+  // Check if the code is valid
+  if ((code != XO_CTUNE_FROM_HOST) && (code != SET_XTAL_GOOD_TIME_FROM_HOST) && (code != SET_PMU_GOOD_TIME_FROM_HOST)) {
     return RSI_ERROR_INVALID_SET_CONFIG_FLAG;
   }
   status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
@@ -2381,8 +2394,8 @@ int32_t rsi_set_config(uint32_t code, uint8_t value)
     //code
     set_config->code = code;
 
-    //xo ctune value from host
-    set_config->values.xo_ctune = value;
+    //config value from host
+    set_config->values.config_val = value;
 
 #ifndef RSI_COMMON_SEM_BITMAP
     rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
