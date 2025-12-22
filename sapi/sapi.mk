@@ -50,7 +50,8 @@ CFLAGS += -g -Wall $(INCLUDES) -Os
 uart_BUS_CFLAGS += -D RSI_UART_INTERFACE
 spi_BUS_CFLAGS  += -D RSI_SPI_INTERFACE
 sdio_BUS_CFLAGS += -D RSI_SDIO_INTERFACE
- 
+usb_BUS_CFLAGS  += -D RSI_USB_INTERFACE
+
 # Enable debug prints by default
 CFLAGS+= -D RSI_ENABLE_DEBUG_PRINT -D RSI_DEBUG_PRINTS -D RSI_WLAN_ENABLE -D WISECONNECT
 
@@ -215,6 +216,11 @@ COMMON_SOURCES += $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_frame
                  $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_iface_init.c \
                  $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_mem_rd_wr.c \
                  $(RSI_SDK_PATH)/sapi/driver/device_interface/spi/rsi_spi_reg_rd_wr.c
+endif
+
+ifeq "$(PLATFORM)" "linux"
+COMMON_SOURCES += $(RSI_SDK_PATH)/sapi/driver/device_interface/usb/rsi_usb_frame_rd_wr.c \
+                 $(RSI_SDK_PATH)/sapi/driver/device_interface/usb/rsi_usb_mem_rd_wr.c
 endif
 
 zigbee_SOURCES = $(ZB_CORE_SRC)/rsi_zb.c \

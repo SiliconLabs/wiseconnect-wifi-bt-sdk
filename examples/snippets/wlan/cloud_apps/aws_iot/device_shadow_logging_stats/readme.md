@@ -42,7 +42,7 @@ Before running the application, the user will need the following things to setup
 
 ### 2.2 Software Requirements
 
-- [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
+- [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
 
 - Embedded Development Environment
   
@@ -226,7 +226,7 @@ IP address of the network mask should also be in long format and in little endia
 
 To authenticate and securely connect with AWS, your Wi-Fi device requires a unique x.509 security certificate and private key, as well as a CA certificate which is used to verify the AWS server. Security credentials need to be converted into a C-array rather than [PEM format](https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail) provided by AWS; they also need to be added to your project. 
 
-The WiSeConnect SDK provides a conversion script (written in Python 3) to make the conversion straightforward. The script is provided in the SDK 'resources' directory and is called [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/).
+The RS9116 SDK provides a conversion script (written in Python 3) to make the conversion straightforward. The script is provided in the SDK 'resources' directory and is called [certificate_to_array.py](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/).
 
 To convert the device certificate and private key to C arrays, open a system command prompt and use the script as indicated in the following examples.
 
@@ -248,8 +248,8 @@ aws_client_private_key.pem.key.h
 Before proceeding, copy both of the new files to the WiSeConnect directory: `<SDK>/resources/certificates`  
 Go ahead and overwrite any existing files with the same name in that directory, the originals are not needed.
 
-The Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the WiSeConnect SDK; no additional setup is required.
-For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/aws_starfield_ca.pem.h).
+The Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the RS9116 SDK; no additional setup is required.
+For reference, Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the RS9116 SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/master/resources/certificates/aws_starfield_ca.pem.h).
 
 
 > NOTE :

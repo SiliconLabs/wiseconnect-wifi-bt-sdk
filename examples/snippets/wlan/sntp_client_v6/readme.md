@@ -23,7 +23,7 @@ Before running the application, set up the following:
 
 ### 2.2 Software Requirements 
 
-- [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/) 
+- [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/) 
 - Embedded Development Environment
    
    - For STM32, use licensed [Keil IDE](https://www.keil.com/demo/eval/arm.htm) 

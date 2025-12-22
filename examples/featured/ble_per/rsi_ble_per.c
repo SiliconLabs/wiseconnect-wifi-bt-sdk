@@ -245,6 +245,9 @@ int32_t rsi_ble_per(void)
     rsi_ble_per_tx.pll_mode                     = PLL_MODE_0;
     rsi_ble_per_tx.rf_type                      = BLE_INTERNAL_RF;
     rsi_ble_per_tx.rf_chain                     = BT_HP_CHAIN_BIT;
+
+    rsi_uint32_to_4bytes(rsi_ble_per_tx.num_pkts, NUM_PKTS);
+
     //! start the Transmit PER functionality
     status = rsi_ble_per_transmit(&rsi_ble_per_tx);
     if (status != RSI_SUCCESS) {

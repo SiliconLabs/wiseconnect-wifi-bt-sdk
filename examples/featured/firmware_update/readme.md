@@ -23,7 +23,7 @@ To test the application, the following hardware, software and project setup is r
 ![Figure: TCP Firmware Update Block Diagram](resources/readme/image156.png)
 
 ### Software Requirements
-  - [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
+  - [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
   - Embedded Development Environment
     - For Silicon Labs EFx32, use the latest version of [Simplicity Studio](https://www.silabs.com/developers/simplicity-studio).
     - For STM32, use [Keil](https://www.keil.com/demo/eval/arm.htm)

@@ -39,9 +39,9 @@ As an example, the Keithley DMM6500 current meter was used. It is set as shown b
 
 ![Tera Term Script to be selected](./resources/tera-term-scripts-low-power-wlan.png)
 
-Note: The OPERMODE in this TTL script is configured default for EVK Version 1.4, if the user wants to run the same TTL script on  EVK version which is older than 1.4, then user has to comment 1.4 EVK Version OPERMODE and uncomment 1.3 EVK Version OPERMODE.
+Note: The OPERMODE in this TTL script is configured default for EVK Version 1.4.
 
-To identify the EVK is 1.3 or 1.4 Version you can check the J9 Connector on EVK, If J9 Connector has UULP_0 and UULP_2 then it is 1.4 version. Instead of UULP_0 if it has UULP_3 pin then it is 1.3 version.
+To identify the EVK is 1.4 Version you can check the J9 Connector on EVK, If J9 Connector has UULP_0 and UULP_2 then it is 1.4 version.
 
 
 **STEP 4.** After running wlan_low_power_station, it will pop up as shown.

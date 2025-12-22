@@ -72,7 +72,8 @@ void rsi_tx_event_handler(void)
 
   //To remove the warning type condition always true, the status variable declared to int16_t.
   int16_t status = 0;
-#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) || (defined RSI_SDIO_INTERFACE))
+#if ((defined RSI_SPI_INTERFACE) || (defined RSI_M4_INTERFACE) || (defined RSI_SDIO_INTERFACE) \
+     || (defined RSI_USB_INTERFACE))
   int16_t ret_status = 0;
   uint8_t int_status = 0;
 #endif
@@ -265,7 +266,8 @@ void rsi_tx_event_handler(void)
 
   if (common_pkt_pending) {
 #if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) || (defined RSI_M4_INTERFACE) \
-     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
+     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))                           \
+     || ((defined RSI_USB_INTERFACE) && (!defined LINUX_PLATFORM)))
     rsi_driver_cb->rsi_tx_done_handler = &rsi_common_packet_transfer_done;
     // Read interrupt status register to check buffer full condition
     ret_status = rsi_device_interrupt_status(&int_status);
@@ -357,7 +359,8 @@ void rsi_tx_event_handler(void)
   else if (wlan_pkt_pending) {
 #ifdef RSI_WLAN_ENABLE
 #if (((defined RSI_SPI_INTERFACE) && (!defined LINUX_PLATFORM)) || (defined RSI_M4_INTERFACE) \
-     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM)))
+     || ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))                           \
+     || ((defined RSI_USB_INTERFACE) && (!defined LINUX_PLATFORM)))
     // Read interrupt status register to check buffer full condition
     ret_status = rsi_device_interrupt_status(&int_status);
 

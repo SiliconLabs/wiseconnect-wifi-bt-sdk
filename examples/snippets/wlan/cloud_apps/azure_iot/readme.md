@@ -22,7 +22,7 @@ Before running the application, the user will need the following things to setup
 
 ### 2.2 Software Requirements
 
-- [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/) 
+- [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/) 
 - Embedded Development Environment
   
   - For STM32, use licensed [Keil IDE](https://www.keil.com/demo/eval/arm.htm)
@@ -307,7 +307,7 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
 4. Update the connection string in `azure_iot_config.h` with 
    - Primary key of the IoT Device for Symmetric key authentication
 
-> For example : "HostName=example.azure-devices.net;DeviceId=example_Device_SymKey;SharedAccessKey=TAEw6g7gEJh6zB74ykuiUnA8UbUhsSApuqFIgd/YB6Y="
+> For example : "HostName=example.azure-devices.net;DeviceId=example_Device_SymKey;SharedAccessKey=xxxxxx"
 
    - Connection string for IoT Device with X.509 self signed authentication
 

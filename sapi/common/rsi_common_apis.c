@@ -386,11 +386,10 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 
 #ifdef LINUX_PLATFORM
 #if (defined(RSI_USB_INTERFACE) || defined(RSI_SDIO_INTERFACE) || defined(RSI_SPI_INTERFACE))
-  status = rsi_linux_app_init();
+  status = rsi_hal_platform_init();
   if (status != RSI_SUCCESS) {
     return status;
   }
-
 #endif
 #endif
 
@@ -474,7 +473,7 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
   common_cb->ps_coex_mode = coex_mode;
   common_cb->ps_coex_mode &= ~BIT(0);
 
-#if (defined(RSI_UART_INTERFACE) && defined(RSI_STM32))
+#ifdef RSI_UART_INTERFACE
   common_cb->state = RSI_COMMON_CARDREADY;
 #else
   rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);

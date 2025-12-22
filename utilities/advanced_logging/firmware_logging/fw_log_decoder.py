@@ -85,19 +85,21 @@ class Decoder:
         h = self.head
         bh = h // 8
         ret = 0
+        curh = 0
         if h + n > self.length:
             raise ValueError("get value too large.")
         copy_n = n
         while n:
             bufl = 8 - (h % 8)
-            chunk = int.from_bytes(self.data[bh], "little") & ((1 << bufl) - 1)
+            chunk = int.from_bytes(self.data[bh], "little") >> (8 - bufl)
             if n < bufl:
-                chunk >>= bufl - n
-                ret = (ret << n) | chunk
-                n = 0
+                chunk &= ((1 << n) - 1)
+                ret = (chunk << curh) | ret
+                curh = n = 0
             else:
-                ret = (ret << bufl) | chunk
+                ret = (chunk << curh) | ret
                 n -= bufl
+                curh += bufl
             bh += 1
             h = 0
         self.head += copy_n
@@ -108,7 +110,6 @@ class Decoder:
         Prints remaining contents of self.data
         For debugging only
         """
-
         for byte in self.data[self.head // 8 :]:
             print(hex(b2i(byte))[2:].zfill(2), end=" ")
         print()
@@ -124,74 +125,40 @@ class Decoder:
 
     def read_next(self):
         """Read and parse the next "packet" of data"""
-        TSF_FORMAT_SIZE = 1
-        TSF_PRESENT_SIZE = 1
-        DID_FORMAT_SIZE = 1
-        LDID_SIZE = 5
-        HDID_SIZE = 8
-        EDID_SIZE = 8
-        LTSF_SIZE = 16
-        HTSF_SIZE = 16
+        TSF_SIZE = 32
+        LOG_LEVEL_SIZE = 3
+        CORE_ID_SIZE = 8
+        NUM_ARGS = 3
+        EVENT_ID_SIZE = 32
+        ARG_COUNT_SIZE = 16
+        FLAGS_SIZE = 8
+        VERSION_SIZE = 8
+        ARG_SIZE = 32
 
-        BYTE = 0b00
-        WORD = 0b01
-        STRING = 0b10
-        DWORD = 0b11
-
-        ldid = self.get(LDID_SIZE)
-        did_format = self.get(DID_FORMAT_SIZE)
-        tsf_present = self.get(TSF_PRESENT_SIZE)
-        tsf_format = self.get(TSF_FORMAT_SIZE)
-
-        if not (ldid or did_format or tsf_present or tsf_format):
-            print("Signal lost")
-
-        # signal_lost = self.get(SINGAL_LOST_SIZE)
-
-        # print("TSF_P:", tsf_present)
-        # print("DIDF:", did_format)
-        # print("LDID:", ldid)
-
-        hdid = 0
-        if did_format:
-            hdid = self.get(HDID_SIZE)
-        did = hdid << LDID_SIZE | ldid
-        if hdid >> 7:
-            edid = self.get(8)
-            did |= (edid << 12)
-        if tsf_present: 
-            ltsf1 = self.get(8)
-            ltsf2 = self.get(8)
-            ltsf = (ltsf2 << 8) | ltsf1
-            if tsf_format:
-                htsf1 = self.get(8)
-                htsf2 = self.get(8) 
-                htsf = (htsf2 << 8) | htsf1
-                tsf = htsf << 16 | ltsf
-                self.cum_tsf = tsf
-            else:
-                self.cum_tsf += ltsf
-
+        self.cum_tsf = self.get(TSF_SIZE)
+        # self._print_remaining()
+        did = str(self.get(EVENT_ID_SIZE))
         did = str(did)
-        # print("DID:", did)
-        # print("TSF:", tsf)
+        arg_list = []
+        arg_list.append(self.get(ARG_SIZE))
+        arg_list.append(self.get(ARG_SIZE))
+        arg_list.append(self.get(ARG_SIZE))
+        arg_count = self.get(ARG_COUNT_SIZE)
+        num_lost_msgs = arg_count >> 2
+        core_id = self.get(CORE_ID_SIZE)
+        flags = self.get(FLAGS_SIZE)
+        log_level = flags >> 1
+        version = self.get(VERSION_SIZE)
 
-        #if signal_lost:
-            #print("Signal Lost")
-            #self._print_remaining()
-            #raise RuntimeError("Signal lost.")
-        #print(did)
         if did not in self.json:
             raise KeyError("DebugID missing in JSON.")
-
+    
         info = self.json[str(did)]
         parsee = info["format"]
         num_args = info["argnum"]
-
-        # print("FORMAT STRING:", parsee)
-        # print("NUM ARGS:", num_args)
-        # print()
-
+        data_left = NUM_ARGS * ARG_SIZE  # bits
+        if num_lost_msgs :
+            print(f"Number of lost messages: {num_lost_msgs}")
         for argpos in range(num_args):
             idx = parsee.find("%")
             sub = parsee[idx : idx + 2]
@@ -200,55 +167,23 @@ class Decoder:
 
             argtype = int(info["arg" + str(argpos + 1) + "type"])
 
-            # print("ARGTYPE:", argtype)
-            # print("SUBSTRING:", sub)
+            # dropping strings
+            if sub == "%s":
+                continue
 
-            # string
-            if argtype is STRING and sub == "%s":
-                data = str()
-                while True:
-                    next_byte = self.get(8)
-                    if not next_byte:
-                        break
-                    data += chr(next_byte)
-                parsee = parsee.replace("%s", data, 1)
+            data_left -= ARG_SIZE
+            # data = self.get(ARG_SIZE)
+            data = arg_list[argpos]
+            if sub in ("%x", "%1x", "%2x", "%4x", "%w"):
+                parsee = parsee.replace(sub, hex(data), 1)
+            elif sub in ("%d", "%b"):
+                parsee = parsee.replace(sub, str(data), 1)
+            elif sub in ("%c"):
+                parsee = parsee.replace(sub, chr(data), 1)
+            
+        # self.get(data_left)
 
-            elif argtype is BYTE and sub in ("%b", "%c", "%1x"):
-                if sub == "%b":
-                    data = self.get(8)
-                    parsee = parsee.replace("%b", str(data), 1)
-                elif sub == "%c":
-                    data = self.get(8)
-                    parsee = parsee.replace("%c", chr(data), 1)
-                elif sub == "%1x":
-                    data = self.get(8)
-                    parsee = parsee.replace("%1x", hex(data), 1)
-
-            elif argtype is WORD and sub in ("%2x", "%w"):
-                data = 0
-                for shift in range(2):
-                    data |= self.get(8) << (8*shift)
-                if sub == "%2x":
-                    parsee = parsee.replace("%2x", hex(data), 1)
-                if sub == "%w":
-                    parsee = parsee.replace("%w", hex(data), 1)
-
-            elif argtype is DWORD and sub in ("%4x", "%d"):
-                if sub == "%d":
-                    data = 0
-                    for shift in range(4):
-                        data |= self.get(8) << (8*shift)
-                    parsee = parsee.replace("%d", str(data), 1)
-                elif sub == "%4x":
-                    data = 0
-                    for shift in range(4):
-                        data |= self.get(8) << (8*shift)
-                    parsee = parsee.replace("%4x", hex(data), 1)
-
-            else:
-                raise RuntimeError("Format mismatch.")
-
-        return str(self.cum_tsf).zfill(6) + " " + info["debug_id"] + "(" + parsee + ")"
+        return f'{self.cum_tsf} {info["level"]} {("HOST", "NWP")[core_id]} {arg_count & 3} {info["debug_id"]} ({parsee})'
 
 
 def main():

@@ -20,7 +20,7 @@ Both gain tables must be configured in the correct order to successfully apply c
      - [STM32F411 Nucleo](https://st.com/)
   
 ### Software Requirements
-  - [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
+  - [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
   - Embedded Development Environment
     - For STM32, use licensed [Keil IDE](https://www.keil.com/demo/eval/arm.htm)
     - For Silicon Labs EFx32, use the latest version of [Simplicity Studio](https://www.silabs.com/developers/simplicity-studio)

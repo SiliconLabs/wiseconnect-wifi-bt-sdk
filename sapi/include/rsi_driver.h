@@ -105,6 +105,10 @@
 #ifdef FW_LOGGING_ENABLE
 #include "sl_fw_logging.h"
 #endif
+#if (defined(LINUX_PLATFORM) && defined(RSI_USB_INTERFACE))
+#include "rsi_linux_app_init.h"
+#include <inttypes.h>
+#endif
 
 //#include <stdlib.h>
 /******************************************************

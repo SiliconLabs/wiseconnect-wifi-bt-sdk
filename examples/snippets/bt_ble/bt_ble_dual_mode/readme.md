@@ -26,7 +26,7 @@ Before running the application, the user will need the following things to setup
   
 ### 2.2 Software Requirements
 
-- [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
+- [RS9116 SDK](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/)
     
 - Embedded Development Environment
 

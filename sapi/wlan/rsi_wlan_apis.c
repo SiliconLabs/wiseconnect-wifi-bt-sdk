@@ -5345,8 +5345,6 @@ int32_t rsi_wlan_power_save_with_listen_interval(uint8_t psp_mode, uint8_t psp_t
  *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P4_AND_ABOVE' \n
  *					   - If not using external clock on UULP_VBAT_GPIO_3' as sleep clock source, \n
  *						 use UULP_VBAT_GPIO_3 for SLEEP_IND_FROM_DEV \n
- *						 set RS9116_SILICON_CHIP_VER in 'RS9116.NB0.WC.GENR.OSI.X.X.X\host\sapis\include\rsi_user.h' to 'CHIP_VER_1P3'. \n
- *             EXT_FEAT_LOW_POWER_MODE is not supported for 1.3 version chipset(CHIP_VER_1P3).
  *            ## Power save modes description ##
  *	        + **Power Save Mode 0** \n
  *            - In this mode, module is active and power save is disabled. It can be configured any time, while the module is configured in Power Save mode 2 or 8.\n

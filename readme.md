@@ -11,7 +11,7 @@ WiSeConnect documentation is [available online](http://docs.silabs.com/rs9116-wi
 - [Release Notes](docs/release_notes/release_notes.md)
 
 # SDK Outline
-The WiSeConnect SDK contains the following files and folders.
+The RS9116 SDK contains the following files and folders.
 
 ```
   +--examples
