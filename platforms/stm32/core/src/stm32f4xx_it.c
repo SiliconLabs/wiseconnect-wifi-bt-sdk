@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_it.h"
+#include <string.h>
 #ifdef RSI_WITH_OS
 #include "FreeRTOS.h"
 #include "task.h"
@@ -280,15 +281,20 @@ void DMA2_Stream2_IRQHandler(void)
   * @brief This function handles USART1 global interrupt.
   */
 #ifdef RSI_UART_INTERFACE
-uint8_t uart_rev_buf[1600]={0xff};
-uint32_t  uart_rev_buf_indx  =0;
+extern uint8_t uart_rev_buf[1600];
+extern uint8_t uart_rev_buf2[1600];
+extern uint32_t last_len;
+extern uint32_t desired_len;
+extern uint32_t value;
+extern uint32_t previous;
+extern uint8_t abrd_bit;
+uint32_t uart_rev_buf_indx  = 0;
 uint8_t uart_rx_start;
-uint32_t index_cnt,Uart_recv_done,desired_len;
+uint32_t index_cnt, Uart_recv_done;
 uint8_t uart_dump[1600];
 uint32_t dump_index = 0;
 uint32_t issue_hit;
-uint32_t  value = 0, ack_cnt, previous;
-uint8_t abrd_bit=0;
+uint32_t ack_cnt;
 
 void USART1_IRQHandler(void)
 {
@@ -331,8 +337,10 @@ void USART1_IRQHandler(void)
         previous = desired_len;
         desired_len=(((*(uint16_t*)&uart_rev_buf[0])) - 4);
       }
-      if((uart_rev_buf_indx > 3) && ((uart_rev_buf_indx - 4) == desired_len))
+      else if((uart_rev_buf_indx > 3) && ((uart_rev_buf_indx - 4) == desired_len))
       {
+        last_len = desired_len;
+        memcpy(uart_rev_buf2, uart_rev_buf, uart_rev_buf_indx);
         uart_rev_buf_indx =0 ;
         value = 0;
 #ifdef RSI_WITH_OS

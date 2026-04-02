@@ -2414,7 +2414,8 @@ int32_t rsi_driver_process_wlan_recv_cmd(rsi_pkt_t *pkt)
              || (cmd_type == RSI_WLAN_REQ_OTA_FWUP) || (cmd_type == RSI_WLAN_REQ_WEBPAGE_CLEAR_ALL)
              || (cmd_type == RSI_WLAN_REQ_FWUP) || (cmd_type == RSI_WLAN_RSP_WIRELESS_FWUP_OK)
              || (cmd_type == RSI_WLAN_RSP_WIRELESS_FWUP_DONE) || (cmd_type == RSI_WLAN_REQ_EMB_MQTT_CLIENT)
-             || (cmd_type == RSI_WLAN_REQ_PING_PACKET) || (cmd_type == RSI_WLAN_RSP_NWK_APP_PROTOCOL_CONFIG)) {
+             || (cmd_type == RSI_WLAN_REQ_PING_PACKET) || (cmd_type == RSI_WLAN_RSP_NWK_APP_PROTOCOL_CONFIG)
+             || (cmd_type == RSI_WLAN_RSP_MQTT_REMOTE_TERMINATE)) {
     rsi_wlan_set_nwk_status(status);
     if (rsi_driver_cb_non_rom->nwk_wait_bitmap & BIT(0)) {
 #ifndef RSI_NWK_SEM_BITMAP

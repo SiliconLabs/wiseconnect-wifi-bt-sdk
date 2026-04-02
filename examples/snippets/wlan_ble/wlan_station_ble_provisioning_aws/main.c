@@ -110,6 +110,9 @@ int32_t rsi_wlan_ble_app(void);
 
 uint8_t magic_word;
 
+//! Enable BLE configurator
+#define BLE_ENABLE 1
+
 #ifdef RSI_WITH_OS
 rsi_semaphore_handle_t commonsem, wlan_thread_sem, ble_thread_sem;
 
@@ -119,7 +122,7 @@ int32_t rsi_wlan_ble_app_init(void)
   rsi_task_handle_t wlan_task_handle = NULL;
   rsi_task_handle_t ble_task_handle  = NULL;
   uint8_t fmversion[20]              = { 0 };
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   //! WiSeConnect initialization
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_OPERMODE_WLAN_BLE);
 #else
@@ -147,7 +150,7 @@ int32_t rsi_wlan_ble_app_init(void)
   } else {
     LOG_PRINT("\r\nset certificate Success\r\n");
   }
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   //! BLE initialization
   rsi_ble_configurator_init();
 #endif
@@ -160,7 +163,7 @@ int32_t rsi_wlan_ble_app(void)
 {
   int32_t status        = RSI_SUCCESS;
   uint8_t fmversion[20] = { 0 };
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   //! WiSeConnect initialization
   status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_OPERMODE_WLAN_BLE);
 #else
@@ -188,14 +191,14 @@ int32_t rsi_wlan_ble_app(void)
   } else {
     LOG_PRINT("\r\nSet Certificate Success\r\n");
   }
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   rsi_ble_configurator_init();
 #endif
 
   while (RSI_FOREVER) {
     //! WLAN application tasks
     rsi_wlan_app_task();
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
     //! BLE application tasks
     rsi_ble_configurator_task();
 #endif
@@ -241,7 +244,7 @@ int main(void)
   } else {
     LOG_PRINT("\r\nDevice Initialization Success\r\n");
   }
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   //Start BT Stack
   intialize_bt_stack(STACK_BTLE_MODE);
 #endif
@@ -249,7 +252,7 @@ int main(void)
 #ifdef RSI_WITH_OS
 
   rsi_semaphore_create(&wlan_thread_sem, 0);
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   rsi_semaphore_create(&ble_thread_sem, 0);
 #endif
   rsi_semaphore_create(&commonsem, 0);
@@ -262,7 +265,7 @@ int main(void)
                   NULL,
                   RSI_WLAN_BLE_TASK_PRIORITY,
                   &wlan_ble_task_handle);
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
   rsi_task_create(rsi_ble_configurator_task,
                   "ble_task",
                   RSI_BLE_TASK_STACK_SIZE,

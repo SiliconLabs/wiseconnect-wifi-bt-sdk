@@ -454,9 +454,8 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
   rsi_opermode_t *rsi_opermode;
   int32_t status = RSI_SUCCESS;
   SL_PRINTF(SL_WIRELESS_INIT_ENTRY, COMMON, LOG_INFO);
-#if !((defined(RSI_UART_INTERFACE) && defined(RSI_STM32)))
   rsi_timer_instance_t timer_instance;
-#endif
+
 #ifdef RSI_M4_INTERFACE
   // int32_t        ipmu_status = RSI_SUCCESS;
 
@@ -473,33 +472,31 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
   common_cb->ps_coex_mode = coex_mode;
   common_cb->ps_coex_mode &= ~BIT(0);
 
-#ifdef RSI_UART_INTERFACE
-  common_cb->state = RSI_COMMON_CARDREADY;
-#else
-  rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);
-  // If state is not in card ready received state
-  while (common_cb->state == RSI_COMMON_STATE_NONE) {
+  if (common_cb->state == RSI_COMMON_STATE_NONE) {
+    rsi_init_timer(&timer_instance, RSI_CARD_READY_WAIT_TIME);
+    // If state is not in card ready received state
+    while (common_cb->state == RSI_COMMON_STATE_NONE) {
 #ifndef RSI_WITH_OS
-    // Wait until receive card ready
-    rsi_scheduler(&rsi_driver_cb->scheduler_cb);
+      // Wait until receive card ready
+      rsi_scheduler(&rsi_driver_cb->scheduler_cb);
 
-    if (rsi_timer_expired(&timer_instance)) {
-      SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
-      return RSI_ERROR_CARD_READY_TIMEOUT;
-    }
+      if (rsi_timer_expired(&timer_instance)) {
+        SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
+        return RSI_ERROR_CARD_READY_TIMEOUT;
+      }
 #else
 #ifndef RSI_COMMON_SEM_BITMAP
-    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(3);
+      rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(3);
 #endif
 #ifdef RSI_WITH_OS
-    if (rsi_wait_on_common_semaphore(&common_cb->common_card_ready_sem, RSI_CARD_READY_WAIT_TIME) != RSI_ERROR_NONE) {
-      SL_PRINTF(SL_WIRELESS_INIT_RESPONSE_TIMEOUT, COMMON, LOG_ERROR);
-      return RSI_ERROR_RESPONSE_TIMEOUT;
+      if (rsi_wait_on_common_semaphore(&common_cb->common_card_ready_sem, RSI_CARD_READY_WAIT_TIME) != RSI_ERROR_NONE) {
+        SL_PRINTF(SL_WIRELESS_INIT_RESPONSE_TIMEOUT, COMMON, LOG_ERROR);
+        return RSI_ERROR_RESPONSE_TIMEOUT;
+      }
+#endif
+#endif
     }
-#endif
-#endif
   }
-#endif
   if (wlan_cb->auto_config_state != RSI_WLAN_STATE_NONE) {
     while (1) {
       // Check auto config state
@@ -1003,7 +1000,7 @@ int32_t rsi_wireless_deinit(void)
   // State update
   rsi_driver_cb->common_cb->state = RSI_COMMON_STATE_NONE;
 #ifdef RSI_WLAN_ENABLE
-  rsi_driver_cb->wlan_cb->state   = RSI_WLAN_STATE_NONE;
+  rsi_driver_cb->wlan_cb->state = RSI_WLAN_STATE_NONE;
 #endif
 
   // Deinitializing SDIO Interface

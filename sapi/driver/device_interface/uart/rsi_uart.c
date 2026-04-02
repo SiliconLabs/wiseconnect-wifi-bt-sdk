@@ -58,7 +58,9 @@ extern UART_HandleTypeDef huart1;
 #endif
 #include "rsi_common_apis.h"
 #include "rsi_hal.h"
+#ifdef EFX_UART_HAL
 USART_TypeDef *uart = USART0;
+#endif
 #define BUFFER_SIZE 2048UL
 uint8_t uart_rev_buf[1600];
 uint8_t uart_rev_buf2[1600];
@@ -131,7 +133,7 @@ int32_t rsi_uart_init(void)
   huart1.Init.Mode         = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-#endif
+#elif defined(EFX_UART_HAL)
   USART_InitAsync_TypeDef init = USART_INITASYNC_DEFAULT;
   init.baudrate                = 115200;
   // Enable oscillator to GPIO and USART0 modules
@@ -167,6 +169,7 @@ int32_t rsi_uart_init(void)
 
   // Enable receive data valid interrupt
   USART_IntEnable(USART0, USART_IEN_RXDATAV);
+#endif
   SL_PRINTF(SL_UART_INIT_EXIT, DRIVER, LOG_INFO);
   return 0;
 }
@@ -183,6 +186,7 @@ int32_t rsi_uart_deinit(void)
   return 0;
 }
 
+#ifdef EFX_UART_HAL
 void USART0_RX_IRQHandler(void)
 {
 
@@ -215,6 +219,7 @@ void USART0_RX_IRQHandler(void)
     index1 = 0;
   }
 }
+#endif
 /*=============================================*/
 /**
  * @brief       Initialize the UART interface of the module
@@ -224,6 +229,7 @@ void USART0_RX_IRQHandler(void)
  */
 short int rsi_uart_iface_int(void)
 {
+#ifndef RSI_STM32
   char abrd[1], abrd1[1], load[1], load_binary[1];
   int16_t retval = 0;
   abrd[0]        = 0x7C;
@@ -301,45 +307,7 @@ short int rsi_uart_iface_int(void)
 
   abrd_bit = 1; // set abrd bit true
   return retval;
-}
-#ifdef RSI_UART_FLOW_CTRL_ENABLE
-void uart_init(void)
-{
-
-  USART_InitAsync_TypeDef init = USART_INITASYNC_DEFAULT;
-  init.baudrate                = 115200;
-  init.hwFlowControl           = usartHwFlowControlCtsAndRts;
-
-  // Enable oscillator to GPIO and USART1 modules
-  CMU_ClockEnable(cmuClock_GPIO, true);
-  CMU_ClockEnable(cmuClock_USART0, true);
-
-  // set pin modes for UART TX and RX pins
-  GPIO_PinModeSet(gpioPortA, 6, gpioModeInput, 0);
-  GPIO_PinModeSet(gpioPortA, 5, gpioModePushPull, 1);
-  // set pin modes for UART TX and RX pins
-  //CTS
-  GPIO_PinModeSet(gpioPortC, 0, gpioModeInput, 1);
-  //RTS
-  GPIO_PinModeSet(gpioPortC, 1, gpioModePushPull, 1);
-
-  // Initialize UART asynchronous mode and route pins
-  USART_InitAsync(USART0, &init);
-
-  GPIO->USARTROUTE[0].RXROUTE  = (gpioPortA << _GPIO_USART_RXROUTE_PORT_SHIFT) | (6 << _GPIO_USART_RXROUTE_PIN_SHIFT);
-  GPIO->USARTROUTE[0].TXROUTE  = (gpioPortA << _GPIO_USART_TXROUTE_PORT_SHIFT) | (5 << _GPIO_USART_TXROUTE_PIN_SHIFT);
-  GPIO->USARTROUTE[0].CTSROUTE = (gpioPortC << _GPIO_USART_CTSROUTE_PORT_SHIFT) | (0 << _GPIO_USART_CTSROUTE_PIN_SHIFT);
-  GPIO->USARTROUTE[0].RTSROUTE = (gpioPortC << _GPIO_USART_RTSROUTE_PORT_SHIFT) | (1 << _GPIO_USART_RTSROUTE_PIN_SHIFT);
-
-  // Enable USART interface pins
-  GPIO->USARTROUTE[0].ROUTEEN = GPIO_USART_ROUTEEN_RXPEN | GPIO_USART_ROUTEEN_TXPEN | GPIO_USART_ROUTEEN_RTSPEN;
-  // Enable interrupt
-  NVIC_ClearPendingIRQ(USART0_RX_IRQn);
-  NVIC_EnableIRQ(USART0_RX_IRQn);
-
-  // Enable receive data valid interrupt
-  USART_IntEnable(USART0, USART_IEN_RXDATAV);
-}
 #endif
+}
 #endif
 /** @} */

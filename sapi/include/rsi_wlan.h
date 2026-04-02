@@ -1622,9 +1622,17 @@ typedef union {
  *Structure for rejoin_params
  */
 typedef struct rsi_rejoin_params_s {
+  //! Maximum number of retries before indicating join failure \n
+  //! Note: A value of 1 indicates no retries, while 0 indicates infinite retries.
   uint8_t rsi_max_try[4];
+
+  //! Scan interval in seconds between each retry
   uint8_t rsi_scan_interval[4];
+
+  //! Number of missed beacons that will trigger rejoin
   uint8_t rsi_beacon_missed_count[4];
+
+  //! Retry enable or disable for first time joining
   uint8_t rsi_first_time_retry_enable[4];
 } rsi_rejoin_params_t;
 
@@ -1634,8 +1642,15 @@ typedef struct rsi_rejoin_params_s {
  */
 typedef union {
   struct {
+    //! Enables or disables the roaming feature.
+    //! 0 - Disable
+    //! 1 - Enable
     uint8_t roam_enable[4];
+
+    //! Specifies the RSSI threshold (in dBm) below which the module will attempt to roam to a better access point.
     uint8_t roam_threshold[4];
+
+    //! Defines the hysteresis value to prevent frequent roaming when the RSSI fluctuates around the threshold.
     uint8_t roam_hysteresis[4];
   } roamParamsFrameSnd;
   uint8_t uRoamParamsBuf[12];
@@ -1673,102 +1688,401 @@ typedef struct {
 #define RSI_PSK_LEN              64
 // structure for cfg_get
 typedef struct rsi_cfgGetFrameRcv {
+
+  //! Configuration enable/disable for auto-join or auto-create modes \n
+  //! 0x00 - Auto-join/create modes disabled (primary configuration) \n
+  //! 0x01 - Auto-join/create modes enabled (primary configuration) \n
+  //! 0x03 - Auto-join/create modes disabled (secondary configuration, not supported in SAPI) \n
+  //! 0x04 - Auto-join/create modes enabled (secondary configuration, not supported in SAPI)
   uint8_t cfg_enable;
+
+  //! WiFi operating mode configuration \n
+  //! 0 - Client/Station mode \n
+  //! 1 - Wi-Fi Direct/P2P mode (not supported) \n
+  //! 2 - Enterprise Client mode with EAP \n
+  //! 6 - Access Point mode \n
+  //! 8 - Transmit test mode \n
+  //! 9 - Concurrent mode
   uint8_t opermode[4];
+
+  //! Bitmap of enabled WLAN features. Refer feature_bit_map
   uint8_t feature_bit_map[4];
+
+  //! Bitmap of enabled TCP/IP related features. Refer tcp_ip_feature_bit_map
   uint8_t tcp_ip_feature_bit_map[4];
+
+  //! Bitmap of enabled custom features. Refer custom custom_feature_bit_map
   uint8_t custom_feature_bit_map[4];
+
+  //! Operating band
+  //! 0x00 - device configured to operate in 2.4 GHz - 0x01 - device configured to operate in 5 GHz \n
+  //! 0x02 - Dual band(2.4 GHz and 5GHz). Dual band is valid in station mode
   uint8_t band;
+
+  //! Scan feature bitmap for scan behavior \n
+  //! BIT[0]: Quick scan feature (1 - To enable quick scan feature, 0 - To disable quick scan feature). \n
+  //! BIT[1-7]: Reserved
   uint8_t scan_feature_bitmap;
+
+  //! SSID of the AP for auto-join mode (34-byte buffer, null-terminated string). \n
+  //! If actual length < 32 bytes, 0x00 filler bytes appended to make the buffer length 34 bytes.
   uint8_t join_ssid[RSI_SSID_LEN];
+
+  //! Data rate configured in the module. \n
+  //! 0=Auto, 1-4=802.11b rates (1,2,5.5,11 Mbps), 5-12=802.11g rates (6,9,12,18,24,36,48,54 Mbps), \n
+  //! 13-20=802.11n MCS rates (MCS0-MCS7). Values > 20 are rejected. \n
+  //! If 802.11b disabled and rate < 5 provided, defaults to 6 Mbps.
   uint8_t uRate;
+
+  //! Tx power to be configured in the device. \n
+  //! At 2.4GHz: 0 – Low power (7 +/- 1) dBm  1 – Medium power (10 +/- 1)dBm  2 – High power (18 +/- 2)dBm \n
+  //! At 5 GHz: 0 – Low power (5 +/- 1) dBm  1 – Medium power (7 +/- 1) dBm  2 – High power (12 +/- 2) dBm
   uint8_t uTxPower;
+
+  //! Reserved 1
   uint8_t reserved_1;
+
+  //! Reserved 2
   uint8_t reserved_2;
+
+  //! Length of SSID in scan_ssid array (uint8_t, range 0-32). \n
+  //! 0 = Broadcast scan (scan all APs), 1-32 = Directed scan (scan for specific SSID).
   uint8_t scan_ssid_len;
+
+  //! Reserved 3
   uint8_t reserved_3;
+
+  //! Security mode used to connect to an Access Point in auto-join mode \n
+  //! 0 – Open mode \n
+  //! 1 – WPA security \n
+  //! 2 – WPA2 Security \n
+  //! 3 – WEP security \n
+  //! 4 – Enterprise WPA security  \n
+  //! 5 – Enterprise WPA2 security  \n
+  //! 6 – WPA/WPA2 mixed security \n
+  //! 7 – WPA3 Personal Mode Security \n
+  //! 8 – WPA3 Personal Transition Mode Security
   uint8_t csec_mode;
+
+  //! Pre-shared key of the access point to which module wants to associate in auto-join \n
+  //! Filler bytes of 0x00 are added to make it 64 bytes if the original PSK is less than 64 bytes
   uint8_t psk[RSI_PSK_LEN];
+
+  //! SSID for directed scan operations (34 byte buffer). \n
+  //! If the actual length is not 32 bytes, 0x00 filler bytes are appended to make the length 34 bytes. \n
+  //! If scan_ssid_len = 0, broadcast scan is performed. \n
+  //! If scan_ssid_len > 0, only APs matching this SSID are scanned. \n
+  //! Stored as binary data (may not be null-terminated).
   uint8_t scan_ssid[RSI_SSID_LEN];
+
+  //! Channel number to be scanned in auto join mode. Refer to the PER Mode command section for the supported channels in 2.4GHz and 5 GHz band
   uint8_t scan_cnum;
+
+  //! Controls how the device gets its IPv4 address in auto‑join mode \n
+  //! 0x00 - DHCP client is disabled in device (auto-join mode) \n
+  //! 0x01 - DHCP client is enabled in device (auto-join mode)
   uint8_t dhcp_enable;
+
+  //! Static IP configured in the device in auto-join or auto-create mode. For auto-join mode, this is valid when dhcp_enable is 0.
   uint8_t ip[IP_ADDRESS_SZ];
+
+  //! Subnet mask,this is valid only if dhcp_enable is 0.
   uint8_t sn_mask[IP_ADDRESS_SZ];
+
+  //! Default gateway, this is valid only if dhcp_enable is 0.
   uint8_t dgw[IP_ADDRESS_SZ];
+
+  //! EAP method string for Enterprise security mode (32-byte null-terminated ASCII). \n
+  //! Valid values: "TLS", "TTLS", "PEAP", "FAST", "LEAP".
   uint8_t eap_method[32];
+
+  //! This parameter gives the EAP inner method configured for the device/EAP Client
   uint8_t inner_method[32];
+
+  //! User ID in enterprise security mode.
   uint8_t user_identity[64];
+
+  //! The password configured for the user identity on the RADIUS server for enterprise authentication. \n
+  //! Filler bytes of 0x00 are used to make the length 128 bytes, of the original length is less than 128 bytes.
   uint8_t passwd[128];
+
+  //! GO Intent Value 0-15 for P2P GO or client, 16 for Soft AP
   uint8_t go_intent[2];
+
+  //! Name of the GO device, meant only for P2P. \n
+  //! Note: P2P is not supported
   uint8_t device_name[64];
+
+  //! The channel on which the device operates after becoming a Group Owner (GO) in P2P
+  //! Note: P2P is not supported
   uint8_t operating_channel[2];
+
+  //! Postfix data to add to the SSID in Wi-Fi Direct (P2P) mode \n
+  //! This data will be added to the end of the SSID after the DIRECT-<random two octets> prefix. \n
+  //! Note: P2P is not supported
   uint8_t ssid_postfix[64];
+
+  //! Psk of the device in P2P \n
+  //! Note: P2P is not supported
   uint8_t psk_key[64];
+
+  //! PMK key
   uint8_t pmk[WISE_PMK_LEN];
+
+  //! AP Configuration information
   rsi_apconfig apconfig;
+
+  //! WiFi MAC address of the device (6 bytes).
   uint8_t module_mac[6];
+
+  //! Selected antenna \n
+  //! 0 -  Built‑in / inbuilt antenna selected \n
+  //! 1 - UFL connector (external antenna) selected
   uint8_t antenna_select[2];
+
+  //! Reserved 4
   uint8_t reserved_4[2];
+
+  //! WEP key in the module to connect to an AP with WEP security. \n
+  //! There are two modes in which a WEP key can be set in an Access Point- WEP (hex) mode and WEP (ASCII) mode. The module supports WEP (hex) mode only.
   rsi_wepkey wep_key;
+
+  //! 0x00 – Indicates that the device uses static IPv6 address provided by the user \n
+  //! 0x01 – Indicates that the device uses IPv6 address either derived using SLAAC method or DHCPv6 process based on the DHCPv6 server configuration.
   uint8_t dhcp6_enable[2];
+
+  //! Prefix length of IPv6 address.
   uint8_t prefix_length[2];
+
+  //! IPv6 address of device.
   uint8_t ip6[16];
+
+  //! IPv6 address of default router (gateway).
   uint8_t dgw6[16];
+
+  //! Shows which TCP stack is used, this is a bitmap.  \n
+  //! BIT(0)- If set indicates IPv4 Stack is in use \n
+  //! BIT(1) – If set indicates IPv6 Stack is in use
   uint8_t tcp_stack_used;
+
+  //! This magic code is used to validate the bgscan parameter present in flash memory. It is not configurable. \n
+  //! (0x4321) indicates stored bg scan parameters are valid
   uint8_t bgscan_magic_code[2];
+
+  //! Enable/Disable bgscan \n
+  //! 0 – Disable, 1 - Enable
   uint8_t bgscan_enable[2];
+
+  //! Threshold in dBm to trigger the bgscan. After bgscan periodicity, If connected AP RSSI falls below this then bgscan will be triggered.
   uint8_t bgscan_threshold[2];
+
+  //! This is difference of last RSSI of connected AP and current RSSI of connected AP. \n
+  //! Here last RSSI is the RSSI calculated at the last beacon received and current RSSI is the RSSI calculated at current beacon received. \n
+  //! If this difference is more than rssi_tolerance_threshold then bgscan will be triggered irrespective of periodicity.
   uint8_t rssi_tolerance_threshold[2];
+
+  //! Time period in seconds to trigger bgscan if RSSI of connected AP is greater than the given bgscan_threshold. Default value is 10 second.
   uint8_t bgscan_periodicity[2];
+
+  //! This is active scan duration in ms. The recommended value is 20ms for quicker Background scan operation and uninterrupted throughput.
   uint8_t active_scan_duration[2];
+
+  //! This is passive scan duration in ms. During a passive scan, if any beacon is received in a channel, then the recommended value for this parameter will be 100ms
   uint8_t passive_scan_duration[2];
+
+  //! If set to one then module will send two probe request one with specific SSID provided during join command and other with NULL ssid (to scan all the access points)
   uint8_t multi_probe;
+
+  //! Used to validate the given scan channel bitmaps. If magic code is 0x4321, then only the scan channel bitmaps are considered as valid
   uint8_t chan_bitmap_magic_code[2];
+
+  //! Channel bitmap for scanning in set of selective channels in 2.4 GHz band.
   uint8_t scan_chan_bitmap_stored_2_4_GHz[4];
+
+  //! Channel bitmap for scanning in set of selective channels in 5 GHz band.
   uint8_t scan_chan_bitmap_stored_5_GHz[4];
+
+  //! This magic code is used to validate the roaming parameters stored in the flash memory. This is not configurable, 0x4321 indicating stored roam parameters are valid
   uint8_t roam_magic_code[2];
+
+  //! Roaming parameters stored in the module.
   rsi_uRoamParams roam_params_stored;
+
+  //! This magic code is used to validate the rejoin parameters stored in the flash memory. If magic code is 0x4321, then rejoin params considered as valid
   uint8_t rejoin_magic_code[2];
+
+  //! rejoin_param_stored stores user configured rejoin parameters. \n
+  //! This is updated from the user input and will be configured to the TA using RSI_WLAN_RSP_USER_STORE_CFG command. \n
+  //! We can configure values like  rsi_max_try – max rejoin try count rsi_scan_interval, rsi_beacon_missed_count
   rsi_rejoin_params_t rejoin_param_stored;
+
+  //! If this variable is 1, region of the device is set either in auto join or auto create mode based on the opermode. \n
+  //! 0 – Disable set region in Auto create or Auto join mode \n
+  //! 1 – Enable set region in Auto create or Auto join mode
   uint8_t region_request_from_host;
+
+  //! Enable/Disable set region code from user. \n
+  //! If opermode is 0 or 2: \n
+  //! 0 - Disable. Use the region information from beacon (country IE) \n
+  //! 1 - Enable. Use the region information from user command \n
+  //! If opermode is 6: \n
+  //! 0 - Disable. Get the region information based on region code from internal memory
   uint8_t rsi_region_code_from_host;
+
+  //! If the region code is given as 0, US domain is considered by default and device is configured according to the US domain regulations. \n
+  //! 1 - US domain \n
+  //!  2 - Europe domain \n
+  //! 3 - Japan Domain \n
+  //! 4 -Rest of world \n
+  //! 5 - Korea Domain
   uint8_t region_code;
+
+  //! reserved_5
   uint8_t reserved_5[43];
+
+  //! A validation flag, (0x4321) indicating stored multicast parameters are valid
   uint8_t multicast_magic_code[2];
+
+  //! There are two bytes in the command which represent 2 parts. Lower order byte represents the command type and higher order byte is the hash value (6 Bits) generated from the desired multicast mac address (48 Bits) using hash function. Refer to mcast_bitmap_frame.
   uint8_t multicast_bitmap[2];
+
+  //! A validation flag, (0x4321) indicating stored powermode parameters are valid
   uint8_t powermode_magic_code[2];
+
+  //! powermode variable configures the powersave mode of the device. \n
+  //! Below are the configurable powersave values on 9116. \n
+  //! 2 - Connected Powersave. \n
+  //! 8 - Unconnected power save with RAM Retention \n
+  //! 10 - Unconnected power save mode without RAM Retention
   uint8_t powermode;
+
+  //! 1 - Low power mode. \n
+  //! 2 - Ultra low power mode with RAM retention. \n
+  //! 3 - Ultra low power mode without RAM retention. \n
+  //! Refer section Powersave operation for detail description about powersave operation.
   uint8_t ulp_mode;
+
+  //! This magic code is used to validate the WMM powersave parameters stored in the flash memory.(0x4321) indicating stored parameters are valid
+  //! Note: WMM PS is not supported
   uint8_t wmm_ps_magic_code[2];
+
+  //! To enable or disable WMM PS\n
+  //! 0 - Disable, 1 - Enable
+  //! Note: WMM PS is not supported
   uint8_t wmm_ps_enable;
+
+  //! WMM PS type \n
+  //! 0 - Tx Based, 1 - Periodic
+  //! Note: WMM PS is not supported
   uint8_t wmm_ps_type;
+
+  //! Wakeup interval in milliseconds.
+  //! Note: WMM PS is not supported
   uint8_t wmm_ps_wakeup_interval[4];
+
+  //! 0 to 15 possible values. \n
+  //! wmm_ps_uapsd_bitmap[0] Access category: Voice \n
+  //! wmm_ps_uapsd_bitmap[1] Access category: Video \n
+  //! wmm_ps_uapsd_bitmap[2] Access category: background \n
+  //! wmm_ps_uapsd_bitmap[3] Access category: Best effort U-APSD \n
+  //! wmm_ps_uapsd_bitmap[4:7] All set to 0 / Don't care
+  //! Note: WMM PS is not supported
   uint8_t wmm_ps_uapsd_bitmap;
+
+  //! This is valid only if BIT(1) in join_feature_bitmap is set. This value is given in Time units (1024 microseconds). \n
+  //! This parameter gives the listen interval configured in power save mode
   uint8_t listen_interval[4];
+
+  //! This parameter is valid only if BIT(1) is set in the join_feature_bitmap and valid listen interval is given in join command. \n
+  //! If this parameter is set, the device computes the desired sleep duration based on listen interval (from join command) and its wakeup align with Beacon or DTIM Beacon (based on this parameter). \n
+  //! 0 - device wakes up before nearest Beacon that does not exceed the specified listen interval time. \n
+  //! 1 - device wakes up before nearest DTIM Beacon that does not exceed the specified listen interval time.
   uint8_t listen_interval_dtim;
+
+  //! Gives the features enabled in Extended custom feature bitmap.
   uint8_t ext_custom_feature_bit_map[4];
+
+  //! Password to decrypt an encrypted private key used in EAP authentication
   uint8_t private_key_password[82];
+
+  //! BSSID for BSSID-based join feature (6 bytes) \n
+  //! This is connected AP MAC address when BSSID-based join is enabled and used during auto-config restore to automatically reconnect.
   uint8_t join_bssid[6];
+
+  //! BIT[0] - To enable b/g only mode in station mode \n
+  //! BIT[1] - To take listen interval from join command \n
+  //! BIT[2] - To enable quick join feature \n
+  //! BIT[3] - To enable CCXV2 feature \n
+  //! BIT[4] - To connect to AP based on BSSID \n
+  //! BIT[5] - Management Frame Protection Capable only(802.11W) \n
+  //! BIT[6] - Management Frame Protection required(802.11W) \n
+  //! BIT[7] - listen interval from power save command \n
   uint8_t join_feature_bitmap;
+
+  //! HT (High Throughput) capabilities parameters.
   rsi_uHtCaps ht_caps;
+
+  //! ht_caps_magic_word – Fixed to 0x4321, used to validate the saved stored config info
   uint8_t ht_caps_magic_word[2];
+
+  //! fast_psp_enable temporarily disables power save during data transfers and re-enables it after a monitor interval of inactivity.
   uint8_t fast_psp_enable;
+
+  //! Time in milliseconds to keep device in wakeup state for each Tx or Rx traffic sent or received respectively. Default value for this is 50 ms.
   uint8_t monitor_interval[2];
+
+  //! Magic word of request time out. Is fixed to 0x4321 in TA side.
   uint8_t request_timeout_magic_word[2];
+
+  //! Timeout value used with timeout_bitmap to get timeout durations
   uint8_t timeout_value[2];
+
+  //! bitmap[0]   - timeout for association and authentication request in ms. \n
+  //! bitmap[1]   - each channel active scan time in ms \n
+  //! bitmap[2] 	- WLAN keep alive timeout in seconds \n
+  //! bitmap[3]   - Passive scan dwell time in ms \n
+  //! bitmap[31-4] - Reserved (not used)
   uint8_t timeout_bitmap[4];
+
   // AP IP parameters in Concurrent mode
+  //! DHCPv4 mode enable or disable.
   uint8_t dhcp_ap_enable;
+
+  //! IPv4 address of the device in AP mode.
   uint8_t ap_ip[4];
+
+  //! Sub-net mask
   uint8_t ap_sn_mask[4];
+
+  //! Default gateway for the AP in AP mode.
   uint8_t ap_dgw[4];
+
+  //! DHCP mode (has to be zero) for AP in IPv6
   uint8_t dhcp6_ap_enable[2];
+
+  //! prefix length of IPv6 address in AP mode.
   uint8_t ap_prefix_length[2];
+
+  //! IPv6 address of device in AP mode.
   uint8_t ap_ip6[16];
+
+  //! IPv6 address of default router in AP mode.
   uint8_t ap_dgw6[16];
+
+  //! Exteneded TCP/IP feature bitmap.
   uint8_t ext_tcp_ip_feature_bit_map[4];
+
+  //! HTTP server credentials availability indicator. \n
+  //! This field indicates the source of HTTP server authentication credentials (username/password). \n
+  //! 0 - No HTTP credentials available (default) \n
+  //! 1 - HTTP credentials available in runtime (stored in TCP/IP control block) \n
+  //! 2 - HTTP credentials stored in saved configuration (flash memory)
   uint8_t http_credentials_avail;
+
+  //! HTTP server username.
   uint8_t http_username[MAX_HTTP_SERVER_USERNAME];
+
+  //! HTTP server password.
   uint8_t http_password[MAX_HTTP_SERVER_PASSWORD];
 } rsi_cfgGetFrameRcv_t, rsi_user_store_config_t;
 

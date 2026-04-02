@@ -1225,7 +1225,7 @@ typedef struct rsi_network_app_protocol_config_req_s {
  * *                      Macros
  * ******************************************************/
 #define RSI_EMB_MQTT_TOPIC_MAX_LEN    202
-#define RSI_EMB_MQTT_USERNAME_MAX_LEN 122
+#define RSI_EMB_MQTT_USERNAME_MAX_LEN 512 // Extended to 512 bytes
 #define RSI_EMB_MQTT_WILL_MSG_MAX_LEN 100
 #define RSI_EMB_MQTT_CLIENTID_MAX_LEN 62
 #define RSI_EMB_MQTT_PASSWORD_MAX_LEN 62
@@ -1378,11 +1378,11 @@ typedef struct rsi_emb_mqtt_client_init_s {
   int8_t client_id[RSI_EMB_MQTT_CLIENTID_MAX_LEN];
   // keep alive interval (s)
   uint8_t keep_alive_interval[2];
-  // username Length
-  uint8_t username_len;
+  // username Length (2 bytes to support up to 512 bytes)
+  uint8_t username_len[2];
   // user name
   uint8_t user_name[RSI_EMB_MQTT_USERNAME_MAX_LEN];
-  // password Length
+  // password Length (1 byte, max 62 bytes)
   uint8_t password_len;
   // password
   uint8_t password[RSI_EMB_MQTT_PASSWORD_MAX_LEN];

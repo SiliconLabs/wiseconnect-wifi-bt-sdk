@@ -249,6 +249,9 @@ int32_t rsi_device_init(uint8_t select_option)
 #endif
   // Updating state
   rsi_driver_cb_non_rom->device_state = RSI_DEVICE_INIT_DONE;
+#ifdef RSI_UART_INTERFACE
+  rsi_platform_uart_post_init();
+#endif
   SL_PRINTF(SL_DEVICE_INIT_EXIT_5, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }

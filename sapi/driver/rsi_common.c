@@ -980,12 +980,16 @@ void rsi_handle_slp_wkp(uint8_t frame_type)
   // Handle them here based on power save state machine
   switch (frame_type) {
     case RSI_RSP_SLP: {
+#if (RSI_HAND_SHAKE_TYPE != GPIO_BASED)
       rsi_common_cb->power_save.module_state = RSI_SLP_RECEIVED;
       rsi_set_event(RSI_TX_EVENT);
+#endif
     } break;
     case RSI_RSP_WKP: {
+#if (RSI_HAND_SHAKE_TYPE != GPIO_BASED)
       rsi_common_cb->power_save.module_state = RSI_WKUP_RECEIVED;
       rsi_unmask_event(RSI_TX_EVENT);
+#endif
     } break;
     case RSI_COMMON_RSP_ULP_NO_RAM_RETENTION: {
       // state update

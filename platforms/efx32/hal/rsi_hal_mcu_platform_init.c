@@ -415,6 +415,23 @@ void rsi_switch_to_high_clk_freq()
 //  USART_BaudrateSyncSet(USART2, 0, 25000000);
 }
 
+#ifdef RSI_UART_INTERFACE
+/*==============================================*/
+/**
+ * @fn          void rsi_platform_uart_post_init(void)
+ * @brief       Platform-specific post-initialization for UART interface
+ * @param[in]   None
+ * @return      None
+ * @section description
+ * This function is called after rsi_device_init() completes for UART interface.
+ * Leave this function empty (default) to keep state as NONE and wait for 
+ * CARD_READY response in rsi_wireless_init().
+ */
+void rsi_platform_uart_post_init(void)
+{
+}
+#endif
+
 #ifdef  RSI_SPI_INTERFACE
 #ifndef RSI_HAL_NO_COM_PORT
 

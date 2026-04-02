@@ -859,11 +859,13 @@ adv:
         // LOG_PRINT("No.of scan list,response on 1bb1 for '3' command\n");
         for (scan_ix = 0; scan_ix < scanresult.scan_count[0]; scan_ix++) {
           memset(data, 0, RSI_BLE_MAX_DATA_LEN);
-          data[0] = scanresult.scan_info[scan_ix].security_mode;
-          data[1] = ',';
-          strcpy((char *)(data + 2), (char *)scanresult.scan_info[scan_ix].ssid);
-          length = strlen((char *)(data + 2));
-          length = length + 2;
+          data[0]    = scanresult.scan_info[scan_ix].security_mode;
+          data[1]    = ',';
+          size_t cap = sizeof(data) - 2;
+          strncpy((char *)(data + 2), (char *)scanresult.scan_info[scan_ix].ssid, cap - 1);
+          (data + 2)[cap - 1] = '\0';
+          length              = strlen((char *)(data + 2));
+          length              = length + 2;
 
           rsi_ble_set_local_att_value(rsi_ble_att3_val_hndl, RSI_BLE_MAX_DATA_LEN, data);
           rsi_delay_ms(10);

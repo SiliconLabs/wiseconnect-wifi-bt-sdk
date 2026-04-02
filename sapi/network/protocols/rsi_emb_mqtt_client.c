@@ -152,15 +152,19 @@ int32_t rsi_emb_mqtt_client_init(int8_t *server_ip,
     // Copy Client ID
     rsi_strcpy(&mqtt_ops->client_id, clientid);
 
-    // Copy username length
-    mqtt_ops->username_len = rsi_strlen(username);
+    // Validate username and password lengths
+    uint16_t username_len = username ? rsi_strlen(username) : 0;
+    uint8_t password_len  = password ? rsi_strlen(password) : 0;
+
+    // Copy username length (2 bytes to support up to 512)
+    rsi_uint16_to_2bytes(mqtt_ops->username_len, username_len);
 
     if (username) {
       // Copy username if username is not NULL
       rsi_strcpy(&mqtt_ops->user_name, username);
     }
-    // Copy password length
-    mqtt_ops->password_len = rsi_strlen(password);
+    // Copy password length (1 byte, max 62)
+    mqtt_ops->password_len = password_len;
     if (password) {
       // Copy password if password is not NULL
       rsi_strcpy(&mqtt_ops->password, password);

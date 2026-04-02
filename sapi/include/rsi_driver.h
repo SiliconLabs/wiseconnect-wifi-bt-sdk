@@ -294,5 +294,8 @@ int32_t rsi_driver_process_recv_data(rsi_pkt_t *pkt);
 //int32_t rsi_driver_send_data(int32_t sock_no, uint8_t* buffer, uint32_t length, struct rsi_sockaddr *destAddr);
 int32_t rsi_send_raw_data(uint8_t *buffer, uint32_t length);
 int32_t rsi_ftp_mode_set(uint8_t mode);
+#ifdef RSI_UART_INTERFACE
+extern void rsi_platform_uart_post_init(void);
+#endif
 
 #endif

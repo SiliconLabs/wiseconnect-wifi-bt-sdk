@@ -506,3 +506,25 @@ PUTCHAR_PROTOTYPE
 	return ch;
 }
 #endif
+
+#ifdef RSI_UART_INTERFACE
+/*==============================================*/
+/**
+ * @fn          void rsi_platform_uart_post_init(void)
+ * @brief       Platform-specific post-initialization for UART interface
+ * @param[in]   None
+ * @return      None
+ * @section description
+ * This function is called after rsi_device_init() completes for UART interface.
+ * Sets common_cb->state to RSI_COMMON_CARDREADY to skip waiting for CARD_READY
+ * response in rsi_wireless_init().
+ */
+void rsi_platform_uart_post_init(void)
+{
+  extern rsi_driver_cb_t *rsi_driver_cb;
+  
+  if (rsi_driver_cb != NULL && rsi_driver_cb->common_cb != NULL) {
+    rsi_driver_cb->common_cb->state = RSI_COMMON_CARDREADY;
+  }
+}
+#endif

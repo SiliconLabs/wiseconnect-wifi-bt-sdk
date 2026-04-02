@@ -185,7 +185,7 @@ uint8_t retry = 1;
 
 uint8_t conn_status;
 
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
 extern uint8_t magic_word;
 #endif
 
@@ -293,7 +293,7 @@ int32_t rsi_wlan_mqtt_certs_init(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
-#ifndef BLE_CONFIGURATOR
+#if BLE_ENABLE
   rsi_wlan_app_cb.state = RSI_WLAN_SCAN_STATE;
 #endif
 
@@ -314,7 +314,7 @@ void rsi_wlan_app_task()
         //rsi_delay_ms(6);
         //! update wlan application state
 
-#if (BLE_CONFIGURATOR || BLE_SCANNER)
+#if (BLE_ENABLE || BLE_SCANNER)
 
         //  rsi_wlan_app_cb.state = RSI_WLAN_UNCONNECTED_STATE;
         if (magic_word) {
@@ -333,7 +333,7 @@ void rsi_wlan_app_task()
       } break;
 
       case RSI_WLAN_SCAN_STATE: {
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
         scanbuf_size = sizeof(scan_result);
         memset(&scan_result, 0, sizeof(scan_result));
 
@@ -365,7 +365,7 @@ void rsi_wlan_app_task()
       } break;
 
       case RSI_WLAN_JOIN_STATE: {
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
         if (sec_type == 0 || sec_type == '0') {
           status = rsi_wlan_connect((int8_t *)coex_ssid, RSI_OPEN, NULL);
         } else if (sec_type == 1 || sec_type == '1') {
@@ -396,7 +396,7 @@ void rsi_wlan_app_task()
 #endif
 
         if (status != RSI_SUCCESS) {
-#if BLE_CONFIGURATOR
+#if BLE_ENABLE
           a++;
           if (a == 5) {
             a       = 0;
@@ -443,7 +443,7 @@ void rsi_wlan_app_task()
         //! Configure IP
         status = rsi_config_ipaddress(RSI_IP_VERSION_4, RSI_DHCP, 0, 0, 0, rsp_buf, sizeof(rsp_buf), 0);
         if (status != RSI_SUCCESS) {
-#if BLE_CONFIGURATOR
+#if BLE_ENABLE
           a++;
           if (a == 3) {
             a       = 0;
@@ -470,7 +470,7 @@ void rsi_wlan_app_task()
           rsi_wlan_app_cb.state = RSI_WLAN_IPCONFIG_DONE_STATE;
           LOG_PRINT("\r\n IP Config Success \r\n");
 
-#if BLE_CONFIGURATOR
+#if BLE_ENABLE
           rsi_wlan_app_send_to_ble(RSI_WLAN_CONN_STATUS, (uint8_t *)&connected, 1);
 #endif
         }
@@ -627,7 +627,7 @@ void rsi_wlan_mqtt_task()
         }
         if (!power_save_given) {
 
-#ifdef BLE_CONFIGURATOR
+#if BLE_ENABLE
           //! initiating power save in BLE mode
           status = rsi_bt_power_save_profile(RSI_SLEEP_MODE_2, RSI_MAX_PSP);
           if (status != RSI_SUCCESS) {

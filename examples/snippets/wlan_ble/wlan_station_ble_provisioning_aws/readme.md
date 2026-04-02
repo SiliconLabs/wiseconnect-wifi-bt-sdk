@@ -232,7 +232,9 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
 #define  BT_GLOBAL_BUFF_LEN                              15000
 ```
 
-**4.3** Open `aws_iot_config.h` file and change the AWS_IOT_MQTT_CLIENT_ID to your choice (Make sure this is unique, if more than one user use has same client id it might get conflict at server side). 
+**4.3** Open `main.c` file and enable the macro `BLE_ENABLE` to activate BLE functionality.
+
+**4.4** Open `aws_iot_config.h` file and change the AWS_IOT_MQTT_CLIENT_ID to your choice (Make sure this is unique, if more than one user use has same client id it might get conflict at server side). 
 
  ```c
    //AWS Host name 
@@ -247,7 +249,7 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
    #define AWS_IOT_MY_THING_NAME      "AWS-IoT-C-SDK"    
 ```
 
-**4.4 To Load Certificate**
+**4.5 To Load Certificate**
 
    **rsi\_wlan\_set\_certificate()** API expects the certificate in the form of linear array. Convert the pem certificate into linear array form using python script provided in the SDK `<SDK>/resources/certificates/certificate_script.py`.
    

@@ -305,7 +305,6 @@ int32_t rsi_http_client_app()
     LOG_PRINT("\r\nHardware flow control is Successful\r\n");
   }
 
-  uart_init();
 #endif
 #if LOAD_CERTIFICATE
   if (flags & HTTPS_SUPPORT) {

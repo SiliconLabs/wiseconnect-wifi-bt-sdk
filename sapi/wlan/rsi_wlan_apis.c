@@ -1475,7 +1475,7 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *                          - BIT[1] of OKC is used to enable or disable CA certification for PEAP connection. \n
  *                            -- `0` – CA certificate is not required.  \n
  *                            -- `1` – CA certificate is required. \n
- *                          - BIT[2-12] of OKC argument are used for Cipher list selection for EAP connection. All possible ciphers are listed below \n 
+ *                          - BIT[2-14] of OKC argument are used for Cipher list selection for EAP connection. All possible ciphers are listed below \n
  * 	                                 BIT position  |   Cipher selected
  * 	                                 :--           |:-------
  *                                   2             |   DHE-RSA-AES256-SHA256                              
@@ -1489,8 +1489,10 @@ int32_t rsi_wlan_scan_async(int8_t *ssid,
  *                                   10            |   RC4-SHA                                                                        
  *                                   11            |   DES-CBC3-SHA	                                                               
  *                                   12            |   RC4-MD5                                                                  
- *                          - BIT[13-31] of OKC argument is reserved. \n
- *                          - When user sets BIT[1] and does not provide the CA certificate for PEAP connection then error is thrown. If user provides invalid CA certificate then also error is thrown. User can set either one or multiple bits from BIT[2-12] to provide the cipher's list. When user does not provide any value in OKC's BIT[2-12] then by default all the ciphers are selected. \n
+ *                                   13            |   ECDHE-RSA-AES256-SHA
+ *                                   14            |   ECDHE-RSA-AES128-SHA
+ *                          - BIT[15-31] of OKC argument is reserved. \n
+ *                          - When user sets BIT[1] and does not provide the CA certificate for PEAP connection then error is thrown. If user provides invalid CA certificate then also error is thrown. User can set either one or multiple bits from BIT[2-14] to provide the cipher's list. When user does not provide any value in OKC's BIT[2-14] then by default all the ciphers are selected. \n
  *               • private_key_password is 82 bytes,This is password for encrypted private key given to the module. Module will use this password during decryption of encrypted private key. password length must be 80 bytes or less. Should be configured in RSI_PRIVATE_KEY_PASSWORD. \n
  *              
  * 
@@ -4093,7 +4095,6 @@ int32_t rsi_wlan_get_status(void)
  *                         11 | RSI_WMM_PARAMS \n
  *                         12 | RSI_GET_DEVICE_ID \n
  * @param[out] response  - Response of the requested command.
- * @param[in]  length     - Length of the response buffer in bytes to hold result.
  *                         cmd_type |	Request Structure
  *                         :---|:---------------------
  *                      	 RSI_FW_VERSION        | uint8_t response[20] \n
@@ -4108,14 +4109,32 @@ int32_t rsi_wlan_get_status(void)
  *                         RSI_WLAN_EXT_STATS    | struct \ref rsi_wlan_ext_stats_s \n
  *                         RSI_WMM_PARAMS        | struct \ref rsi_wmm_ps_parms_s \n
  *                         RSI_GET_DEVICE_ID     | uint8_t response[2] \n 0x9116 for 9116 chipsets \n 0x917 for 917 chipsets \n
- * @note	     RSI_WLAN_INFO is relevant in both station and AP mode. \n
- * @note	     RSI_SOCKETS_INFO is relevant in both station mode and AP mode. \n
- * @note	     RSI_STATIONS_INFO is relevant in AP mode \n
- * @note	     RSI_GET_WLAN_STATS is relevant in AP and Station mode \n
- * @note	     RSI_GET_DEVICE_ID returns the device ID, allowing the application to distinguish between 9116 and 917 chipsets.
+ * @param[in]  length     - Length of the response buffer in bytes to hold result.
+ * 
  * @return   	 0 	             - Success 
  * @return   	 Non-Zero Value  - Failure (**Possible Error Codes** - 0xfffffffd,0xfffffffc,0xfffffffa) \n           
- * @note       **Precondition** - \ref rsi_wireless_init () API needs to be called before this API.
+ * 
+ * @note       **Preconditions** -
+ * @note       1. \ref rsi_wireless_init () API needs to be called before this API.
+ * @note       2. RSI_FW_VERSION, RSI_CONNECTION_STATUS, and RSI_GET_DEVICE_ID commands should be used only after the successful execution of the rsi_wireless_init() API. \n
+ * @note       3. RSI_MAC_ADDRESS should be used only after the successful execution of either the rsi_wlan_scan() API or the rsi_wlan_radio_init() API. \n
+ * @note       4. RSI_RSSI, RSI_WLAN_INFO, RSI_GET_WLAN_STAT, and RSI_WMM_PARAMS commands should be used only after establishing a successful WLAN connection. \n
+ * @note       The RSI_STATIONS_INFO command type is used to retrieve information about connected WLAN stations in AP mode. \n
+ *             It should be used only after a successful WLAN connection. \n
+ *             If no stations are connected to the AP, the response will contain zeros. \n
+ * @note       The RSI_SOCKETS_INFO command type is used to get information about sockets. \n
+ *             The usage depends on the type of socket:
+ *             - 1. TCP Client: Call this after successfully creating a socket. \n
+ *             - 2. TCP Server: Call this after the listen() API. \n
+ *             - 3. UDP : Call this after using either the sendto() or bind() API. \n
+ *             If no sockets are created, the response will also contain zeros. \n
+ * @note       RSI_CFG_GET should be called after successful WLAN connection. \n
+ *             Once the CFG parameters are saved in flash memory of module we can give RSI_CFG_GET after wireless_init() API. \n
+ *             It will print previously stored configurations. \n
+ * @note       RSI_GET_WLAN_STATS gives info on Operating Mode (STA, AP, Concurrent), dtim period, beacon interval. \n
+ * @note       RSI_WLAN_EXT_STATS should be used after successful WLAN connection. \n
+ *             Gives info on beacon lost count, beacon rx count, Tx and Rx multicast and unicast packets count. \n
+ * @note       RSI_STATIONS_INFO is relevant in AP mode \n
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *
