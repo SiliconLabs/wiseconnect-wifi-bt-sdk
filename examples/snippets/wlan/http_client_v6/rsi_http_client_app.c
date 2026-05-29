@@ -296,6 +296,15 @@ int32_t rsi_http_client_app()
     LOG_PRINT("\r\nWireless Initialization Success\r\n");
   }
 
+#ifdef RSI_ROBUST_MODE_ENABLE
+  status = rsi_robust_drv_start_handshake();
+  if (status != RSI_SUCCESS) {
+    LOG_PRINT("\r\nRobust mode Failed, Error Code : 0x%lX\r\n", status);
+    return status;
+  } else {
+    LOG_PRINT("\r\nRobust mode Active\r\n");
+  }
+#endif
 #if ((defined RSI_UART_INTERFACE) && (defined RSI_UART_FLOW_CTRL_ENABLE))
   status = rsi_cmd_uart_flow_ctrl(HFC_ENABLE);
   if (status != RSI_SUCCESS) {

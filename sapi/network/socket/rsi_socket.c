@@ -1425,16 +1425,16 @@ int rsi_fill_tls_extension(int32_t sockID, int extension_type, const void *optio
  *                              SO_RCVTIMEO - To configure the socket-receive timeout using this option. If no data is received within this time, the sapi driver will unblock this API. \n
  *                              SO_CHECK_CONNECTED_STATE - To check for the connected state \n
  *                              IP_TOS - To configure the type of service value [0-7]
- *                                | TOS | Value	Description                                                         |
- *                                |-----|---------------------------------------------------------------------------|
- *                                |  0	| Best Effort                                                               |   
- *                                |  1	| Priority                                                                  |
- *                                |  2	| Immediate                                                                 |    
- *                                |  3	| Flash-mainly used for voice signaling                                     |
- *                                |  4	| Flash Override                                                            |    
- *                                |  5	| Critical - mainly used for voice RTP (Real-time Tranlocal_port Protocol)  |
- *                                |  6	| Internet                                                                  |       
- *                                |  7	| Network                                                                   |
+ *                                | User Priority (UP) | Value	Description          | Access Category (AC) |
+ *                                |--------------------|-----------------------------|----------------------|
+ *                                |  0	               | Best Effort (default)       | AC_BE                |
+ *                                |  1	               | Background                  | AC_BK                |
+ *                                |  2	               | Spare / Background          | AC_BK                |
+ *                                |  3	               | Excellent Effort            | AC_BE                |
+ *                                |  4	               | Controlled Load             | AC_VI                |
+ *                                |  5	               | Video                       | AC_VI                |
+ *                                |  6	               | Voice                       | AC_VO                |
+ *                                |  7	               | Network Control             | AC_VO                |
  *
  * @param[in]    option_value - Value of the parameter
  * @param[in]    option_len   - Length of the parameter

@@ -21,6 +21,9 @@
 #include "rsi_m4.h"
 #endif
 #include "rsi_wlan_non_rom.h"
+#ifdef RSI_ROBUST_MODE_ENABLE
+#include "rsi_robust_driver.h"
+#endif
 #ifdef RSI_BLE_ENABLE
 #include "rsi_ble_common_config.h"
 #endif
@@ -438,6 +441,11 @@ int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt)
       payload_size = sizeof(sl_fw_logging_t);
     } break;
 #endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+    case RSI_COMMON_REQ_ROBUST_HANDSHAKE: {
+      payload_size = 0;
+    } break;
+#endif
     default: {
     }
   }
@@ -809,6 +817,31 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
 
     } break;
 
+#ifdef RSI_ROBUST_MODE_ENABLE
+    case RSI_COMMON_RSP_ROBUST_HANDSHAKE: {
+      status = rsi_bytes2R_to_uint16(host_desc + RSI_STATUS_OFFSET);
+
+      if (status == RSI_SUCCESS) {
+        if (rsi_driver_cb_non_rom->robust_drv_cb != NULL) {
+          rsi_driver_cb_non_rom->robust_drv_cb->enabled = 1;
+          rsi_driver_cb_non_rom->robust_drv_cb->state   = RSI_ROBUST_STATE_ACTIVE;
+        }
+      } else {
+        if (rsi_driver_cb_non_rom->robust_drv_cb != NULL) {
+          rsi_driver_cb_non_rom->robust_drv_cb->enabled = 0;
+          rsi_driver_cb_non_rom->robust_drv_cb->state   = RSI_ROBUST_STATE_ERROR;
+        }
+      }
+      rsi_common_set_status(status);
+      if (rsi_driver_cb_non_rom->common_wait_bitmap & BIT(0)) {
+#ifndef RSI_COMMON_SEM_BITMAP
+        rsi_driver_cb_non_rom->common_wait_bitmap &= ~BIT(0);
+#endif
+        rsi_semaphore_post(&rsi_driver_cb_non_rom->common_cmd_sem);
+      }
+    } break;
+#endif
+
     case RSI_COMMON_RSP_MODULE_TYPE: {
 
       if (status == RSI_SUCCESS) {
@@ -948,10 +981,12 @@ int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt)
         rsi_semaphore_post(&rsi_driver_cb_non_rom->common_cmd_sem);
       }
     } else {
+      if (rsi_driver_cb_non_rom->common_wait_bitmap & BIT(0)) {
 #ifndef RSI_COMMON_SEM_BITMAP
-      rsi_driver_cb_non_rom->common_wait_bitmap &= ~BIT(0);
+        rsi_driver_cb_non_rom->common_wait_bitmap &= ~BIT(0);
 #endif
-      rsi_semaphore_post(&rsi_driver_cb_non_rom->common_cmd_sem);
+        rsi_semaphore_post(&rsi_driver_cb_non_rom->common_cmd_sem);
+      }
     }
   }
 

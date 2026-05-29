@@ -32,8 +32,11 @@
 //! opermode command paramaters
 /*=======================================================================*/
 //! To set wlan feature select bit map
+#ifdef RSI_ROBUST_MODE_ENABLE
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | FEAT_ROBUST_MODE_ENABLE)
+#else
 #define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK)
-
+#endif
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
 

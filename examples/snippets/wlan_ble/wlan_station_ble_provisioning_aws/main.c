@@ -110,9 +110,6 @@ int32_t rsi_wlan_ble_app(void);
 
 uint8_t magic_word;
 
-//! Enable BLE configurator
-#define BLE_ENABLE 1
-
 #ifdef RSI_WITH_OS
 rsi_semaphore_handle_t commonsem, wlan_thread_sem, ble_thread_sem;
 

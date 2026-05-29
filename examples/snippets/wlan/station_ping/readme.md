@@ -103,6 +103,8 @@ SSID refers to the name of the Access point.
    
    - RSI_WPA2 - For WPA2 security mode
    
+   - RSI_WPA2_PMK - For WPA2 security mode with PMK
+
 ```c
 #define SECURITY_TYPE                           RSI_WPA2
 ```
@@ -215,7 +217,7 @@ SSID refers to the name of the Access point.
 #define CONNECT_WITH_PMK                         0`
 ```
   
-> **Note:** If `CONNECT_WITH_PMK` is enable ,`SECURITY_TYPE` is set to `RSI_WPA2_PMK`
+> **Note:** If `CONNECT_WITH_PMK` is enabled,`SECURITY_TYPE` must be set to `RSI_WPA2_PMK`
    
 ## 4.2 Open ***rsi\_wlan\_config.h*** file and update/modify following macros,
    

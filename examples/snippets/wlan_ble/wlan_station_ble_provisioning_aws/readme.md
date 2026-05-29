@@ -232,7 +232,7 @@ define RSI_BAND                                  RSI_BAND_2P4GHZ
 #define  BT_GLOBAL_BUFF_LEN                              15000
 ```
 
-**4.3** Open `main.c` file and enable the macro `BLE_ENABLE` to activate BLE functionality.
+**4.3** Open `rsi_wlan_config.h` file and enable the macro `BLE_ENABLE` to activate BLE functionality.
 
 **4.4** Open `aws_iot_config.h` file and change the AWS_IOT_MQTT_CLIENT_ID to your choice (Make sure this is unique, if more than one user use has same client id it might get conflict at server side). 
 

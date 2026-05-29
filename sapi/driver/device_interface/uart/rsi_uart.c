@@ -66,8 +66,9 @@ uint8_t uart_rev_buf[1600];
 uint8_t uart_rev_buf2[1600];
 volatile uint8_t data_rx_flag = 0;
 volatile uint16_t index1      = 0;
-uint32_t value = 0, previous = 0, desired_len = 0, last_len = 0;
-volatile uint8_t abrd_bit = false;
+uint32_t value = 0, previous = 0, desired_len = 0;
+volatile uint32_t last_len = 0;
+volatile uint8_t abrd_bit  = false;
 rsi_linux_app_cb_t rsi_linux_app_cb;
 /** @addtogroup DRIVER3
 * @{
@@ -82,9 +83,8 @@ rsi_linux_app_cb_t rsi_linux_app_cb;
 
 int16_t rsi_frame_read(uint8_t *pkt_buffer)
 {
-  // API to read packet via UART interface
+  // API to read packet via UART interface (copy one completed frame from ISR staging)
   memcpy(pkt_buffer, uart_rev_buf2 + 4, last_len);
-
   return 0;
 }
 
@@ -193,9 +193,6 @@ void USART0_RX_IRQHandler(void)
   // Get the character just received
   uart_rev_buf[index1++] = USART0->RXDATA;
   data_rx_flag           = 1;
-  NVIC_DisableIRQ(USART0_RX_IRQn);
-  NVIC_ClearPendingIRQ(USART0_RX_IRQn);
-  NVIC_EnableIRQ(USART0_RX_IRQn);
   if (abrd_bit == 1) {
     if (index1 == 3) {
       previous    = desired_len;
@@ -207,6 +204,8 @@ void USART0_RX_IRQHandler(void)
 
       index1 = 0;
       value  = 0;
+      /* Stop RX until rsi_frame_read() copies uart_rev_buf2; avoids overwriting before the driver runs. */
+      USART_IntDisable(USART0, USART_IEN_RXDATAV);
 #ifdef RSI_WITH_OS
       rsi_set_event_from_isr(RSI_RX_EVENT);
 #else
@@ -307,6 +306,14 @@ short int rsi_uart_iface_int(void)
 
   abrd_bit = 1; // set abrd bit true
   return retval;
+#endif
+}
+
+/** EFX: enable USART0 RX data-valid IRQ (e.g. after @ref rsi_clear_event(RSI_RX_EVENT)). No-op on non-EFX. */
+void rsi_uart_rx_irq_enable(void)
+{
+#ifdef EFX_UART_HAL
+  USART_IntEnable(USART0, USART_IEN_RXDATAV);
 #endif
 }
 #endif

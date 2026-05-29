@@ -130,6 +130,9 @@
 // If below bit is set, new set of firmware update result code will be received
 #define FEAT_FW_UPDATE_RSP_CODE_SET_V2 BIT(16)
 
+// Robust mode (CRC-32 integrity) over UART
+#define FEAT_ROBUST_MODE_ENABLE BIT(26)
+
 // Secure Attestation
 #define FEAT_SECURE_ATTESTATION BIT(30)
 /*=========================================================================*/

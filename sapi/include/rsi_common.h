@@ -201,6 +201,12 @@
 #define BT_STACK_ON_HOST_MEMORY 0
 #endif
 
+#ifdef RSI_ROBUST_MODE_ENABLE
+#define RSI_ROBUST_DRV_POOL_SIZE ((((uint32_t)(sizeof(rsi_robust_drv_cb_t))) + 3) & ~3)
+#else
+#define RSI_ROBUST_DRV_POOL_SIZE 0
+#endif
+
 #define RSI_DRIVER_POOL_SIZE                                                                                          \
   sizeof(uint32_t) + ((((uint32_t)(sizeof(rsi_driver_cb_t))) + 3) & ~3) + RSI_DRIVER_RX_POOL_SIZE                     \
     + ((((uint32_t)(sizeof(rsi_common_cb_t))) + 3) & ~3) + ((((uint32_t)(sizeof(rsi_driver_cb_non_rom_t))) + 3) & ~3) \
@@ -209,7 +215,8 @@
     + RSI_SOCKET_SELECT_INFO_POOL_SIZE + SCAN_RESULTS_MEMORY_POOL_SIZE + RSI_ZB_MEMORY_POOL_SIZE                      \
     + RSI_BT_BLE_PROP_PROTOCOL_MEMORY_POOL_SIZE + RSI_BT_MEMORY_POOL_SIZE + RSI_BLE_MEMORY_POOL_SIZE                  \
     + PROP_PROTOCOL_MEMORY_SIZE + BT_STACK_ON_HOST_MEMORY + RSI_EVENT_INFO_POOL_SIZE + RSI_WLAN_CB_NON_ROM_POOL_SIZE  \
-    + ((((uint32_t)(sizeof(global_cb_t))) + 3) & ~3) + ((((uint32_t)(sizeof(rom_apis_t))) + 3) & ~3)
+    + ((((uint32_t)(sizeof(global_cb_t))) + 3) & ~3) + ((((uint32_t)(sizeof(rom_apis_t))) + 3) & ~3)                  \
+    + RSI_ROBUST_DRV_POOL_SIZE
 
 #define RSI_WAIT_FOREVER            0
 #define RSI_ZIGB_RESPONSE_WAIT_TIME RSI_WAIT_FOREVER
@@ -233,6 +240,7 @@
 #define RSI_GET_RAM_DUMP_RESPONSE_WAIT_TIME     ((1000 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_FEATURE_FRAME_RESPONSE_WAIT_TIME    ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_UART_FLOW_CTRL_RESPONSE_WAIT_TIME   ((100 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
+#define RSI_ROBUST_HANDSHAKE_RESPONSE_WAIT_TIME ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_PWRMODE_RESPONSE_WAIT_TIME          ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_PUF_START_RESPONSE_WAIT_TIME        ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
 #define RSI_PUF_SET_RESPONSE_WAIT_TIME          ((500 * WIFI_INTERNAL_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
@@ -496,7 +504,10 @@ typedef enum rsi_common_cmd_response_e {
 #endif
   ,
   RSI_COMMON_RSP_MODULE_TYPE = 0xBF
-
+#ifdef RSI_ROBUST_MODE_ENABLE
+  ,
+  RSI_COMMON_RSP_ROBUST_HANDSHAKE = 0x3B
+#endif
 } rsi_common_cmd_response_t;
 
 // enumeration for command request used in common control block
@@ -560,6 +571,10 @@ typedef enum rsi_common_cmd_request_e {
 #endif
   ,
   RSI_COMMON_REQ_MODULE_TYPE = 0xBF
+#ifdef RSI_ROBUST_MODE_ENABLE
+  ,
+  RSI_COMMON_REQ_ROBUST_HANDSHAKE = 0x3B
+#endif
 } rsi_common_cmd_request_t;
 
 #ifdef RSI_PUF_ENABLE
@@ -909,6 +924,9 @@ typedef struct fwupeq_s {
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
 #define SDIO_BUFFER_LENGTH (2048 + RSI_SSL_RECV_BUFFER_LENGTH)
 #endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+struct rsi_robust_drv_cb_s;
+#endif
 typedef struct rsi_driver_cb_non_rom {
   uint32_t rom_version_info;
   uint32_t tx_mask_event;
@@ -984,6 +1002,9 @@ typedef struct rsi_driver_cb_non_rom {
   uint32_t nwk_app_buffer_length;
   uint8_t module_type_valid;
   uint8_t module_type_id;
+#ifdef RSI_ROBUST_MODE_ENABLE
+  struct rsi_robust_drv_cb_s *robust_drv_cb;
+#endif
 } rsi_driver_cb_non_rom_t;
 typedef struct rsi_set_config_s {
 #define XO_CTUNE_FROM_HOST           BIT(0)

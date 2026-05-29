@@ -218,7 +218,19 @@ Refer [Getting started with EFX32](https://docs.silabs.com/rs9116-wiseconnect/la
   - If RESET pin is connected from EFX32 to RS9116W EVK, then user need not press the RESET button on RS9116W EVK before free run
   - If RESET pin is not connected from EFX32 to Rs9116W EVK, then user need to press the RESET button on RS9116W EVK before free run
 - Add the macro RSI_CONFIGURE_IPV6=1 in the preprocessor settings to enable IPv6 (Project -> Properties -> C/C++ Build -> Settings ->GNU ARM C Compiler ->Preprosessor)
-- For the Host MCU to communicate with RS9116W through UART Interface, replace the **RSI_SPI_INTERFACE** and **RSI_SPI_HIGH_SPEED_ENABLE** macros in the pre-processor Symbols present at path: **C/C++ General → Paths and Symbols → Symbols → GNU C** with **RSI_UART_INTERFACE** , **EFX_UART_HAL** and **RSI_UART_FLOW_CTRL_ENABLE**.
+- For the Host MCU to communicate with RS9116W over the UART Interface, update the **INTERFACE_TYPE** macro in **rsi_board_configuration.h** by replacing **SPI_INTERFACE** to **UART_INTERFACE**
+```c
+#define INTERFACE_TYPE UART_INTERFACE
+```
+- To enable CRC validation the `RSI_ROBUST_MODE_ENABLE` macro must be enabled in the pre-processor directive. (Project -> Properties -> C/C++ Build -> Settings -> GNU ARM C Compiler -> Preprosessor)
+- To enable UART hardware flow control, call `rsi_cmd_uart_flow_ctrl(HFC_ENABLE)`, where `HFC_ENABLE` is defined in `rsi_wlan_config.h` (value `1` or `2` to select the RTS/CTS pin set). Refer to the `rsi_cmd_uart_flow_ctrl()` PRM documentation for parameter details.
+
+**Note!**
+> To enable UART flow control, define the **RSI_UART_FLOW_CTRL_ENABLE** macro inside the **UART_INTERFACE** configuration block as shown below:
+
+```c
+#define RSI_UART_FLOW_CTRL_ENABLE
+```
 - Free run the project
 - Then continue the common steps from **5.3**
 

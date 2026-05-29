@@ -65,7 +65,7 @@
 // Certificate includes
 #include "azure_client_cert.pem.h"
 #include "azure_client_key.pem.h"
-#include "azure_baltimore_ca.pem.h"
+#include "silabs_dgcert_ca.pem.h"
 
 #define GLOBAL_BUFF_LEN 8000
 #define SSID            "SILABS_AP"
@@ -483,7 +483,7 @@ int rsi_azure_client_app(void)
   if (status != RSI_SUCCESS) {
     return status;
   }
-  status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, azure_baltimore_ca, (sizeof(azure_baltimore_ca) - 1));
+  status = rsi_wlan_set_certificate(RSI_SSL_CA_CERTIFICATE, silabs_dgcert_ca, (sizeof(silabs_dgcert_ca) - 1));
   if (status != RSI_SUCCESS) {
     return status;
   }

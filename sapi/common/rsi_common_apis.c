@@ -20,6 +20,9 @@
 #include "rsi_ipmu.h"
 #endif
 #include "rsi_timer.h"
+#ifdef RSI_ROBUST_MODE_ENABLE
+#include "rsi_robust_driver.h"
+#endif
 #ifdef RSI_BT_ENABLE
 #include "rsi_bt.h"
 #include "rsi_bt_config.h"
@@ -245,6 +248,11 @@ int32_t rsi_driver_init(uint8_t *buffer, uint32_t length)
 
   rsi_queues_init(&rsi_driver_cb->m4_rx_q);
 
+#endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+  rsi_driver_cb_non_rom->robust_drv_cb = (rsi_robust_drv_cb_t *)buffer;
+  buffer += sizeof(rsi_robust_drv_cb_t);
+  rsi_robust_drv_init(rsi_driver_cb_non_rom->robust_drv_cb);
 #endif
 #ifdef RSI_ZB_ENABLE
   rsi_driver_cb->zigb_cb = (rsi_zigb_cb_t *)buffer;
@@ -1396,6 +1404,70 @@ int32_t rsi_get_fw_version(uint8_t *response, uint16_t length)
   SL_PRINTF(SL_GET_FW_VERSION_EXIT, COMMON, LOG_INFO, "status: %4x", status);
   return status;
 }
+
+#ifdef RSI_ROBUST_MODE_ENABLE
+/*==============================================*/
+/**
+ * @brief       Activates Robust Mode (CRC-32 integrity) on the UART host
+ *              interface by performing a one-time handshake between the
+ *              host driver and the module. After this API returns success,
+ *              every command, response, and event frame exchanged over
+ *              UART is protected by a sequence number and a CRC-32, and
+ *              any corrupted or out-of-sequence frame is rejected. This is
+ *              a blocking API.
+ * @pre         \ref rsi_driver_init() and \ref rsi_wireless_init() must have completed successfully.
+ * @param[in]   void
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure
+ */
+int32_t rsi_robust_drv_start_handshake(void)
+{
+  int32_t status = RSI_SUCCESS;
+  rsi_pkt_t *pkt;
+  rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
+
+  if (rsi_driver_cb_non_rom->robust_drv_cb == NULL) {
+    return RSI_ERROR_ROBUST_HANDSHAKE_FAILED;
+  }
+
+  if ((common_cb->state < RSI_COMMON_OPERMODE_DONE)) {
+    SL_PRINTF(SL_SEND_FEATURE_FRAME_COMMAND_GIVEN_IN_WRONG_STATE, COMMON, LOG_ERROR);
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  rsi_driver_cb_non_rom->robust_drv_cb->tx_sn   = 0;
+  rsi_driver_cb_non_rom->robust_drv_cb->rx_sn   = 0;
+  rsi_driver_cb_non_rom->robust_drv_cb->enabled = 0;
+  rsi_driver_cb_non_rom->robust_drv_cb->state   = RSI_ROBUST_STATE_RST_SENT;
+
+  status = rsi_check_and_update_cmd_state(COMMON_CMD, IN_USE);
+  if (status == RSI_SUCCESS) {
+
+    pkt = rsi_pkt_alloc(&common_cb->common_tx_pool);
+
+    if (pkt == NULL) {
+      rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+      return RSI_ERROR_PKT_ALLOCATION_FAILURE;
+    }
+
+#ifndef RSI_COMMON_SEM_BITMAP
+    rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
+#endif
+    status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_ROBUST_HANDSHAKE, pkt);
+
+    rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_ROBUST_HANDSHAKE_RESPONSE_WAIT_TIME);
+
+    rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);
+
+  } else {
+    return status;
+  }
+
+  status = rsi_common_get_status();
+
+  return status;
+}
+#endif
 /*==============================================*/
 /**
  * @brief       Get module type. This is a blocking API.

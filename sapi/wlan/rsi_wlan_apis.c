@@ -252,7 +252,7 @@ int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
  * 		         16	                     |       16
  * @param[out]  result         - Buffer address provided by the application to fill the scan response.
  *                               result is type of rsi_rsp_scan_t .
- * @param[in]  length          - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+ * @param[in]  length          - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
  *                               A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @param[in]  scan_bitmap     - Scan bitmap options. \n
  *                               BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
@@ -403,7 +403,7 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
  *                                         The parameters involved are status, buffer, & length.
  * @param[out]  status   - Response status
  * @param[out]  buffer   - Buffer address provided by the application to fill the scan response.
- * @param[out]  length   - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+ * @param[out]  length   - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
  *                         A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return      0              -   Success \n
  * @return      Non-Zero Value -   Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
@@ -837,7 +837,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
  *                       information about each network scanned.
  *                       result is type of rsi_rsp_scan_t 
- * @param[in]  length  -The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n
+ * @param[in]  length  -The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n
  *                      A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return     0              - Success
  * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
@@ -993,7 +993,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  *				                             The parameters involved are status, buffer, & length. \n
  *@param[out]	 Status                - Response status.
  *@param[out]	 Buffer                - Response buffer \n
- *@param[out]	 Length                - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results./n 
+ *@param[out]	 Length                - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
                                        A minimum buffer size of 514 bytes is required to hold 11 scan results.
  * @return     0              -  Success \n
  * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
@@ -4841,13 +4841,12 @@ int32_t rsi_wlan_buffer_config(void)
  * @param[in]  security_type - Type of the security modes on which an access point needs to be operated: \n
  *                           Value | Security type
  *                           :----:|:------------------------------------------:
- *                          1    | RSI_OPEN \n
- *                          2    | RSI_WPA  \n
- *                          3    | RSI_WPA2 \n
- *                          4    | RSI_WPA_WPA2_MIXED \n
- *                          5    | RSI_WPS_PUSH_BUTTON \n
- *                          7    | RSI_WPA3_PERSONAL \n
- *                          8    | RSI_WPA3_PERSONAL_TRANSITION
+ *                          0     | RSI_OPEN \n
+ *                          1     | RSI_WPA  \n
+ *                          2     | RSI_WPA2 \n
+ *                          6     | RSI_WPA_WPA2_MIXED \n
+ *                          13    | RSI_WPA3_PERSONAL \n
+ *                          14    | RSI_WPA3_PERSONAL_TRANSITION
  * @param[in]  encryption_mode - Type of the encryption mode:\n
  *                           Value |    Encryption mode
  *                           :----:|:------------------------------------------:
@@ -8399,12 +8398,12 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  *                                               <REGION NAME y>, <CHANNEL_CODE_5G>, 
  *                                               }; 
  *                            2. Supported Region names:
- *                                                   FCC, RED,TELEC,KCC
+ *                                                   FCC, ETSI,TELEC,KCC
  *                                                   The following are the regions and the values to be passed instead of macros in the example.
  *                                                   Region      |          Macro Value
  *                                                   ------------|--------------------
  *                                                   FCC         |            0
- *                                                   RED         |            1
+ *                                                   ETSI        |            1
  *                                                   TELEC       |            2
  *                                                   KCC         |            4
  *                            3. <CHANNEL_CODE_2G> is a 8 bit value which is encoded as:
@@ -8508,13 +8507,13 @@ int32_t rsi_wlan_add_mfi_ie(int8_t *mfi_ie, uint32_t ie_len)
  * @note   	   **Precondition** - \ref rsi_radio_init() API needs to be called before this API
  * @note		   Length of the payload should match with payload_len parameter value.
  * @note		   40MHz is not supported in both 2.4GHz and 5GHz
- * @note       This API must be used by customers who has done FCC/RED/TELEC certification with their own antenna. Inappropriate use of this API may result in violation of FCC/RED/TELEC, or any certifications and Silicon labs is not liable for that.
+ * @note       This API must be used by customers who has done FCC/ETSI/TELEC certification with their own antenna. Inappropriate use of this API may result in violation of FCC/ETSI/TELEC, or any certifications and Silicon labs is not liable for that.
  * @note       Internally firmware maintains two gain tables: Worldwide table & Region based table. Worldwide table is populated by firmware with maximum power values that chip can transmit that meets target specifications like EVM. Region based table has default gain value set.
  * @note       When certifying with your own antenna, region must be set to Worldwide and sweep the power from 0 to 21dBm. Arrive at maximum power level that is passing certification especially band-edge.
- * @note       These FCC/RED/TELEC maximum power level should be loaded in end-to-end mode via WLAN User Gain table.
+ * @note       These FCC/ETSI/TELEC maximum power level should be loaded in end-to-end mode via WLAN User Gain table.
  * @note       This API must be called after every boot-up since this information is not saved inside flash.
- * @note       Region based user gain table sent by application is copied onto Region based table. SoC uses this table in FCC/RED/TELEC to limit power and not to violate allowed limits. For Worldwide region firmware uses Worldwide table for transmit. \n
- *             For other regions (FCC/RED/TELEC), firmware uses minimum value of Worldwide and Region based table for transmit.
+ * @note       Region based user gain table sent by application is copied onto Region based table. SoC uses this table in FCC/ETSI/TELEC to limit power and not to violate allowed limits. For Worldwide region firmware uses Worldwide table for transmit. \n
+ *             For other regions (FCC/ETSI/TELEC), firmware uses minimum value of Worldwide and Region based table for transmit.
  * @note       There will be part to part variation across chips and offsets are estimated during manufacturing flow which will be applied as correction factor during normal mode of operation.
  * @note       Refer to \ref error-codes for the description of above error codes.
  */

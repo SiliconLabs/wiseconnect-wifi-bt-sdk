@@ -1501,6 +1501,11 @@ int32_t rsi_ble_read_rf_path_compensation(void *resp);
  * @fn         rsi_ble_write_rf_path_compensation
  */
 int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_path_value);
+/*==============================================*/
+/**
+ * @fn         rsi_ble_vendor_set_SMP_min_enc_keysize
+ */
+int32_t rsi_ble_vendor_set_SMP_min_enc_keysize(uint8_t min_keysize);
 
 /******************************************************
  * *        GATT Client API's Declarations

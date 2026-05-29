@@ -188,6 +188,9 @@ extern int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode);
 extern int32_t rsi_wireless_antenna(uint8_t type, uint8_t gain_2g, uint8_t gain_5g);
 extern int32_t rsi_send_feature_frame(void);
 extern int32_t rsi_get_fw_version(uint8_t *response, uint16_t length);
+#ifdef RSI_ROBUST_MODE_ENABLE
+extern int32_t rsi_robust_drv_start_handshake(void);
+#endif
 extern int32_t rsi_get_module_type(uint8_t *response);
 extern int32_t rsi_common_debug_log(int32_t assertion_type, int32_t assertion_level);
 extern int32_t rsi_socket_config(void);
@@ -200,7 +203,7 @@ extern int32_t rsi_driver_version(uint8_t *request);
 extern int32_t rsi_set_rtc_timer(module_rtc_time_t *timer);
 extern int32_t rsi_get_rtc_timer(module_rtc_time_t *response);
 
-#define RSI_DRIVER_VERSION "2.13.1.2"
+#define RSI_DRIVER_VERSION "2.14.0.10"
 #ifdef RSI_ASSERT_API
 int32_t rsi_assert(void);
 #endif

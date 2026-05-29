@@ -2329,5 +2329,28 @@ int32_t rsi_ble_vendor_feature_bitmap(uint32_t bitmap)
   ble_vendor_feature_bitmap.bitmap    = bitmap;
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &ble_vendor_feature_bitmap, NULL);
 }
+
+/*==================================================*/
+/**
+ * @fn          int32_t rsi_ble_vendor_set_SMP_min_enc_keysize(uint8_t min_keysize)
+ * @brief       Set minimum encryption key size used when validating the peer pairing response.
+ * @param[in]   min_keysize  -  minimum key size (valid range 7–16 per BLE SMP).
+ * @return      0  =  success \n
+ *             !0  = failure \n
+ * @section description
+ * Host command configures the controller minimum acceptable encryption key size for SMP pairing response handling.
+ */
+int32_t rsi_ble_vendor_set_SMP_min_enc_keysize(uint8_t min_keysize)
+{
+  rsi_ble_vendor_set_SMP_min_enc_keysize_t rsi_ble_vendor_set_SMP_min_enc_keysize;
+  memset(&rsi_ble_vendor_set_SMP_min_enc_keysize, 0, sizeof(rsi_ble_vendor_set_SMP_min_enc_keysize_t));
+
+  rsi_ble_vendor_set_SMP_min_enc_keysize.opcode[0]   = (BLE_VENDOR_SET_SMP_MIN_KEYSIZE & 0xFF);
+  rsi_ble_vendor_set_SMP_min_enc_keysize.opcode[1]   = ((BLE_VENDOR_SET_SMP_MIN_KEYSIZE >> 8) & 0xFF);
+  rsi_ble_vendor_set_SMP_min_enc_keysize.min_keysize = min_keysize;
+
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &rsi_ble_vendor_set_SMP_min_enc_keysize, NULL);
+}
+
 /** @} */
 #endif

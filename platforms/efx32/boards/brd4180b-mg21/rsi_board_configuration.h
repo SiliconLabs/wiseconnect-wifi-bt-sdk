@@ -89,6 +89,7 @@ typedef struct {
 #elif (INTERFACE_TYPE == UART_INTERFACE)
 #define RSI_UART_INTERFACE
 #define EFX_UART_HAL
+#define RSI_UART_FLOW_CTRL_ENABLE
 #endif
 
 // Declaration of MCU type

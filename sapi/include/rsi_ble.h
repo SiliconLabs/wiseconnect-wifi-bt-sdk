@@ -42,6 +42,7 @@
 #define BLE_VENDOR_RF_TYPE_CMD_OPCODE                0xFC14
 #define BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD 0xFC1B
 #define BLE_VENDOR_FEATURE_BITMAP                    0xFC24
+#define BLE_VENDOR_SET_SMP_MIN_KEYSIZE               0xFC25
 
 #define RSI_BLE_MAX_NUM_GAP_EXT_CALLBACKS       2
 #define RSI_BLE_MAX_NUM_ADV_EXT_EVENT_CALLBACKS 0x08
@@ -1550,6 +1551,15 @@ typedef struct rsi_ble_write_rf_path_comp_s {
   /** int16_t, RF RX Path Compensation Value, Range: -128.0 dB (0xFB00) to 128.0 dB (0x0500)*/
   int16_t rx_path_value;
 } __attribute__((__packed__)) rsi_ble_write_rf_path_comp_t;
+
+typedef struct rsi_ble_vendor_set_SMP_min_enc_keysize_s {
+  //uint8, opcode
+  uint8_t opcode[2];
+  //uint8, reserved
+  uint8_t reserved[2];
+  //uint8, min_keysize
+  uint8_t min_keysize;
+} rsi_ble_vendor_set_SMP_min_enc_keysize_t;
 
 typedef struct rsi_ble_ae_pdu {
   uint16_t cmd_sub_opcode;

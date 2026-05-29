@@ -51,7 +51,7 @@
  * @note       This is an optional parameter. If not configured, the default value is 0. In this case, device will not perform MQTT Keep Alive retries, however the MQTT Keep Alive process keeps happening (until MQTT connection is terminated) every Keep Alive Time period configured by the host.                               
  * @note       **Precondition**    - \ref rsi_config_ipaddress() API needs to be called before this API. 
  * @note       Refer to \ref error-codes for the description of above error codes.
- * @note       The keep_alive_interval variable range is between 35 and 65,535 seconds. A value of 0 is a special case that disables the keep-alive mechanism. Most cloud MQTT brokers, however, limit the maximum to 60 seconds, so it's recommended to use a value between 35–60 seconds for best compatibility.
+ * @note       The keep_alive_interval variable supports a range from 36 to 65,535 seconds, with a value of 0 treated as a special case that disables the keep-alive mechanism. However, since most cloud MQTT brokers limit the maximum interval to 60 seconds, it is recommended to use a value between 36 and 60 seconds for optimal compatibility.
  *
  */
 

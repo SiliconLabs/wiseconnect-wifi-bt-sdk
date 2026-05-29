@@ -35,7 +35,9 @@
 #endif
 #include "rsi_hal.h"
 #include "rsi_wlan_non_rom.h"
-
+#ifdef RSI_ROBUST_MODE_ENABLE
+#include "rsi_robust_driver.h"
+#endif
 extern rsi_socket_info_non_rom_t *rsi_socket_pool_non_rom;
 /** @addtogroup COMMON
 * @{
@@ -167,7 +169,9 @@ int32_t rsi_device_init(uint8_t select_option)
     SL_PRINTF(SL_DEVICE_INIT_SPI_INIT_FAILURE, COMMON, LOG_ERROR, "status: %4x", status);
     return status;
   }
-
+#ifdef RSI_ROBUST_MODE_ENABLE
+  rsi_robust_gpcrc_ldma_init();
+#endif
 #if (defined(RSI_SPI_INTERFACE) || defined(RSI_SDIO_INTERFACE))
   rsi_init_timer(&timer_instance, RSI_BOARD_READY_WAIT_TIME); //40000
   do {

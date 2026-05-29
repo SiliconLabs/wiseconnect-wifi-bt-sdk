@@ -318,8 +318,10 @@ void rsi_common_app_task(void)
     //! SiLabs module initialization
     status = rsi_device_init(LOAD_NWP_FW);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\r\n device init failed \n");
+      LOG_PRINT("\r\nDevice Initialization Failed, Error Code : 0x%lX\r\n", status);
       return;
+    } else {
+      LOG_PRINT("\r\nDevice Initialization Successful\r\n");
     }
 // rsi_wireless_driver_task is creating in rsi_common_app_task only for EFM platform
 #ifdef EFM32GG11B820F2048GL192
@@ -334,8 +336,10 @@ void rsi_common_app_task(void)
     //! WiSeConnect initialization
     status = rsi_wireless_init(RSI_WLAN_CLIENT_MODE, RSI_COEX_MODE);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\r\n wireless init failed \n");
+      LOG_PRINT("\r\nWireless Initialization Failed, Error Code : 0x%lX\r\n", status);
       return;
+    } else {
+      LOG_PRINT("\r\nWireless Initialization Successful\r\n");
     }
 
     //! Firmware version Prints
@@ -494,6 +498,9 @@ void rsi_common_app_task(void)
 #ifdef RSI_WITH_OS
     rsi_task_destroy(NULL);
 #endif
+    // Exit the loop after successful initialization
+    // The task will be destroyed above, so this return is defensive
+    return;
   }
 }
 

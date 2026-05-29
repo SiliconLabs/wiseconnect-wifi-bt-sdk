@@ -248,6 +248,12 @@ int32_t rsi_station_ping_app()
   //! Connect to an Access point through PMK method
   if (SECURITY_TYPE == RSI_WPA2_PMK) {
     status = rsi_wlan_connect(SSID, SECURITY_TYPE, pmk);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nWLAN AP Connect with PMK Failed, Error Code : 0x%lX\r\n", status);
+      return status;
+    } else {
+      LOG_PRINT("\r\nWLAN AP Connect with PMK Success\r\n");
+    }
   }
 #else
   //! Connect to an Access point

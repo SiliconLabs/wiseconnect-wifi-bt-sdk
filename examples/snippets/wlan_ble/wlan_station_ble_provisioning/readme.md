@@ -20,7 +20,7 @@ Before running the application, the user will need the following things to setup
    - Silicon labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
    - [STM32F411 Nucleo](https://st.com/)
 *  Wireless Access point
-*  Android Mobile Phone with Silicon labs Connect App.
+*  Android Mobile Phone with Simplicity Connect App.
                      (or)
 *  Windows PC with windows Silicon labs connect application.
 
@@ -40,8 +40,8 @@ Before running the application, the user will need the following things to setup
    
 - User can install any of the below apps to verify WLAN Station BLE Provisioning.
 
- 1. Install Android based Silicon labs Connect APK:
-   - Access the apk provided in the path:  `<SDK>/utilities/Silicon_lab_connectApp.apk`
+ 1. Install Android based Simplicity Connect app from the Play Store or using the APK provided below.
+   - Access the apk provided in the path:  `<SDK>/utilities/ble_provisioning_apps/android_based_provisioning_app/Simplicity_connect.apk`
     
  2. Install windows Silicon labs connect application in laptop.
    - Refer the application provided in the path: `<SDK>/utilities/windows_ble_provisioning_app`
@@ -288,17 +288,17 @@ Refer [EFx32 Getting Started](https://docs.silabs.com/rs9116-wiseconnect/latest/
 
 1. Configure the Access point with internet connection in OPEN/WPA-PSK/WPA2-PSK mode to connect the RS9116W EVK in STA mode.
 2. Connect any serial console for prints.
-3. When RS9116W EVK enters BLE advertising mode, launch the Silicon Labs Connect App.
+3. When RS9116W EVK enters BLE advertising mode, launch the Simplicity Connect App.
 
 ![BLE advertising mode](resources/readme/image280.jpeg)
 
-4. Click on BLE Provisioning.
+4. Click on Demo -> Wi-Fi Commissioning.
 
 ![BLE Provisioning](resources/readme/image281.jpeg)
 
 5. Click on BLE_CONFIGURATOR.
 
-![BLE Configurator](resources/readme/image282.png)
+![BLE Configurator](resources/readme/image282.jpeg)
 
 6. Once the BLE got the connected, list of available Access Points get displayed on the screen
 

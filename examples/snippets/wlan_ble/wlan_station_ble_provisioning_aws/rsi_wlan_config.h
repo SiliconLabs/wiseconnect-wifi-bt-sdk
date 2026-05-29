@@ -33,10 +33,17 @@
 //! To enable concurrent mode
 #define CONCURRENT_MODE RSI_DISABLE
 
+//! Enable BLE
+#define BLE_ENABLE 1
+
 //! opermode command paramaters
 /*=======================================================================*/
 //! To set wlan feature select bit map
+#if defined(RSI_USB_INTERFACE) && defined(LINUX_PLATFORM)
+#define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | FEAT_AGGREGATION)
+#else
 #define RSI_FEATURE_BIT_MAP (FEAT_SECURITY_PSK | FEAT_AGGREGATION | FEAT_ULP_GPIO_BASED_HANDSHAKE)
+#endif
 
 //! TCP IP BYPASS feature check
 #define RSI_TCP_IP_BYPASS RSI_DISABLE
@@ -345,7 +352,11 @@ typedef struct rsi_wlan_app_cb_s {
 //! Power save command parameters
 /*=======================================================================*/
 //! set handshake type of power mode
+#if defined(RSI_USB_INTERFACE) && defined(LINUX_PLATFORM)
+#define RSI_HAND_SHAKE_TYPE MSG_BASED
+#else
 #define RSI_HAND_SHAKE_TYPE GPIO_BASED //M4_BASED
+#endif
 
 //! 0 - LP, 1- ULP mode with RAM retention and 2 - ULP with Non RAM retention
 #define RSI_SELECT_LP_OR_ULP_MODE RSI_ULP_WITH_RAM_RET

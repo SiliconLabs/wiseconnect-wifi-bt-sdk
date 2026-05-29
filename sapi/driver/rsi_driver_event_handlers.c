@@ -23,6 +23,9 @@
 #ifdef RSI_UART_INTERFACE
 #include "rsi_uart.h"
 #endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+#include "rsi_robust_driver.h"
+#endif
 #ifdef RSI_M4_INTERFACE
 #include "rsi_m4.h"
 #endif
@@ -120,6 +123,13 @@ void rsi_tx_event_handler(void)
     pkt                                = NULL;
   }
 #endif
+
+#ifdef RSI_ROBUST_MODE_ENABLE
+  if (rsi_robust_drv_check_ack() == RSI_ROBUST_STATE_WAIT_ACK) {
+    return;
+  }
+#endif
+
   /* First Check for Common Queue */
   common_pkt_pending = rsi_check_queue_status(&rsi_driver_cb->common_tx_q);
 #ifdef SAPIS_BT_STACK_ON_HOST
@@ -445,7 +455,11 @@ void rsi_tx_event_handler(void)
     rsi_mask_event(RSI_TX_EVENT);
 #endif
     // Writing to Module
+#ifdef RSI_ROBUST_MODE_ENABLE
+    status = rsi_robust_drv_send(buf_ptr, length);
+#else
     status = rsi_frame_write((rsi_frame_desc_t *)buf_ptr, &buf_ptr[RSI_HOST_DESC_LENGTH], length);
+#endif
     if (status < 0x0) {
 #ifndef RSI_FREE_QUEUE_PKT
       rsi_free_queue_pkt(pkt_dequeued, pkt);
@@ -808,6 +822,32 @@ void rsi_rx_event_handler(void)
   // Read packet from module
   status = rsi_frame_read(buf_ptr);
 #endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+  if (rsi_driver_cb_non_rom->robust_drv_cb != NULL && rsi_driver_cb_non_rom->robust_drv_cb->enabled) {
+    uint16_t recv_len = (*(uint16_t *)buf_ptr & 0x0FFF) + RSI_HOST_DESC_LENGTH;
+    if (buf_ptr[2] == RSI_COMMON_REQ_ROBUST_HANDSHAKE && recv_len == RSI_ROBUST_CTRL_FRAME_LEN) {
+      rsi_robust_drv_process_ctrl_frame(buf_ptr);
+      rsi_pkt_free(&rsi_driver_cb->rx_pool, rx_pkt);
+      rsi_clear_event(RSI_RX_EVENT);
+#ifdef RSI_UART_INTERFACE
+      rsi_uart_rx_irq_enable();
+#endif
+      rsi_hal_intr_unmask();
+      return;
+    } else {
+      status = rsi_robust_drv_recv_frame(buf_ptr, recv_len);
+      if (status != 0) {
+        rsi_pkt_free(&rsi_driver_cb->rx_pool, rx_pkt);
+        rsi_clear_event(RSI_RX_EVENT);
+#ifdef RSI_UART_INTERFACE
+        rsi_uart_rx_irq_enable();
+#endif
+        rsi_hal_intr_unmask();
+        return;
+      }
+    }
+  }
+#endif
   // Allow Power save again
   if (rsi_common_cb->power_save.power_save_enable) {
 #if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
@@ -824,6 +864,9 @@ void rsi_rx_event_handler(void)
 #endif
 #endif
         rsi_clear_event(RSI_RX_EVENT);
+#ifdef RSI_UART_INTERFACE
+    rsi_uart_rx_irq_enable();
+#endif
 #if ((defined RSI_SDIO_INTERFACE) && (!defined LINUX_PLATFORM))
 // rx_pkt is not from pool, so not freeing
 #else
@@ -895,6 +938,9 @@ void rsi_rx_event_handler(void)
 #endif
 #endif
         rsi_clear_event(RSI_RX_EVENT);
+#ifdef RSI_UART_INTERFACE
+    rsi_uart_rx_irq_enable();
+#endif
     // Unmask RX event
     rsi_unmask_event(RSI_RX_EVENT);
 
@@ -945,6 +991,9 @@ void rsi_rx_event_handler(void)
 #endif
 #ifdef RSI_CRYPTO_ENABLE
              || (frame_type == RSI_RSP_ENCRYPT_CRYPTO)
+#endif
+#ifdef RSI_ROBUST_MODE_ENABLE
+             || (frame_type == RSI_COMMON_RSP_ROBUST_HANDSHAKE)
 #endif
 #ifdef CHIP_917
              || (frame_type == RSI_COMMON_RSP_ECDSA_256_VERIFY_HASH)
@@ -1032,6 +1081,9 @@ void rsi_rx_event_handler(void)
     {
       // Clear RX event
       rsi_clear_event(RSI_RX_EVENT);
+#ifdef RSI_UART_INTERFACE
+      rsi_uart_rx_irq_enable();
+#endif
     }
 #if !THROUGHPUT_EN
 #if RSI_SPI_DUP_INTR_HANDLE

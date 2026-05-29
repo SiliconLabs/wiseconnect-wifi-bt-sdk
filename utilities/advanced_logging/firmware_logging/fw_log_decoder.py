@@ -130,7 +130,7 @@ class Decoder:
         CORE_ID_SIZE = 8
         NUM_ARGS = 3
         EVENT_ID_SIZE = 32
-        ARG_COUNT_SIZE = 16
+        ARG_COUNT_SIZE = 8
         FLAGS_SIZE = 8
         VERSION_SIZE = 8
         ARG_SIZE = 32

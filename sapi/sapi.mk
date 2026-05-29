@@ -192,6 +192,7 @@ COMMON_SOURCES = $(RSI_SDK_PATH)/sapi/common/rsi_common_apis.c \
                  $(RSI_SDK_PATH)/sapi/common/rsi_apis_rom.c \
                  $(RSI_SDK_PATH)/sapi/common/rsi_apis_non_rom.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_driver.c \
+                 $(RSI_SDK_PATH)/sapi/driver/rsi_robust_driver.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_driver_event_handlers.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_events.c \
                  $(RSI_SDK_PATH)/sapi/driver/rsi_os_none.c \

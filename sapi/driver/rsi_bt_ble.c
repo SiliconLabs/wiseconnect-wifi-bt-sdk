@@ -3208,6 +3208,10 @@ uint16_t rsi_bt_prepare_common_pkt(uint16_t cmd_type, void *cmd_struct, rsi_pkt_
           payload_size = sizeof(ble_vendor_feature_bitmap_t);
           memcpy(pkt->data, cmd_struct, payload_size);
           break;
+        case BLE_VENDOR_SET_SMP_MIN_KEYSIZE:
+          payload_size = sizeof(rsi_ble_vendor_set_SMP_min_enc_keysize_t);
+          memcpy(pkt->data, cmd_struct, payload_size);
+          break;
         default:
           break;
       }

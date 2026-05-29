@@ -283,7 +283,7 @@ void DMA2_Stream2_IRQHandler(void)
 #ifdef RSI_UART_INTERFACE
 extern uint8_t uart_rev_buf[1600];
 extern uint8_t uart_rev_buf2[1600];
-extern uint32_t last_len;
+extern volatile uint32_t last_len;
 extern uint32_t desired_len;
 extern uint32_t value;
 extern uint32_t previous;
