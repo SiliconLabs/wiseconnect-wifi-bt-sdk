@@ -2663,6 +2663,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
     } break;
     case RSI_BLE_EVENT_CONN_STATUS: {
       if (ble_specific_cb->ble_on_conn_status_event != NULL) {
+        ((rsi_ble_event_conn_status_t *)payload)->status = status;
         ble_specific_cb->ble_on_conn_status_event((rsi_ble_event_conn_status_t *)payload);
       }
       // rsi_bt_set_status(ble_cb, RSI_BLE_STATE_CONNECTION);
@@ -2671,6 +2672,7 @@ void rsi_ble_callbacks_handler(rsi_bt_cb_t *ble_cb, uint16_t rsp_type, uint8_t *
 
     case RSI_BLE_EVENT_ENHANCE_CONN_STATUS: {
       if (ble_specific_cb->ble_on_enhance_conn_status_event != NULL) {
+        ((rsi_ble_event_enhance_conn_status_t *)payload)->status = status;
         ble_specific_cb->ble_on_enhance_conn_status_event((rsi_ble_event_enhance_conn_status_t *)payload);
       }
       // rsi_bt_set_status(ble_cb, RSI_BLE_STATE_CONNECTION);

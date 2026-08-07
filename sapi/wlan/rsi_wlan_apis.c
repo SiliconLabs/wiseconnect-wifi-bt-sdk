@@ -183,6 +183,18 @@ int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
  *                               Note: SSID is a null terminated string.                          
  * @param[in]  chno            - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n
  *                                based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ * @param[out] result          - Buffer address provided by the application to fill the scan response.
+ *                               result is type of rsi_rsp_scan_t .
+ * @param[in]  length          - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
+ *                               A minimum buffer size of 514 bytes is required to hold 11 scan results.
+ * @param[in]  scan_bitmap     - Scan bitmap options. \n
+ *                               BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
+ *                               BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results are given to host. \n 
+ *                               After getting scan results, host has to issue another scan request by disabling this bit in scan feature bitmap in same API \n
+ *                               or call \ref rsi_wlan_scan API before issuing join command.              
+ * @return     0                -    Success \n
+ * @return     Non-Zero Value   -    Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
  *             ## Channels supported in 2.4 GHz Band ##
  *             Channel numbers       	 |	chno    
  *             :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -250,19 +262,6 @@ int32_t send_timeout(uint32_t timeout_bitmap, uint16_t timeout_value)
  *             8	                     |       8
  *             12	                     |       12
  * 		         16	                     |       16
- * @param[out]  result         - Buffer address provided by the application to fill the scan response.
- *                               result is type of rsi_rsp_scan_t .
- * @param[in]  length          - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
- *                               A minimum buffer size of 514 bytes is required to hold 11 scan results.
- * @param[in]  scan_bitmap     - Scan bitmap options. \n
- *                               BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
- *                               BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results are given to host. \n 
- *                               After getting scan results, host has to issue another scan request by disabling this bit in scan feature bitmap in same API \n
- *                               or call \ref rsi_wlan_scan API before issuing join command.              
- * @return     0                -    Success \n
- * @return     Non-Zero Value   -    Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
- * @note       **Precondition** - \ref rsi_wireless_init() API needs to be called before this API.
- *
  */
 int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
                                           uint8_t chno,
@@ -326,6 +325,20 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
  *                        SSID should be less than or equal to 32 bytes.
  * @param[in]   chno     - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n
  *                         based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ * @param[in]   bitmap   - Scan feature bitmap \n
+ *                         BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
+ *                         BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results
+ *                         are given to host. \n     After getting scan results, host has o issue another
+ *                         scan request by disabling this bit in scan feature bitmap in same api
+ *                         or call \ref rsi_wlan_scan api \n     before issuing join command.
+ * @param[out]  scan_response_handler   - Callback that is called when the response for scan is received from the module.
+ *                                         The parameters involved are status, buffer, & length.
+ * @param[out]  status   - Response status
+ * @param[out]  buffer   - Buffer address provided by the application to fill the scan response.
+ * @param[out]  length   - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
+ *                         A minimum buffer size of 514 bytes is required to hold 11 scan results.
+ * @return      0              -   Success \n
+ * @return      Non-Zero Value -   Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  *              ## Channels supported in 2.4 GHz Band ##
  *              Channel numbers       	 |	chno
  *              :----------------------- |:--------------------------------------------------------------------------------------------------
@@ -393,20 +406,6 @@ int32_t rsi_wlan_scan_with_bitmap_options(int8_t *ssid,
                 8	                       |       8
                 12	                     |       12
                 16	                     |       16
- * @param[in]   bitmap   - Scan feature bitmap \n
- *                         BIT[0] (QUICK SCAN feature) - It is valid only if channel number and ssid is given. \n
- *                         BIT[1] (SCAN RESULTS TO HOST) - When it is enabled additional scan results
- *                         are given to host. \n     After getting scan results, host has o issue another
- *                         scan request by disabling this bit in scan feature bitmap in same api
- *                         or call \ref rsi_wlan_scan api \n     before issuing join command.
- * @param[out]  scan_response_handler   - Callback that is called when the response for scan is received from the module.
- *                                         The parameters involved are status, buffer, & length.
- * @param[out]  status   - Response status
- * @param[out]  buffer   - Buffer address provided by the application to fill the scan response.
- * @param[out]  length   - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
- *                         A minimum buffer size of 514 bytes is required to hold 11 scan results.
- * @return      0              -   Success \n
- * @return      Non-Zero Value -   Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  *
  */
 
@@ -762,7 +761,17 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * @pre		     \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  ssid    - SSID size should be less than or equal to 32 bytes. Note: SSID is a null terminated string.
  * @param[in]  chno    - Specifies the channel number to scan. If set to 0, then the device scans all the channels \n
- *                       based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration. 
+ *                       based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ * @param[out] result  - Scanned Wi-Fi networks information. \n
+ *                       This output contains a maximum of 11 scan results \n
+ *                       The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
+ *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
+ *                       information about each network scanned.
+ *                       result is type of rsi_rsp_scan_t 
+ * @param[in]  length  - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n
+ *                       A minimum buffer size of 514 bytes is required to hold 11 scan results.
+ * @return     0              - Success
+ * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
  *             ## Channels supported in 2.4 GHz Band ##
  *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -830,17 +839,7 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		         8	                     |       8
  * 		         12	                     |       12
  * 		         16	                     |       16
- 
- * @param[out]  result - Scanned Wi-Fi networks information. \n
- *                       This output contains a maximum of 11 scan results \n
- *                       The structure \ref rsi_rsp_scan_t contains members scan_count, which specifies the number of scan \n
- *                       results followed by an array of structure type \ref rsi_scan_info_t, where each array element contains \n
- *                       information about each network scanned.
- *                       result is type of rsi_rsp_scan_t 
- * @param[in]  length  -The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n
- *                      A minimum buffer size of 514 bytes is required to hold 11 scan results.
- * @return     0              - Success
- * @return     Non-Zero Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ *
  * 	          ##	Scan Info structure ##
  * 		        Structure Fields        |	Description	
  * 		        :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -862,7 +861,6 @@ int32_t rsi_wlan_scan_async_with_bitmap_options(int8_t *ssid,
  * 		        timeout_bitmap[1]     	|       Sets each channel active scan time in ms (default 100ms)
  * 		        timeout_bitmap[2] 	    |       Used for WLAN keep alive timeout(default value is 30s)
  * 		        timeout_bitmap[31-3]    |       Reserved
- *
  *
  */
 int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32_t length)
@@ -921,7 +919,16 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
  * @param[in]  ssid		        			 - SSID to scan. If this input parameter is present, module will scan for that particular SSID only. SSID size should be less than or equal to 32 bytes \n
  *                                     Note: SSID is a null terminated string.
  * @param[in]  chno 				         - Specifies the channel number to scan.  If set to 0, then the device scans all the channels \n 
- *                                      based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration. 
+ *                                      based on band (2.4 GHz, 5 GHz or dual) and region (US, Europe, Japan, Rest of the World, Korea) configuration.
+ * @param[in]  Scan_response_handler - Callback that is called when the response for scan is received from the module. \n
+ *				                             The parameters involved are status, buffer, & length. \n
+ *@param[out]	 Status                - Response status.
+ *@param[out]	 Buffer                - Response buffer \n
+ *@param[out]	 Length                - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
+                                       A minimum buffer size of 514 bytes is required to hold 11 scan results.
+ * @return     0              -  Success \n
+ * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ *
  *             ## Channels supported in 2.4 GHz Band ##
  *         		 Channel numbers       	 |	chno
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -989,14 +996,7 @@ int32_t rsi_wlan_scan(int8_t *ssid, uint8_t chno, rsi_rsp_scan_t *result, uint32
                8	                     |       8
                12	                     |       12
                16	                     |       16
- * @param[in]  Scan_response_handler - Callback that is called when the response for scan is received from the module. \n
- *				                             The parameters involved are status, buffer, & length. \n
- *@param[out]	 Status                - Response status.
- *@param[out]	 Buffer                - Response buffer \n
- *@param[out]	 Length                - The length of the result buffer (3rd parameter of the rsi_rsp_scan_t structure) is measured in bytes to store the scan results. \n 
-                                       A minimum buffer size of 514 bytes is required to hold 11 scan results.
- * @return     0              -  Success \n
- * @return     Non-Zero	Value - Failure (**Possible Error Codes** - 0xfffffffe,0xfffffffd,0xfffffffa,0x0002, 0x0003, 0x0005, 0x000A, 0x0014, 0x0015, 0x001A, 0x0021,0x0024,0x0025,0x0026,0x002C,0x003c) \n
+ *
  * 	           #### Scan Response structure format ####
  * 		         Structure Fields        |	Description	
  * 		         :-----------------------|:--------------------------------------------------------------------------------------------------
@@ -4135,6 +4135,8 @@ int32_t rsi_wlan_get_status(void)
  * @note       RSI_WLAN_EXT_STATS should be used after successful WLAN connection. \n
  *             Gives info on beacon lost count, beacon rx count, Tx and Rx multicast and unicast packets count. \n
  * @note       RSI_STATIONS_INFO is relevant in AP mode \n
+ * @note       In the RSI_WLAN_INFO command, the sec_type field is valid only in
+ *             station mode and is not supported in AP mode. \n
  * @note       Refer to \ref error-codes for the description of above error codes.
  *
  *

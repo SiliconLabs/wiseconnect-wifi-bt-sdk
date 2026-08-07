@@ -80,7 +80,7 @@ typedef struct rsi_ble_event_conn_status_s {
   /**Address of the connected device*/
   uint8_t dev_addr[RSI_DEV_ADDR_LEN];
   /**status of the connection - success/failure*/
-  uint8_t status;
+  uint16_t status;
 
 } rsi_ble_event_conn_status_t;
 
@@ -105,7 +105,7 @@ typedef struct rsi_ble_event_enhnace_conn_status_s {
   /**Only applicable for slave ,for master this value is set to 0x00*/
   uint8_t master_clock_accuracy;
   /**Status of the Connection - success/failure*/
-  uint8_t status;
+  uint16_t status;
 } rsi_ble_event_enhance_conn_status_t;
 
 //Disconnect event structure

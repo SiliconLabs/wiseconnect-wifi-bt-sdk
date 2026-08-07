@@ -1083,7 +1083,7 @@ typedef struct rsi_rsp_wireless_info_s {
   // Mac address
   uint8_t mac_address[6];
 
-  // security type
+  //! security type: Supported only in station mode, not in AP mode.
   uint8_t sec_type;
 
   // PMK

@@ -21,9 +21,6 @@
  * *                      Macros
  * ******************************************************/
 
-// Silicon Version 1.3
-#define CHIP_VER_1P3 0
-
 // Silicon Version 1.4 and above
 #define CHIP_VER_1P4_AND_ABOVE 1
 

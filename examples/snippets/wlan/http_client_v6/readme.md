@@ -167,6 +167,40 @@ HTTP_SERVER_IP_ADDRESS refers IP address of the HTTP/HTTPS server
 #define HTTP_SERVER_IP_ADDRESS "2001:0db8:0000:0001:0000:0000:0000:0121"
 ```
 
+#### 4.1.2 HTTP large file download (UART + SAPI)
+
+When using **UART** host interface with **SAPI** mode, a single HTTP GET for a large files may not complete because of UART transfer limits.
+Enable chunked **HTTP Range** download in `rsi_http_client_app.c`:
+
+```c
+//! Set 1 for chunked HTTP Range download (UART + SAPI large files); 0 for full GET
+#define RANGE_REQUEST_ENABLE 1
+```
+
+When `RANGE_REQUEST_ENABLE` is `1`, also configure:
+
+```c
+//! Total file size on server; must match the resource at HTTP_URL
+#define HTTP_DOWNLOAD_FILE_SIZE (1024U * 1024U)
+
+//! First Range segment is 64 bytes (0-63); kept small for UART + SAPI RX limits
+#define HTTP_RANGE_FIRST_END 63U
+
+//! Bytes per subsequent Range request; must stay within APP_BUFF_LEN (2000)
+#define HTTP_RANGE_CHUNK_SIZE 1984U
+```
+
+**Notes:**
+
+- Set `HTTP_URL` to the large file path on the server (for example `/1mb.txt`).
+- Set `HTTP_DOWNLOAD_FILE_SIZE` to the exact byte size of that file on the server.
+- `HTTP_RANGE_CHUNK_SIZE` (1984) plus response overhead must fit in
+  `APP_BUFF_LEN` (2000); do not increase chunk size without increasing
+  `APP_BUFF_LEN`.
+
+When `RANGE_REQUEST_ENABLE` is `0` (default), behavior is unchanged: one full
+HTTP GET for `HTTP_URL`.
+
 ### 4.2 Open rsi_wlan_config.h file. User can also modify the below parameters as per their needs and requirements.
 
 

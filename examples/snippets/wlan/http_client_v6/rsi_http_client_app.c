@@ -55,6 +55,14 @@
 #include "index.txt"
 
 #include "string.h"
+
+//! Set 1 for HTTP Range download, 0 for full file GET
+#define RANGE_REQUEST_ENABLE 0
+
+#if RANGE_REQUEST_ENABLE
+#include <stdio.h>
+#endif
+
 //! standard defines
 
 #ifndef RSI_CONFIGURE_IPV6
@@ -126,6 +134,20 @@ RSI_SSL_V_1_2                       BIT(3)
 
 //! HTTP resource name
 #define HTTP_URL "/index.html"
+
+#if RANGE_REQUEST_ENABLE
+//! Max length of HTTP Range request header
+#define HTTP_RANGE_HEADER_MAX_LEN 48U
+
+//! Total file size on server (must match actual file)
+#define HTTP_DOWNLOAD_FILE_SIZE (1024U * 1024U)
+
+//! First Range request size
+#define HTTP_RANGE_FIRST_END 63U
+
+//! Range chunk size for subsequent requests
+#define HTTP_RANGE_CHUNK_SIZE 1984U
+#endif
 
 //! set HTTP extended header
 //! if NULL , driver fills default extended header
@@ -278,6 +300,13 @@ int32_t rsi_http_client_app()
 
   //! Get the length of the index html page
   uint32_t file_size = (sizeof(rsi_index) - 1);
+
+#if RANGE_REQUEST_ENABLE
+  uint32_t range_start = 0;
+  uint32_t range_end   = HTTP_RANGE_FIRST_END;
+  uint32_t total_len   = 0;
+  char http_range_header[HTTP_RANGE_HEADER_MAX_LEN];
+#endif
 
   //! Silabs module intialisation
   status = rsi_device_init(LOAD_NWP_FW);
@@ -454,6 +483,61 @@ int32_t rsi_http_client_app()
   //! resetting the variables
   rsi_http_reset_handler();
 
+#if RANGE_REQUEST_ENABLE
+  while (range_start < HTTP_DOWNLOAD_FILE_SIZE) {
+    if (range_end >= HTTP_DOWNLOAD_FILE_SIZE) {
+      range_end = HTTP_DOWNLOAD_FILE_SIZE - 1;
+    }
+
+    snprintf(http_range_header,
+             sizeof(http_range_header),
+             "Range: bytes=%lu-%lu\r\n",
+             (unsigned long)range_start,
+             (unsigned long)range_end);
+
+    buf_len          = 0;
+    http_recv_status = 0;
+
+    status = rsi_http_client_get_async((uint16_t)flags,
+                                       (uint8_t *)HTTP_SERVER_IP_ADDRESS,
+                                       (uint16_t)HTTP_PORT,
+                                       (uint8_t *)HTTP_URL,
+                                       (uint8_t *)HTTP_HOSTNAME,
+                                       (uint8_t *)http_range_header,
+                                       (uint8_t *)USERNAME,
+                                       (uint8_t *)PASSWORD,
+                                       rsi_http_response_handler);
+
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nHTTP Range GET start failed at %lu, Error Code : 0x%lX\r\n", (unsigned long)range_start, status);
+      return status;
+    }
+
+    status = rsi_http_response_status((int32_t *)&http_recv_status);
+    if (status != RSI_SUCCESS) {
+      LOG_PRINT("\r\nHTTP Range GET failed at %lu, Error Code : 0x%lX\r\n", (unsigned long)range_start, status);
+      return status;
+    }
+
+    total_len += buf_len;
+
+    range_start = range_end + 1;
+    if (range_start < HTTP_DOWNLOAD_FILE_SIZE) {
+      range_end = range_start + (HTTP_RANGE_CHUNK_SIZE - 1U);
+      if (range_end >= HTTP_DOWNLOAD_FILE_SIZE) {
+        range_end = HTTP_DOWNLOAD_FILE_SIZE - 1U;
+      }
+    }
+
+    rsi_http_reset_handler();
+  }
+
+  LOG_PRINT("\r\nHTTP Range download complete, total bytes: %lu\r\n", (unsigned long)total_len);
+  if (total_len != HTTP_DOWNLOAD_FILE_SIZE) {
+    LOG_PRINT("\r\nHTTP Range download size mismatch, expected %lu\r\n", (unsigned long)HTTP_DOWNLOAD_FILE_SIZE);
+    return RSI_ERROR_INVALID_PARAM;
+  }
+#else
   //! send http get request for the given url
   status = rsi_http_client_get_async((uint16_t)flags,
                                      (uint8_t *)HTTP_SERVER_IP_ADDRESS,
@@ -476,6 +560,7 @@ int32_t rsi_http_client_app()
 
   //! resetting the variables
   rsi_http_reset_handler();
+#endif
 
   //! send http post request for the given url with given http data
   status = rsi_http_client_post_async((uint16_t)FLAGS,
