@@ -49,7 +49,7 @@ uint8_t rsi_convert_db_to_powindex(int8_t tx_power_in_dBm)
   module_type mod_type_temp;
   int16_t status;
   SL_PRINTF(SL_RSI_CONVERT_DB_TO_POWERINDEX_TRIGGER, BLE, LOG_INFO);
-  status = rsi_get_module_type(&mod_type_temp);
+  status = rsi_get_module_type((uint8_t *)&mod_type_temp);
   if (status == RSI_SUCCESS) {
     tx_power_in_dBm += BLE_OUTPUT_POWER_FRONT_END_LOSS;
     if ((tx_power_in_dBm < RSI_MIN_OUTPUT_POWER_IN_DBM) || (tx_power_in_dBm > RSI_MAX_OUTPUT_POWER_IN_DBM)) {

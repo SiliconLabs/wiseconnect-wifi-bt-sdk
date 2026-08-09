@@ -4160,9 +4160,19 @@ int32_t rsi_wlan_get(rsi_wlan_query_cmd_t cmd_type, uint8_t *response, uint16_t 
   // If state is not in card ready received state
   if (common_cb->state == RSI_COMMON_STATE_NONE) {
     if (cmd_type == RSI_FW_VERSION) {
+#ifdef RSI_WITH_OS
+      uint32_t wait_count = 0;
+      const uint32_t wait_interval_ms = 100; /* ms */
+      const uint32_t wait_card_ready = RSI_CARD_READY_WAIT_TIME / wait_interval_ms;
+#endif
       while (common_cb->state != RSI_COMMON_CARDREADY) {
 #ifndef RSI_WITH_OS
         rsi_scheduler(&rsi_driver_cb->scheduler_cb);
+#else
+        if (++wait_count > wait_card_ready) {
+          return RSI_ERROR_CARD_READY_TIMEOUT;
+        }
+        rsi_delay_ms(wait_interval_ms);
 #endif
         if (rsi_timer_expired(&timer_instance)) {
           SL_PRINTF(SL_WIRELESS_INIT_CARD_READY_TIMEOUT, COMMON, LOG_ERROR);
@@ -7622,16 +7632,16 @@ int32_t rsi_wlan_pmk_generate(int8_t type, int8_t *psk, int8_t *ssid, uint8_t *p
  */
 int32_t rsi_wlan_11ax_config(uint8_t gi_ltf, uint8_t config_er_su)
 {
-  rsi_pkt_t *pkt;
-  int32_t status = RSI_SUCCESS;
-  // Get WLAN CB structure pointer
-  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
 #if !(HE_PARAMS_SUPPORT)
   // Change WLAN CMD state to allow
   rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
   // Return command not supported error
   return RSI_ERROR_COMMAND_NOT_SUPPORTED;
-#endif
+#else
+  rsi_pkt_t *pkt;
+  int32_t status = RSI_SUCCESS;
+  // Get WLAN CB structure pointer
+  rsi_wlan_cb_t *wlan_cb = rsi_driver_cb->wlan_cb;
   if (wlan_cb->state >= RSI_WLAN_STATE_INIT_DONE && wlan_cb->state < RSI_WLAN_STATE_CONNECTED) {
     // Change WLAN CMD state to allow
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
@@ -7674,6 +7684,7 @@ int32_t rsi_wlan_11ax_config(uint8_t gi_ltf, uint8_t config_er_su)
   status = rsi_wlan_get_status();
   // Return status
   return status;
+  #endif
 }
 /*==============================================*/
 /**

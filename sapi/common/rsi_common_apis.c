@@ -2969,7 +2969,6 @@ int32_t rsi_gpio_write(uint8_t gpio_num, uint8_t write)
 int32_t rsi_set_region(void)
 {
   rsi_pkt_t *pkt __attribute__((unused));
-  int32_t status                                 = RSI_SUCCESS;
   rsi_wlan_cb_t *wlan_cb __attribute__((unused)) = rsi_driver_cb->wlan_cb;
 #if RSI_SET_REGION_SUPPORT
   // allocate command buffer  from common pool
@@ -2982,16 +2981,16 @@ int32_t rsi_set_region(void)
 #ifndef RSI_WLAN_SEM_BITMAP
   rsi_driver_cb_non_rom->wlan_wait_bitmap |= BIT(0);
 #endif
+  int32_t status                                 = RSI_SUCCESS;
   status = rsi_driver_wlan_send_cmd(RSI_WLAN_REQ_SET_REGION, pkt);
   rsi_wait_on_wlan_semaphore(&rsi_driver_cb_non_rom->wlan_cmd_sem, RSI_REGION_RESPONSE_WAIT_TIME);
   status = rsi_wlan_get_status();
   if (status != RSI_SUCCESS) {
     rsi_check_and_update_cmd_state(WLAN_CMD, ALLOW);
-    return status;
   }
+  return status;  
 #else
   return RSI_ERROR_SET_REGION_NOT_ENABLED;
 #endif
-  return status;
 }
 /** @} */

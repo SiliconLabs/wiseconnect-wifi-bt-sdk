@@ -3962,7 +3962,9 @@ int32_t rsi_wlan_socket_get_status(int32_t sockID)
 void rsi_wlan_socket_set_status(int32_t status, int32_t sockID)
 {
   SL_PRINTF(SL_WLAN_SOCKET_SET_STATUS_ENTRY, NETWORK, LOG_INFO);
-  rsi_socket_pool_non_rom[sockID].socket_status = status;
+  if (sockID > 0 && sockID < RSI_NUMBER_OF_SOCKETS) {
+    rsi_socket_pool_non_rom[sockID].socket_status = status;
+  }
 #ifndef RSI_WLAN_STATUS
   rsi_wlan_set_status(status);
 #endif
@@ -4538,7 +4540,7 @@ int32_t rsi_set_sni_emb_socket(uint8_t app_protocol, uint8_t *hostname, uint16_t
  * 
  */
 
-uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
+int32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
                                          nw_app_config config_type,
                                          void *config,
                                          uint16_t config_length)
