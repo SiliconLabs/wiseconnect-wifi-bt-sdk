@@ -1,0 +1,98 @@
+/**
+ * @file     QuickStart_Guide_For_USB_SDIO_SAPI.txt
+ * @version  1.1
+ * @date     2020-Jan-07
+ *
+ * Copyright(C) Silicon Labs 2021
+ * All rights reserved by Silicon Labs.
+ *
+ * @section License
+ * This guide should be used on your own responsibility.
+ * Silicon Labs assumes no responsibility for any losses
+ * incurred by customers or third parties arising from the use of this file.
+ *
+ * @brief : This guide explains the procedure to run the sample applications on x86 platform using USB or SDIO kernel drivers
+ *
+ * @section Description
+ *  This guide explains the procedure to run the sample applications on x86 platform using USB or SDIO kernel drivers
+ **/
+
+
+Procedure for USB sapi's execution:
+===================================
+
+1.  In <release_package>/platforms/linux/linux.mk
+     --> Enable RSI_USB_INTERFACE macro
+     --> Disable RSI_UART_INTERFACE macro.
+
+2.  Driver Insertion :
+    For TCP/IP Stack driver follow steps a,b,c,e,f,g
+    For TCP/IP Bypass driver follow steps a,b,d,e,f,g
+    a) Open the file in path: <release_package>/platforms/linux/drivers/common/include/rsi_config.h
+    b) Change RSI_INTERFACE define to RSI_USB
+    c) Disable RSI_TCP_IP_BYPASS macro in rsi_config.h
+    d) Enable RSI_TCP_IP_BYPASS macro in rsi_config.h
+    e) Goto path: <release_package>/platforms/linux/drivers/usb/src/
+    f) Compile using "make clean; make" command
+    g) Insert driver using "sudo insmod rpsusb.ko" command
+
+3.  Compilation and running the Application:
+     --> Goto example path(<release_package>/examples) and compile using "make clean; make linux"
+          eg: <release_package>/examples/_internal/Wireless_Examples/wlan/tcp_client
+     --> Run the application using "./app_name"
+          eg: In the above case "./tcp_client"
+
+
+Procedure for SDIO sapi's execution:
+=====================================
+
+ 1.  In release_folder/host/sapis/build/Makefile
+      --> Enable RSI_SDIO_INTERFACE macro
+      --> Disable RSI_UART_INTERFACE macro.
+
+ 2.  Driver Insertion :
+     For TCP/IP Stack driver follow steps a,b,c,e,f,g
+     For TCP/IP Bypass driver follow steps a,b,d,e,f,g
+     a) Goto path :/host/sapis/platforms/linux/Driver/common/include
+     b) Change RSI_INTERFACE define to RSI_SDIO
+     c) Disable RSI_TCP_IP_BYPASS macro in rsi_config.h
+     d) Enable RSI_TCP_IP_BYPASS macro in rsi_config.h
+     e) Goto path : /host/sapis/platforms/linux/Driver/sdio/src
+     f) Compile using "make clean ; make" command
+     g) Insert driver using "insmod rpsusb.ko" command
+
+ 3.  Compilation and running the Application:
+      --> Goto example path((/host/sapis/examples)) and compile using "make clean ;make"
+      --> Run the application using "./rsi_wsc_app"
+
+
+Procedure for UART sapi's execution:
+=====================================
+1.  Connect the Module to PC through UART interface. The PC will detect it as /dev/ttyUSBX.
+
+2.  Configure the <release folder>/host/sapis/include/rsi_uart.h
+     --> Modify RSI_UART_DEVICE macro as /dev/ttyUSBX.
+
+3.  Enable UART interface macro in Makefile at the path <release_folder>/host/sapis/build/Makefile
+     --> Enable RSI_UART_INTERFACE macro
+
+4.  Compilation and running the Application:
+     --> Goto example path(/host/sapis/examples) and compile using "make clean ;make"
+     --> Run the application using "./rsi_wsc_app"
+
+
+Procedure for USB_CDC sapi's execution:
+=======================================
+1.  Connect the Module to PC through USB_CDC interface. The PC will detect it as /dev/ttyACMX.
+
+2.  Configure the <release folder>/host/sapis/include/rsi_uart.h
+     --> Modify RSI_UART_DEVICE macro as /dev/ttyACMX.
+
+3.  Enable UART interface macro in Makefile at the path <release_folder>/host/sapis/build/Makefile
+     --> Enable RSI_UART_INTERFACE macro
+
+4.  Compilation and running the Application:
+     --> Goto example path(/host/sapis/examples) and compile using "make clean ;make"
+     --> Run the application using "./rsi_wsc_app"
+
+

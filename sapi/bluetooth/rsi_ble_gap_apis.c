@@ -1656,7 +1656,14 @@ int32_t rsi_ble_vendor_rf_type(uint8_t ble_power_index)
  *             Non-Zero Value - Failure \n
  *             If the return value is less than 0 \n
  *               -4 - Buffer not available to serve the command
- *              0x4E62 	Invalid Parameters \n 
+ *              0x4E62 	Invalid Parameters \n
+ * @note       This payload-based accept list is independent of the address-based
+ *             accept/white list. Configure scan filter type as
+ *             SCAN_FILTER_TYPE_ALL (via RSI_BLE_SCAN_FILTER_TYPE) when using
+ *             this API. SCAN_FILTER_TYPE_ONLY_ACCEPT_LIST applies address-based
+ *             filtering before advertising reports are processed and will
+ *             prevent the payload filter from working as intended unless the
+ *             peer address is also present in the address accept list.
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
 

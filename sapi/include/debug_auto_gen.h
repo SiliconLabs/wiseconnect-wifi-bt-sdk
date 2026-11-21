@@ -2,7 +2,7 @@
 //! do not modifiy this file directly
 #ifndef DEBUGS_AUTOGEN_H
 #define DEBUGS_AUTOGEN_H
-#define SL_LOG_VERSION  "2026/07/28-14:00:42"
+#define SL_LOG_VERSION  "2026/11/16-11:38:51"
 
 enum {
 SL_DRIVER_INIT_MAX_SOCKETS_ERROR,
@@ -10,10 +10,10 @@ SL_DRIVER_INIT_INSUFFICIENT_BUFFER_2,
 SL_DRIVER_INIT_UART_INIT_ERROR,
 SL_DRIVER_INIT_EXIT,
 SL_WIRELESS_INIT_ENTRY,
+SL_WIRELESS_INIT_EXIT1,
 SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE,
 SL_WIRELESS_INIT_CARD_READY_TIMEOUT,
 SL_WIRELESS_INIT_RESPONSE_TIMEOUT,
-SL_WIRELESS_INIT_EXIT1,
 SL_WIRELESS_INIT_EXIT2,
 SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE,
 SL_WIRELESS_INIT_COMMAND_ERROR,
@@ -1454,10 +1454,10 @@ SL_RSI_BT_A2DP_SET_CONFIG
 #define SL_DRIVER_INIT_UART_INIT_ERROR_SIGNATURE(component, level)  ((SL_DRIVER_INIT_UART_INIT_ERROR & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
 #define SL_DRIVER_INIT_EXIT_SIGNATURE(component, level)  ((SL_DRIVER_INIT_EXIT & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_ENTRY_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_ENTRY & 0xfff) | (component << 18) | (level << 21))
+#define SL_WIRELESS_INIT_EXIT1_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_EXIT1 & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE & 0xfff) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_CARD_READY_TIMEOUT_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_CARD_READY_TIMEOUT & 0xfff) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_RESPONSE_TIMEOUT_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_RESPONSE_TIMEOUT & 0xfff) | (component << 18) | (level << 21))
-#define SL_WIRELESS_INIT_EXIT1_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_EXIT1 & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_EXIT2_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_EXIT2 & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE & 0xfff) | (component << 18) | (level << 21))
 #define SL_WIRELESS_INIT_COMMAND_ERROR_SIGNATURE(component, level)  ((SL_WIRELESS_INIT_COMMAND_ERROR & 0xfff) | (3 << 12) | (component << 18) | (level << 21))
@@ -2895,10 +2895,10 @@ SL_RSI_BT_A2DP_SET_CONFIG
 #define SL_PRINTF_SL_DRIVER_INIT_UART_INIT_ERROR(debug_id, component, level, format, a)    sl_log_1_args(SL_DRIVER_INIT_UART_INIT_ERROR_SIGNATURE(component, level), a)
 #define SL_PRINTF_SL_DRIVER_INIT_EXIT(debug_id, component, level, format, a)    sl_log_1_args(SL_DRIVER_INIT_EXIT_SIGNATURE(component, level), a)
 #define SL_PRINTF_SL_WIRELESS_INIT_ENTRY(debug_id, component, level)    sl_log_no_args(SL_WIRELESS_INIT_ENTRY_SIGNATURE(component, level)) 
+#define SL_PRINTF_SL_WIRELESS_INIT_EXIT1(debug_id, component, level, format, a)    sl_log_1_args(SL_WIRELESS_INIT_EXIT1_SIGNATURE(component, level), a)
 #define SL_PRINTF_SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE(debug_id, component, level)    sl_log_no_args(SL_WIRELESS_INIT_COMMAND_GIVEN_IN_WRONG_STATE_SIGNATURE(component, level)) 
 #define SL_PRINTF_SL_WIRELESS_INIT_CARD_READY_TIMEOUT(debug_id, component, level)    sl_log_no_args(SL_WIRELESS_INIT_CARD_READY_TIMEOUT_SIGNATURE(component, level)) 
 #define SL_PRINTF_SL_WIRELESS_INIT_RESPONSE_TIMEOUT(debug_id, component, level)    sl_log_no_args(SL_WIRELESS_INIT_RESPONSE_TIMEOUT_SIGNATURE(component, level)) 
-#define SL_PRINTF_SL_WIRELESS_INIT_EXIT1(debug_id, component, level, format, a)    sl_log_1_args(SL_WIRELESS_INIT_EXIT1_SIGNATURE(component, level), a)
 #define SL_PRINTF_SL_WIRELESS_INIT_EXIT2(debug_id, component, level, format, a)    sl_log_1_args(SL_WIRELESS_INIT_EXIT2_SIGNATURE(component, level), a)
 #define SL_PRINTF_SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE(debug_id, component, level)    sl_log_no_args(SL_WIRELESS_INIT_PKT_ALLOCATION_FAILURE_SIGNATURE(component, level)) 
 #define SL_PRINTF_SL_WIRELESS_INIT_COMMAND_ERROR(debug_id, component, level, format, a)    sl_log_1_args(SL_WIRELESS_INIT_COMMAND_ERROR_SIGNATURE(component, level), a)

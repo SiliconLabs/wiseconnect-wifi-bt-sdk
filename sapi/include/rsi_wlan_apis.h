@@ -119,12 +119,14 @@
 #define FEAT_HIDE_PSK_CREDENTIALS BIT(9)
 
 //To enable high SSL streaming throughput
+//Currently not supported.
 #define SSL_HIGH_STREAMING_BIT BIT(10)
 
 //To enable certificate pathlength feature
 #define TLS_PATH_LENGTH_SUPPORT BIT(11)
 
 //To enable support for long sized ICMP packets. Max 1472 Bytes for IPv4 and Max 1452 Bytes for IPv6.
+//Currently not supported.
 #define FEAT_LONG_ICMP_PACKET BIT(12)
 
 // If below bit is set, new set of firmware update result code will be received
@@ -134,6 +136,7 @@
 #define FEAT_ROBUST_MODE_ENABLE BIT(26)
 
 // Secure Attestation
+//Currently not supported.
 #define FEAT_SECURE_ATTESTATION BIT(30)
 /*=========================================================================*/
 
@@ -282,12 +285,19 @@
 #define EXT_TCP_IP_TOTAL_SELECTS_9  (9 << 12)
 #define EXT_TCP_IP_TOTAL_SELECTS_10 (10 << 12)
 
-// Enables the SSL_HIGH_PERFORMANCE
+// Enables the SSL_HIGH_PERFORMANCE (Currently not supported).
+// Note: Same bit value as EXT_FEAT_HTTP_OTAF_SUPPORT.
+// On RS9116, BIT(18) in RSI_EXT_TCPIP_FEATURE_BITMAP enables HTTP OTAF, not SSL high performance.
 #define EXT_TCP_IP_FEAT_SSL_HIGH_PERFORMANCE BIT(18)
+
+// To enable http otaf support
+#define EXT_FEAT_HTTP_OTAF_SUPPORT BIT(18)
 
 // Enabled to update TCP window from host
 #define EXT_TCP_DYNAMIC_WINDOW_UPDATE_FROM_HOST BIT(19)
-#define EXT_TCP_MAX_RECV_LENGTH                 BIT(20)
+
+// Allow TCP recv lengths beyond the default 1460-byte single-segment limit
+#define EXT_TCP_MAX_RECV_LENGTH BIT(20)
 
 // Disables Webpage feature and enables usage of certificate index 3
 #define EXT_TCP_IP_CERTIFICATE_INDEX_3 BIT(21)
@@ -403,6 +413,7 @@
 #define EXT_FEAT_FCC_LOW_PWR BIT(5)
 
 // To enable PUF
+//Currently not supported.
 #define EXT_FEAT_PUF BIT(7)
 
 // Nokia Spectral mask extended custom bitmap
@@ -412,6 +423,7 @@
 #define EXT_HTTP_SKIP_DEFAULT_LEADING_CHARACTER BIT(9)
 
 // To enable PUF private key
+//Currently not supported.
 #define EXT_FEAT_PUF_PRIVATE_KEY BIT(10)
 
 // To enable 802.11R Over The Air Roaming
@@ -434,9 +446,6 @@
 
 // To enable low power mode in Wlan
 #define EXT_FEAT_LOW_POWER_MODE BIT(19)
-
-// To enable http otaf support
-#define EXT_FEAT_HTTP_OTAF_SUPPORT BIT(18)
 
 #ifdef CHIP_917B0
 
@@ -573,6 +582,17 @@
 #define ULP_GPIO9_FOR_UART2_TX               BIT(18)
 #define RSI_FEAT_DISABLE_MCS_5_6_7_DATARATES BIT(19)
 #define RSI_FEAT_DISABLE_SHORT_GI            BIT(20)
+
+// Enable PTA 3-wire feature
+#define PTA_3WIRE_EN BIT(21)
+
+// PTA 3-wire config select
+// Use only one of the following with PTA_3WIRE_EN
+// Config 0 (both bits 0) is reserved/invalid
+#define PTA_3WIRE_CONFIG_SEL_1 BIT(22)
+#define PTA_3WIRE_CONFIG_SEL_2 BIT(23)
+#define PTA_3WIRE_CONFIG_SEL_3 (BIT(22) | BIT(23))
+
 //! XTAL goodtime configurations
 #define RSI_XTAL_GOODTIME_1000us 0
 #define RSI_XTAL_GOODTIME_2000us BIT(24)

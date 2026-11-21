@@ -718,6 +718,10 @@ typedef struct rsi_debug_uart_print_s {
 } rsi_debug_uart_print_t;
 
 // RR feature frame command request structure
+// PLLMODE values for feature frame
+#define PLL_MODE_0 0 // 80 MHz NWP clock
+#define PLL_MODE_1 1 // 120/160 MHz NWP clock
+
 typedef struct rsi_feature_frame_s {
   // PLL mode val
   uint8_t pll_mode;

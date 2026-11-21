@@ -237,9 +237,20 @@ int32_t rsi_bt_deinit(void)
  * @brief      Set country region command for BT
  * @pre        \ref rsi_wireless_init() API needs to be called before this API.
  * @param[in]  region - Parameter is used to set country region.
- * @param[in]  resp - Actual country region set by device.
+ * @param[out]  resp - Actual country region set by device.
  * @return     0    - Success \n
  *             Non-Zero Value - Failure
+ * @note Supported Region names: FCC, ETSI, TELEC, WORLDWIDE, KCC, and WORLDSAFE.
+ *   * The following table lists the regions and their corresponding values to pass:
+ * 
+ *      | Value | Region     |
+ *      |-------|------------|
+ *      | 0     | FCC        |
+ *      | 1     | ETSI       |
+ *      | 2     | TELEC      |
+ *      | 3     | WORLDWIDE  |
+ *      | 4     | KCC        |
+ *      | 5     | WORLDSAFE  |
  * @note       Refer Error Codes section for above error codes \ref error-codes .
  */
 int32_t rsi_bt_set_country_region(uint8_t region, void *resp)
@@ -257,7 +268,7 @@ int32_t rsi_bt_set_country_region(uint8_t region, void *resp)
  * @fn         int32_t rsi_bt_get_country_region(void *resp)
  * @brief      Set country region command for BT
  * @pre        \ref rsi_wireless_init() API needs to be called before this API.
- * @param[in]  resp - Gets the current country region set.
+ * @param[out]  resp - Gets the current country region set.
  * @return     0    - Success \n
  *             Non-Zero Value - Failure
  * @note       Refer Error Codes section for above error codes \ref error-codes .

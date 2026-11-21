@@ -7058,8 +7058,12 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
     } else {
       // Not supported
     }
-    // Fill feature frame params
-    feature_frame_ptr->pll_mode      = PLL_MODE;
+    // Fill feature frame params — PLLMODE from AP profile custom feature clock bits
+    if (RSI_CONFIG_AP_CUSTOM_FEAT_BIT_MAP & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      feature_frame_ptr->pll_mode = PLL_MODE_1;
+    } else {
+      feature_frame_ptr->pll_mode = PLL_MODE_0;
+    }
     feature_frame_ptr->rf_type       = RF_TYPE;
     feature_frame_ptr->wireless_mode = WIRELESS_MODE;
     feature_frame_ptr->enable_ppp    = ENABLE_PPP;
@@ -7160,8 +7164,13 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
       // Not supported
     }
 
-    // Fill feature frame params
-    feature_frame_ptr->pll_mode      = PLL_MODE;
+    // Fill feature frame params — PLLMODE from client profile custom feature clock bits
+    if (RSI_CONFIG_CLIENT_CUSTOM_FEAT_BIT_MAP
+        & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      feature_frame_ptr->pll_mode = PLL_MODE_1;
+    } else {
+      feature_frame_ptr->pll_mode = PLL_MODE_0;
+    }
     feature_frame_ptr->rf_type       = RF_TYPE;
     feature_frame_ptr->wireless_mode = WIRELESS_MODE;
     feature_frame_ptr->enable_ppp    = ENABLE_PPP;
@@ -7252,8 +7261,12 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
       // Not supported
     }
 
-    // Fill feature frame params
-    feature_frame_ptr->pll_mode      = PLL_MODE;
+    // Fill feature frame params — PLLMODE from EAP profile custom feature clock bits
+    if (RSI_CONFIG_EAP_CUSTOM_FEAT_BIT_MAP & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      feature_frame_ptr->pll_mode = PLL_MODE_1;
+    } else {
+      feature_frame_ptr->pll_mode = PLL_MODE_0;
+    }
     feature_frame_ptr->rf_type       = RF_TYPE;
     feature_frame_ptr->wireless_mode = WIRELESS_MODE;
     feature_frame_ptr->enable_ppp    = ENABLE_PPP;
@@ -7328,8 +7341,12 @@ uint8_t *rsi_fill_config_profile(uint32_t type, uint8_t *profile_buffer)
       // Not supported
     }
 
-    // Fill feature frame params
-    feature_frame_ptr->pll_mode      = PLL_MODE;
+    // Fill feature frame params — PLLMODE from P2P profile custom feature clock bits
+    if (RSI_CONFIG_P2P_CUSTOM_FEAT_BIT_MAP & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      feature_frame_ptr->pll_mode = PLL_MODE_1;
+    } else {
+      feature_frame_ptr->pll_mode = PLL_MODE_0;
+    }
     feature_frame_ptr->rf_type       = RF_TYPE;
     feature_frame_ptr->wireless_mode = WIRELESS_MODE;
     feature_frame_ptr->enable_ppp    = ENABLE_PPP;

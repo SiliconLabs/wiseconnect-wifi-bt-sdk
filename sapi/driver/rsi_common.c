@@ -1446,11 +1446,22 @@ int32_t rsi_send_ps_mode_to_module(uint8_t selected_ps_mode, uint8_t selected_ps
 #ifndef RSI_COMMON_SEM_BITMAP
     rsi_driver_cb_non_rom->common_wait_bitmap |= BIT(0);
 #endif
+
+#if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
+#if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
+    rsi_hal_set_gpio(RSI_HAL_SLEEP_CONFIRM_PIN);
+#endif
+#endif
     // send power save command
     status = rsi_driver_common_send_cmd(RSI_COMMON_REQ_PWRMODE, pkt);
 
     // wait on common semaphore
     rsi_wait_on_common_semaphore(&rsi_driver_cb_non_rom->common_cmd_sem, RSI_PWRMODE_RESPONSE_WAIT_TIME);
+#if (RSI_HAND_SHAKE_TYPE == GPIO_BASED)
+#if (RSI_SELECT_LP_OR_ULP_MODE != RSI_LP_MODE)
+    rsi_hal_clear_gpio(RSI_HAL_SLEEP_CONFIRM_PIN);
+#endif
+#endif
 
     //Changing the common state to allow state
     rsi_check_and_update_cmd_state(COMMON_CMD, ALLOW);

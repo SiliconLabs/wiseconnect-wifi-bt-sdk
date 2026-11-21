@@ -719,7 +719,10 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
 int32_t trng_get_random_num(uint32_t *random_number, uint16_t length);
 int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length);
 int32_t trng_entropy(void);
+#ifdef CHIP_917B0
+/* Device attestation is SiWx917/CHIP_917B0 only; see rsi_crypto.c. */
 int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonce);
+#endif
 #endif
 #else
 //====================================================== NORMAL CRYPTO ==================================================================================== //
@@ -1412,7 +1415,10 @@ int32_t trng_init(uint32_t *trng_key, uint32_t *trng_test_data, uint16_t input_l
 int32_t trng_get_random_num(uint32_t *random_number, uint16_t length);
 int32_t trng_program_key(uint32_t *trng_key, uint16_t key_length);
 int32_t trng_entropy(void);
+#ifdef CHIP_917B0
+/* Device attestation is SiWx917/CHIP_917B0 only; see rsi_crypto.c. */
 int32_t sl_attestation_get_token(uint8_t *token, uint16_t length, uint32_t *nonce);
+#endif
 void reverse_8(unsigned char *xx, int no_digits);
 #endif
 #endif

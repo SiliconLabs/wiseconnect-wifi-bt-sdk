@@ -276,7 +276,7 @@ int32_t rsi_hmac_sha_pen(uint8_t hmac_sha_mode,
                          uint8_t pending_flag,
                          uint8_t *digest)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Hold computed digest from HMAC-SHA. This is a blocking API.
@@ -525,7 +525,7 @@ int32_t rsi_hmac_sha(uint8_t hmac_sha_mode,
                      uint8_t *digest,
                      uint8_t *hmac_buffer)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Decide whether the HMAC-SHA message can be sent once or requires multiple calls to send the message. This is a blocking API.
@@ -650,7 +650,7 @@ int32_t rsi_aes(uint16_t aes_mode,
                 uint8_t *iv,
                 uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Decide whether the AES message can be sent once or requires multiple calls to send the message. This is a blocking API.
@@ -765,7 +765,7 @@ int32_t rsi_aes_pen(uint16_t aes_mode,
                     uint8_t aes_flags,
                     uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Encrypt/decrypt the data using AES
@@ -2127,7 +2127,7 @@ int32_t rsi_ccm(uint8_t enc_dec,
                 uint16_t ad_len,
                 uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @fn         rsi_ccm(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, uint8_t *key, uint16_t key_length, uint8_t *iv, uint16_t iv_sz,
@@ -2336,7 +2336,7 @@ int32_t rsi_ccm_pen(uint8_t enc_dec,
                     uint8_t ccm_flags,
                     uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @fn         rsi_ccm_pen(uint8_t enc_dec, uint8_t *msg, uint16_t msg_length, uint16_t chunk_length, uint8_t *key, uint16_t key_length,
@@ -3434,7 +3434,7 @@ int32_t rsi_chachapoly(uint16_t chachapoly_mode,
                        uint16_t header_length,
                        uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Decides whether the CHACHAPOLY message can be sent once or requires multiple calls to send
@@ -3590,7 +3590,7 @@ int32_t rsi_chachapoly_pen(uint16_t chachapoly_mode,
                            uint8_t chachapoly_flags,
                            uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Encrypt/Decrypt the data using CHACHA_POLY
@@ -3903,7 +3903,7 @@ int32_t rsi_gcm(uint32_t gcm_mode,
                 uint16_t header_length,
                 uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Decides whether the GCM message can be sent once or requires multiple calls to send
@@ -4109,7 +4109,7 @@ int32_t rsi_gcm_pen(uint32_t gcm_mode,
                     uint8_t gcm_flags,
                     uint8_t *output)
 #else
-/** @cond */
+/** @cond RS9116_API */
 /*==============================================*/
 /**
  * @brief      Encrypt/Decrypt the data using GCM

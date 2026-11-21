@@ -49,6 +49,26 @@ extern rom_apis_t *rom_apis;
 extern void rom_init(void);
 int32_t rsi_driver_memory_estimate(void);
 
+/*==============================================*/
+/**
+ * @brief       Validate OPERMODE SOC clock configuration. This is a non-blocking API.
+ * @param[in]   custom_feature_bit_map - OPERMODE custom feature bitmap \n
+ *                                       BIT(24) selects 120 MHz, BIT(4) selects 160 MHz
+ * @return      0              - Success \n
+ * @return      Non-Zero Value - Failure \n
+ *              \ref RSI_ERROR_INVALID_SOC_CLK_CONFIG - Both BIT(24)/120 MHz and BIT(4)/160 MHz are set
+ * @note        Supported combinations: 80 MHz (neither bit), 120 MHz (BIT(24) only), 160 MHz (BIT(4) only).
+ *              Setting both BIT(24) and BIT(4) together is not supported.
+ */
+static int32_t rsi_validate_soc_clk_config(uint32_t custom_feature_bit_map)
+{
+  if ((custom_feature_bit_map & CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ)
+      && (custom_feature_bit_map & CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+    return RSI_ERROR_INVALID_SOC_CLK_CONFIG;
+  }
+  return RSI_SUCCESS;
+}
+
 /* For Remove sapi Wranings*/
 #if defined(RSI_SDIO_INTERFACE)
 void rsi_sdio_deinit(void);
@@ -471,6 +491,12 @@ int32_t rsi_wireless_init(uint16_t opermode, uint16_t coex_mode)
   // Get common cb pointer
   rsi_common_cb_t *common_cb = rsi_driver_cb->common_cb;
   rsi_wlan_cb_t *wlan_cb     = rsi_driver_cb->wlan_cb;
+
+  status = rsi_validate_soc_clk_config(RSI_CUSTOM_FEATURE_BIT_MAP);
+  if (status != RSI_SUCCESS) {
+    SL_PRINTF(SL_WIRELESS_INIT_EXIT1, COMMON, LOG_ERROR, "status: %4x", status);
+    return status;
+  }
 
   if ((rsi_driver_cb_non_rom->device_state < RSI_DEVICE_INIT_DONE)) {
     // Command given in wrong state
@@ -923,6 +949,7 @@ int32_t rsi_cmd_m4_ta_secure_handshake(uint8_t sub_cmd_type,
  *              followed by rsi_driver_init() and rsi_device_init(). 
  *              For OS cases, additionally needs to call rsi_task_destroy(driver_task_handle) to delete the driver task before calling 
  *              rsi_driver_deinit() and should create again, after rsi_device_init() using rsi_task_create()
+ * @note        If the STA is connected to an AP, it is recommended to call the rsi_wlan_disconnect() API before calling rsi_wireless_deinit().
  * @note        Refer to \ref error-codes for the description of above error codes.      
  */
 
@@ -1173,8 +1200,11 @@ int32_t rsi_send_feature_frame_dyn(uint32_t feature_enables)
     // Take the user provided data and fill it in antenna select structure
     rsi_feature_frame = (rsi_feature_frame_t *)pkt->data;
 
-    // PLL mode value
-    rsi_feature_frame->pll_mode = PLL_MODE;
+    if (RSI_CUSTOM_FEATURE_BIT_MAP & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      rsi_feature_frame->pll_mode = PLL_MODE_1;
+    } else {
+      rsi_feature_frame->pll_mode = PLL_MODE_0;
+    }
 
     // RF type
     rsi_feature_frame->rf_type = RF_TYPE;
@@ -1261,8 +1291,11 @@ int32_t rsi_send_feature_frame(void)
     // Take the user provided data and fill it in antenna select structure
     rsi_feature_frame = (rsi_feature_frame_t *)pkt->data;
 
-    // PLL mode value
-    rsi_feature_frame->pll_mode = PLL_MODE;
+    if (RSI_CUSTOM_FEATURE_BIT_MAP & (CUSTOM_FEAT_SOC_CLK_CONFIG_120MHZ | CUSTOM_FEAT_SOC_CLK_CONFIG_160MHZ)) {
+      rsi_feature_frame->pll_mode = PLL_MODE_1;
+    } else {
+      rsi_feature_frame->pll_mode = PLL_MODE_0;
+    }
 
     // RF type
     rsi_feature_frame->rf_type = RF_TYPE;
