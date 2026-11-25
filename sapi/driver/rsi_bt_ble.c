@@ -493,6 +493,10 @@ void rsi_bt_common_tx_done(rsi_pkt_t *pkt)
   // Get the protocol Type
   protocol_type = (uint8_t)rsi_bt_get_proto_type(rsp_type, &bt_cb);
 
+  if (bt_cb == NULL) {
+    return;
+  }
+
   if (protocol_type == 0xFF) {
     return;
   }
@@ -669,6 +673,10 @@ int32_t rsi_driver_process_bt_resp(
   uint16_t payload_length;
   uint16_t expected_resp = 0;
 
+  if (bt_cb == NULL) {
+    return RSI_ERROR_INVALID_PARAM;
+  }
+
   // Get Host Descriptor
   host_desc = pkt->desc;
 
@@ -795,6 +803,10 @@ uint16_t rsi_driver_process_bt_resp_handler(rsi_pkt_t *pkt)
 
   // Get the protocol Type
   protocol_type = (uint8_t)rsi_bt_get_proto_type(rsp_type, &bt_cb);
+
+  if (bt_cb == NULL) {
+    return 0;
+  }
 
   SL_PRINTF(SL_RSI_BT_DRIVER_PROCESS_BT_RESP_HANDLER_TRIGGER, BLUETOOTH, LOG_INFO, "PROTOCOL_TYPE: %1x", protocol_type);
   if (protocol_type == 0xFF) {
@@ -2520,7 +2532,7 @@ uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
 
     /*Return , if the callback number exceeds the RSI_BT_COMMON_MAX_NUM_EXT_CALLBACKS */
 
-    return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
+    return (uint32_t)RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
   }
   switch (callback_id) {
     case RSI_BLE_ON_REMOTE_DEVICE_INFORMATION: {
@@ -2531,7 +2543,7 @@ uint32_t rsi_ble_enhanced_gap_extended_register_callbacks(uint16_t callback_id,
     } break;
     default:
       LOG_PRINT("\nInvalid Callback ID\n");
-      return RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
+      return (uint32_t)RSI_ERROR_BLE_INVALID_CALLBACK_CNT;
   }
   return RSI_SUCCESS;
 }
@@ -4434,6 +4446,10 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
 
   protocol_type = rsi_bt_get_proto_type(cmd, &bt_cb);
 
+  if (bt_cb == NULL) {
+    return RSI_ERROR_INVALID_MEMORY;
+  }
+
   SL_PRINTF(SL_RSI_BT_SEND_CMD_PROTOCOL_TYPE, BLUETOOTH, LOG_INFO, "PROTOCOL_TYPE: %2x", protocol_type);
   if (protocol_type == 0xFF) {
     // Return packet allocation failure error
@@ -4483,9 +4499,6 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
   // Allocate command buffer from ble pool
   pkt = rsi_pkt_alloc(&bt_cb->bt_tx_pool);
 
-  // Get host descriptor pointer
-  host_desc = (pkt->desc);
-
   // If allocation of packet fails
   if (pkt == NULL) {
     rsi_bt_clear_wait_bitmap(protocol_type, BT_CMD_SEM);
@@ -4496,6 +4509,9 @@ int32_t rsi_bt_driver_send_cmd(uint16_t cmd, void *cmd_struct, void *resp)
 
     return RSI_ERROR_PKT_ALLOCATION_FAILURE;
   }
+
+  // Get host descriptor pointer
+  host_desc = (pkt->desc);
 
   // Memset host descriptor
   memset(host_desc, 0, RSI_HOST_DESC_LENGTH);

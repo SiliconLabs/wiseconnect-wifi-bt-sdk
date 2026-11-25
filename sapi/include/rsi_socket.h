@@ -682,7 +682,7 @@ int32_t rsi_sendto_async(int32_t sockID,
                          struct rsi_sockaddr *destAddr,
                          int32_t destAddrLen,
                          void (*data_transfer_complete_handler)(int32_t sockID, const uint16_t length));
-uint32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
+int32_t rsi_network_app_protocol_config(nw_app_protocol protocol,
                                          nw_app_config config_type,
                                          void *config,
                                          uint16_t config_length);

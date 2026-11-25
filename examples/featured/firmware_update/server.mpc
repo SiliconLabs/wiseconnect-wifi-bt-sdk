@@ -1,0 +1,15 @@
+// https://github.com/DOCGroup/MPC
+//
+// To generate a Visual Studio 2019 solution:
+//   perl %MPC_ROOT%\mwc.pl -type vs2019
+//
+// To generate a Makefile for Linux:
+//   $MPC_ROOT/mwc.pl -type make
+
+project {
+  lit_libs += ws2_32
+  Source_Files {
+    firmware_update_tcp_server.c
+  }
+}
+

@@ -52,7 +52,11 @@ extern "C" {
 #include "rsi_nwk.h"
 #include "rsi_utils.h"
 #include "rsi_driver.h"
+#include "aws_iot_config.h"
 
+#ifndef AWS_IOT_TLS_CONNECT_TIMEOUT
+#define AWS_IOT_TLS_CONNECT_TIMEOUT 120000
+#endif
 
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
@@ -79,10 +83,10 @@ uint32_t ssl_cert_bit_map = RSI_CERT_INDEX_0;
 
 
 /*
- * This is a function to do further verification if needed on the cert received
+ *  Convert an RSI error code into an IoT_Error_t error code.
  */
 
-int32_t get_aws_error(int32_t status)
+IoT_Error_t  get_aws_error(int32_t status)
 {
 	switch(status)
 	{
@@ -95,7 +99,7 @@ int32_t get_aws_error(int32_t status)
 	case RSI_ERROR_EFAULT:/* Bad address */
 	case RSI_ERROR_EAFNOSUPPORT:/* Address family not supported by protocol */
 	case RSI_ERROR_EMSGSIZE:/* Message too long */
-		return status;
+		return FAILURE;
 
 	case 0xFF7E:
 	case 0xBBED:
@@ -239,9 +243,11 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 
 		if(flags & RSI_SSL_ENABLE) {
 			n->socket_id = rsi_socket(AF_INET, type, 0);
-    	status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_SSL_ENABLE,&ssl_bit_map,sizeof(ssl_bit_map));
-    	status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_CERT_INDEX,&ssl_cert_bit_map,sizeof(ssl_cert_bit_map));
-    }
+			if (n->socket_id >= 0) {
+				status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_SSL_ENABLE,&ssl_bit_map,sizeof(ssl_bit_map));
+				status = rsi_setsockopt(n->socket_id,SOL_SOCKET,SO_CERT_INDEX,&ssl_cert_bit_map,sizeof(ssl_cert_bit_map));
+			}
+	}
 		else
 			n->socket_id = rsi_socket(AF_INET, type, 0);
 
@@ -251,7 +257,7 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 		/* Set all bits of the padding field to 0 */
 		memset(clientAddr.sin_zero, '\0', sizeof(clientAddr.sin_zero));
 	}
-	if (n->socket_id == -1)
+	if (n->socket_id < 0)
 	{
 		return NETWORK_ERR_NET_SOCKET_FAILED;
 	}
@@ -260,20 +266,18 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 	{
 		//! Bind socket
 		status = rsi_bind(n->socket_id, (struct rsi_sockaddr *) &clientAddr_v6, sizeof(clientAddr_v6));
-
 	}
 	else
 	{
 		//! Bind socket
 		status = rsi_bind(n->socket_id, (struct rsi_sockaddr *) &clientAddr, sizeof(clientAddr));
-
-
 	}
 	if(status != 0)
 	{
 		//! Shut Down the port
 		//  mqtt_disconnect(n);
 		status = rsi_wlan_socket_get_status(n->socket_id);
+		rsi_shutdown(n->socket_id,0);
 		return get_aws_error(status);
 	}
 	if(flags == RSI_IPV6)
@@ -285,9 +289,10 @@ int ConnecttoNetwork(Network* n, uint8_t flags,char* addr, int dst_port, int src
 		rc = rsi_connect(n->socket_id, (struct rsi_sockaddr*)&address, sizeof(address));
 
 	}
-	if(rc == -1)
+	if(rc == RSI_SOCK_ERROR)
 	{
 		status = rsi_wlan_socket_get_status(n->socket_id);
+		rsi_shutdown(n->socket_id,0);
 		return get_aws_error(status);
 		//! Shut Down the port
 		//mqtt_disconnect(n);
@@ -298,27 +303,43 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 {
   UNUSED_PARAMETER(params);
 	int32_t     status       = 0;
-	rsi_rsp_dns_query_t dns_query_rsp;
+	rsi_rsp_dns_query_t dns_query_rsp = {0};
 	uint32_t    server_address =  0;
-	uint8_t  count = DNS_REQ_COUNT;
+	uint16_t  count = DNS_REQ_COUNT;
+	uint16_t ip_count = 0;
+	int client_port = CLIENT_PORT;
+	const uint8_t ip_version = RSI_IP_VERSION_4;
+	Timer timer;
+
+	/* Timer to limit the connection time. */
+	init_timer(&timer);
+	countdown_ms(&timer, AWS_IOT_TLS_CONNECT_TIMEOUT);	
 
   do{
-    status = rsi_dns_req(RSI_IP_VERSION_4, (uint8_t *)pNetwork->tlsConnectParams.pDestinationURL, NULL, NULL, &dns_query_rsp, sizeof(dns_query_rsp));
+    status = rsi_dns_req(ip_version, (uint8_t *)pNetwork->tlsConnectParams.pDestinationURL, NULL, NULL, &dns_query_rsp, sizeof(dns_query_rsp));
     if(status == SUCCESS)
     {			
       break;
     }		
     count --;
-  }while(count != 0);
+  }while(count != 0 && !has_timer_expired(&timer));
 
-	if(status != SUCCESS)
+
+	/* Adding a sanity check on the dns result. */
+	if(status != SUCCESS || rsi_bytes2R_to_uint16(dns_query_rsp.ip_version) != ip_version)
 	{
 		return NETWORK_ERR_NET_UNKNOWN_HOST;
 	}
-	server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[0].ipv4_address);
-
-	status = ConnecttoNetwork(pNetwork, 2,(char *) &server_address, pNetwork->tlsConnectParams.DestinationPort, CLIENT_PORT);
-
+	
+	status = FAILURE;
+	ip_count = rsi_bytes2R_to_uint16(dns_query_rsp.ip_count);
+	
+	/* Do not continue looping if we are successful or we are unable to create a socket. */
+	for(count = 0; status != SUCCESS && status != NETWORK_ERR_NET_SOCKET_FAILED &&
+		       !has_timer_expired(&timer) && count < ip_count; count++) {
+		server_address = rsi_bytes4R_to_uint32(dns_query_rsp.ip_address[count].ipv4_address);
+		status = ConnecttoNetwork(pNetwork, RSI_SSL_ENABLE, (char *)&server_address, pNetwork->tlsConnectParams.DestinationPort, client_port + count);
+	}
 	return (IoT_Error_t)status;
 }
 
@@ -328,16 +349,17 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	bool isErrorFlag = false;
 	int frags;
 	int ret = 0;
+	/* There is a maximum amount of data that is allowed to be written at
+	* one time.  We must limit ourself to writing a smaller amount to
+	* ensure that all of the data gets written. */
+	const size_t block_size = 1024;
 	for(written_so_far = 0, frags = 0;
 			written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++)
 	{
-		while(!has_timer_expired(timer) &&
-				(ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), len - written_so_far,0)) <= 0)
-		{
+		const size_t to_write = len - written_so_far;
+		if ((ret = rsi_send(pNetwork->socket_id,(int8_t *)(pMsg + written_so_far), to_write > block_size ? block_size : to_write,0)) <= 0) //FIXME:flags parameter kept as 0
+		{		
 			isErrorFlag = true;
-		}
-		if(isErrorFlag)
-		{
 			break;
 		}
 	}
@@ -391,7 +413,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 		else //ret<0
 		{
 			status = rsi_wlan_socket_get_status(pNetwork->socket_id);
-			return (IoT_Error_t)get_aws_error(status);
+			return get_aws_error(status);
 		}
 
 		// Evaluate timeout after the read to make sure read is done at least once
@@ -422,7 +444,13 @@ IoT_Error_t iot_tls_disconnect(Network *pNetwork)
 	status = rsi_shutdown(pNetwork->socket_id,0);
 	if(status != RSI_SUCCESS)
 	{
-		return (IoT_Error_t)rsi_wlan_socket_get_status(pNetwork->socket_id);
+		status = rsi_wlan_socket_get_status(pNetwork->socket_id);
+		if (RSI_ERROR_EBADF == status)
+		{
+			/* We will get this error if the socket has already been closed. */
+			status = RSI_SUCCESS;
+			rsi_wlan_socket_set_status(RSI_SUCCESS, pNetwork->socket_id);
+		}
 	}
 	return (IoT_Error_t)status;
 }

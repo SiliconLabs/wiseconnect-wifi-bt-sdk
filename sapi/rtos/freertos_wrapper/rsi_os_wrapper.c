@@ -123,8 +123,7 @@ rsi_error_t rsi_mutex_create(rsi_mutex_handle_t *mutex)
 rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
 {
   uint32_t timeout_ms = 0;
-  TickType_t delayTime;
-
+ 
   SemaphoreHandle_t *p_mutex = (SemaphoreHandle_t *)mutex;
   if (mutex == NULL || *p_mutex == NULL) //Note : FreeRTOS porting
   {
@@ -133,9 +132,8 @@ rsi_error_t rsi_mutex_lock(volatile rsi_mutex_handle_t *mutex)
   if (!timeout_ms) {
     timeout_ms = portMAX_DELAY;
   }
-  delayTime = rsi_ms_to_tick(timeout_ms);
 
-  if (xSemaphoreTake(*p_mutex, delayTime) == pdPASS) {
+  if (xSemaphoreTake(*p_mutex, timeout_ms) == pdPASS) {
     return RSI_ERROR_NONE;
   }
   return RSI_ERROR_IN_OS_OPERATION;
@@ -299,7 +297,6 @@ rsi_error_t rsi_semaphore_check_and_destroy(rsi_semaphore_handle_t *semaphore)
 rsi_error_t rsi_semaphore_wait(rsi_semaphore_handle_t *semaphore, uint32_t timeout_ms)
 {
   SemaphoreHandle_t *p_semaphore = NULL;
-  TickType_t delayTime;
 
   p_semaphore = (SemaphoreHandle_t *)semaphore;
 
@@ -311,10 +308,7 @@ rsi_error_t rsi_semaphore_wait(rsi_semaphore_handle_t *semaphore, uint32_t timeo
     timeout_ms = portMAX_DELAY;
   }
 
-  /*converting ms to ticks*/
-  delayTime = rsi_ms_to_tick(timeout_ms); //Note : xSemaphoreTake accepts time in ticks
-
-  if (xSemaphoreTake(*p_semaphore, delayTime) == pdPASS) {
+  if (xSemaphoreTake(*p_semaphore, timeout_ms) == pdPASS) {
     return RSI_ERROR_NONE;
   }
   return RSI_ERROR_IN_OS_OPERATION;
@@ -457,8 +451,7 @@ void rsi_task_destroy(rsi_task_handle_t *task_handle)
  */
 void rsi_os_task_delay(uint32_t timeout_ms)
 {
-  TickType_t delayTime = rsi_ms_to_tick(timeout_ms);
-  vTaskDelay(delayTime);
+  vTaskDelay(timeout_ms);
 }
 
 /*==============================================*/
